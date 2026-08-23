@@ -4613,7 +4613,7 @@ function loadImg(src){
 }
 async function downloadRecapCard(fmt, data){
   const isFr = S.lang==='fr';
-  const W = 1080, H = 1620;
+  const W = 1080, H = 2120;
   const accent = cssVal('--accent', '#00e5ff');
   const accentDark = cssVal('--accent-dark', '#0077aa');
   const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
@@ -4676,7 +4676,7 @@ async function downloadRecapCard(fmt, data){
   x.shadowColor = data.gradeCol; x.shadowBlur = 30; x.fillStyle = data.gradeCol;
   x.font = '900 108px Arial'; x.fillText(String(data.cs.total), 122, gy+130);
   x.shadowBlur = 0; x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '700 34px Arial';
-  x.fillText('/100', 122 + x.measureText(String(data.cs.total)).width + 128, gy+130);
+  x.fillText('/100', 122 + x.measureText(String(data.cs.total)).width + 18, gy+130);
   x.textAlign = 'right'; x.fillStyle = data.gradeCol; x.font = '900 44px Arial';
   x.fillText(data.cs.grade, W-122, gy+80);
   x.fillStyle = 'rgba(255,255,255,0.75)'; x.font = '600 22px Arial';
