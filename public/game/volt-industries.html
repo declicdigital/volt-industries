@@ -5806,19 +5806,26 @@ async function downloadRecapCard(fmt, data){
   x.fillText(spaced(isFr?'BILAN DE CARRIERE':'CAREER REPORT', 4), 84, 282);
   // Portrait + identite
   const im = await loadImg(S.portrait);
-  const py = 320, pS = 250;
+  const py = 320, pW = 250, pH = 300, pS = pW;
   if(im){
-    x.save(); roundRect(x, 82, py, pS, pS, 20); x.clip();
-    const r = Math.max(pS/im.width, pS/im.height);
-    x.drawImage(im, 82 + (pS - im.width*r)/2, py + (pS - im.height*r)/2, im.width*r, im.height*r);
+    x.save(); roundRect(x, 82, py, pW, pH, 20); x.clip();
+    // fond interne
+    const bg = x.createLinearGradient(82, py, 82+pW, py+pH);
+    bg.addColorStop(0, hexA(accentDark, 0.35)); bg.addColorStop(1, 'rgba(5,7,14,0.9)');
+    x.fillStyle = bg; x.fillRect(82, py, pW, pH);
+    // contain : tout le personnage (tete comprise) rentre dans le cadre
+    const r = Math.min(pW/im.width, pH/im.height);
+    const dw = im.width*r, dh = im.height*r;
+    x.drawImage(im, 82 + (pW - dw)/2, py + (pH - dh)/2, dw, dh);
     x.restore();
     x.save(); x.shadowColor = accent; x.shadowBlur = 22; x.strokeStyle = accent; x.lineWidth = 3;
-    roundRect(x, 82, py, pS, pS, 20); x.stroke(); x.restore();
+    roundRect(x, 82, py, pW, pH, 20); x.stroke(); x.restore();
   } else {
-    x.fillStyle = hexA(accent, 0.12); roundRect(x, 82, py, pS, pS, 20); x.fill();
+    x.fillStyle = hexA(accent, 0.12); roundRect(x, 82, py, pW, pH, 20); x.fill();
     x.fillStyle = accent; x.font = 'italic 900 120px Arial'; x.textAlign='center';
-    x.fillText((S.heroName||'V').charAt(0).toUpperCase(), 82+pS/2, py+pS/2+42); x.textAlign='left';
+    x.fillText((S.heroName||'V').charAt(0).toUpperCase(), 82+pW/2, py+pH/2+42); x.textAlign='left';
   }
+
   x.fillStyle = '#ffffff'; x.font = '900 62px Arial';
   wrapText(x, (S.heroName||'').toUpperCase(), 366, py+72, W-448, 66, 2);
   x.fillStyle = hexA(accent, 0.95); x.font = '700 24px Arial';
