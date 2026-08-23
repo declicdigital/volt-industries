@@ -2919,6 +2919,7 @@ function applyConvChoice(conv, choice){
   S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
+  if(eff.rom){ handleRomanceEffect(eff.rom, conv); }
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   const newZone = zoneOf(S.align);
