@@ -2945,6 +2945,8 @@ function screenEnd(){
   else if(S.align >= 40){ endingFr = `${S.heroName} est devenu(e) une legende protectrice apres ${S.missionsPlan.length} annees de service. ${topRel.fr} le/la considere comme un allie indefectible.${teamLineFr}`; endingEn = `${S.heroName} became a protective legend after ${S.missionsPlan.length} years of service. ${topRel.en} considers them an unshakeable ally.${teamLineEn}`; }
   else if(S.align <= -40){ endingFr = `${S.heroName} a sombre du cote des fleaux au fil de ${S.missionsPlan.length} annees, semant la crainte partout ou il/elle passe. ${topRel.fr} salue cette ascension.${teamLineFr}`; endingEn = `${S.heroName} fell to the side of menace over ${S.missionsPlan.length} years, sowing fear wherever they go. ${topRel.en} welcomes this rise.${teamLineEn}`; }
   else { endingFr = `Apres ${S.missionsPlan.length} annees, ${S.heroName} trace sa propre voie, entre ombre et lumiere. ${topRel.fr} reste la relation la plus marquante.${teamLineFr}`; endingEn = `After ${S.missionsPlan.length} years, ${S.heroName} walks their own path, between shadow and light. ${topRel.en} remains the most defining relationship.${teamLineEn}`; }
+  const romLine = romanceLabel();
+  if(romLine){ endingFr += ' ' + romLine.fr; endingEn += ' ' + romLine.en; }
   const alignLabel = S.align>=15 ? t('alignHero') : (S.align<=-15 ? t('alignVillain') : t('alignNeutral'));
   const finalZone = zoneOf(S.align);
   const locLabel = finalZone==='villain' ? t('locationsDestroyed') : t('locationsSaved');
