@@ -2296,6 +2296,26 @@ function computePowerLevel(){
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
   return clamp(base+statBonus+growth,1,100);
 }
+/* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
+const CHAR_TIER = {
+  /* Sommet absolu */
+  theg:10, siddartha:10, malachar:10,
+  /* Poids lourds cosmiques */
+  nihil:9, sepulcre:9, vaelor:9, ferrum:9, nyx:9, solen:9, kaerus:8,
+  /* Elite */
+  volt:8, obsidian:8, boomnpc:8, aegis:7, requiem:7, precheur:7,
+  /* Solides */
+  kidspider:6, vipera:6, mandate:6, fuchsia:6, umbra:6, courtier:5, zeroday:5, aurelia:5,
+  /* Specialistes humains */
+  marsh:4, lorelei:4, sable:3
+};
+function charTier(key){
+  if(!key) return 5;
+  if(CHAR_TIER[key]!==undefined) return CHAR_TIER[key];
+  const c = CHARACTERS[key];
+  if(!c) return 5;
+  return 4; /* recrues et personnages jouables : encore en construction */
+}
 /* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
 function playerStrength(){
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
@@ -2312,7 +2332,7 @@ function foeStrength(foeKey, mission){
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
   const danger = (mission && mission.danger) || 1;
   const scope = (mission && mission.scope) || 1;
-  return Math.round(34 + danger*8 + scope*1.6 + (tier-24)*1.6);
+  return Math.round(30 + danger*7 + scope*1.6 + (tier-24)*1.4 + (charTier(foeKey)-5)*6);
 }
 function winOdds(foeKey, mission){
   const diff = playerStrength() - foeStrength(foeKey, mission);
@@ -2375,7 +2395,24 @@ function careerScore(){
   return { total, parts, grade, gradeLabel: fr?gradeLabelFr:gradeLabelEn, winRate, fights, locWeight };
 }
 function reputationCap(){ return clamp((S.reputationFloor||0) + S.totalMissionsDone * 6, 0, 100); }
-function clampToReputation(v){ const cap = reputationCap(); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
+/* Plafond de conviction : une carriere faite de contradictions et de defaites ne finit jamais a 100%. */
+function convictionCap(){
+  const fights = S.combat.won + S.combat.lost;
+  const lossPen = fights ? Math.round((S.combat.lost/fights) * 16) : 4;
+  const contra = Math.min(30, (S.alignContradictions||0) * 5);
+  const wobble = S.convictionSeed===undefined ? (S.convictionSeed = 3 + Math.floor(Math.random()*9)) : S.convictionSeed;
+  return clamp(100 - contra - lossPen - wobble, 42, 96);
+}
+/* Les gains d'alignement s'essoufflent quand on est deja tres marque. */
+function softenAlign(delta){
+  if(!delta) return 0;
+  const a = Math.abs(S.align);
+  const sameDir = (delta>0 && S.align>=0) || (delta<0 && S.align<=0);
+  if(!sameDir){ S.alignContradictions = (S.alignContradictions||0) + (Math.abs(delta)>=4 ? 1 : 0); return delta; }
+  const f = a>=85 ? 0.25 : a>=70 ? 0.45 : a>=55 ? 0.7 : 1;
+  return Math.round(delta*f*10)/10;
+}
+function clampToReputation(v){ const cap = Math.min(reputationCap(), convictionCap()); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
 function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
 function computeStars(){ const score = heroVillainScore(); return Math.max(1, Math.min(7, Math.round(score/100*7))); }
 
@@ -3432,17 +3469,29 @@ function startRecruitArc(){
   S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:(S.lang==='fr'?c.fr:c.en), arc:true });
   S.screen='mentor'; render(); maybeTriggerConversation(); return true;
 }
+/* Les propositions de clan ne tombent pas a chaque palier : elles dependent du palmares,
+   de la popularite, de la nettete de la trajectoire, et restent rares (2-3 par carriere). */
 function checkTeamInvite(){
   const zone = zoneOf(S.align);
-  if(zone==='neutral' || S.totalMissionsDone < 2) return false;
+  if(zone==='neutral' || S.totalMissionsDone < 5) return false;
   const tier = computeStars();
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
-  if(tier > S[key]){
-    S[key] = tier;
-    S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
-    return true;
-  }
-  return false;
+  if(tier <= S[key]) return false;
+  if(Math.abs(S.align) < 38) return false;
+  if(S.inviteCount===undefined) S.inviteCount = 0;
+  const cap = Math.min(3, 1 + Math.floor((S.years||10)/16));
+  if(S.inviteCount >= cap) return false;
+  const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
+  const gap = S.team ? 6 : 3;
+  if(S.currentYear - last < gap) return false;
+  const fights = S.combat.won + S.combat.lost;
+  const winRate = fights ? S.combat.won/fights : 0.35;
+  let p = 0.14 + winRate*0.34 + (S.stats.popularity-50)/320 + (S.locations.length>=3 ? 0.07 : 0);
+  if(S.team) p -= 0.12;
+  if(Math.random() > clamp(p, 0.05, 0.55)) return false;
+  S[key] = tier; S.inviteCount += 1; S.lastInviteYear = S.currentYear;
+  S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
+  return true;
 }
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
@@ -4150,6 +4199,7 @@ function applyChoice(choice){
   if(eff.flip){ alignDelta = (S.align >= 0 ? -1 : 1) * eff.magnitude; }
   else if(eff.reinforce){ alignDelta = (S.align >= 0 ? 1 : -1) * eff.magnitude; }
   else if(eff.balance){ alignDelta = S.align > 0 ? -Math.min(eff.magnitude, S.align) : (S.align < 0 ? Math.min(eff.magnitude, -S.align) : 0); }
+  if(!isChaosEvent){ alignDelta = softenAlign(alignDelta); }
   const newAlign = clamp(S.align + alignDelta, -100, 100);
   if(isChaosEvent){
     S.align = newAlign;
@@ -4189,10 +4239,49 @@ function screenInvite(){
   d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
   return d;
 }
+/* Bilan d'annee : construit a partir de ce qui s'est reellement passe cette annee. */
+function yearRecap(y){
+  const fr = S.lang==='fr';
+  const h = S.yearsHistory[S.yearsHistory.length-1];
+  const e = (h && h.entries) || [];
+  let w=0,l=0,sv=0,fail=0;
+  e.forEach(x=>{ if(x.type==='combat'){ if(x.outcome==='win') w++; else l++; } else if(x.type==='rescue'){ if(x.outcome==='saved') sv++; else fail++; } });
+  const zone = zoneOf(S.align); const total = S.missionsPlan.length||10;
+  const phase = y<=Math.max(2,Math.round(total*0.2)) ? 'debut' : (y>=total-1 ? 'fin' : 'milieu');
+  const lines = [];
+  /* 1) Le terrain */
+  if(w+l===0 && sv+fail===0){
+    lines.push(fr?`Annee sans affrontement direct : des reunions, des dossiers, des silences.`:`A year without direct confrontation: meetings, files, silences.`);
+  } else if(l>w && l>0){
+    lines.push(fr?`Annee dure : ${l} defaite${l>1?'s':''} pour ${w} victoire${w>1?'s':''}. Ton corps et ta reputation ont encaisse.`:`A hard year: ${l} loss${l>1?'es':''} against ${w} win${w>1?'s':''}. Body and reputation both took the hit.`);
+  } else if(w>l){
+    lines.push(fr?`Annee solide : ${w} victoire${w>1?'s':''} contre ${l} defaite${l>1?'s':''}. On commence a te craindre dans les briefings.`:`A solid year: ${w} win${w>1?'s':''} against ${l} loss${l>1?'es':''}. Briefings start naming you.`);
+  } else {
+    lines.push(fr?`Annee en equilibre : ${w} victoire${w>1?'s':''}, ${l} defaite${l>1?'s':''}. Rien de decisif, tout reste ouvert.`:`A balanced year: ${w} win${w>1?'s':''}, ${l} loss${l>1?'es':''}. Nothing decided, everything still open.`);
+  }
+  if(sv+fail>0){
+    lines.push(sv>=fail
+      ? (fr?`${sv} zone${sv>1?'s':''} securisee${sv>1?'s':''} cette annee${fail?`, ${fail} perdue${fail>1?'s':''}`:''}.`:`${sv} zone${sv>1?'s':''} secured this year${fail?`, ${fail} lost`:''}.`)
+      : (fr?`${fail} operation${fail>1?'s':''} de sauvetage ratee${fail>1?'s':''} : les rapports internes ne t'epargnent pas.`:`${fail} failed rescue op${fail>1?'s':''}: internal reports are not kind.`));
+  }
+  /* 2) La trajectoire morale, sans certitude */
+  const a = Math.abs(S.align);
+  if(zone==='neutral') lines.push(fr?`Personne ne sait encore de quel cote tu tombes. Les deux camps attendent.`:`Nobody knows which side you fall on yet. Both camps are waiting.`);
+  else if(a>=75) lines.push(zone==='hero'?(fr?`Ton nom circule comme une garantie. C'est aussi une cible.`:`Your name circulates as a guarantee. It is also a target.`):(fr?`Ta signature suffit a vider une rue. Peu de gens osent encore negocier.`:`Your signature empties a street. Few still dare negotiate.`));
+  else if(a>=40) lines.push(zone==='hero'?(fr?`Ton camp te fait confiance, sans totalement te comprendre.`:`Your side trusts you, without fully understanding you.`):(fr?`Tes commanditaires te trouvent utile. Utile n'est pas sur.`:`Your backers find you useful. Useful is not safe.`));
+  else lines.push(fr?`Ta ligne reste floue, et ca se voit dans les rapports.`:`Your line stays blurry, and the reports show it.`);
+  /* 3) Perspective, selon le moment de la carriere */
+  if(phase==='debut') lines.push(fr?`Il te reste tout a construire : ${total-y} annee${total-y>1?'s':''} devant toi.`:`Everything is still to build: ${total-y} year${total-y>1?'s':''} ahead.`);
+  else if(phase==='fin') lines.push(fr?`La fin approche. Ce qui est ecrit maintenant restera dans le dossier.`:`The end is near. What is written now stays in the file.`);
+  else lines.push(fr?`Popularite ${S.stats.popularity} - on t'observe plus qu'avant.`:`Popularity ${S.stats.popularity} - you are watched more than before.`);
+  return lines;
+}
 function screenYearBreak(){
   const d = document.createElement('div'); const y = S.currentYear;
+  const rec = yearRecap(y);
   d.innerHTML = `<span class="eyebrow">${t('year')} ${y}</span><h2>${S.lang==='fr' ? `Fin de l'annee ${y}` : `End of year ${y}`}</h2>
-    <p class="lead">${S.lang==='fr' ? "Le bilan de cette annee facconne deja ta legende." : "This year's outcome is already shaping your legend."}</p>
+    <p class="lead">${rec[0]}</p>
+    ${rec.slice(1).map(x=>`<p class="lead" style="opacity:.82; font-size:.95em;">${x}</p>`).join('')}
     <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
   d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
     if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
