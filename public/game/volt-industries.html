@@ -5878,6 +5878,21 @@ function applyConvChoice(conv, choice){
 function removeConvOverlay(){ const el=document.getElementById('convOverlay'); if(el) el.remove(); }
 
 /* ---------- End screen ---------- */
+/* ---------- Prolongation de carriere : +5 ans, l'age continue d'avancer ---------- */
+function extendCareer(extra){
+  if(S.dead) return;
+  S.extensions = (S.extensions||0) + 1;
+  S.savedToHistory = false;
+  for(let i=0;i<extra;i++) S.missionsPlan.push(3);
+  S.years = S.missionsPlan.length;
+  S.mode = S.years <= 12 ? 'short' : 'long';
+  S.mentorCap = (S.mentorCap||1) + 1;
+  if(S.battlePlan) S.battlePlan.target += battleTargetForYears(extra);
+  S.currentYear += 1; S.currentMissionInYear = 0;
+  showImpact([{ label:(S.lang==='fr'?'Annees de service':'Years of service'), delta:extra }, { label:(S.lang==='fr'?'Age':'Age'), delta:extra }],
+    S.lang==='fr' ? `Carriere prolongee - ${agingLabel()}` : `Career extended - ${agingLabel()}`);
+  nextMission();
+}
 function screenEnd(){
   saveCareerToHistory();
   clearGameState();
@@ -5987,6 +6002,11 @@ function screenEnd(){
         <button class="btn ghost" id="dlJpg">${isFr?'Telecharger en JPG':'Download JPG'}</button>
       </div>
     </div>
+    ${S.dead ? '' : `<div class="dl-box" style="margin-top:14px;">
+      <div class="dl-title">${isFr?'Prolonger la carriere':'Extend the career'}</div>
+      <p class="dl-sub">${isFr?`Ajoute 5 annees de service, autant de fois que tu veux. Ton personnage vieillit : ${agingLabel()}.`:`Add 5 years of service, as many times as you want. Your character ages: ${agingLabel()}.`}</p>
+      <div class="dl-actions"><button class="btn cyan" id="extend5">${isFr?'+5 ans':'+5 years'}</button></div>
+    </div>`}
     <div class="actions"><button class="btn cyan" id="restart">${t('restart')}</button></div>`;
   const recapData = { cs, kpis:[
       { v:(S.dead ? S.deathInfo.year : S.missionsPlan.length), l:t('yearsServed') },
@@ -5999,6 +6019,7 @@ function screenEnd(){
       { v:S.skills.length, l:isFr?'Techniques rares':'Rare techniques' },
       { v:S.turningPoints.length, l:isFr?'Basculements':'Side switches' },
     ], verdicts, alignLabel, faction:(S.team?factionName(S.team.side,S.team.tier):null), gradeCol };
+  const extBtn = d.querySelector('#extend5'); if(extBtn) extBtn.onclick=()=>extendCareer(5);
   d.querySelector('#dlPng').onclick=()=>downloadRecapCard('png', recapData);
   d.querySelector('#dlJpg').onclick=()=>downloadRecapCard('jpg', recapData);
   d.querySelector('#restart').onclick=()=>{ const lang = S.lang; S = freshState(lang); const badge=document.getElementById('rankBadgeFixed'); if(badge) badge.remove(); removeConvOverlay(); render(); };
