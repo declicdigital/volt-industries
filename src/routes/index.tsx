@@ -1,24 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "VOLT INDUSTRIES — Jeu de gestion industrielle" },
+      {
+        name: "description",
+        content:
+          "Jouez à VOLT INDUSTRIES : développez votre empire industriel, gérez la production, l'énergie et vos équipes dans ce jeu de stratégie.",
+      },
+      { property: "og:title", content: "VOLT INDUSTRIES — Jeu de gestion industrielle" },
+      {
+        property: "og:description",
+        content:
+          "Développez votre empire industriel : production, énergie et stratégie dans VOLT INDUSTRIES.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+    <main className="h-screen w-screen overflow-hidden bg-background">
+      <h1 className="sr-only">VOLT INDUSTRIES</h1>
+      <iframe
+        src="/game/volt-industries.html"
+        title="VOLT INDUSTRIES"
+        className="h-full w-full border-0"
       />
-    </div>
+    </main>
   );
 }
