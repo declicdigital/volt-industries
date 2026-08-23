@@ -2019,7 +2019,8 @@ function maybeTriggerConversation(){
 }
 function convBeamColor(align){ return align==='villain' ? '#ff2d55' : (align==='hero' ? '#00e5ff' : '#c084fc'); }
 function characterPortraitHTML(charObj, animate){
-  const col = charColor(charObj.align);
+  const col = convBeamColor(charObj.align);
+
   const entranceClass = animate ? (charObj.align==='villain' ? 'glitch-in' : 'materialize-in') : '';
   const name = S.lang==='fr'?charObj.fr:charObj.en;
   const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
