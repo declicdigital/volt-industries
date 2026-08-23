@@ -382,6 +382,58 @@
   .impact-toast .it-row.up{ color:var(--green); } .impact-toast .it-row.down{ color:#ff5c7a; }
   .impact-toast .it-row.neutral{ color:var(--accent); font-weight:700; }
   @keyframes impactIn{ from{ opacity:0; transform:translate(-50%,-12px); } to{ opacity:1; transform:translate(-50%,0); } }
+
+  /* ================= JARVIS : compagnon IA persistant ================= */
+  #jarvis{ position:fixed; left:16px; bottom:16px; z-index:90; width:308px; max-width:calc(100vw - 32px);
+    background:linear-gradient(160deg, rgba(6,12,24,.93), rgba(4,8,16,.9)); border:1.5px solid var(--line);
+    border-radius:18px; padding:11px 13px 12px; backdrop-filter:blur(14px); overflow:hidden;
+    box-shadow:0 18px 46px -20px rgba(0,0,0,.85), 0 0 26px -12px var(--accent); animation:jvIn .5s ease; }
+  @keyframes jvIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  #jarvis::before{ content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px); }
+  #jarvis::after{ content:''; position:absolute; left:0; right:0; height:34%; top:-40%; pointer-events:none;
+    background:linear-gradient(180deg, transparent, var(--accent-soft), transparent); animation:jvScan 4.6s linear infinite; opacity:.75; }
+  @keyframes jvScan{ 0%{ top:-40%; } 100%{ top:110%; } }
+  #jarvis.jv-off{ display:none; }
+  #jarvis .jv-head{ display:flex; align-items:center; gap:9px; position:relative; }
+  #jarvis .jv-core{ position:relative; width:26px; height:26px; flex-shrink:0; border-radius:50%;
+    border:1.5px solid var(--accent); box-shadow:0 0 12px var(--accent), inset 0 0 10px var(--accent-soft); }
+  #jarvis .jv-core i{ position:absolute; inset:5px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 14px var(--accent); animation:jvPulse 1.9s ease-in-out infinite; }
+  #jarvis.jv-talk .jv-core i{ animation-duration:.55s; }
+  @keyframes jvPulse{ 0%,100%{ transform:scale(.62); opacity:.75; } 50%{ transform:scale(1); opacity:1; } }
+  #jarvis .jv-core b{ position:absolute; inset:-5px; border-radius:50%; border:1px solid var(--accent);
+    opacity:.5; animation:jvRing 2.6s ease-out infinite; }
+  @keyframes jvRing{ 0%{ transform:scale(.7); opacity:.6; } 100%{ transform:scale(1.5); opacity:0; } }
+  #jarvis .jv-id{ flex:1; min-width:0; }
+  #jarvis .jv-name{ font-size:11.5px; font-weight:900; letter-spacing:3px; color:var(--ink); }
+  #jarvis .jv-sub{ font-size:8.5px; font-weight:800; letter-spacing:2px; color:var(--accent); opacity:.85; text-transform:uppercase; }
+  #jarvis .jv-eq{ display:flex; align-items:flex-end; gap:2px; height:20px; }
+  #jarvis .jv-eq span{ width:2.5px; background:linear-gradient(180deg, var(--accent), var(--accent-dark));
+    border-radius:2px; height:25%; animation:jvEq 1.1s ease-in-out infinite; box-shadow:0 0 6px var(--accent); }
+  #jarvis.jv-talk .jv-eq span{ animation-duration:.42s; }
+  @keyframes jvEq{ 0%,100%{ height:18%; } 50%{ height:95%; } }
+  #jarvis .jv-wave{ margin-top:9px; height:2px; border-radius:2px; position:relative; overflow:hidden;
+    background:rgba(255,255,255,.07); }
+  #jarvis .jv-wave i{ position:absolute; top:0; bottom:0; width:38%; border-radius:2px;
+    background:linear-gradient(90deg, transparent, var(--accent), transparent); animation:jvSweep 2.4s linear infinite; }
+  #jarvis.jv-talk .jv-wave i{ animation-duration:.9s; }
+  @keyframes jvSweep{ 0%{ left:-40%; } 100%{ left:100%; } }
+  #jarvis .jv-body{ margin-top:9px; font-size:12.5px; line-height:1.5; color:var(--ink); min-height:34px; position:relative; }
+  #jarvis .jv-body .cur{ display:inline-block; width:6px; background:var(--accent); animation:jvCur .7s steps(1) infinite; }
+  @keyframes jvCur{ 0%,49%{ opacity:1; } 50%,100%{ opacity:0; } }
+  #jarvis .jv-body.glitch{ animation:jvGlitch .32s steps(2) 1; }
+  @keyframes jvGlitch{ 0%{ transform:translateX(0); filter:none; } 33%{ transform:translateX(-2px); filter:hue-rotate(40deg); }
+    66%{ transform:translateX(2px); } 100%{ transform:translateX(0); } }
+  #jarvis .jv-meta{ margin-top:7px; display:flex; justify-content:space-between; align-items:center;
+    font-size:8.5px; font-weight:800; letter-spacing:1.6px; color:var(--dim); text-transform:uppercase; }
+  #jarvis .jv-mute{ background:none; border:1px solid var(--line); color:var(--dim); border-radius:999px;
+    font-size:8.5px; font-weight:800; letter-spacing:1.4px; padding:3px 9px; cursor:pointer; }
+  #jarvis .jv-mute:hover{ border-color:var(--accent); color:var(--accent); }
+  @media (max-width:920px){
+    #jarvis{ left:10px; right:10px; bottom:10px; width:auto; padding:9px 11px 10px; border-radius:15px; }
+    #jarvis .jv-body{ font-size:12px; min-height:30px; }
+  }
 </style>
 </head>
 <body>
@@ -2383,6 +2435,8 @@ function render(){
   const foot = document.createElement('footer'); foot.className='mini';
   foot.textContent = S.lang==='fr' ? "VOLT INDUSTRIES - univers de fiction original" : "VOLT INDUSTRIES - original fictional universe";
   app.appendChild(foot);
+  jarvisHUD();
+  jarvisAuto();
   scheduleSaveGame();
 }
 let _saveTimer = null;
@@ -5916,6 +5970,119 @@ function initParticles(){
   }
   document.body.insertBefore(layer, document.body.firstChild);
 }
+
+/* ================= JARVIS : compagnon IA (voix radio) ================= */
+const JV = { on:true, typing:null, lastKey:null, lastAt:0, idleTimer:null, muted:false };
+function jvL(fr,en){ return S.lang==='fr' ? fr : en; }
+function jarvisHUD(){
+  let el = document.getElementById('jarvis');
+  if(!shouldShowSidebar()){ if(el) el.remove(); return null; }
+  if(!el){
+    el = document.createElement('div'); el.id='jarvis';
+    el.innerHTML = `<div class="jv-head">
+        <div class="jv-core"><i></i><b></b></div>
+        <div class="jv-id"><div class="jv-name">JARVIS</div><div class="jv-sub" id="jvSub">canal securise</div></div>
+        <div class="jv-eq">${Array.from({length:9}).map((_,i)=>`<span style="animation-delay:${(i*0.11).toFixed(2)}s"></span>`).join('')}</div>
+      </div>
+      <div class="jv-wave"><i></i></div>
+      <div class="jv-body" id="jvBody"></div>
+      <div class="jv-meta"><span id="jvTag">// uplink 99.7 fm</span><button class="jv-mute" id="jvMute"></button></div>`;
+    document.body.appendChild(el);
+    el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
+  }
+  el.querySelector('#jvSub').textContent = jvL('canal securise','secure channel');
+  jvSyncMute();
+  return el;
+}
+function jvSyncMute(){
+  const b = document.getElementById('jvMute'); if(!b) return;
+  b.textContent = JV.muted ? jvL('reprendre','resume') : jvL('silence','mute');
+  const body = document.getElementById('jvBody');
+  if(JV.muted && body){ body.textContent = jvL('- canal en veille -','- channel standby -'); }
+}
+function jarvisSay(fr, en, tag){
+  const el = jarvisHUD(); if(!el || JV.muted) return;
+  const body = el.querySelector('#jvBody');
+  const tagEl = el.querySelector('#jvTag');
+  if(tagEl) tagEl.textContent = '// ' + (tag || jvL('analyse en cours','analysis running'));
+  const txt = jvL(fr,en);
+  clearInterval(JV.typing);
+  el.classList.add('jv-talk'); body.classList.remove('glitch'); void body.offsetWidth; body.classList.add('glitch');
+  let i = 0; body.innerHTML = '<span class="cur">&nbsp;</span>';
+  JV.typing = setInterval(()=>{
+    i++;
+    body.innerHTML = txt.slice(0,i).replace(/</g,'&lt;') + '<span class="cur">&nbsp;</span>';
+    if(i >= txt.length){
+      clearInterval(JV.typing);
+      body.innerHTML = txt.replace(/</g,'&lt;');
+      el.classList.remove('jv-talk');
+    }
+  }, 16);
+  jvScheduleIdle();
+}
+function jvScheduleIdle(){
+  clearTimeout(JV.idleTimer);
+  JV.idleTimer = setTimeout(()=>{ jvIdle(); }, 26000 + Math.random()*14000);
+}
+const JV_IDLE = [
+  { fr:"Scan passif du secteur... rien d'anormal pour l'instant.", en:"Passive sector scan... nothing abnormal for now." },
+  { fr:"Je surveille les canaux d'urgence en arriere-plan.", en:"I'm monitoring emergency channels in the background." },
+  { fr:"Tes constantes sont stables. Je garde un oeil dessus.", en:"Your vitals are stable. I'm keeping an eye on them." },
+  { fr:"J'archive chaque decision. Ta legende a besoin de sources.", en:"I'm archiving every decision. A legend needs sources." },
+  { fr:"Trois rumeurs te concernant circulent. Aucune verifiee.", en:"Three rumors about you are circulating. None verified." },
+  { fr:"Interference sur la bande basse... je filtre. Continue.", en:"Interference on the low band... filtering. Carry on." },
+];
+function jvIdle(){
+  if(JV.muted || !document.getElementById('jarvis')) return;
+  const l = pick(JV_IDLE);
+  jarvisSay(l.fr, l.en, jvL('veille active','idle watch'));
+}
+/* Commentaire contextuel : une ligne par contexte, sans spam. */
+function jarvisAuto(force){
+  const el = jarvisHUD(); if(!el) return;
+  const zone = zoneOf(S.align);
+  const key = S.screen + ':' + S.currentYear + ':' + S.currentMissionInYear + ':' + (S.pendingBattleWin===null?'-':S.pendingBattleWin);
+  if(!force && key === JV.lastKey) return;
+  JV.lastKey = key;
+  const name = S.heroName || 'operateur';
+  const fights = S.combat ? (S.combat.won + S.combat.lost) : 0;
+  const wr = fights ? Math.round(S.combat.won/fights*100) : null;
+  let fr, en, tag;
+  if(S.screen==='mission'){
+    const m = S.currentMission || {};
+    if(m.pivotal){ fr = "Ce dossier va peser sur ton alignement. Je note tout, "+name+"."; en = "This file will weigh on your alignment. I'm logging everything, "+name+"."; tag = jvL('dossier sensible','sensitive file'); }
+    else if(m.type==='combat'){ fr = "Signal hostile confirme. Je te transmets les angles morts."; en = "Hostile signal confirmed. Sending you the blind spots."; tag = jvL('contact hostile','hostile contact'); }
+    else if(m.arc){ fr = "Ta recrue attend une direction. Ce que tu dis restera."; en = "Your recruit is waiting for direction. What you say will stick."; tag = jvL('canal interne','internal channel'); }
+    else { fr = "Briefing recu. Annee "+S.currentYear+", intervention "+S.currentMissionInYear+"."; en = "Briefing received. Year "+S.currentYear+", op "+S.currentMissionInYear+"."; tag = jvL('briefing','briefing'); }
+  } else if(S.screen==='yearbreak'){
+    fr = "Bilan annuel compile"+(wr!==null?" - "+wr+"% de combats remportes":"")+". Je te laisse respirer.";
+    en = "Yearly report compiled"+(wr!==null?" - "+wr+"% of fights won":"")+". Take a breath.";
+    tag = jvL('rapport annuel','annual report');
+  } else if(S.screen==='training'){
+    fr = "Protocole d'entrainement ouvert. Choisis ce qui te manque, pas ce qui brille.";
+    en = "Training protocol open. Pick what you lack, not what shines."; tag = jvL('protocole','protocol');
+  } else if(S.screen==='invite'){
+    fr = "Offre d'organisation interceptee. Rien ne t'oblige a signer, "+name+".";
+    en = "Organization offer intercepted. Nothing forces you to sign, "+name+"."; tag = jvL('offre externe','external offer');
+  } else if(S.screen==='mentor'){
+    fr = "Transmission privee. Ce genre de conversation change des trajectoires.";
+    en = "Private transmission. This kind of talk changes trajectories."; tag = jvL('canal prive','private channel');
+  } else if(S.screen==='summary'){
+    fr = "Dossier "+name+" initialise. Je serai sur ce canal jusqu'a la fin.";
+    en = "File "+name+" initialized. I'll be on this channel until the end."; tag = jvL('mise en service','boot sequence');
+  } else if(S.screen==='end'){
+    fr = "Fin de carriere archivee. Ce fut un honneur de tenir le canal.";
+    en = "Career archived. It was an honor to hold the channel."; tag = jvL('archivage','archiving');
+  } else {
+    fr = "Canal ouvert. Je reste avec toi, "+name+"."; en = "Channel open. I'm with you, "+name+"."; tag = jvL('liaison','uplink');
+  }
+  if(zone==='villain' && Math.random()<0.3){
+    fr += " ... mes garde-fous ethiques sont desactives, comme demande.";
+    en += " ... my ethical safeguards are off, as requested.";
+  }
+  jarvisSay(fr, en, tag);
+}
+
 initParticles();
 render();
 </script>
