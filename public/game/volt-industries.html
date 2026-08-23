@@ -2338,21 +2338,44 @@ function screenStartSide(){
   };
   return d;
 }
+function estimateCareerMissions(years, mode){
+  if(mode==='short') return 30;
+  return Math.round(years * 6.5);
+}
+function formatDuration(totalSec){
+  const min = Math.max(1, Math.round(totalSec/60));
+  if(min < 60) return '~' + min + ' min';
+  const h = Math.floor(min/60); const m = min % 60;
+  if(m === 0) return '~' + h + ' h';
+  return '~' + h + ' h ' + m + ' min';
+}
+function estimateCareerTime(years, mode){
+  return formatDuration(estimateCareerMissions(years, mode) * 45);
+}
 function screenMode(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2><p class="lead">${t('modeLead')}</p>
     <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
     <div id="yearsBox" style="margin-top:20px; display:none;">
       <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
-      <input type="range" min="10" max="80" value="${S.years}" id="yearsRange"></div>
-    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
+      <input type="range" min="10" max="80" value="${S.years}" id="yearsRange">
+      <div id="estBox" style="margin-top:14px;"></div>
+    </div>
+    <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
+  function estHtml(mode){
+    const years = mode==='short' ? 10 : S.years;
+    const total = estimateCareerMissions(years, mode);
+    const dur = formatDuration(total * 45);
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} ${S.lang==='fr'?'missions':'missions'})</span></div>`;
+  }
   function refresh(){
-    d.querySelector('#modeOpt').innerHTML = `<div class="opt ${S.mode==='short'?'selected':''}" data-m="short"><div class="oname">${t('modeShort')}</div><div class="odesc">${t('modeShortDesc')}</div></div>
-      <div class="opt ${S.mode==='long'?'selected':''}" data-m="long"><div class="oname">${t('modeLong')}</div><div class="odesc">${t('modeLongDesc')}</div></div>`;
+    d.querySelector('#modeOpt').innerHTML = `<div class="opt ${S.mode==='short'?'selected':''}" data-m="short"><div class="oname">${t('modeShort')}</div><div class="odesc">${t('modeShortDesc')}</div>${estHtml('short')}</div>
+      <div class="opt ${S.mode==='long'?'selected':''}" data-m="long"><div class="oname">${t('modeLong')}</div><div class="odesc">${t('modeLongDesc')}</div>${estHtml('long')}</div>`;
     d.querySelectorAll('#modeOpt .opt').forEach(el=>{ el.onclick=()=>{ S.mode = el.dataset.m; d.querySelector('#yearsBox').style.display = S.mode==='long' ? 'block' : 'none'; refresh(); d.querySelector('#next').disabled=false; }; });
+    const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long');
   }
   refresh();
-  d.querySelector('#yearsRange').oninput=(e)=>{ S.years = parseInt(e.target.value); d.querySelector('#yearsVal').textContent = S.years; };
+  d.querySelector('#yearsRange').oninput=(e)=>{ S.years = parseInt(e.target.value); d.querySelector('#yearsVal').textContent = S.years; const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long'); };
   d.querySelector('#back').onclick=()=>{ S.screen = 'startside'; render(); };
   d.querySelector('#next').onclick=()=>{ if(!S.mode) return; buildCareerPlan(); S.screen='summary'; render(); };
   return d;
