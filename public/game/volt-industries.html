@@ -362,6 +362,23 @@
   @keyframes squadIn{ from{ opacity:0; transform:translateY(8px) scale(.8);} to{ opacity:1; transform:none;} }
   @media (max-width:560px){ .btl-squad .sq{ width:26px; height:26px; border-radius:7px; } .btl-squad{ gap:3px; } }
 
+
+  /* --- Interventions d'escouade : un allie/ennemi entre dans l'echange --- */
+  .btl-squad .sq{ transition:transform .18s ease, box-shadow .18s ease; }
+  .btl-squad .sq.assist{ animation: sqAssist .75s cubic-bezier(.2,.9,.3,1) 1; z-index:3; }
+  @keyframes sqAssist{ 0%{ transform:none; } 25%{ transform:translateY(-12px) scale(1.42); box-shadow:0 0 26px var(--cp-color); }
+    60%{ transform:translateY(-4px) scale(1.18); } 100%{ transform:none; } }
+  .btl-frame.assisted::after{ content:''; position:absolute; inset:-4px; border-radius:inherit; pointer-events:none;
+    border:2px solid var(--cp-color); box-shadow:0 0 30px var(--cp-color); animation: assistRing .7s ease-out 1; }
+  @keyframes assistRing{ from{ opacity:1; transform:scale(.94); } to{ opacity:0; transform:scale(1.08); } }
+  .btl-tracer{ position:fixed; height:3px; border-radius:3px; z-index:10000; pointer-events:none; transform-origin:0 50%;
+    background:linear-gradient(90deg, transparent, var(--cp-color), #fff, var(--cp-color), transparent);
+    box-shadow:0 0 16px var(--cp-color); animation: tracerGo .48s ease-out forwards; }
+  @keyframes tracerGo{ 0%{ opacity:0; clip-path:inset(0 100% 0 0);} 25%{ opacity:1; } 70%{ clip-path:inset(0 0 0 0);} 100%{ opacity:0; clip-path:inset(0 0 0 92%);} }
+  .btl-assist-name{ position:fixed; z-index:10001; pointer-events:none; font-size:12px; font-weight:900; letter-spacing:1.4px;
+    text-transform:uppercase; color:var(--cp-color); text-shadow:0 0 12px var(--cp-color); animation: assistName 1s ease-out forwards; }
+  @keyframes assistName{ 0%{ opacity:0; transform:translateY(6px); } 20%{ opacity:1; transform:translateY(0); } 100%{ opacity:0; transform:translateY(-14px); } }
+
   /* --- Conversation de groupe : bandeau des participants --- */
   .conv-cast{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
   .conv-cast .cc{ width:38px; height:38px; border-radius:10px; overflow:hidden; position:relative; flex:0 0 auto;
@@ -2877,7 +2894,10 @@ const FF_ARCH = {
 };
 const FF_MASK = { aucun:{fr:'Visage decouvert',en:'No mask',p:'face fully uncovered and clearly visible'},
   demi:{fr:'Demi-masque',en:'Half mask',p:'half mask covering only the lower jaw, eyes and upper face fully visible'},
-  domino:{fr:'Loup / domino',en:'Domino mask',p:'thin domino eye mask, the rest of the face fully visible'} };
+  domino:{fr:'Loup / domino',en:'Domino mask',p:'thin domino eye mask, the rest of the face fully visible'},
+  integral:{fr:'Masque integral',en:'Full mask',p:'full-face fabric-and-armor mask covering the entire face, only stylized glowing lenses where the eyes are, no skin visible on the face', hides:true},
+  casque:{fr:'Casque complet',en:'Full helmet',p:'full rigid armored helmet covering the entire head and face, sculpted faceplate, glowing eye slits, no skin visible on the head', hides:true},
+  visiere:{fr:'Casque a visiere',en:'Visor helmet',p:'full helmet with a mirrored wraparound visor covering the whole face, sleek aerodynamic shell, no skin visible on the face', hides:true} };
 const FF_AURA = { neon:{fr:'Aura neon',en:'Neon aura',p:'crackling neon energy arcs around the body'},
   fumee:{fr:'Fumee',en:'Smoke',p:'swirling smoke and embers around the body'},
   aucune:{fr:'Aucune',en:'None',p:'no supernatural effects, grounded realism'} };
@@ -2897,7 +2917,9 @@ function ffPrompt(){
     'Ultra photorealistic cinematic movie still, shot on 85mm lens, shallow depth of field, dramatic volumetric rim lighting, high dynamic range, film grain, 8k detail.',
     'Full upper-body portrait (head to waist) of ' + side + ', ' + sx.p + ', standing in a dark futuristic laboratory hangar.',
     'The character is ' + sx.pr + '; the body, build and costume fit must read clearly as ' + sx.pr + '.',
-    'CRITICAL: keep the EXACT face, facial features, skin tone, age, hair and identity of the person in the reference photo. Do not beautify, do not change ethnicity or gender, do not replace the face. It must be immediately recognizable as the same real human being.',
+    (FF_MASK[FF.mask].hides
+      ? 'The head is FULLY covered: no face, no hair and no skin are visible on the head. Keep the exact body type, build, height, skin tone and posture of the person in the reference photo, but the face must be completely hidden by the headgear.'
+      : 'CRITICAL: keep the EXACT face, facial features, skin tone, age, hair and identity of the person in the reference photo. Do not beautify, do not change ethnicity or gender, do not replace the face. It must be immediately recognizable as the same real human being.'),
     'Costume: ' + a.promptFr + '. Primary suit color ' + FF.color + ' with dark charcoal and metallic accents.',
     FF.cape ? 'Wearing a long dramatic cape catching the wind.' : 'No cape.',
     FF_MASK[FF.mask].p + '.',
@@ -2974,7 +2996,7 @@ function applyCustomCharacter(cfg){
     morphology:a.morphology, path:a.path, powers:a.powers,
     align: cfg.side==='villain' ? -30 : 30,
     stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
-    look:{ suitColor:cfg.color, secondaryColor:'#0f1420', aura:cfg.aura==='aucune'?'none':'electric', cape: !!cfg.cape, helmet:'none', glasses: cfg.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
+    look:{ suitColor:cfg.color, secondaryColor:'#0f1420', aura:cfg.aura==='aucune'?'none':'electric', cape: !!cfg.cape, helmet:(cfg.mask==='casque'||cfg.mask==='visiere')?'full':(cfg.mask==='integral'?'mask':'none'), glasses: (cfg.mask==='domino'||cfg.mask==='visiere')?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
     descFr:fr?a.fr:'', descEn:a.en
   });
   S.playerSex = cfg.sex;
@@ -3916,9 +3938,36 @@ function squadHTML(list){
     const col = convBeamColor(c.align);
     const nm = S.lang==='fr'?c.fr:c.en;
     const inner = c.img ? `<img src="${c.img}" alt="${nm}">` : `<span>${nm.charAt(0).toUpperCase()}</span>`;
-    return `<div class="sq" style="--cp-color:${col}; animation-delay:${0.5 + i*0.09}s;" title="${nm}">${inner}</div>`;
+    return `<div class="sq" data-k="${k}" style="--cp-color:${col}; animation-delay:${0.5 + i*0.09}s;" title="${nm}">${inner}</div>`;
   }).join('')}</div>`;
 }
+
+/* Tracer visuel : un allie (ou un ennemi) entre dans l'echange. */
+function battleTracer(fromEl, toEl, col){
+  if(!fromEl || !toEl) return;
+  const a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+  const x1 = a.left + a.width/2, y1 = a.top + a.height/2;
+  const x2 = b.left + b.width/2, y2 = b.top + b.height/2;
+  const len = Math.hypot(x2-x1, y2-y1), ang = Math.atan2(y2-y1, x2-x1) * 180/Math.PI;
+  const el = document.createElement('div'); el.className='btl-tracer';
+  el.style.setProperty('--cp-color', col);
+  el.style.left = x1+'px'; el.style.top = y1+'px'; el.style.width = len+'px';
+  el.style.transform = 'rotate('+ang+'deg)';
+  document.body.appendChild(el); setTimeout(()=>el.remove(), 520);
+}
+function battleAssistName(el, name, col){
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  const n = document.createElement('div'); n.className='btl-assist-name';
+  n.style.setProperty('--cp-color', col); n.textContent = name;
+  n.style.left = (r.left + r.width/2)+'px'; n.style.top = (r.top - 16)+'px';
+  n.style.transform = 'translateX(-50%)';
+  document.body.appendChild(n); setTimeout(()=>n.remove(), 1050);
+}
+const ASSIST_FR = ["{n} enchaine sur l'ouverture", "{n} surgit et frappe a decouvert", "{n} couvre ton angle mort et tire", "{n} plaque la cible au sol", "{n} balance tout ce qu'il lui reste"];
+const ASSIST_EN = ["{n} follows up on the opening", "{n} bursts in and lands a clean hit", "{n} covers your blind spot and fires", "{n} slams the target down", "{n} unloads everything left"];
+const FOEASSIST_FR = ["{n} te prend par derriere", "{n} entre dans la melee et te cueille", "{n} profite de ta garde basse", "{n} t'ecrase pendant que tu recules"];
+const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips you", "{n} punishes your low guard", "{n} crushes you as you back off"];
 function startBattle(mission, done){
   const foeKey = battleFoeKey(mission);
   const foe = CHARACTERS[foeKey];
@@ -3991,6 +4040,39 @@ function startBattle(mission, done){
     frame.appendChild(el); setTimeout(()=>el.remove(), 1000);
   }
   function hit(frame){ frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
+  function runAssist(side){
+    // side 'ally' : un de tes coequipiers frappe l'adversaire. side 'foe' : un de leurs renforts te touche.
+    const list = side==='ally' ? squads.allies : squads.foes;
+    if(!list || !list.length) return 0;
+    const k = pick(list);
+    const c = CHARACTERS[k]; if(!c) return 0;
+    const nm = S.lang==='fr'?c.fr:c.en;
+    const col = convBeamColor(c.align);
+    const chip = ov.querySelector((side==='ally'?'.btl-fighter.me':'.btl-fighter.foe')+' .sq[data-k="'+k+'"]');
+    const target = side==='ally' ? foeFrame : meFrame;
+    const tier = (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5;
+    const d = Math.max(3, Math.round((5 + tier*1.6) * (0.8 + Math.random()*0.5)));
+    if(chip){ chip.classList.remove('assist'); void chip.offsetWidth; chip.classList.add('assist'); }
+    battleAssistName(chip || target, nm, col);
+    setTimeout(()=>{
+      battleTracer(chip || (side==='ally'?meFrame:foeFrame), target, col);
+      setTimeout(()=>{
+        target.classList.remove('assisted'); void target.offsetWidth; target.classList.add('assisted');
+        hit(target); floatDmg(target, d, col);
+        if(side==='ally') st.foeHP = Math.max(0, st.foeHP - d); else st.myHP = Math.max(0, st.myHP - d);
+        refreshBars();
+        const tmpl = side==='ally' ? (S.lang==='fr'?pick(ASSIST_FR):pick(ASSIST_EN)) : (S.lang==='fr'?pick(FOEASSIST_FR):pick(FOEASSIST_EN));
+        setLog(tmpl.replace('{n}', nm) + ' : ' + d + (S.lang==='fr'?' degats.':' damage.'));
+      }, 240);
+    }, 120);
+    return d;
+  }
+  function assistChance(side){
+    const list = side==='ally' ? squads.allies : squads.foes;
+    if(!list || !list.length) return false;
+    const base = side==='ally' ? 0.34 : 0.3;
+    return Math.random() < Math.min(0.6, base + list.length*0.03);
+  }
   function setMovesEnabled(on){
     movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on);
   }
