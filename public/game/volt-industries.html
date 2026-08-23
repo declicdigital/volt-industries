@@ -779,7 +779,7 @@ function generateProceduralMission(rank){
   const locName = randLocationName();
   const pattern = pick(MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? pick(Object.keys(CHARACTERS)) : null;
+  const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -846,7 +846,7 @@ function generateVillainMission(rank){
   const locName = randLocationName();
   const pattern = pick(MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? pick(Object.keys(CHARACTERS)) : null;
+  const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -898,7 +898,7 @@ const SIGNATURE_ROLE_TEMPLATES = [
     en:(n,T,S_,L)=>`${n}'s past resurfaces in ${L}, tangled up with ${T}. Some truths are hard to hear.` },
 ];
 function generateSignatureMission(rank){
-  const charKey = pick(Object.keys(CHARACTERS));
+  const charKey = pick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pick(SIGNATURE_ROLE_TEMPLATES);
   const threat = pick(THREATS), stakes = pick(STAKES), locName = randLocationName();
@@ -1245,6 +1245,7 @@ function freshState(lang){
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
     activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null,
+    portrait:null, playerCharKey:null,
     lastStars:1, savedToHistory:false,
   };
 }
@@ -1501,9 +1502,14 @@ function avatarSVG(){
     <circle cx="${cx+cfg.shoulderW*0.72}" cy="${footY+10}" r="2.5" fill="${pathColor}" opacity="0.6"><animate attributeName="cy" values="${footY+10};${footY-14};${footY+10}" dur="3.6s" repeatCount="indefinite"/></circle>
   </svg>`;
 }
+function otherCharKeys(){ return Object.keys(CHARACTERS).filter(k=>k!==S.playerCharKey); }
+function avatarVisual(){
+  if(S.portrait) return `<div class="portrait-avatar"><img src="${S.portrait}" alt="${S.heroName||''}"></div>`;
+  return avatarSVG();
+}
 function avatarBoxInner(){
   return `<div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
-    <div class="hud-label">${S.heroName || '???'}</div><div id="avatarBox">${avatarSVG()}</div>`;
+    <div class="hud-label">${S.heroName || '???'}</div><div id="avatarBox">${avatarVisual()}</div>`;
 }
 function sideAvatarPanel(){
   return `<div class="avatar-wrap">${avatarBoxInner()}</div>
@@ -1605,6 +1611,7 @@ function applyPreset(p){
   S.reputationFloor = S.initialAlignMagnitude;
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
   S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
+  S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
 }
 function screenProfileChoice(){
   const d = document.createElement('div');
@@ -1615,7 +1622,7 @@ function screenProfileChoice(){
   const grid = d.querySelector('#presetGrid');
   grid.innerHTML = PRESETS.map(p=>{
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
-    const badge = p.side==='villain' ? (S.lang==='fr'?'MECHANT':'VILLAIN') : (S.lang==='fr'?'GENTIL':'HERO');
+    const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HERO':'HERO');
     const nm = S.lang==='fr'?p.nameFr:p.nameEn;
     return `<div class="preset-card ${p.side}" data-id="${p.id}" style="--pc-color:${col};">
       <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span></div>
@@ -1658,7 +1665,7 @@ function screenLook(){
       <div style="flex:1; min-width:160px;"><div style="font-weight:800;margin-bottom:8px; font-size:13px;">${t('symbol')}</div><input type="text" id="symbol" maxlength="3" placeholder="${t('symbolPh')}" value="${S.look.symbol}"></div>
     </div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next">${t('next')} -></button></div>`;
-  function refreshAvatar(){ renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarSVG(); }
+  function refreshAvatar(){ renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarVisual(); }
   function opts(containerId, options, onPick){
     const c = d.querySelector('#'+containerId);
     c.innerHTML = options.map(o=>`<div class="opt ${o.sel?'selected':''} ${o.disabled?'disabled':''}" data-key="${o.key}"><div class="oname">${o.label}</div>${o.desc?`<div class="odesc">${o.desc}</div>`:''}</div>`).join('');
@@ -1701,7 +1708,7 @@ function screenPath(){
     d.querySelector('#pathOpt').innerHTML = PATHS.map(p=>`<div class="opt ${S.path===p.id?'selected':''}" data-id="${p.id}">
       <div class="oname">${S.lang==='fr'?p.fr:p.en} <span class="badge ${p.color}">${p.color.toUpperCase()}</span></div>
       <div class="odesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`).join('');
-    d.querySelectorAll('#pathOpt .opt').forEach(el=>{ el.onclick=()=>{ if(S.path!==el.dataset.id){ S.path = el.dataset.id; S.powers=[]; } renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarSVG(); refresh(); d.querySelector('#next').disabled = !S.path; }; });
+    d.querySelectorAll('#pathOpt .opt').forEach(el=>{ el.onclick=()=>{ if(S.path!==el.dataset.id){ S.path = el.dataset.id; S.powers=[]; } renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarVisual(); refresh(); d.querySelector('#next').disabled = !S.path; }; });
   }
   refresh();
   d.querySelector('#back').onclick=()=>{ S.screen='look'; render(); };
@@ -1795,14 +1802,14 @@ function screenSummary(){
 function pickMission(){
   const rank = computeStars();
   if(Math.random() < 0.05){
-    let pPool = PIVOTAL_MISSIONS.filter((m,i)=>!S.usedPivotalIds.includes(i));
+    let pPool = PIVOTAL_MISSIONS.filter((m,i)=>!S.usedPivotalIds.includes(i) && (!m.charKey || m.charKey!==S.playerCharKey));
     if(pPool.length===0){ S.usedPivotalIds = []; pPool = PIVOTAL_MISSIONS; }
     const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
     const m = PIVOTAL_MISSIONS[idx];
     return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
   }
   if(Math.random() < 0.052){
-    let bPool = BREAKTHROUGH_MISSIONS.filter((m,i)=>!S.usedBreakthroughIds.includes(i));
+    let bPool = BREAKTHROUGH_MISSIONS.filter((m,i)=>!S.usedBreakthroughIds.includes(i) && (!m.charKey || m.charKey!==S.playerCharKey));
     if(bPool.length===0){ S.usedBreakthroughIds = []; bPool = BREAKTHROUGH_MISSIONS; }
     const idx = BREAKTHROUGH_MISSIONS.indexOf(pick(bPool)); S.usedBreakthroughIds.push(idx);
     const m = BREAKTHROUGH_MISSIONS[idx];
@@ -1812,6 +1819,7 @@ function pickMission(){
   if(Math.random() < 0.83){ return zoneOf(S.align)==='villain' ? generateVillainMission(rank) : generateProceduralMission(rank); }
   let reachable = MISSIONS.filter(m => (m.scope||1) <= rank);
   if(reachable.length===0) reachable = MISSIONS.filter(m=>(m.scope||1)===1);
+  reachable = reachable.filter(m=>!m.charKey || m.charKey!==S.playerCharKey);
   let pool = reachable.filter(m=>!S.usedIds.includes(m.id));
   if(pool.length===0){ pool = reachable; S.usedIds = S.usedIds.filter(id=>!reachable.some(m=>m.id===id)); }
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
@@ -2017,8 +2025,9 @@ function maybeTriggerConversation(){
   const gap = S.currentYear - S.lastConvYear;
   const forced = gap >= 2;
   if(forced || Math.random() < 0.5){
-    let pool = CONVERSATIONS.filter(c=>!S.usedConvIds.includes(c.id));
-    if(pool.length===0){ pool = CONVERSATIONS; S.usedConvIds=[]; }
+    let pool = CONVERSATIONS.filter(c=>c.charKey!==S.playerCharKey && !S.usedConvIds.includes(c.id));
+    if(pool.length===0){ pool = CONVERSATIONS.filter(c=>c.charKey!==S.playerCharKey); S.usedConvIds=[]; }
+    if(pool.length===0) return;
     const conv = pool[Math.floor(Math.random()*pool.length)];
     S.usedConvIds.push(conv.id); S.activeConversation = conv; S.convLineIndex = 0;
     S.lastConvYear = S.currentYear;
@@ -2130,7 +2139,7 @@ function screenEnd(){
     ${kpiHtml}${locBreak}${menteeDetail}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
     <h3>${t('relations')}</h3>
-    <div class="relwrap">${Object.keys(CHARACTERS).map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
+    <div class="relwrap">${otherCharKeys().map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
       const col = charColor(c.align);
       return `<div class="relcard"><div class="rn">${S.lang==='fr'?c.fr:c.en}</div><div class="barbg"><div class="barfill" style="width:${pct}%; background:${col};"></div></div></div>`; }).join('')}</div>
     <h3>${t('yearByYearTitle')}</h3><div style="margin-top:6px;">${yearsHtml}</div>
