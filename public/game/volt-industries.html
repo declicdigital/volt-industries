@@ -3283,6 +3283,13 @@ function handleRomanceEffect(rom, conv){
     const dir = c.align==='villain' ? -1 : 1;
     S.align = clampToReputation(clamp(S.align + dir*3, -100, 100));
   }
+  // impact durable de l'amour sur la carriere
+  if(r.active){
+    if((r.love||0) >= 8){ S.stats.courage = clamp(S.stats.courage + 1, 0, 100); }
+    else if((r.love||0) <= -4){ S.stats.popularity = clamp(S.stats.popularity - 2, 0, 100); }
+    if(r.betrayed) S.stats.popularity = clamp(S.stats.popularity - 1, 0, 100);
+  }
+  renderRankBadge();
 }
 /* ---------- Conversation overlay ---------- */
 function maybeTriggerConversation(){
