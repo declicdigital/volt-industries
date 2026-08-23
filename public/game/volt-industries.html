@@ -2609,8 +2609,9 @@ function resolveBattleOffscreen(mission){
   const f = battleForm();
   const inj = injuryActive();
   const pl = computePowerLevel ? computePowerLevel() : 50;
-  let odds = 0.5 + (pl-50)/220 + f.momentum*0.04 - (inj?inj.sev*0.08:0) - (mission.danger||0)*0.05;
-  odds = clamp(odds, 0.15, 0.9);
+  let odds = 0.48 + (pl-50)/240 + f.momentum*0.03 - Math.max(0,f.streak)*0.05 - (inj?inj.sev*0.09:0) - (mission.danger||0)*0.05;
+  odds = clamp(odds, 0.15, 0.82);
+
   const win = Math.random() < odds;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   if(win){
