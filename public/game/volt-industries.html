@@ -2000,7 +2000,8 @@ function freshState(lang){
     currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], usedIntrigueIds:[], orientationCount:0, lastOrientationYear:null, currentMission:null, log:[],
     team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
-    battleForm:{ momentum:0, streak:0, injury:null },
+  battleForm:{ momentum:0, streak:0, injury:null },
+  battlePlan:{ target:0, played:0 },
     skills:[], lastTrainingYear:null, trainingOffer:null,
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
@@ -2694,6 +2695,7 @@ function buildCareerPlan(){
   S.mode = S.years <= 12 ? 'short' : 'long';
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
+  S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
   S.mentorCap = S.years>=14 ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
@@ -3045,15 +3047,33 @@ function battleFoeKey(mission){
   if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey) return mission.charKey;
   return pickOpponentKey();
 }
+function battleTargetForYears(years){
+  const blocks = Math.ceil(years / 5);
+  let total = 0;
+  for(let i=0;i<blocks;i++){
+    const r = Math.random();
+    total += r < 0.50 ? 2 : (r < 0.85 ? 3 : 4);
+  }
+  return total;
+}
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
   if(mission.pivotal || mission.breakthrough || mission.intrigue) return false;
   const f = battleForm();
   if(injuryActive()) return false;
+  const bp = S.battlePlan || (S.battlePlan = { target: 0, played: 0 });
+  if(bp.played >= bp.target) return false;
+  const expected = Math.round(bp.target * S.currentYear / Math.max(1,S.years));
+  if(bp.played < expected){
+    bp.played++;
+    f.lastPlayedYear = S.currentYear;
+    return true;
+  }
   if(f.lastPlayedYear!=null && (S.currentYear - f.lastPlayedYear) < 2) return false;
   const d = mission.danger||0;
   const p = d>=3 ? 0.55 : (d===2 ? 0.30 : 0.12);
   if(Math.random() >= p) return false;
+  bp.played++;
   f.lastPlayedYear = S.currentYear;
   return true;
 }
