@@ -2797,19 +2797,32 @@ function startBattle(mission, done){
       }, 450);
     }, 1500);
   }
+  function foeAI(){
+    const lowSelf = st.foeHP/st.foeMax < 0.32;
+    const lowFoe = st.myHP/st.myMax < 0.3;
+    const healMove = foeMoves.find(m=>m.heal);
+    if(lowSelf && healMove && Math.random()<0.55) return healMove;
+    if(lowFoe){
+      const best = foeMoves.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0];
+      if(Math.random()<0.7) return best;
+    }
+    const weighted = foeMoves.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
+    return Math.random()<0.6 ? weighted[0] : pick(foeMoves);
+  }
   function foeTurn(){
-    const m = pick(foeMoves);
+    const m = foeAI();
     const label = S.lang==='fr'?m.fr:m.en;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${foeName} tente ${label}... et te manque.`:`${foeName} tries ${label}... and misses.`);
       setTimeout(()=>{ st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.'); }, 900);
       return;
     }
-    const d = dmgOf(m, 55 + (mission.danger||0)*10);
+    const d = dmgOf(m, foePower, foeDmgMult);
     st.myHP = Math.max(0, st.myHP - d);
     if(m.heal){ st.foeHP = Math.min(st.foeMax, st.foeHP + m.heal); floatDmg(foeFrame, -m.heal, foeCol); }
     hit(meFrame); floatDmg(meFrame, d, foeCol); refreshBars();
     setLog(S.lang==='fr'?`${foeName} utilise ${label} : ${d} degats.`:`${foeName} uses ${label}: ${d} damage.`);
+
     setTimeout(()=>{
       if(st.myHP<=0){ finish(false); return; }
       st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
