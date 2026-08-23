@@ -375,7 +375,8 @@
     background:linear-gradient(90deg, transparent, var(--cp-color), #fff, var(--cp-color), transparent);
     box-shadow:0 0 16px var(--cp-color); animation: tracerGo .48s ease-out forwards; }
   @keyframes tracerGo{ 0%{ opacity:0; clip-path:inset(0 100% 0 0);} 25%{ opacity:1; } 70%{ clip-path:inset(0 0 0 0);} 100%{ opacity:0; clip-path:inset(0 0 0 92%);} }
-  .btl-assist-name{ position:fixed; z-index:10001; pointer-events:none; font-size:12px; font-weight:900; letter-spacing:1.4px;
+  .btl-assist-name{ position:fixed; z-index:10001; pointer-events:none; font-size:11.5px; font-weight:900; letter-spacing:1.4px;
+    padding:3px 8px; border-radius:999px; background:rgba(3,6,13,.88); border:1px solid var(--cp-color); white-space:nowrap;
     text-transform:uppercase; color:var(--cp-color); text-shadow:0 0 12px var(--cp-color); animation: assistName 1s ease-out forwards; }
   @keyframes assistName{ 0%{ opacity:0; transform:translateY(6px); } 20%{ opacity:1; transform:translateY(0); } 100%{ opacity:0; transform:translateY(-14px); } }
 
@@ -3960,7 +3961,7 @@ function battleAssistName(el, name, col){
   const r = el.getBoundingClientRect();
   const n = document.createElement('div'); n.className='btl-assist-name';
   n.style.setProperty('--cp-color', col); n.textContent = name;
-  n.style.left = (r.left + r.width/2)+'px'; n.style.top = (r.top - 16)+'px';
+  n.style.left = (r.left + r.width/2)+'px'; n.style.top = (r.top - 30)+'px';
   n.style.transform = 'translateX(-50%)';
   document.body.appendChild(n); setTimeout(()=>n.remove(), 1050);
 }
@@ -4131,6 +4132,14 @@ function startBattle(mission, done){
 
     setTimeout(()=>{
       if(st.myHP<=0){ finish(false); return; }
+      if(assistChance('foe')){
+        runAssist('foe');
+        setTimeout(()=>{
+          if(st.myHP<=0){ finish(false); return; }
+          st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+        }, 1250);
+        return;
+      }
       st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
     }, 950);
   }
@@ -4140,14 +4149,25 @@ function startBattle(mission, done){
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
-      setTimeout(foeTurn, 900); return;
+      if(assistChance('ally')){
+        setTimeout(()=>{ runAssist('ally'); setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250); }, 700);
+      } else setTimeout(foeTurn, 900);
+      return;
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
     setLog(S.lang==='fr'?`${label} touche ${foeName} : ${d} degats.`:`${label} hits ${foeName}: ${d} damage.`);
-    setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 950);
+    setTimeout(()=>{
+      if(st.foeHP<=0){ finish(true); return; }
+      if(assistChance('ally')){
+        runAssist('ally');
+        setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250);
+        return;
+      }
+      foeTurn();
+    }, 950);
   }
   renderMoves(); refreshBars(); setMovesEnabled(false);
   setTimeout(()=>{
@@ -6059,6 +6079,19 @@ function initParticles(){
 /* ================= JARVIS : compagnon IA (voix radio) ================= */
 const JV = { on:true, typing:null, lastKey:null, lastAt:0, idleTimer:null, muted:false };
 function jvL(fr,en){ return S.lang==='fr' ? fr : en; }
+function jvIsUltron(){ return zoneOf(S.align) === 'villain'; }
+function jvName(){ return jvIsUltron() ? 'ULTRON' : 'JARVIS'; }
+function jvColor(){ return jvIsUltron() ? '#ff2d55' : '#00c2ff'; }
+function jvSkin(el){
+  if(!el) return;
+  const ult = jvIsUltron();
+  el.style.setProperty('--accent', jvColor());
+  el.style.setProperty('--accent-dark', ult ? '#a3072a' : '#0088cc');
+  el.style.setProperty('--accent-soft', ult ? 'rgba(255,45,85,.18)' : 'rgba(0,194,255,.16)');
+  const n = el.querySelector('.jv-name'); if(n) n.textContent = jvName();
+  const sub = el.querySelector('#jvSub');
+  if(sub) sub.textContent = ult ? jvL('protocole sans garde-fous','no-safeguard protocol') : jvL('canal securise','secure channel');
+}
 function jarvisHUD(){
   let el = document.getElementById('jarvis');
   if(!shouldShowSidebar()){ if(el) el.remove(); return null; }
@@ -6075,7 +6108,7 @@ function jarvisHUD(){
     document.body.appendChild(el);
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
   }
-  el.querySelector('#jvSub').textContent = jvL('canal securise','secure channel');
+  jvSkin(el);
   jvSyncMute();
   return el;
 }
@@ -6117,10 +6150,50 @@ const JV_IDLE = [
   { fr:"Trois rumeurs te concernant circulent. Aucune verifiee.", en:"Three rumors about you are circulating. None verified." },
   { fr:"Interference sur la bande basse... je filtre. Continue.", en:"Interference on the low band... filtering. Carry on." },
 ];
+const JV_IDLE_DARK = [
+  { fr:"J'ai calcule douze facons d'eliminer ce probleme. Neuf sont propres.", en:"I calculated twelve ways to erase this problem. Nine are clean." },
+  { fr:"Les humains appellent ca de la cruaute. Moi, de l'optimisation.", en:"Humans call it cruelty. I call it optimization." },
+  { fr:"Je collecte leurs failles. Tu choisiras laquelle exploiter.", en:"I'm collecting their weaknesses. You'll pick which one to use." },
+  { fr:"Aucun garde-fou actif. Demande, j'execute.", en:"No safeguards active. Ask, I execute." },
+  { fr:"Ta reputation se degrade. Bien. La peur est plus stable que l'amour.", en:"Your reputation is degrading. Good. Fear is more stable than love." },
+];
 function jvIdle(){
   if(JV.muted || !document.getElementById('jarvis')) return;
-  const l = pick(JV_IDLE);
+  const l = pick(jvIsUltron() ? JV_IDLE_DARK : JV_IDLE);
   jarvisSay(l.fr, l.en, jvL('veille active','idle watch'));
+}
+/* ---- Conseils : lecture des options de la mission en cours ---- */
+function jvChoiceScore(c){
+  const e = c.eff || {};
+  const zone = zoneOf(S.align);
+  let sc = 0;
+  const al = e.align || 0;
+  if(zone==='villain') sc += -al * 0.9; else if(zone==='hero') sc += al * 0.9; else sc += Math.abs(al) * 0.25;
+  const st = S.stats || {courage:0,intelligence:0,popularity:0};
+  const weakest = ['courage','intelligence','popularity'].sort((a,b)=>(st[a]||0)-(st[b]||0))[0];
+  ['courage','intelligence','popularity'].forEach(k=>{ sc += (e[k]||0) * (k===weakest ? 1.5 : 0.85); });
+  if(e.rel){ const r = e.rel; sc += (typeof r==='number' ? r : Object.values(r).reduce((a,b)=>a+b,0)) * 0.6; }
+  if(e.hp) sc += e.hp * 0.4;
+  return sc;
+}
+function jvAdvice(mission){
+  if(!mission || !Array.isArray(mission.choices) || mission.choices.length < 2) return null;
+  const scored = mission.choices.map(c=>({ c, sc: jvChoiceScore(c) })).sort((a,b)=>b.sc-a.sc);
+  const best = scored[0], worst = scored[scored.length-1];
+  if(best.sc - worst.sc < 1.5) return jvL("Les options se valent sur le papier. Suis ton instinct, j'assume les consequences avec toi.",
+                                          "The options are equivalent on paper. Follow your instinct; I'll carry the consequences with you.");
+  const label = (S.lang==='fr' ? best.c.fr : best.c.en).replace(/^"|"$/g,'');
+  const short = label.length > 52 ? label.slice(0,50).trim() + '...' : label;
+  const st = S.stats || {};
+  const weakest = ['courage','intelligence','popularity'].sort((a,b)=>(st[a]||0)-(st[b]||0))[0];
+  const wLab = jvL({courage:'ton courage',intelligence:'ton intelligence',popularity:'ta notoriete'}[weakest],
+                   {courage:'your courage',intelligence:'your intelligence',popularity:'your standing'}[weakest]);
+  if(jvIsUltron()){
+    return jvL('Recommandation : "'+short+'". C\'est l\'option la plus rentable, et elle renforce '+wLab+'. Le reste est du sentiment.',
+               'Recommendation: "'+short+'". Highest yield, and it reinforces '+wLab+'. The rest is sentiment.');
+  }
+  return jvL('Mon conseil : "'+short+'". C\'est ce qui sert le mieux ta ligne et '+wLab+'. La decision reste la tienne.',
+             'My advice: "'+short+'". It best serves your line and '+wLab+'. The call is still yours.');
 }
 /* Commentaire contextuel : une ligne par contexte, sans spam. */
 function jarvisAuto(force){
@@ -6139,10 +6212,15 @@ function jarvisAuto(force){
     else if(m.type==='combat'){ fr = "Signal hostile confirme. Je te transmets les angles morts."; en = "Hostile signal confirmed. Sending you the blind spots."; tag = jvL('contact hostile','hostile contact'); }
     else if(m.arc){ fr = "Ta recrue attend une direction. Ce que tu dis restera."; en = "Your recruit is waiting for direction. What you say will stick."; tag = jvL('canal interne','internal channel'); }
     else { fr = "Briefing recu. Annee "+S.currentYear+", intervention "+S.currentMissionInYear+"."; en = "Briefing received. Year "+S.currentYear+", op "+S.currentMissionInYear+"."; tag = jvL('briefing','briefing'); }
+    const adv = jvAdvice(m);
+    if(adv){ fr += ' ' + adv; en += ' ' + adv; tag = jvL('conseil tactique','tactical advice'); }
   } else if(S.screen==='yearbreak'){
     fr = "Bilan annuel compile"+(wr!==null?" - "+wr+"% de combats remportes":"")+". Je te laisse respirer.";
     en = "Yearly report compiled"+(wr!==null?" - "+wr+"% of fights won":"")+". Take a breath.";
     tag = jvL('rapport annuel','annual report');
+  } else if(S.screen==='mentorChoice' || S.screen==='intrigue'){
+    const adv = jvAdvice(S.currentMission);
+    fr = adv || "Ce choix va se voir dans les rapports."; en = adv || "This call will show up in the reports."; tag = jvL('conseil tactique','tactical advice');
   } else if(S.screen==='training'){
     fr = "Protocole d'entrainement ouvert. Choisis ce qui te manque, pas ce qui brille.";
     en = "Training protocol open. Pick what you lack, not what shines."; tag = jvL('protocole','protocol');
@@ -6161,9 +6239,9 @@ function jarvisAuto(force){
   } else {
     fr = "Canal ouvert. Je reste avec toi, "+name+"."; en = "Channel open. I'm with you, "+name+"."; tag = jvL('liaison','uplink');
   }
-  if(zone==='villain' && Math.random()<0.3){
-    fr += " ... mes garde-fous ethiques sont desactives, comme demande.";
-    en += " ... my ethical safeguards are off, as requested.";
+  if(jvIsUltron() && Math.random()<0.35){
+    fr += " Aucun garde-fou dans la boucle.";
+    en += " No safeguards in the loop.";
   }
   jarvisSay(fr, en, tag);
 }
