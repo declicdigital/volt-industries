@@ -1607,15 +1607,15 @@ function screenProfileChoice(){
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
   d.querySelector('#scratchCard').onclick = ()=>{ S.usingPreset=false; S.screen='name'; render(); };
   const grid = d.querySelector('#presetGrid');
-  grid.innerHTML = PRESETS.map(p=>`<div class="preset-card" data-id="${p.id}"><div class="preset-mini" id="mini-${p.id}"></div>
-      <div class="pname">${S.lang==='fr'?p.nameFr:p.nameEn}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`).join('');
-  PRESETS.forEach(p=>{
-    const savedLook = S.look, savedPath=S.path, savedPowers=S.powers, savedHero=S.heroName;
-    S.look = Object.assign({}, S.look, p.look, { morphology:p.morphology }); S.path = p.path; S.powers = p.powers; S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
-    const svg = avatarSVG();
-    S.look = savedLook; S.path = savedPath; S.powers = savedPowers; S.heroName = savedHero;
-    d.querySelector('#mini-'+p.id).innerHTML = `<div style="transform:scale(0.55); transform-origin:top center; height:150px; overflow:hidden;">${svg}</div>`;
-  });
+  grid.innerHTML = PRESETS.map(p=>{
+    const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
+    const badge = p.side==='villain' ? (S.lang==='fr'?'MECHANT':'VILLAIN') : (S.lang==='fr'?'GENTIL':'HERO');
+    const nm = S.lang==='fr'?p.nameFr:p.nameEn;
+    return `<div class="preset-card ${p.side}" data-id="${p.id}" style="--pc-color:${col};">
+      <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span></div>
+      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`;
+  }).join('');
+
   grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
   return d;
 }
