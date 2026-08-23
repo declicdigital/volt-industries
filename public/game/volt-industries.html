@@ -130,6 +130,9 @@
   .preset-mini{ width:100%; display:flex; justify-content:center; }
   .portrait-avatar{ width:100%; height:100%; min-height:200px; aspect-ratio:3/4; border-radius:12px; overflow:hidden; position:relative; }
   .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .pstats{ margin-top:8px; font-size:10.5px; font-weight:900; letter-spacing:1px; color:var(--pc-color); }
+  .ptrait{ margin-top:6px; font-size:11.5px; line-height:1.45; color:var(--muted); }
+  .ptrait.good{ color:#7ef0c0; } .ptrait.bad{ color:#ff9aa8; }
   .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
   .pgal{ grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); }
   .pgal .pitem{ position:relative; border:2px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; height:126px; background:rgba(255,255,255,.03); transition:.15s; }
@@ -319,7 +322,7 @@ const T = {
     brand:"VOLT INDUSTRIES", welcomeEyebrow:"Programme d'entrainement experimental", welcomeTitle:"Bienvenue chez VOLT INDUSTRIES",
     welcomeLead:"Un laboratoire d'elite forme la prochaine generation d'etres exceptionnels. Ton chemin s'ecrira choix apres choix, annee apres annee, jusqu'a 50 ans de carriere. Rien n'est scripte deux fois de la meme facon.",
     start:"Commencer",
-    profileChoiceTitle:"Comment veux-tu commencer ?", profileChoiceLead:"Cree ton heros de A a Z, ou incarne l'un des 10 profils deja prets : 5 gentils et 5 mechants.",
+    profileChoiceTitle:"Choisis ton personnage", profileChoiceLead:"20 personnages jouables : 10 HEROS et 10 VILLAINS. Chacun a ses avantages et ses inconvenients qui compteront toute la carriere. Tu pourras le renommer juste apres.",
     scratchTitle:"Creer mon heros de A a Z", scratchDesc:"Choisis chaque detail toi-meme : morphologie, equipement, pouvoirs...",
     usePreset:"Choisir ce profil",
     nameLabel:"Quel est ton nom civil ?", heroNameLabel:"Choisis ton nom de code",
@@ -370,7 +373,7 @@ const T = {
     brand:"VOLT INDUSTRIES", welcomeEyebrow:"Experimental training program", welcomeTitle:"Welcome to VOLT INDUSTRIES",
     welcomeLead:"An elite lab is training the next generation of extraordinary beings. Your path will be written choice by choice, year by year, across up to 50 years of career. Nothing plays out the same way twice.",
     start:"Begin",
-    profileChoiceTitle:"How do you want to start?", profileChoiceLead:"Build your hero from scratch, or play one of 10 ready-made profiles: 5 heroes and 5 villains.",
+    profileChoiceTitle:"Choose your character", profileChoiceLead:"20 playable characters: 10 HEROES and 10 VILLAINS. Each has strengths and weaknesses that shape the whole career. You can rename them right after.",
     scratchTitle:"Build my hero from scratch", scratchDesc:"Choose every detail yourself: morphology, gear, powers...",
     usePreset:"Choose this profile",
     nameLabel:"What's your civilian name?", heroNameLabel:"Choose your codename",
