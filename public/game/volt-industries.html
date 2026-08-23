@@ -317,6 +317,17 @@
     .btl-move b{ font-size:11.5px; }
     .btl-move span{ display:none; }
   }
+
+  .impact-toast{ position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:9999; padding:10px 14px; border-radius:12px;
+    background:rgba(6,10,18,.94); border:1px solid var(--accent); box-shadow:0 0 24px var(--accent-soft); max-width:92vw; text-align:center;
+    animation:impactIn .28s ease; }
+  .impact-toast.out{ opacity:0; transition:opacity .45s ease; }
+  .impact-toast .it-title{ font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .impact-toast .it-rows{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .impact-toast .it-row{ font-size:13px; font-weight:800; padding:3px 9px; border-radius:999px; background:rgba(255,255,255,.05); }
+  .impact-toast .it-row.up{ color:var(--green); } .impact-toast .it-row.down{ color:#ff5c7a; }
+  .impact-toast .it-row.neutral{ color:var(--accent); font-weight:700; }
+  @keyframes impactIn{ from{ opacity:0; transform:translate(-50%,-12px); } to{ opacity:1; transform:translate(-50%,0); } }
 </style>
 </head>
 <body>
@@ -585,15 +596,15 @@ const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none
 const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
 
 const CHAR_IMG = {
-  char1:"/__l5e/assets-v1/cf2378dd-c610-4926-931c-b9c686868de5/char1.png",
-  char2:"/__l5e/assets-v1/ac6e7356-9e29-41bf-9a0b-d6845d9668e0/char2.png",
-  char3:"/__l5e/assets-v1/c85bed7f-dbc2-4c27-9705-2feada839811/char3.png",
-  char4:"/__l5e/assets-v1/c73ce399-db3d-48cc-b783-e8c798646ca3/char4.png",
-  char5:"/__l5e/assets-v1/a1110626-8508-441e-9aa9-12bfe8c01fc1/char5.png",
-  char6:"/__l5e/assets-v1/a5a1f131-fbd0-468e-858f-427b91401a02/char6.png",
-  char7:"/__l5e/assets-v1/1e7a2066-6dec-4835-86f0-8231cacba1e4/char7.png",
-  char8:"/__l5e/assets-v1/c582e6fa-37e3-4ab1-993f-78ff7809d4b7/char8.png",
-  char9:"/__l5e/assets-v1/861f3863-5d02-4954-96bf-f2d6e866593a/char9.png",
+  char1:"/__l5e/assets-v1/92f023c1-99a0-416c-8cad-1f2b589a327a/npc_ironboy.png",
+  char2:"/__l5e/assets-v1/731224c8-9bcf-4dc5-bd9a-588e5bc9a7f4/npc_blackcat.png",
+  char3:"/__l5e/assets-v1/cdb6c263-d7bc-42b0-b7b8-3e3e43d39513/npc_captainam.png",
+  char4:"/__l5e/assets-v1/aa2b4de8-a586-4465-b207-30cac2522a76/npc_muskl.png",
+  char5:"/__l5e/assets-v1/dfe44887-4b20-42fd-a454-954796006e31/npc_fhor.png",
+  char6:"/__l5e/assets-v1/9bbb5d81-9c47-4ec6-81a7-0ead0378ecc2/npc_purplewitch.png",
+  char7:"/__l5e/assets-v1/9f48d2df-b8c7-4f8c-8b96-2aa21cc9771d/npc_redwidow.png",
+  char8:"/__l5e/assets-v1/ae8336c2-92ed-4252-9030-62b6b9228e05/npc_audition.webp",
+  char9:"/__l5e/assets-v1/9f0a51ea-fdd2-4b46-af75-a69b47094b0a/npc_docetrange.webp",
   char10:"/__l5e/assets-v1/5bae346d-58b4-4f57-ad5d-07e08d962e5c/char10.png",
   char11:"/__l5e/assets-v1/fc4c6a64-88a9-4963-a4ca-3874d1117868/char11.png",
   char12:"/__l5e/assets-v1/7ac0a093-ecfb-40b9-beed-798c225cb63b/char12.png",
@@ -605,6 +616,7 @@ const CHAR_IMG = {
   char18:"/__l5e/assets-v1/6e13484e-32de-485d-8aeb-f548215e6ca9/char18.png",
   char19:"/__l5e/assets-v1/4c55f158-1215-4523-b5f5-8a8dd629aa17/char19.png",
   char20:"/__l5e/assets-v1/34e2c225-b0f6-411e-b252-9fa43076dff2/char20.png",
+  char41:"/__l5e/assets-v1/2e37f364-3c1f-4714-9d9c-4056ea37290f/npc_kidspider.png",
   char21:"/game/chars/21.png", char22:"/game/chars/22.png", char23:"/game/chars/23.png", char24:"/game/chars/24.png",
   char25:"/game/chars/25.png", char26:"/game/chars/26.png", char27:"/game/chars/27.png", char28:"/game/chars/28.png",
   char29:"/game/chars/29.png", char30:"/game/chars/30.png", char31:"/game/chars/31.png", char32:"/game/chars/32.png",
@@ -613,12 +625,12 @@ const CHAR_IMG = {
 };
 const CHARACTERS = {
   theg:{fr:"The G",en:"The G",align:'hero', sex:'m', img:CHAR_IMG.char10},
-  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', sex:'m', img:CHAR_IMG.char1}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', sex:'m', img:CHAR_IMG.char5},
-  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', sex:'f', img:CHAR_IMG.char7}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', sex:'f', img:CHAR_IMG.char6},
-  aegis:{fr:"Aegis",en:"Aegis",align:'hero', sex:'m', img:CHAR_IMG.char3},
-  ferrum:{fr:"Ferrum",en:"Ferrum",align:'hero', sex:'m', img:CHAR_IMG.char4},
-  solen:{fr:"Kilian Solen",en:"Kilian Solen",align:'hero', sex:'m', img:CHAR_IMG.char9},
-  sable:{fr:"Sable",en:"Sable",align:'hero', sex:'f', img:CHAR_IMG.char2},
+  volt:{fr:"Iron Boy",en:"Iron Boy",align:'hero', sex:'m', img:CHAR_IMG.char1}, vaelor:{fr:"Fhor",en:"Fhor",align:'hero', sex:'m', img:CHAR_IMG.char5},
+  marsh:{fr:"Red Widow",en:"Red Widow",align:'hero', sex:'f', img:CHAR_IMG.char7}, nyx:{fr:"Purple Witch",en:"Purple Witch",align:'hero', sex:'f', img:CHAR_IMG.char6},
+  aegis:{fr:"Captain Americain",en:"Captain American",align:'hero', sex:'m', img:CHAR_IMG.char3},
+  ferrum:{fr:"Muskl",en:"Muskl",align:'hero', sex:'m', img:CHAR_IMG.char4},
+  solen:{fr:"Docteur Etrange",en:"Doctor Strange-ish",align:'hero', sex:'m', img:CHAR_IMG.char9},
+  sable:{fr:"Black Cat",en:"Black Cat",align:'hero', sex:'m', img:CHAR_IMG.char2},
   siddartha:{fr:"Siddartha",en:"Siddartha",align:'villain', sex:'m', img:CHAR_IMG.char11},
   malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', sex:'m', img:CHAR_IMG.char12},
   mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', sex:'m', img:CHAR_IMG.char19},
@@ -629,7 +641,8 @@ const CHARACTERS = {
   sepulcre:{fr:"Le Sepulcre",en:"The Sepulchre",align:'villain', sex:'m', img:CHAR_IMG.char16},
   nihil:{fr:"Nihil",en:"Nihil",align:'villain', sex:'m', img:CHAR_IMG.char18},
   fuchsia:{fr:"Lord Fuchsia",en:"Lord Fuchsia",align:'villain', sex:'m', img:CHAR_IMG.char20},
-  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', sex:'f', img:CHAR_IMG.char8},
+  lorelei:{fr:"Audition",en:"Audition",align:'hero', sex:'m', img:CHAR_IMG.char8},
+  kidspider:{fr:"Kid-Spider",en:"Kid-Spider",align:'hero', sex:'m', img:CHAR_IMG.char41},
   nightlark:{fr:"Arachno Kid",en:"Arachno Kid",align:'hero', sex:'m', img:CHAR_IMG.char21},
   titanwolf:{fr:"Iron Boy",en:"Iron Boy",align:'hero', sex:'m', img:CHAR_IMG.char22},
   solaris:{fr:"Thunor",en:"Thunor",align:'hero', sex:'m', img:CHAR_IMG.char23},
@@ -742,7 +755,7 @@ const MISSIONS = [
       { fr:"Manipuler le discours pour ternir un rival.", en:"Spin the narrative to smear a rival.", eff:{align:-5, intelligence:3, popularity:-2, rel:{obsidian:2}} },
     ]},
   { id:'recrutement_heros', type:'social', danger:0, scope:1, charKey:'volt', tagFr:'Recrutement', tagEn:'Recruitment',
-    fr:"Cassius Volt t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Cassius Volt personally invites you to join his elite response team.",
+    fr:"Iron Boy t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Iron Boy personally invites you to join his elite response team.",
     choices:[
       { fr:"Accepter avec enthousiasme.", en:"Accept enthusiastically.", eff:{align:9, popularity:3, rel:{volt:6}} },
       { fr:"Accepter, mais a tes conditions.", en:"Accept, but on your own terms.", eff:{align:4, intelligence:3, rel:{volt:2}} },
@@ -777,21 +790,21 @@ const MISSIONS = [
       { fr:"Laisser quelqu'un d'autre prendre le risque a ta place.", en:"Let someone else take the risk instead.", eff:{align:-8, popularity:-6} },
     ]},
   { id:'infiltration', type:'combat', danger:2, scope:2, charKey:'nyx', tagFr:'Infiltration', tagEn:'Infiltration',
-    fr:"Nyx te propose de t'infiltrer dans une organisation criminelle pour la demanteler de l'interieur.", en:"Nyx proposes infiltrating a criminal organization to dismantle it from within.",
+    fr:"Purple Witch te propose de t'infiltrer dans une organisation criminelle pour la demanteler de l'interieur.", en:"Purple Witch proposes infiltrating a criminal organization to dismantle it from within.",
     choices:[
       { fr:"Accepter la mission, quitte a mentir longtemps.", en:"Accept the mission, even if it means lying for a long time.", eff:{align:4, intelligence:5, rel:{nyx:5}} },
       { fr:"Refuser - ce n'est pas ton style.", en:"Refuse - it's not your style.", eff:{courage:2, rel:{nyx:-2}} },
       { fr:"Accepter, mais garder les benefices de l'organisation pour toi.", en:"Accept, but keep the organization's profits for yourself.", eff:{align:-9, intelligence:2, rel:{nyx:-6, mandate:2}} },
     ]},
   { id:'trickster', type:'social', danger:0, scope:1, charKey:'lorelei', tagFr:'Manipulation', tagEn:'Manipulation',
-    fr:"Lorelei te propose un marche ambigu : elle t'aide contre une menace, en echange d'une faveur non precisee.", en:"Lorelei offers an ambiguous deal: she helps against a threat, for an unspecified future favor.",
+    fr:"Audition te propose un marche ambigu : il t'aide contre une menace, en echange d'une faveur non precisee.", en:"Audition offers an ambiguous deal: he helps against a threat, for an unspecified future favor.",
     choices:[
       { fr:"Refuser tout marche avec elle.", en:"Refuse any deal with her.", eff:{align:2, courage:3, rel:{lorelei:-3}} },
       { fr:"Accepter, prudemment.", en:"Accept, cautiously.", eff:{intelligence:4, rel:{lorelei:4}} },
       { fr:"Essayer de la doubler a son propre jeu.", en:"Try to outplay her at her own game.", eff:{align:-2, intelligence:6, rel:{lorelei:2}} },
     ]},
   { id:'catastrophe_naturelle', type:'rescue', danger:2, scope:3, charKey:'vaelor', tagFr:'Catastrophe naturelle', tagEn:'Natural disaster',
-    fr:"Un phenomene climatique extreme menace une region entiere. Vaelor te demande de l'aide.", en:"An extreme weather phenomenon threatens an entire region. Vaelor asks for your help.",
+    fr:"Un phenomene climatique extreme menace une region entiere. Fhor te demande de l'aide.", en:"An extreme weather phenomenon threatens an entire region. Fhor asks for your help.",
     choices:[
       { fr:"Combattre en premiere ligne a ses cotes.", en:"Fight on the front line at his side.", eff:{align:7, courage:6, rel:{vaelor:5}} },
       { fr:"Organiser l'evacuation des populations pendant qu'il agit.", en:"Organize civilian evacuation while he acts.", eff:{align:5, intelligence:4, popularity:4} },
@@ -833,11 +846,11 @@ const MISSIONS = [
       { fr:"Negocier ta propre survie en echange d'informations sur les defenses.", en:"Negotiate your own survival in exchange for defense intel.", eff:{align:-16, popularity:-9, rel:{mandate:6}} },
     ]},
   { id:'faille_systeme', type:'rescue', danger:3, scope:6, charKey:'vaelor', tagFr:'Faille stellaire', tagEn:'Stellar rift',
-    fr:"Une faille spatio-temporelle menace de destabiliser le systeme stellaire tout entier. Vaelor te demande une aide vitale.", en:"A space-time rift threatens to destabilize the entire star system. Vaelor asks for your vital help.",
+    fr:"Une faille spatio-temporelle menace de destabiliser le systeme stellaire tout entier. Fhor te demande une aide vitale.", en:"A space-time rift threatens to destabilize the entire star system. Fhor asks for your vital help.",
     choices:[
       { fr:"Te jeter corps et ame dans la stabilisation de la faille.", en:"Throw yourself entirely into stabilizing the rift.", eff:{align:13, courage:9, rel:{vaelor:6}} },
       { fr:"Concevoir une solution technique a distance, plus prudente.", en:"Design a safer technical solution from a distance.", eff:{align:6, intelligence:10, rel:{volt:3}} },
-      { fr:"Laisser Vaelor s'en charger seul et observer depuis un lieu sur.", en:"Let Vaelor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
+      { fr:"Laisser Fhor s'en charger seul et observer depuis un lieu sur.", en:"Let Fhor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
     ]},
   { id:'guerre_cosmique', type:'combat', danger:3, scope:7, tagFr:'Guerre cosmique', tagEn:'Cosmic war',
     fr:"Une entite ancestrale, aussi vieille que le deuil de Malachar lui-meme, menace l'existence de la realite connue.", en:"An ancestral entity, as old as Malachar's own grief, threatens the existence of known reality.",
@@ -1323,32 +1336,32 @@ const MENTOR_MISSIONS = [
 /* ============================ CONVERSATIONS ============================ */
 const CONVERSATIONS = [
   { id:'conv_volt', charKey:'volt',
-    linesFr:["Cassius Volt t'observe un instant. \"Tu progresses vite. Trop vite, peut-etre.\"","\"Le pouvoir sans responsabilite finit toujours par se retourner contre son porteur.\""],
-    linesEn:["Cassius Volt watches you for a moment. \"You're progressing fast. Maybe too fast.\"","\"Power without responsibility always turns on its bearer eventually.\""],
+    linesFr:["Iron Boy t'observe un instant. \"Tu progresses vite. Trop vite, peut-etre.\"","\"Le pouvoir sans responsabilite finit toujours par se retourner contre son porteur.\""],
+    linesEn:["Iron Boy watches you for a moment. \"You're progressing fast. Maybe too fast.\"","\"Power without responsibility always turns on its bearer eventually.\""],
     choices:[
       { fr:"Le remercier pour son conseil et t'engager a etre prudent.", en:"Thank him for the advice and commit to being careful.", eff:{align:5, rel:{volt:4}} },
       { fr:"Lui repondre que tu n'as besoin des conseils de personne.", en:"Tell him you don't need anyone's advice.", eff:{courage:3, rel:{volt:-3}} },
       { fr:"Ecouter poliment, sans vraiment l'ecouter.", en:"Listen politely, without really taking it in.", eff:{rel:{volt:-1}} },
     ]},
   { id:'conv_marsh', charKey:'marsh',
-    linesFr:["Le Dr Elena Marsh consulte ton dossier avec inquietude. \"Tes rapports de mission deviennent de plus en plus risques.\"","\"Je ne te juge pas. Je veux juste m'assurer que tu tiens le coup.\""],
-    linesEn:["Dr. Elena Marsh reviews your file with concern. \"Your mission reports are getting riskier and riskier.\"","\"I'm not judging you. I just want to make sure you're holding up.\""],
+    linesFr:["Le Red Widow consulte ton dossier avec inquietude. \"Tes rapports de mission deviennent de plus en plus risques.\"","\"Je ne te juge pas. Je veux juste m'assurer que tu tiens le coup.\""],
+    linesEn:["Red Widow reviews your file with concern. \"Your mission reports are getting riskier and riskier.\"","\"I'm not judging you. I just want to make sure you're holding up.\""],
     choices:[
       { fr:"Te confier sincerement sur tes doutes.", en:"Open up honestly about your doubts.", eff:{align:6, intelligence:2, rel:{marsh:5}} },
       { fr:"La rassurer d'un ton detache.", en:"Reassure her in a detached tone.", eff:{rel:{marsh:1}} },
       { fr:"Lui dire de se meler de ses affaires.", en:"Tell her to mind her own business.", eff:{align:-3, rel:{marsh:-4}} },
     ]},
   { id:'conv_vaelor', charKey:'vaelor',
-    linesFr:["Vaelor Skoll te rejoint sur le toit de Volt Industries, le regard tourne vers le ciel. \"Dans mon royaume, la survie exigeait le sacrifice permanent.\"","\"Je me demande parfois si votre monde comprend vraiment ce que cela coute.\""],
-    linesEn:["Vaelor Skoll joins you on the Volt Industries rooftop, eyes on the sky. \"In my realm, survival demanded constant sacrifice.\"","\"I sometimes wonder if your world truly understands what that costs.\""],
+    linesFr:["Fhor te rejoint sur le toit de Volt Industries, le regard tourne vers le ciel. \"Dans mon royaume, la survie exigeait le sacrifice permanent.\"","\"Je me demande parfois si votre monde comprend vraiment ce que cela coute.\""],
+    linesEn:["Fhor joins you on the Volt Industries rooftop, eyes on the sky. \"In my realm, survival demanded constant sacrifice.\"","\"I sometimes wonder if your world truly understands what that costs.\""],
     choices:[
       { fr:"Lui promettre de porter ce fardeau a ses cotes.", en:"Promise to carry that burden alongside him.", eff:{align:5, courage:3, rel:{vaelor:5}} },
       { fr:"Questionner la sagesse de ses methodes.", en:"Question the wisdom of his methods.", eff:{intelligence:3, rel:{vaelor:-2}} },
       { fr:"Tourner sa grandiloquence en derision.", en:"Mock his grandiosity.", eff:{align:-4, rel:{vaelor:-5}} },
     ]},
   { id:'conv_nyx', charKey:'nyx',
-    linesFr:["Nyx apparait sans bruit derriere toi. \"J'ai decouvert quelque chose de compromettant sur un membre du conseil. Je ne sais pas encore quoi en faire.\"","\"Tu es la seule personne en qui j'ai encore confiance ici.\""],
-    linesEn:["Nyx appears silently behind you. \"I found something compromising about a council member. I don't know what to do with it yet.\"","\"You're the only person here I still trust.\""],
+    linesFr:["Purple Witch apparait sans bruit derriere toi. \"J'ai decouvert quelque chose de compromettant sur un membre du conseil. Je ne sais pas encore quoi en faire.\"","\"Tu es la seule personne en qui j'ai encore confiance ici.\""],
+    linesEn:["Purple Witch appears silently behind you. \"I found something compromising about a council member. I don't know what to do with it yet.\"","\"You're the only person here I still trust.\""],
     choices:[
       { fr:"Garder le secret avec elle, quoi qu'il arrive.", en:"Keep the secret with her, whatever happens.", eff:{rel:{nyx:6}} },
       { fr:"L'encourager a remonter l'information officiellement.", en:"Encourage her to report it officially.", eff:{align:4, rel:{nyx:-1}} },
@@ -1371,8 +1384,8 @@ const CONVERSATIONS = [
       { fr:"Accepter discretement, sans que personne ne le sache.", en:"Quietly accept, with no one the wiser.", eff:{align:-10, rel:{mandate:7}} },
     ]},
   { id:'conv_lorelei', charKey:'lorelei',
-    linesFr:["Lorelei surgit, amusee, dans un jeu de reflets. \"Dis-moi, entre nous : agis-tu vraiment par conviction, ou par habitude ?\"","\"J'adore observer les gens se mentir a eux-memes.\""],
-    linesEn:["Lorelei appears, amused, in a play of reflections. \"Tell me, just between us: do you act from real conviction, or out of habit?\"","\"I love watching people lie to themselves.\""],
+    linesFr:["Audition surgit, amusee, dans un jeu de reflets. \"Dis-moi, entre nous : agis-tu vraiment par conviction, ou par habitude ?\"","\"J'adore observer les gens se mentir a eux-memes.\""],
+    linesEn:["Audition appears, amused, in a play of reflections. \"Tell me, just between us: do you act from real conviction, or out of habit?\"","\"I love watching people lie to themselves.\""],
     choices:[
       { fr:"Jouer le jeu avec elle, avec humour.", en:"Play along with her, playfully.", eff:{intelligence:3, rel:{lorelei:4}} },
       { fr:"Refuser de te laisser deconcentrer par ses provocations.", en:"Refuse to be thrown off by her provocations.", eff:{align:3} },
@@ -1395,32 +1408,32 @@ const CONVERSATIONS = [
       { fr:"Lui repondre que tu n'obeis a aucune ligne.", en:"Tell him you follow no one's line.", eff:{align:-6, rel:{theg:-5}} },
     ]},
   { id:'conv_aegis', charKey:'aegis',
-    linesFr:["Aegis se releve de sa position de garde. \"J'ai vu ton dernier deploiement. Tu couvres mal ton flanc gauche.\"","\"Je peux t'entrainer. Ou je peux te ramasser plus tard, en morceaux.\""],
-    linesEn:["Aegis rises from a guard stance. \"I saw your last deployment. You leave your left flank open.\"","\"I can train you. Or I can scrape you off the pavement later.\""],
+    linesFr:["Captain Americain se releve de sa position de garde. \"J'ai vu ton dernier deploiement. Tu couvres mal ton flanc gauche.\"","\"Je peux t'entrainer. Ou je peux te ramasser plus tard, en morceaux.\""],
+    linesEn:["Captain Americain rises from a guard stance. \"I saw your last deployment. You leave your left flank open.\"","\"I can train you. Or I can scrape you off the pavement later.\""],
     choices:[
       { fr:"Accepter son entrainement, humblement.", en:"Accept her training, humbly.", eff:{align:4, courage:4, rel:{aegis:5}} },
       { fr:"Proposer un duel amical pour tester sa theorie.", en:"Propose a friendly duel to test the theory.", eff:{courage:5, rel:{aegis:2}} },
       { fr:"Balayer la remarque d'un geste.", en:"Wave the remark off.", eff:{align:-3, rel:{aegis:-4}} },
     ]},
   { id:'conv_ferrum', charKey:'ferrum',
-    linesFr:["Ferrum pose une main enorme sur ton epaule. \"Les gens comme nous cassent tout, meme sans le vouloir.\"","\"Alors moi j'ai appris a compter jusqu'a trois avant de frapper. Toi aussi tu devrais.\""],
-    linesEn:["Ferrum drops a huge hand on your shoulder. \"People like us break things, even by accident.\"","\"So I learned to count to three before I swing. You should too.\""],
+    linesFr:["Muskl pose une main enorme sur ton epaule. \"Les gens comme nous cassent tout, meme sans le vouloir.\"","\"Alors moi j'ai appris a compter jusqu'a trois avant de frapper. Toi aussi tu devrais.\""],
+    linesEn:["Muskl drops a huge hand on your shoulder. \"People like us break things, even by accident.\"","\"So I learned to count to three before I swing. You should too.\""],
     choices:[
       { fr:"Promettre de mesurer chacun de tes coups.", en:"Promise to measure every blow.", eff:{align:6, rel:{ferrum:5}} },
       { fr:"Lui dire que la retenue coute des vies.", en:"Tell him restraint costs lives.", eff:{courage:4, rel:{ferrum:-2}} },
       { fr:"Rire de sa prudence de vieux colosse.", en:"Laugh at the old colossus's caution.", eff:{align:-5, rel:{ferrum:-5}} },
     ]},
   { id:'conv_solen', charKey:'solen',
-    linesFr:["Kilian Solen fait defiler des donnees sur son avant-bras. \"J'ai intercepte des transferts internes qui ne devraient pas exister.\"","\"Je te partage tout, mais on garde ca entre nous jusqu'a preuve solide.\""],
-    linesEn:["Kilian Solen scrolls data on his forearm. \"I intercepted internal transfers that shouldn't exist.\"","\"I'll share everything, but this stays between us until we have hard proof.\""],
+    linesFr:["Docteur Etrange fait defiler des donnees sur son avant-bras. \"J'ai intercepte des transferts internes qui ne devraient pas exister.\"","\"Je te partage tout, mais on garde ca entre nous jusqu'a preuve solide.\""],
+    linesEn:["Docteur Etrange scrolls data on his forearm. \"I intercepted internal transfers that shouldn't exist.\"","\"I'll share everything, but this stays between us until we have hard proof.\""],
     choices:[
       { fr:"Enqueter ensemble, discretement et proprement.", en:"Investigate together, quietly and cleanly.", eff:{intelligence:5, rel:{solen:5}} },
       { fr:"Exiger de tout rendre public immediatement.", en:"Demand it all go public immediately.", eff:{align:4, popularity:3, rel:{solen:-2}} },
       { fr:"Lui proposer de monnayer l'information.", en:"Suggest cashing in on the information.", eff:{align:-8, rel:{solen:-6}} },
     ]},
   { id:'conv_sable', charKey:'sable',
-    linesFr:["Sable surgit d'une ruelle, masque baisse. \"Je bosse dans l'ombre, mais je choisis toujours mon camp.\"","\"Une alliance ? Tu me couvres, je te ramene ce que personne d'autre ne peut trouver.\""],
-    linesEn:["Sable slips out of an alley, mask down. \"I work in the dark, but I always pick a side.\"","\"An alliance? You cover me, I bring back what nobody else can find.\""],
+    linesFr:["Black Cat surgit d'une ruelle, masque baisse. \"Je bosse dans l'ombre, mais je choisis toujours mon camp.\"","\"Une alliance ? Tu me couvres, je te ramene ce que personne d'autre ne peut trouver.\""],
+    linesEn:["Black Cat slips out of an alley, mask down. \"I work in the dark, but I always pick a side.\"","\"An alliance? You cover me, I bring back what nobody else can find.\""],
     choices:[
       { fr:"Sceller l'alliance sur une poignee de main.", en:"Seal the alliance with a handshake.", eff:{align:3, intelligence:3, rel:{sable:6}} },
       { fr:"Accepter, mais poser des regles strictes.", en:"Accept, but set strict rules.", eff:{align:5, rel:{sable:2}} },
@@ -1519,43 +1532,43 @@ const PRESETS = [
     perkFr:'Icone absolue : popularite et courage d\'entree, les alliances se signent vite.', perkEn:'Absolute icon: high courage and fame from day one, alliances come easy.',
     flawFr:'Tout le monde l\'attend au tournant : la moindre faute coute double en reputation.', flawEn:'Everyone watches him: every mistake costs double reputation.',
     descFr:'Le heros de reference de Volt Industries. Le monde entier connait son nom.', descEn:'Volt Industries\' flagship hero. The whole world knows his name.' },
-  { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Cassius Volt', nameEn:'Cassius Volt', heroFr:'Volt', heroEn:'Volt', morphology:'humain', path:'tech', powers:['ia','rayons'],
+  { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Iron Boy', nameEn:'Iron Boy', heroFr:'Volt', heroEn:'Volt', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#0f2a4a', secondaryColor:'#39d0ff', symbol:'V' },
     align:28, stats:{courage:2, intelligence:20, popularity:10},
     perkFr:'Moyens illimites : intelligence tres haute, budgets et technologies sans limite.', perkEn:'Unlimited means: very high intelligence, endless budget and tech.',
     flawFr:'Courage moyen sur le terrain et suspicion permanente sur ses interets.', flawEn:'Average field courage and constant suspicion about his interests.',
     descFr:'Industriel milliardaire, cerveau derriere la moitie des armures du monde.', descEn:'Billionaire industrialist, mind behind half the world\'s armors.' },
-  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Vaelor Skoll', nameEn:'Vaelor Skoll', heroFr:'Vaelor', heroEn:'Vaelor', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
+  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Fhor', nameEn:'Fhor', heroFr:'Fhor', heroEn:'Fhor', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#2b3242', secondaryColor:'#c94b2c', symbol:'' },
     align:30, stats:{courage:18, intelligence:6, popularity:2},
     perkFr:'Veteran de guerre : encaisse les missions les plus dures sans reculer.', perkEn:'War veteran: takes the hardest missions without flinching.',
     flawFr:'Peu populaire, mauvaise image mediatique, alliances difficiles.', flawEn:'Unpopular, poor media image, alliances are hard to build.',
     descFr:'Soldat mystique revenu de trop de fronts. Il se bat, il ne parle pas.', descEn:'Mystic soldier back from too many fronts. He fights, he does not talk.' },
-  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Aegis', nameEn:'Aegis', heroFr:'Aegis', heroEn:'Aegis', morphology:'armure', path:'tech', powers:['armure','rayons'],
+  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Captain Americain', nameEn:'Captain Americain', heroFr:'Captain Americain', heroEn:'Captain Americain', morphology:'armure', path:'tech', powers:['armure','rayons'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'shield', suitColor:'#e8eef7', secondaryColor:'#1a6cff', symbol:'AGS' },
     align:35, stats:{courage:14, intelligence:10, popularity:4},
     perkFr:'Exosquelette defensif : tres resistant, protege les civils et les allies.', perkEn:'Defensive exosuit: very resilient, shields civilians and allies.',
     flawFr:'Lourd et lent : peu efficace sur les missions d\'infiltration ou de vitesse.', flawEn:'Heavy and slow: weak on stealth or speed missions.',
     descFr:'Exosquelette de premiere ligne. Il encaisse pour que personne d\'autre ne tombe.', descEn:'Front-line exosuit. He takes the hits so nobody else falls.' },
-  { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Ferrum', nameEn:'Ferrum', heroFr:'Ferrum', heroEn:'Ferrum', morphology:'colosse', path:'physique', powers:['force','regen'],
+  { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Muskl', nameEn:'Muskl', heroFr:'Muskl', heroEn:'Muskl', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3a3f47', secondaryColor:'#c8763c', symbol:'' },
     align:25, stats:{courage:20, intelligence:-6, popularity:2},
     perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
     flawFr:'Intelligence faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low intelligence: easily manipulated, fails strategic missions.',
     descFr:'Ancien docker devenu montagne humaine.', descEn:'Former dockworker turned human mountain.' },
-  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Elena Marsh', nameEn:'Elena Marsh', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'tech', powers:['ia','vitesse'],
+  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Red Widow', nameEn:'Red Widow', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'tech', powers:['ia','vitesse'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#123c78', secondaryColor:'#ffc63f', symbol:'MRD' },
     align:30, stats:{courage:6, intelligence:18, popularity:8},
     perkFr:'Assistee par IA : lit le terrain, resout les crises complexes.', perkEn:'AI-assisted: reads the field, solves complex crises.',
     flawFr:'Fragile physiquement : les affrontements bruts la mettent en danger.', flawEn:'Physically fragile: raw brawls put her in danger.',
     descFr:'Officier de terrain assistee par IA.', descEn:'AI-assisted field officer.' },
-  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Nyx', nameEn:'Nyx', heroFr:'Nyx', heroEn:'Nyx', morphology:'elance', path:'psychique', powers:['illusions','vitesse'],
+  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Purple Witch', nameEn:'Purple Witch', heroFr:'Purple Witch', heroEn:'Purple Witch', morphology:'elance', path:'psychique', powers:['illusions','vitesse'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1b1b26', secondaryColor:'#8a7bff', symbol:'' },
     align:14, stats:{courage:10, intelligence:14, popularity:-4},
     perkFr:'Reine de l\'ombre : infiltration, informations, coups impossibles a tracer.', perkEn:'Queen of shadows: infiltration, intel, untraceable strikes.',
     flawFr:'Reputation trouble : le public se mefie, l\'alignement glisse facilement.', flawEn:'Murky reputation: the public distrusts her, alignment slips easily.',
     descFr:'Espionne devenue heroine par accident. Elle joue sur toutes les lignes.', descEn:'Spy turned hero by accident. She plays every line.' },
-  { id:'solen', charKey:'solen', side:'hero', img:CHAR_IMG.char9, nameFr:'Kilian Solen', nameEn:'Kilian Solen', heroFr:'Solen', heroEn:'Solen', morphology:'humain', path:'psychique', powers:['telepathie','projection'],
+  { id:'solen', charKey:'solen', side:'hero', img:CHAR_IMG.char9, nameFr:'Docteur Etrange', nameEn:'Docteur Etrange', heroFr:'Solen', heroEn:'Solen', morphology:'humain', path:'psychique', powers:['telepathie','projection'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'standard', aura:'none', weapon:'none', suitColor:'#25405c', secondaryColor:'#ffe9b0', symbol:'' },
     align:22, stats:{courage:4, intelligence:12, popularity:16},
     perkFr:'Charisme naturel : negocie, calme les foules, gagne les proces d\'opinion.', perkEn:'Natural charisma: negotiates, calms crowds, wins public opinion.',
@@ -1567,7 +1580,7 @@ const PRESETS = [
     perkFr:'Frappe mystique devastatrice, tres suivie par les foules.', perkEn:'Devastating mystic strikes, crowds follow her.',
     flawFr:'Orgueil : refuse les ordres, provoque des conflits avec ses allies.', flawEn:'Pride: refuses orders, creates conflicts with allies.',
     descFr:'Heritiere d\'un marteau de siege. Frappe droit, ne recule jamais.', descEn:'Heir to a siege hammer. Strikes straight, never retreats.' },
-  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Sable', nameEn:'Sable', heroFr:'Sable', heroEn:'Sable', morphology:'elance', path:'psychique', powers:['telepathie','vitesse'],
+  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Black Cat', nameEn:'Black Cat', heroFr:'Black Cat', heroEn:'Black Cat', morphology:'elance', path:'psychique', powers:['telepathie','vitesse'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#4b2a7a', secondaryColor:'#1a1a22', symbol:'' },
     align:12, stats:{courage:12, intelligence:12, popularity:-2},
     perkFr:'Polyvalente : bonne sur presque toutes les missions, jamais prise au piege.', perkEn:'Versatile: solid on almost any mission, never cornered.',
@@ -1782,6 +1795,7 @@ function freshState(lang){
     team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
     battleForm:{ momentum:0, streak:0, injury:null },
+    skills:[], lastTrainingYear:null, trainingOffer:null,
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
     activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null, usedFrag:{}, introConvDone:false,
@@ -1947,7 +1961,7 @@ function topbar(){
 function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
-    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, end:screenEnd };
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, training:screenTraining, end:screenEnd };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -2339,8 +2353,7 @@ function screenStartSide(){
   return d;
 }
 function estimateCareerMissions(years, mode){
-  if(mode==='short') return 30;
-  return Math.round(years * 6.5);
+  return Math.max(1, years) * 3;
 }
 function formatDuration(totalSec){
   const min = Math.max(1, Math.round(totalSec/60));
@@ -2358,7 +2371,7 @@ function screenMode(){
     <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
     <div id="yearsBox" style="margin-top:20px; display:none;">
       <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
-      <input type="range" min="10" max="80" value="${S.years}" id="yearsRange">
+      <input type="range" min="10" max="50" value="${Math.min(50,S.years)}" id="yearsRange">
       <div id="estBox" style="margin-top:14px;"></div>
     </div>
     <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
@@ -2383,7 +2396,7 @@ function screenMode(){
 function buildCareerPlan(){
   S.missionsPlan = [];
   if(S.mode==='short'){ S.years = 10; for(let y=0;y<10;y++) S.missionsPlan.push(3); }
-  else { for(let y=0;y<S.years;y++) S.missionsPlan.push(3 + Math.floor(Math.random()*8)); }
+  else { S.years = Math.min(50, S.years); for(let y=0;y<S.years;y++) S.missionsPlan.push(3); }
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.mentorCap = S.mode==='long' ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -2458,6 +2471,7 @@ function nextMission(){
     S.screen='yearbreak'; render(); return;
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
+  if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
   if(shouldTriggerMentor()){
     S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
     S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
@@ -2537,6 +2551,136 @@ const MOVES_BY_POWER = {
   controle_emotionnel:[{fr:'Vague de doute',en:'Wave of doubt',p:23,acc:.93},{fr:'Rage retournee',en:'Turned rage',p:31,acc:.79}],
   precognition:[{fr:'Coup d\'avance',en:'One step ahead',p:24,acc:1},{fr:'Esquive prophetique',en:'Prophetic dodge',p:13,acc:1,heal:13}],
 };
+
+/* ============================ SKILLS (20) ============================ */
+const SKILLS = [
+  { id:'poing_stellaire', fr:'Poing Stellaire', en:'Stellar Fist', tags:['force','invulnerabilite','saut'], move:{fr:'Poing stellaire',en:'Stellar fist',p:42,acc:.78}, bonus:{courage:4} },
+  { id:'garde_vibranium', fr:'Garde Vibranium', en:'Vibranium Guard', tags:['armure','bouclier_energie','invulnerabilite'], move:{fr:'Garde vibranium',en:'Vibranium guard',p:16,acc:1,heal:22}, bonus:{courage:2,popularity:2} },
+  { id:'foudre_asgardienne', fr:'Foudre Ancestrale', en:'Ancestral Thunder', tags:['elementaire','rayons'], move:{fr:'Foudre ancestrale',en:'Ancestral thunder',p:44,acc:.74}, bonus:{courage:3,popularity:2} },
+  { id:'protocole_singularite', fr:'Protocole Singularite', en:'Singularity Protocol', tags:['ia','drones','nanotech'], move:{fr:'Protocole singularite',en:'Singularity protocol',p:38,acc:.86}, bonus:{intelligence:5} },
+  { id:'toile_sixieme_sens', fr:'Sixieme Sens', en:'Sixth Sense', tags:['sens_aiguises','vitesse','precognition'], move:{fr:'Riposte au sixieme sens',en:'Sixth-sense riposte',p:31,acc:1}, bonus:{intelligence:3,courage:1} },
+  { id:'chaos_ecarlate', fr:'Chaos Ecarlate', en:'Scarlet Chaos', tags:['illusions','telekinesie','controle_emotionnel'], move:{fr:'Vague de chaos',en:'Chaos wave',p:45,acc:.72}, bonus:{intelligence:3,popularity:2} },
+  { id:'mudra_temporel', fr:'Mudra Temporel', en:'Time Mudra', tags:['controle_temporel','portails','projection'], move:{fr:'Mudra temporel',en:'Time mudra',p:36,acc:.9}, bonus:{intelligence:4} },
+  { id:'fureur_gamma', fr:'Fureur Gamma', en:'Gamma Fury', tags:['force','regen','metamorphose'], move:{fr:'Fureur gamma',en:'Gamma fury',p:47,acc:.68}, bonus:{courage:5,popularity:-1} },
+  { id:'danse_veuve', fr:'Danse de la Veuve', en:'Widow Dance', tags:['vitesse','sens_aiguises','illusion_mentale'], move:{fr:'Danse de la veuve',en:'Widow dance',p:33,acc:.95}, bonus:{popularity:3,courage:1} },
+  { id:'pierre_esprit', fr:'Eclat de Pierre d\'Esprit', en:'Mind Stone Shard', tags:['telepathie','projection','ia'], move:{fr:'Eclat de pierre d\'esprit',en:'Mind stone shard',p:40,acc:.82}, bonus:{intelligence:4,popularity:1} },
+  { id:'rugissement_panthere', fr:'Rugissement de Panthere', en:'Panther Roar', tags:['vitesse','force','invulnerabilite'], move:{fr:'Rugissement de panthere',en:'Panther roar',p:37,acc:.88}, bonus:{courage:3,popularity:2} },
+  { id:'souffle_kamar', fr:'Souffle de Kamar', en:'Kamar Breath', tags:['invocation','portails','elementaire'], move:{fr:'Souffle de Kamar',en:'Kamar breath',p:20,acc:1,heal:26}, bonus:{intelligence:3} },
+  { id:'surcharge_arc', fr:'Surcharge Arc', en:'Arc Overload', tags:['armure','rayons','nanotech'], move:{fr:'Surcharge arc',en:'Arc overload',p:46,acc:.7}, bonus:{intelligence:3,courage:2} },
+  { id:'voile_neant', fr:'Voile du Neant', en:'Void Veil', tags:['illusions','illusion_mentale','metamorphose'], move:{fr:'Voile du neant',en:'Void veil',p:18,acc:1,heal:20}, bonus:{intelligence:2,popularity:2} },
+  { id:'jugement_multivers', fr:'Jugement du Multivers', en:'Multiverse Judgment', tags:['controle_temporel','telekinesie','invocation'], move:{fr:'Jugement du multivers',en:'Multiverse judgment',p:49,acc:.66}, bonus:{courage:3,intelligence:2} },
+  { id:'sang_froid_tactique', fr:'Sang-Froid Tactique', en:'Tactical Composure', tags:[], move:{fr:'Lecture du Sanctuaire',en:'Sanctum read',p:29,acc:1}, bonus:{intelligence:4,courage:2} },
+  { id:'endurance_titan', fr:'Endurance de Titan', en:'Titan Endurance', tags:[], move:{fr:'Second souffle du titan',en:'Titan second wind',p:14,acc:1,heal:24}, bonus:{courage:4} },
+  { id:'aura_charismatique', fr:'Aura Charismatique', en:'Charismatic Aura', tags:[], move:{fr:'Provocation magnetique',en:'Magnetic taunt',p:26,acc:1}, bonus:{popularity:6} },
+  { id:'frappe_dimensionnelle', fr:'Frappe Dimensionnelle', en:'Dimensional Strike', tags:['portails','projection','controle_temporel'], move:{fr:'Frappe dimensionnelle',en:'Dimensional strike',p:43,acc:.76}, bonus:{intelligence:2,courage:2} },
+  { id:'venin_symbiote', fr:'Venin Symbiote', en:'Symbiote Venom', tags:['metamorphose','nanotech','force'], move:{fr:'Venin symbiote',en:'Symbiote venom',p:41,acc:.8}, bonus:{courage:2,popularity:-1,intelligence:1} },
+];
+const SAGES = [
+  { fr:"Maitre Aranya, gardienne d'un sanctuaire cache dans l'Himalaya", en:"Master Aranya, keeper of a hidden Himalayan sanctum" },
+  { fr:"le Sorcier Sans Nom, dernier eleve d'une lignee eteinte", en:"the Nameless Sorcerer, last student of an extinct lineage" },
+  { fr:"Vashtar l'Exile, ancien champion d'une Terre effondree", en:"Vashtar the Exiled, former champion of a collapsed Earth" },
+  { fr:"la Doyenne du Sanctum de Kamar", en:"the Elder of the Kamar Sanctum" },
+  { fr:"Oldrik le Forgeron d'Etoiles", en:"Oldrik the Star-Smith" },
+  { fr:"Sister Kaal, moniale d'un ordre efface de la Chronologie Sacree", en:"Sister Kaal, nun of an order erased from the Sacred Timeline" },
+];
+function learnedSkills(){ return (S.skills||[]).map(id=>SKILLS.find(x=>x.id===id)).filter(Boolean); }
+function skillCandidates(){
+  const known = S.skills||[];
+  const pool = SKILLS.filter(sk=>!known.includes(sk.id));
+  const fit = pool.filter(sk=>sk.tags.length && sk.tags.some(tg=>(S.powers||[]).includes(tg)));
+  const generic = pool.filter(sk=>!sk.tags.length);
+  const base = fit.length ? fit : (generic.length ? generic : pool);
+  const extra = pool.filter(x=>!base.includes(x));
+  return shuffle(base).slice(0,2).concat(shuffle(extra).slice(0,1));
+}
+function shouldTriggerTraining(){
+  if(!S.currentMission && S.screen!=='mission') { /* noop */ }
+  if((S.skills||[]).length >= (S.mode==='short'?2:5)) return false;
+  if(S.currentYear < 3) return false;
+  if(S.lastTrainingYear!=null && (S.currentYear - S.lastTrainingYear) < (S.mode==='short'?4:6)) return false;
+  return Math.random() < 0.35;
+}
+function learnSkill(sk){
+  S.skills = S.skills || [];
+  if(!S.skills.includes(sk.id)) S.skills.push(sk.id);
+  const b = sk.bonus||{};
+  const impacts = [];
+  ['courage','intelligence','popularity'].forEach(k=>{ if(b[k]){ S.stats[k] = clamp(S.stats[k] + b[k], 0, 100); impacts.push({ label: statLabel(k), delta: b[k] }); } });
+  impacts.push({ label:(S.lang==='fr'?'Nouvelle attaque':'New move'), text:(S.lang==='fr'?sk.move.fr:sk.move.en) });
+  showImpact(impacts, (S.lang==='fr'?`Competence apprise : ${sk.fr}`:`Skill learned: ${sk.en}`));
+  const label = S.lang==='fr' ? `Retour d'exil : maitrise de ${sk.fr}.` : `Back from exile: mastered ${sk.en}.`;
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false });
+  S.currentYearEntries.push({ tag: label, location:null, type:'training', outcome:'skill' });
+}
+function screenTraining(){
+  const d = document.createElement('div');
+  const sage = pick(SAGES);
+  const cands = S.trainingOffer && S.trainingOffer.length ? S.trainingOffer : (S.trainingOffer = skillCandidates());
+  const sageTxt = S.lang==='fr' ? sage.fr : sage.en;
+  const zone = zoneOf(S.align);
+  const intro = S.lang==='fr'
+    ? (zone==='villain'
+       ? `Une transmission cryptee t'atteint : ${sageTxt} accepte de t'enseigner une technique interdite. Un an loin de tout, sans missions, sans public.`
+       : `Un message ancien t'atteint : ${sageTxt} propose de te former une annee entiere, en exil, loin des projecteurs.`)
+    : (zone==='villain'
+       ? `An encrypted transmission reaches you: ${sageTxt} agrees to teach you a forbidden technique. One year off the grid, no missions, no audience.`
+       : `An old message reaches you: ${sageTxt} offers a full year of training in exile, far from the spotlight.`);
+  d.innerHTML = `<span class="eyebrow">${S.lang==='fr'?'EXIL & ENTRAINEMENT':'EXILE & TRAINING'}</span>
+    <h2 style="margin-top:6px;">${intro}</h2>
+    <p class="lead">${S.lang==='fr'?'Choisis la voie que tu veux maitriser (tu perds l\'annee en cours, ta popularite baisse, mais tu reviens avec une attaque de haut niveau).':'Pick the discipline you want to master (you lose the current year and some popularity, but you return with a high-tier move).'}</p>
+    <div id="choices"></div>`;
+  const cbox = d.querySelector('#choices');
+  cands.forEach(sk=>{
+    const b = document.createElement('button'); b.className='choice';
+    const bonusTxt = Object.keys(sk.bonus||{}).map(k=>`${sk.bonus[k]>0?'+':''}${sk.bonus[k]} ${statLabel(k)}`).join(', ');
+    const mv = S.lang==='fr'?sk.move:{fr:sk.move.en};
+    b.innerHTML = `<b>${S.lang==='fr'?sk.fr:sk.en}</b><br><span style="color:var(--muted);font-size:12.5px;">${S.lang==='fr'?'Attaque':'Move'}: ${S.lang==='fr'?sk.move.fr:sk.move.en} (${sk.move.heal?(S.lang==='fr'?'soin ':'heal ')+sk.move.heal+' - ':''}${S.lang==='fr'?'degats':'dmg'} ${sk.move.p}, ${Math.round(sk.move.acc*100)}%) - ${bonusTxt}</span>`;
+    b.onclick = ()=>{
+      S.trainingOffer = null; S.lastTrainingYear = S.currentYear;
+      S.stats.popularity = clamp(S.stats.popularity - 4, 0, 100);
+      learnSkill(sk);
+      const missionsThisYear = S.missionsPlan[S.currentYear-1];
+      S.currentMissionInYear = missionsThisYear;
+      setTimeout(()=>{ nextMission(); }, 900);
+    };
+    cbox.appendChild(b);
+  });
+  const no = document.createElement('button'); no.className='choice';
+  no.textContent = S.lang==='fr'?'Refuser : rester sur le terrain, la legende ne se construit pas en retraite.':'Decline: stay in the field, legends are not built in retreat.';
+  no.onclick = ()=>{ S.trainingOffer = null; S.lastTrainingYear = S.currentYear;
+    S.stats.popularity = clamp(S.stats.popularity + 2, 0, 100);
+    showImpact([{label:statLabel('popularity'), delta:2}], S.lang==='fr'?'Tu restes sous les projecteurs':'You stay in the spotlight');
+    setTimeout(()=>{ nextMission(); }, 700);
+  };
+  cbox.appendChild(no);
+  return d;
+}
+/* ---------- Impact feedback ---------- */
+function statLabel(k){
+  const fr = { courage:'Attaque', intelligence:'Intelligence', popularity:'Popularite', align:'Alignement' };
+  const en = { courage:'Attack', intelligence:'Intelligence', popularity:'Popularity', align:'Alignment' };
+  return (S.lang==='fr'?fr:en)[k] || k;
+}
+function showImpact(items, title){
+  const list = (items||[]).filter(x=>x && (x.delta || x.text));
+  if(!list.length) return;
+  const old = document.getElementById('impactToast'); if(old) old.remove();
+  const el = document.createElement('div'); el.id='impactToast'; el.className='impact-toast';
+  el.innerHTML = `${title?`<div class="it-title">${title}</div>`:''}<div class="it-rows">${list.map(x=>{
+    if(x.text) return `<span class="it-row neutral">${x.label} : ${x.text}</span>`;
+    const up = x.delta > 0;
+    return `<span class="it-row ${up?'up':'down'}">${up?'+':''}${x.delta} ${x.label}</span>`;
+  }).join('')}</div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 500); }, 2600);
+}
+function impactFromEff(eff, alignDelta){
+  const items = [];
+  ['courage','intelligence','popularity'].forEach(k=>{ if(eff && eff[k]) items.push({ label:statLabel(k), delta:eff[k] }); });
+  if(alignDelta) items.push({ label:(S.lang==='fr'?(alignDelta>0?'vers Hero':'vers Villain'):(alignDelta>0?'toward Hero':'toward Villain')), delta:alignDelta });
+  if(eff && eff.rel){ Object.keys(eff.rel).forEach(k=>{ const c = CHARACTERS[k]; if(c) items.push({ label:(S.lang==='fr'?c.fr:c.en), delta:eff.rel[k] }); }); }
+  return items;
+}
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
 const FOE_MOVES = {
   theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut final',en:'Finishing uppercut',p:38,acc:.68}],
@@ -2569,6 +2713,7 @@ function foeMovesFor(key){
 }
 function playerMoves(){
   const list = [];
+  learnedSkills().slice(-2).forEach(sk=>list.push(sk.move));
   (S.powers||[]).forEach(id=>{ const m = MOVES_BY_POWER[id]; if(m) list.push(m[0], m[1]); });
   BASIC_MOVES.forEach(m=>list.push(m));
   const out = [];
@@ -2911,6 +3056,7 @@ function applyMentorChoice(choice, name){
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
+  showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   handleZoneCheckAndContinue();
 }
 function handleZoneCheckAndContinue(){
@@ -2954,6 +3100,7 @@ function applyChoice(choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
+  showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
   if(checkDeath(m)){
