@@ -264,12 +264,13 @@
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
 
   /* --- Combat tactique (style Pokemon) --- */
-  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; overflow:hidden;
-    background:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
+  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:center; overflow-y:auto;
+    background:#04070d; background-image:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
-  .btl-arena{ position:relative; flex:1 1 auto; display:flex; align-items:stretch; gap:10px; padding:12px 12px 6px; min-height:0; }
-  .btl-fighter{ flex:1 1 0; display:flex; flex-direction:column; gap:8px; min-width:0; }
-  .btl-frame{ position:relative; flex:1 1 auto; min-height:0; border-radius:16px; overflow:hidden;
+  .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
+    width:100%; max-width:660px; margin:0 auto; }
+  .btl-fighter{ flex:1 1 0; max-width:300px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .btl-frame{ position:relative; width:100%; aspect-ratio:1/1; border-radius:16px; overflow:hidden;
     border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 30px -6px var(--cp-color, var(--accent)), inset 0 0 50px -14px var(--cp-color, var(--accent));
     background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--cp-color) 28%, transparent), rgba(0,0,0,.62) 72%); }
   .btl-frame img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
@@ -294,8 +295,8 @@
   .btl-vs{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:5; font-size:clamp(30px,8vw,68px); font-weight:900; color:#fff;
     letter-spacing:2px; text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
   .btl-vs.gone{ animation: cineOut .35s ease forwards; }
-  .btl-log{ min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
-  .btl-moves{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
+  .btl-log{ width:100%; max-width:660px; margin:0 auto; min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
+  .btl-moves{ width:100%; max-width:660px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
   .btl-move{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer;
     color:var(--ink); font:inherit; transition:border-color .15s, transform .15s, background .15s; }
   .btl-move:hover:not(:disabled){ border-color:var(--accent); background:var(--accent-soft); transform:translateY(-1px); }
@@ -305,7 +306,9 @@
   .btl-overlay.intro .btl-moves, .btl-overlay.intro .btl-log, .btl-overlay.intro .btl-meta{ opacity:0; }
   .btl-moves, .btl-log, .btl-meta{ transition:opacity .4s ease; }
   @media (max-width:560px){
-    .btl-arena{ gap:6px; padding:8px 8px 4px; }
+    .btl-arena{ gap:8px; padding:10px 10px 4px; max-width:100%; }
+    .btl-fighter{ max-width:none; }
+    .btl-frame{ border-radius:12px; }
     .btl-frame .cp-glyph{ font-size:54px; }
     .btl-name{ font-size:10.5px; }
     .btl-log{ font-size:13px; min-height:40px; padding:4px 10px 6px; }
