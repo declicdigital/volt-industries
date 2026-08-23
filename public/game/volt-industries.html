@@ -267,9 +267,10 @@
   .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; overflow:hidden;
     background:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
-  .btl-arena{ position:relative; flex:1 1 auto; display:flex; align-items:stretch; gap:10px; padding:12px 12px 6px; min-height:0; }
-  .btl-fighter{ flex:1 1 0; display:flex; flex-direction:column; gap:8px; min-width:0; }
-  .btl-frame{ position:relative; flex:1 1 auto; min-height:0; border-radius:16px; overflow:hidden;
+  .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
+    width:100%; max-width:660px; margin:auto auto 0; }
+  .btl-fighter{ flex:1 1 0; max-width:300px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .btl-frame{ position:relative; width:100%; aspect-ratio:1/1; border-radius:16px; overflow:hidden;
     border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 30px -6px var(--cp-color, var(--accent)), inset 0 0 50px -14px var(--cp-color, var(--accent));
     background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--cp-color) 28%, transparent), rgba(0,0,0,.62) 72%); }
   .btl-frame img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
