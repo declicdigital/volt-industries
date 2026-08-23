@@ -1923,10 +1923,15 @@ function wordmarkLogoSVG(heightPx){
 }
 function topbar(){
   const bar = document.createElement('div'); bar.className='topbar';
+  const swatches = PALETTES.map(p=>`<button class="swatch ${S.palette===p.id?'active':''}" data-pal="${p.id}" title="${S.lang==='fr'?p.fr:p.en}" style="background:${p.swatch};"></button>`).join('');
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(52)}</div>
-    <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>`;
+    <div class="topopts">
+      <div class="palsel">${swatches}</div>
+      <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>
+    </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
   bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
+  bar.querySelectorAll('.palsel .swatch').forEach(b=>{ b.onclick=()=>{ S.palette=b.dataset.pal; try{ localStorage.setItem('vi_palette', S.palette); }catch(e){} applyTheme(); render(); }; });
   return bar;
 }
 function screenContent(){
