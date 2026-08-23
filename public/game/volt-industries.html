@@ -1781,6 +1781,7 @@ function freshState(lang){
     currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], currentMission:null, log:[],
     team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
+    battleForm:{ momentum:0, streak:0, injury:null },
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
     activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null, usedFrag:{}, introConvDone:false,
@@ -2576,6 +2577,70 @@ function battleFrameInner(charObj){
   const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
   return charObj.img ? `<img src="${charObj.img}" alt="${name}">` : `<span class="cp-glyph">${initial}</span>`;
 }
+function battleForm(){
+  if(!S.battleForm) S.battleForm = { momentum:0, streak:0, injury:null };
+  return S.battleForm;
+}
+function injuryActive(){
+  const f = battleForm();
+  if(f.injury && f.injury.battlesLeft > 0) return f.injury;
+  return null;
+}
+function formLabel(){
+  const f = battleForm(); const inj = injuryActive();
+  if(inj) return S.lang==='fr' ? `Convalescence (${inj.label}) - puissance reduite` : `Recovering (${inj.label}) - reduced power`;
+  if(f.momentum > 0) return S.lang==='fr' ? `Elan de victoire +${f.momentum} - coups renforces` : `Win momentum +${f.momentum} - stronger hits`;
+  return '';
+}
+function showBattleAftermath(html, col, cb){
+  const ov = document.createElement('div');
+  ov.className = 'btl-overlay';
+  ov.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML = `<div style="max-width:520px;width:92%;text-align:center;padding:22px 18px;border:1px solid ${col};border-radius:14px;background:rgba(6,10,18,.92);box-shadow:0 0 34px ${col}55;">
+    ${html}
+    <button class="btl-move" id="btlAfterOk" style="margin-top:16px;min-width:180px;"><b>${S.lang==='fr'?'CONTINUER':'CONTINUE'}</b></button></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#btlAfterOk').onclick = ()=>{ ov.remove(); cb(); };
+}
+function applyBattleAftermath(win, foeName, hpLeftPct, cb){
+  const f = battleForm();
+  if(win){
+    f.streak = Math.max(0, f.streak) + 1;
+    f.momentum = Math.min(6, f.momentum + 1);
+    if(f.injury) f.injury.battlesLeft = Math.max(0, f.injury.battlesLeft - 2);
+    S.stats.courage = clamp(S.stats.courage + 2, 0, 100);
+    S.stats.popularity = clamp(S.stats.popularity + 1, 0, 100);
+    const clean = hpLeftPct > 60;
+    if(clean) S.stats.popularity = clamp(S.stats.popularity + 2, 0, 100);
+    const col = 'var(--green)';
+    const title = S.lang==='fr'?'VICTOIRE - REGAIN DE FORME':'VICTORY - PEAK FORM';
+    const body = S.lang==='fr'
+      ? `Tu sors vainqueur face a ${foeName}${clean?' sans une egratignure':''}. Tes appuis, ta lecture du combat et ta frappe progressent.<br><br><b style="color:var(--green);">Elan de victoire : +${f.momentum}</b><br>Degats +${f.momentum*8}% et +${f.momentum*6} PV pour les prochains affrontements.<br>Courage +2, Popularite +${clean?3:1}.`
+      : `You beat ${foeName}${clean?' without a scratch':''}. Footwork, reads and striking power all improve.<br><br><b style="color:var(--green);">Win momentum: +${f.momentum}</b><br>+${f.momentum*8}% damage and +${f.momentum*6} HP in upcoming fights.<br>Courage +2, Popularity +${clean?3:1}.`;
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Victoire contre ${foeName}`:`Victory over ${foeName}`), location:null, type:'combat', outcome:'win' });
+    showBattleAftermath(`<div class="ru-title" style="color:var(--green);font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, col, cb);
+    return;
+  }
+  f.streak = 0;
+  f.momentum = 0;
+  const r = Math.random();
+  let sev, battles, label, days;
+  if(r < 0.45){ sev = 1; battles = 1; days = 4 + Math.floor(Math.random()*10); label = S.lang==='fr'?`${days} jours d'arret`:`${days} days off`; }
+  else if(r < 0.82){ sev = 2; battles = 2; const w = 3 + Math.floor(Math.random()*6); label = S.lang==='fr'?`${w} semaines de reeducation`:`${w} weeks of rehab`; }
+  else { sev = 3; battles = 3; const mo = 2 + Math.floor(Math.random()*5); label = S.lang==='fr'?`${mo} mois de galere`:`${mo} rough months`; }
+  f.injury = { sev, battlesLeft: battles, label };
+  S.stats.courage = clamp(S.stats.courage - (2+sev*2), 0, 100);
+  S.stats.popularity = clamp(S.stats.popularity - (1+sev), 0, 100);
+  if(sev >= 2) S.stats.intelligence = clamp(S.stats.intelligence + 1, 0, 100);
+  const ward = S.lang==='fr'
+    ? ['Tu te reveilles aux urgences, perfusion au bras.','Extraction en civiere, bloc operatoire dans l\'heure.','On te recolle a l\'infirmerie de Volt Industries.','Reveil en unite de soins, scanner et cotes fissurees.'][Math.min(3,sev)]
+    : ['You wake up in the ER, IV in your arm.','Stretchered out, surgery within the hour.','Patched up in the Volt Industries infirmary.','You come to in intensive care, cracked ribs.'][Math.min(3,sev)];
+  const body = S.lang==='fr'
+    ? `${foeName} t'a mis au tapis. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Ton elan retombe a zero. Degats -${sev*10}% et -${sev*8} PV sur les ${battles} prochain(s) combat(s).<br>Courage -${2+sev*2}, Popularite -${1+sev}${sev>=2?(S.lang==='fr'?', Intelligence +1 (tu apprends de la douleur)':', Intelligence +1 (pain teaches)'):''}.`
+    : `${foeName} put you down. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Momentum wiped. -${sev*10}% damage and -${sev*8} HP for your next ${battles} fight(s).<br>Courage -${2+sev*2}, Popularity -${1+sev}${sev>=2?', Intelligence +1':''}.`;
+  S.currentYearEntries.push({ tag:(S.lang==='fr'?`Defaite contre ${foeName} - ${label}`:`Defeat vs ${foeName} - ${label}`), location:null, type:'combat', outcome:'lose' });
+  showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, 'var(--red)', cb);
+}
 function startBattle(mission, done){
   const foeKey = battleFoeKey(mission);
   const foe = CHARACTERS[foeKey];
@@ -2585,12 +2650,17 @@ function startBattle(mission, done){
   const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
   const foeCol = convBeamColor(foe.align);
   const pl = computePowerLevel();
+  const form = battleForm();
+  const inj = injuryActive();
+  const myMaxHP = Math.max(45, 100 + form.momentum*6 - (inj?inj.sev*8:0));
+  const dmgMult = (1 + form.momentum*0.08) * (inj ? (1 - inj.sev*0.10) : 1);
   const st = {
-    myHP:100, myMax:100,
+    myHP: myMaxHP, myMax: myMaxHP,
     foeHP: 90 + (mission.danger||0)*6 + Math.round((mission.scope||1)*2),
     busy:true
   };
   st.foeMax = st.foeHP;
+  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro';
@@ -2642,18 +2712,22 @@ function startBattle(mission, done){
     }).join('');
     movesEl.querySelectorAll('button').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
   }
-  function dmgOf(move, atkPower){
+  function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
-    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62));
+    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
     (win?foeFrame:meFrame).classList.add('ko');
     setLog(win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
                : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`));
+    const hpPct = clamp(st.myHP/st.myMax*100, 0, 100);
     setTimeout(()=>{
       ov.classList.add('btl-out');
-      setTimeout(()=>{ ov.remove(); done(win, foeKey); }, 450);
+      setTimeout(()=>{
+        ov.remove();
+        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey); });
+      }, 450);
     }, 1500);
   }
   function foeTurn(){
@@ -2682,7 +2756,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.35);
+    const d = dmgOf(m, pl + S.stats.courage*0.35, dmgMult);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
@@ -2693,7 +2767,8 @@ function startBattle(mission, done){
   setTimeout(()=>{
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
-    setLog(S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`);
+    const fl = formLabel();
+    setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
     st.busy = false; setMovesEnabled(true);
   }, 1500);
 }
