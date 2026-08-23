@@ -2836,7 +2836,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.35, dmgMult);
+    const d = dmgOf(m, pl + S.stats.courage*0.25, dmgMult);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
@@ -2848,9 +2848,17 @@ function startBattle(mission, done){
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
     const fl = formLabel();
-    setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
-    st.busy = false; setMovesEnabled(true);
+    // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
+    const foeFirst = Math.random() < (0.28 + Math.min(0.22, Math.max(0, form.streak)*0.06));
+    if(foeFirst){
+      setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
+      setTimeout(foeTurn, 1000);
+    } else {
+      setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
+      st.busy = false; setMovesEnabled(true);
+    }
   }, 1500);
+
 }
 function afterMissionRender(mission){
   if(mission && mission.pivotal){
