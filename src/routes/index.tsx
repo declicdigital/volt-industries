@@ -19,13 +19,17 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: "https://volt-industries.lovable.app/" },
       {
         property: "og:image",
-        content: "https://volt-industries.lovable.app/og-volt-industries.png",
+        content: "https://volt-industries.lovable.app/og-volt-industries.jpg",
       },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "800" },
+      { property: "og:image:alt", content: "Volt Industries — Le choix de l'énergie" },
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:image",
-        content: "https://volt-industries.lovable.app/og-volt-industries.png",
+        content: "https://volt-industries.lovable.app/og-volt-industries.jpg",
       },
+
     ],
     links: [{ rel: "canonical", href: "https://volt-industries.lovable.app/" }],
   }),
