@@ -2826,6 +2826,37 @@ const CONV_CHOICE_POOL = {
     { fr:"Vendre l'information au plus offrant.", en:"Sell the information to the highest bidder.", eff:{align:-8, popularity:1, rel:-3} },
   ],
 };
+/* Options supplementaires, champ lexical MCU */
+CONV_CHOICE_POOL.noble.push(
+  { fr:"Refuser d'utiliser l'artefact, meme pour gagner.", en:"Refuse to use the artifact, even to win.", eff:{align:8, rel:3, intelligence:1} },
+  { fr:"Assembler l'equipe au complet avant d'intervenir.", en:"Assemble the full team before moving in.", eff:{align:5, popularity:3, rel:4} },
+  { fr:"Evacuer les civils avant d'affronter la breche.", en:"Evacuate civilians before facing the breach.", eff:{align:8, courage:2, rel:2} },
+  { fr:"Signer les accords de supervision et l'assumer.", en:"Sign the oversight accords and own it.", eff:{align:6, popularity:2, rel:1} },
+  { fr:"Protéger la ligne temporelle plutot que ton propre passe.", en:"Protect the timeline instead of your own past.", eff:{align:9, courage:3, rel:2} },
+  { fr:"Tendre la main a ta variante au lieu de la neutraliser.", en:"Reach out to your variant instead of neutralizing them.", eff:{align:7, rel:5} },
+  { fr:"Rendre le sceptre au sanctuaire, sans conditions.", en:"Return the scepter to the sanctum, no conditions.", eff:{align:8, rel:3} },
+  { fr:"Porter seul le cout du dommage collateral.", en:"Carry the collateral damage cost alone.", eff:{align:7, popularity:-3, courage:3, rel:3} },
+);
+CONV_CHOICE_POOL.pragmatic.push(
+  { fr:"Confiner l'artefact et etudier sa signature energetique.", en:"Contain the artifact and study its energy signature.", eff:{intelligence:5, rel:1} },
+  { fr:"Demander une analyse de divergence avant d'agir.", en:"Request a divergence analysis before acting.", eff:{intelligence:5} },
+  { fr:"Negocier un couloir de portail securise.", en:"Negotiate a secured portal corridor.", eff:{intelligence:4, rel:3} },
+  { fr:"Verrouiller la breche a minima et gagner du temps.", en:"Minimally lock the breach and buy time.", eff:{intelligence:4, courage:1} },
+  { fr:"Deployer l'essaim de drones en reconnaissance.", en:"Deploy the drone swarm for recon.", eff:{intelligence:4, popularity:1} },
+  { fr:"Proposer un protocole conjoint avec sa faction.", en:"Propose a joint protocol with their faction.", eff:{intelligence:3, rel:4} },
+  { fr:"Falsifier le rapport de dommages pour eviter l'audience.", en:"Doctor the damage report to dodge the hearing.", eff:{intelligence:4, align:-3, popularity:2} },
+  { fr:"Garder le prototype d'armure en reserve, hors inventaire.", en:"Keep the armor prototype off the books.", eff:{intelligence:5, align:-2} },
+);
+CONV_CHOICE_POOL.ruthless.push(
+  { fr:"Prendre l'artefact et l'utiliser sur-le-champ.", en:"Take the artifact and use it on the spot.", eff:{align:-9, courage:4, rel:-5} },
+  { fr:"Effacer sa variante avant qu'elle ne devienne un probleme.", en:"Erase their variant before it becomes a problem.", eff:{align:-10, intelligence:3, rel:-7} },
+  { fr:"Ouvrir la breche plus grand pour couvrir ta fuite.", en:"Widen the breach to cover your escape.", eff:{align:-9, courage:3, rel:-4} },
+  { fr:"Reclamer un tribut a la ville que tu viens de sauver.", en:"Demand tribute from the city you just saved.", eff:{align:-8, popularity:2, rel:-3} },
+  { fr:"Retourner l'IA de defense contre ses proprietaires.", en:"Turn the defense AI against its owners.", eff:{align:-8, intelligence:4, rel:-4} },
+  { fr:"Injecter le serum sans attendre les tests.", en:"Inject the serum without waiting for tests.", eff:{align:-6, courage:5, intelligence:-2, rel:-2} },
+  { fr:"Livrer les identites civiles de ton equipe au conseil.", en:"Hand your team's civilian identities to the council.", eff:{align:-10, popularity:3, rel:-8} },
+  { fr:"Laisser la moitie de la zone tomber pour sauver l'autre.", en:"Let half the zone fall to save the other.", eff:{align:-7, courage:3, rel:-5} },
+);
 function convFill(str, charObj){
   return str.replace(/\{char\}/g, S.lang==='fr'?charObj.fr:charObj.en)
             .replace(/\{hero\}/g, S.heroName || (S.lang==='fr'?'toi':'you'))
