@@ -4131,6 +4131,14 @@ function startBattle(mission, done){
 
     setTimeout(()=>{
       if(st.myHP<=0){ finish(false); return; }
+      if(assistChance('foe')){
+        runAssist('foe');
+        setTimeout(()=>{
+          if(st.myHP<=0){ finish(false); return; }
+          st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+        }, 1250);
+        return;
+      }
       st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
     }, 950);
   }
@@ -4140,14 +4148,25 @@ function startBattle(mission, done){
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
-      setTimeout(foeTurn, 900); return;
+      if(assistChance('ally')){
+        setTimeout(()=>{ runAssist('ally'); setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250); }, 700);
+      } else setTimeout(foeTurn, 900);
+      return;
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
     setLog(S.lang==='fr'?`${label} touche ${foeName} : ${d} degats.`:`${label} hits ${foeName}: ${d} damage.`);
-    setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 950);
+    setTimeout(()=>{
+      if(st.foeHP<=0){ finish(true); return; }
+      if(assistChance('ally')){
+        runAssist('ally');
+        setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250);
+        return;
+      }
+      foeTurn();
+    }, 950);
   }
   renderMoves(); refreshBars(); setMovesEnabled(false);
   setTimeout(()=>{
