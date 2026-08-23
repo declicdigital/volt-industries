@@ -264,7 +264,7 @@
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
 
   /* --- Combat tactique (style Pokemon) --- */
-  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; overflow:hidden;
+  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:center; overflow-y:auto;
     background:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
   .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
@@ -306,7 +306,9 @@
   .btl-overlay.intro .btl-moves, .btl-overlay.intro .btl-log, .btl-overlay.intro .btl-meta{ opacity:0; }
   .btl-moves, .btl-log, .btl-meta{ transition:opacity .4s ease; }
   @media (max-width:560px){
-    .btl-arena{ gap:6px; padding:8px 8px 4px; }
+    .btl-arena{ gap:8px; padding:10px 10px 4px; max-width:100%; }
+    .btl-fighter{ max-width:none; }
+    .btl-frame{ border-radius:12px; }
     .btl-frame .cp-glyph{ font-size:54px; }
     .btl-name{ font-size:10.5px; }
     .btl-log{ font-size:13px; min-height:40px; padding:4px 10px 6px; }
