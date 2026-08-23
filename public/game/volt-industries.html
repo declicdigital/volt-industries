@@ -45,6 +45,10 @@
   .rank-badge .rlabel{ font-size:9.5px; font-weight:800; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-top:2px;}
   .rank-badge .stars{ margin-top:4px; font-size:15px; letter-spacing:2px; }
   .rank-badge .score-line{ margin-top:3px; font-size:13px; font-weight:900; }
+  .rank-badge .rlove{ margin-top:6px; display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    font-size:10.5px; font-weight:800; letter-spacing:.6px; }
+  .rank-badge .rlove .hb{ font-size:13px; animation:heartBeat 1.4s ease-in-out infinite; }
+  @keyframes heartBeat{ 0%,100%{ transform:scale(1); } 45%{ transform:scale(1.28); } }
   .game-shell{ display:flex; gap:26px; align-items:flex-start; }
   .side-avatar{ position:sticky; top:20px; width:300px; flex-shrink:0; }
   .main-col{ flex:1; min-width:0; }
@@ -1770,8 +1774,15 @@ function renderRankBadge(){
       <span style="font-size:10px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
       <div style="width:24px;height:24px;">${factionEmblemSVG(S.team.side, S.team.tier, 24)}</div>
     </div>` : '';
+  let loveHtml = '';
+  if(S.romance && S.romance.active && CHARACTERS[S.romance.charKey]){
+    const pc = CHARACTERS[S.romance.charKey];
+    const pn = S.lang==='fr' ? pc.fr : pc.en;
+    const col = S.romance.enemy ? 'var(--red)' : '#ff5c8a';
+    loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
+  }
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span></div>${factionHtml}`;
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span></div>${factionHtml}${loveHtml}`;
   if(stars > S.lastStars){ showRankUpToast(stars, zone); }
   S.lastStars = stars;
 }
@@ -3139,18 +3150,85 @@ function buildRomanceConv(charKey, enemy, stage){
   return { id:'rom_'+charKey+'_'+stage, charKey, romance:true, enemy, stage,
     linesFr, linesEn, choices: romanceChoices(charKey, enemy, stage) };
 }
+/* ---- scenes recurrentes de couple (entre les grandes etapes) ---- */
+const ROM_BEATS = [
+  { fr:s=>`${s.n} debarque dans ton QG sans prevenir, deux cafes a la main. \"Tu dors combien d'heures, en vrai ?\"`, en:s=>`${s.n} shows up at your HQ unannounced, two coffees in hand. "How many hours do you actually sleep?"` },
+  { fr:s=>`Une soiree sans alerte, sans camera. ${s.n} coupe la radio. \"Ce soir, personne ne meurt. On a le droit.\"`, en:s=>`One evening with no alerts, no cameras. ${s.n} kills the radio. "Tonight nobody dies. We're allowed."` },
+  { fr:s=>`La presse publie une photo de vous deux. ${s.n} la regarde longtemps. \"Ils vont s'en servir contre nous.\"`, en:s=>`The press runs a photo of you two. ${s.n} stares at it. "They'll use this against us."` },
+  { fr:s=>`Tu rentres blesse. ${s.n} recoud sans un mot, puis explose. \"Tu joues avec ma vie, pas juste la tienne.\"`, en:s=>`You come home hurt. ${s.n} stitches you up in silence, then snaps. "You're gambling with my life too."` },
+  { fr:s=>`${s.n} te demande de couvrir une operation risquee. \"J'ai besoin de quelqu'un a qui je peux tourner le dos.\"`, en:s=>`${s.n} asks you to cover a risky op. "I need someone I can turn my back to."` },
+  { fr:s=>`Anniversaire de votre rencontre. ${s.n} t'offre une balise de secours gravee. \"Appuie, et je viens. Toujours.\"`, en:s=>`The anniversary of your meeting. ${s.n} gives you an engraved distress beacon. "Press it and I come. Always."` },
+  { fr:s=>`Dispute violente : ${s.n} t'accuse de faire passer ta reputation avant tout. Le silence dure trois jours.`, en:s=>`A violent argument: ${s.n} accuses you of putting your reputation first. The silence lasts three days.` },
+  { fr:s=>`Ta faction te convoque : votre relation est jugee \"risque operationnel\". ${s.n} attend ta reponse.`, en:s=>`Your faction summons you: the relationship is rated an "operational risk". ${s.n} waits for your answer.` },
+  { fr:s=>`${s.n} rencontre ton equipe pour la premiere fois. Ca se passe... presque bien.`, en:s=>`${s.n} meets your team for the first time. It goes... almost well.` },
+  { fr:s=>`Nuit blanche a deux sur un toit. ${s.n} parle d'arreter. \"Une maison, un vrai nom. Pas ces masques.\"`, en:s=>`A sleepless night on a rooftop. ${s.n} talks about quitting. "A house, a real name. Not these masks."` },
+  { fr:s=>`Un rival tente de te faire chanter avec vos messages prives. ${s.n} l'apprend avant toi.`, en:s=>`A rival tries to blackmail you with your private messages. ${s.n} finds out before you do.` },
+  { fr:s=>`Sur le terrain, ${s.n} prend un coup destine a toi. \"Ne me remercie pas. Ne recommence pas.\"`, en:s=>`In the field, ${s.n} takes a hit meant for you. "Don't thank me. Don't do it again."` },
+  { fr:s=>`${s.n} te tend un dossier sur ta propre faction. \"Lis-le. Apres, on parle de confiance.\"`, en:s=>`${s.n} hands you a file about your own faction. "Read it. Then we'll talk about trust."` },
+  { fr:s=>`Vacances de trois jours sous fausse identite. Personne ne vous reconnait. ${s.n} rit enfin.`, en:s=>`Three days off under fake names. Nobody recognizes you. ${s.n} finally laughs.` },
+  { fr:s=>`${s.n} disparait deux semaines sans explication, puis revient comme si rien n'etait.`, en:s=>`${s.n} vanishes for two weeks with no explanation, then comes back like nothing happened.` },
+  { fr:s=>`Une mission vous oppose officiellement. ${s.n} murmure dans l'oreillette : \"Fais semblant de me rater.\"`, en:s=>`A mission puts you officially against each other. ${s.n} whispers on comms: "Pretend you missed me."` },
+];
+function romanceBeatChoices(charKey, enemy){
+  const c = CHARACTERS[charKey];
+  const pull = enemy ? (c.align==='villain' ? -1 : 1) * 4 : 0;
+  const mySign = S.align >= 0 ? 1 : -1;
+  const L = (fr,en,eff)=>({fr,en,eff});
+  return [
+    pickNoRepeat('romA', [
+      L("Lui donner la priorite, quoi qu'il en coute.", "Make them the priority, whatever it costs.",
+        { courage:2, popularity:enemy?-3:2, align:pull, rel:{[charKey]:5}, rom:{love:2} }),
+      L("Rester une nuit de plus, tant pis pour l'alerte.", "Stay one more night, alert be damned.",
+        { courage:2, popularity:enemy?-2:1, align:pull, rel:{[charKey]:4}, rom:{love:2} }),
+      L("Tout lui avouer, meme ce qui te dessert.", "Tell them everything, even what hurts you.",
+        { courage:3, intelligence:1, align:pull, rel:{[charKey]:6}, rom:{love:3} }),
+    ]),
+    pickNoRepeat('romB', [
+      L("Gerer ca froidement, sans t'exposer.", "Handle it coldly, without exposing yourself.",
+        { intelligence:3, rel:{[charKey]:1}, rom:{love:0, secret:true} }),
+      L("Poser des limites claires : la mission d'abord.", "Set clear limits: the mission first.",
+        { intelligence:2, popularity:1, align:2*mySign, rel:{[charKey]:-2}, rom:{love:-1} }),
+      L("Detourner la conversation et gagner du temps.", "Deflect and buy time.",
+        { intelligence:2, rel:{[charKey]:-1}, rom:{love:-1, secret:true} }),
+    ]),
+    pickNoRepeat('romC', [
+      L("Te servir de la relation pour ton avantage.", "Use the relationship to your advantage.",
+        { intelligence:5, align:-4, popularity:2, rel:{[charKey]:-5}, rom:{love:-2, betray:true} }),
+      L("Assumer publiquement, quitte a choquer.", "Go public, even if it shocks.",
+        { popularity:enemy?-6:5, courage:4, rel:{[charKey]:4}, rom:{love:1, exposed:true} }),
+      L("Prendre du recul pendant quelques mois.", "Step back for a few months.",
+        { intelligence:2, popularity:-2, rel:{[charKey]:-4}, rom:{love:-2} }),
+    ]),
+  ];
+}
+function buildRomanceBeat(r){
+  const c = CHARACTERS[r.charKey]; if(!c) return null;
+  const beat = pickNoRepeat('romBeat', ROM_BEATS);
+  const linesFr = [beat.fr({ n:c.fr, name:S.heroName })];
+  const linesEn = [beat.en({ n:c.en, name:S.heroName })];
+  if(r.enemy){
+    linesFr.push(`Personne ne doit savoir : vos camps s'entretuent encore.`);
+    linesEn.push(`Nobody can know: your factions are still killing each other.`);
+  } else if((r.love||0) >= 6){
+    linesFr.push(`Vous etes devenus un point fixe l'un pour l'autre.`);
+    linesEn.push(`You've become each other's fixed point.`);
+  }
+  return { id:'rombeat_'+r.charKey+'_'+S.currentYear, charKey:r.charKey, romance:true, enemy:r.enemy, stage:r.stage,
+    linesFr, linesEn, choices: romanceBeatChoices(r.charKey, r.enemy) };
+}
 function maybeTriggerRomance(){
   const r = S.romance;
   if(r && r.active){
-    if(S.currentYear - (r.lastYear||0) < 2) return false;
-    const conv = buildRomanceConv(r.charKey, r.enemy, r.stage);
+    if(S.currentYear - (r.lastYear||0) < 1) return false;
+    const beat = Math.random() < 0.55;
+    const conv = beat ? buildRomanceBeat(r) : buildRomanceConv(r.charKey, r.enemy, r.stage);
     if(!conv) return false;
     r.lastYear = S.currentYear;
     S.activeConversation = conv; S.convLineIndex = 0; S.lastConvYear = S.currentYear;
     renderConversationOverlay(); return true;
   }
-  if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < 4) return false;
-  if(Math.random() > 0.35) return false;
+  if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < 2) return false;
+  if(Math.random() > 0.55) return false;
   const enemy = Math.random() < 0.20;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
@@ -3205,6 +3283,13 @@ function handleRomanceEffect(rom, conv){
     const dir = c.align==='villain' ? -1 : 1;
     S.align = clampToReputation(clamp(S.align + dir*3, -100, 100));
   }
+  // impact durable de l'amour sur la carriere
+  if(r.active){
+    if((r.love||0) >= 8){ S.stats.courage = clamp(S.stats.courage + 1, 0, 100); }
+    else if((r.love||0) <= -4){ S.stats.popularity = clamp(S.stats.popularity - 2, 0, 100); }
+    if(r.betrayed) S.stats.popularity = clamp(S.stats.popularity - 1, 0, 100);
+  }
+  renderRankBadge();
 }
 /* ---------- Conversation overlay ---------- */
 function maybeTriggerConversation(){
