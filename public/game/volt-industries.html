@@ -2122,6 +2122,10 @@ function buildCareerPlan(){
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
+function findPowerById(id){
+  for(const k in POWERS){ const f = POWERS[k].find(x=>x.id===id); if(f) return f; }
+  return null;
+}
 function screenSummary(){
   const d = document.createElement('div');
   const totalMissions = S.missionsPlan.reduce((a,b)=>a+b,0);
