@@ -128,9 +128,10 @@
   .preset-badge{ position:absolute; top:10px; left:10px; z-index:2; font-size:9.5px; font-weight:900; letter-spacing:1.4px;
     padding:4px 8px; border-radius:999px; color:#0a0d14; background:var(--pc-color); box-shadow:0 0 14px var(--pc-color); }
   .preset-mini{ width:100%; display:flex; justify-content:center; }
-  .portrait-avatar{ width:100%; height:100%; min-height:230px; border-radius:12px; overflow:hidden; position:relative; }
+  .portrait-avatar{ width:100%; height:100%; min-height:200px; aspect-ratio:3/4; border-radius:12px; overflow:hidden; position:relative; }
   .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
   .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
+  .pgal{ grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); }
   .pgal .pitem{ position:relative; border:2px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; height:126px; background:rgba(255,255,255,.03); transition:.15s; }
   .pgal .pitem img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
   .pgal .pitem.sel{ border-color:var(--accent); box-shadow:0 0 20px -6px var(--accent); }
@@ -140,16 +141,33 @@
   .scratch-card .pname{ font-weight:900; font-size:16px; }
   .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
   .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.78); backdrop-filter:blur(6px); }
-  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:900px; width:100%; box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
-  .conv-stage{ position:relative; flex:0 0 42%; min-height:400px; background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--cp-color) 26%, transparent), rgba(0,0,0,.55) 70%); overflow:hidden; }
-  .conv-body{ flex:1 1 auto; padding:28px; display:flex; flex-direction:column; justify-content:center; min-width:0; }
+  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:760px; width:100%; max-height:min(560px, 86vh); box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
+  .conv-stage{ position:relative; flex:0 0 38%; min-height:0; align-self:stretch; background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--cp-color) 26%, transparent), rgba(0,0,0,.55) 70%); overflow:hidden; }
+  .conv-body{ flex:1 1 auto; padding:24px; display:flex; flex-direction:column; justify-content:center; min-width:0; overflow-y:auto; }
   .conv-charname{ font-weight:900; font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
   .conv-dot{ width:10px; height:10px; border-radius:50%; }
   .conv-line{ font-size:16px; line-height:1.6; color:var(--ink); min-height:70px; }
   @media (max-width:720px){
-    .conv-card{ flex-direction:column; max-width:480px; }
-    .conv-stage{ flex:none; min-height:260px; }
-    .conv-body{ padding:20px; }
+    .conv-overlay{ padding:12px; }
+    .conv-card{ flex-direction:column; max-width:440px; max-height:92vh; }
+    .conv-stage{ flex:0 0 auto; height:min(38vh, 240px); min-height:0; }
+    .conv-stage .conv-portrait img{ object-position:50% 8%; }
+    .conv-body{ padding:16px 16px 18px; justify-content:flex-start; }
+    .conv-line{ font-size:14.5px; min-height:0; }
+    .conv-charname{ font-size:12px; margin-bottom:8px; }
+    .conv-stage .conv-portrait .cp-glyph{ font-size:64px; }
+  }
+  @media (max-width:720px) and (orientation:landscape){
+    .conv-card{ flex-direction:row; max-width:640px; }
+    .conv-stage{ flex:0 0 34%; height:auto; }
+  }
+
+  @media (max-width:720px){
+    .preset-photo{ height:200px; }
+    .pgal{ grid-template-columns:repeat(auto-fill,minmax(74px,1fr)); gap:8px; }
+    .pgal .pitem{ height:100px; }
+    .portrait-avatar{ min-height:0; max-height:46vh; }
+    .side-avatar .avatar-wrap{ max-width:320px; margin:0 auto; }
   }
 
   footer.mini{ text-align:center; color:#4b5876; font-size:11px; margin-top:44px; letter-spacing:1px;}
