@@ -3323,13 +3323,13 @@ function screenSummary(){
 
 /* ---------- Mission engine ---------- */
 /* Les questions d'orientation (choisir son camp) sont rares : 2 par carriere courte, 3-4 sur une longue. */
-function orientationCap(){ return S.mode==='long' ? Math.min(4, 2 + Math.floor((S.years||10)/20)) : 2; }
+function orientationCap(){ const y = S.years||10; return y >= 30 ? 3 : (y >= 15 ? 2 : 1); }
 function orientationBudgetLeft(){
   if(S.orientationCount===undefined) S.orientationCount = 0;
   if(S.orientationCount >= orientationCap()) return false;
   const last = (S.lastOrientationYear===undefined || S.lastOrientationYear===null) ? -99 : S.lastOrientationYear;
-  const gap = S.mode==='long' ? 5 : 3;
-  return (S.currentYear - last) >= gap && S.currentYear >= 2;
+  const gap = Math.max(6, Math.round((S.years||10)/4));
+  return (S.currentYear - last) >= gap && S.currentYear >= 3;
 }
 function pickIntrigueMission(){
   if(!S.usedIntrigueIds) S.usedIntrigueIds = [];
