@@ -147,10 +147,11 @@
     animation: particleFloat linear infinite; box-shadow:0 0 6px var(--accent); }
   @keyframes particleFloat{ 0%{ transform:translateY(0) translateX(0); opacity:0;} 10%{opacity:.6;} 90%{opacity:.4;} 100%{ transform:translateY(-110vh) translateX(20px); opacity:0;} }
 
-  .conv-portrait{ width:76px; height:76px; border-radius:50%; margin:0 auto 14px; position:relative; display:flex; align-items:center; justify-content:center;
+  .conv-portrait{ width:118px; height:118px; border-radius:50%; margin:0 auto 14px; position:relative; display:flex; align-items:center; justify-content:center;
     overflow:hidden; background:radial-gradient(circle at 40% 30%, rgba(255,255,255,.08), rgba(0,0,0,.3)); }
-  .conv-portrait img{ width:100%; height:100%; object-fit:cover; }
-  .conv-portrait .cp-glyph{ font-size:28px; font-weight:900; color:#fff; opacity:.85; }
+  .conv-portrait img{ width:125%; height:125%; object-fit:cover; object-position:50% 8%; }
+  .conv-portrait .cp-glyph{ font-size:40px; font-weight:900; color:#fff; opacity:.85; }
+
   .conv-portrait.materialize-in{ animation: materializeIn .7s cubic-bezier(.2,.8,.3,1); }
   .conv-portrait.glitch-in{ animation: glitchIn .6s steps(2,end); }
   .conv-portrait::after{ content:''; position:absolute; inset:0; border-radius:50%; border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 18px var(--cp-color, var(--accent)); }
