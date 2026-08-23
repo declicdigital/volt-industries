@@ -38,8 +38,8 @@ export const Route = createFileRoute("/api/generate-hero")({
         let data = raw;
         const m = /^data:([^;]+);base64,(.*)$/s.exec(raw);
         if (m) {
-          mimeType = m[1];
-          data = m[2];
+          mimeType = m[1] ?? mimeType;
+          data = m[2] ?? data;
         }
 
         const model = "gemini-2.5-flash-image";
