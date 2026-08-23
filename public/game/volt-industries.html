@@ -1192,11 +1192,11 @@ const SIGNATURE_ROLE_TEMPLATES = [
     en:(n,T,S_,L)=>`${n}'s past resurfaces in ${L}, tangled up with ${T}. Some truths are hard to hear.` },
 ];
 function generateSignatureMission(rank){
-  const charKey = (typeof type!=='undefined' && type==='combat') ? pickOpponentKey() : pick(otherCharKeys());
+  const type = pick(['combat','combat','rescue','social']);
+  const charKey = type==='combat' ? pickOpponentKey() : pick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
   const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
-  const type = pick(['combat','combat','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
   const fr = roleT.fr(c.fr, threat.fr, stakes.fr, locName);
