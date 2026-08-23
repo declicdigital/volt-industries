@@ -1763,7 +1763,8 @@ const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* ============================ STATE ============================ */
 function freshState(lang){
   return {
-    lang: lang||'fr', screen:'welcome', civilName:'', heroName:'', usingPreset:false, startSide:'neutral',
+    lang: lang||'fr', palette: (function(){ try{ return localStorage.getItem('vi_palette')||'auto'; }catch(e){ return 'auto'; } })(),
+    screen:'welcome', civilName:'', heroName:'', usingPreset:false, startSide:'neutral',
     look:{ morphology:'humain', helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3aa7ff', secondaryColor:'#ffffff', symbol:'' },
     path:null, powers:[], mode:null, years:10, missionsPlan:[],
     stats:{ courage:50, intelligence:50, popularity:50 }, align:0, initialAlignMagnitude:0, reputationFloor:0, lastZone:'neutral',
