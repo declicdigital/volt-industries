@@ -1817,7 +1817,7 @@ function avatarSVG(){
     <circle cx="${cx+cfg.shoulderW*0.72}" cy="${footY+10}" r="2.5" fill="${pathColor}" opacity="0.6"><animate attributeName="cy" values="${footY+10};${footY-14};${footY+10}" dur="3.6s" repeatCount="indefinite"/></circle>
   </svg>`;
 }
-function otherCharKeys(){ return Object.keys(CHARACTERS).filter(k=>k!==S.playerCharKey); }
+function otherCharKeys(){ return NPC_KEYS.filter(k=>k!==S.playerCharKey); }
 function avatarVisual(){
   if(S.portrait) return `<div class="portrait-avatar"><img src="${S.portrait}" alt="${S.heroName||''}"></div>`;
   return avatarSVG();
