@@ -1912,7 +1912,7 @@ function screenProfileChoice(){
       <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div></div>`;
   }).join('');
 
-  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
+  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
   return d;
 }
 function screenName(){
