@@ -317,6 +317,17 @@
     .btl-move b{ font-size:11.5px; }
     .btl-move span{ display:none; }
   }
+
+  .impact-toast{ position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:9999; padding:10px 14px; border-radius:12px;
+    background:rgba(6,10,18,.94); border:1px solid var(--accent); box-shadow:0 0 24px var(--accent-soft); max-width:92vw; text-align:center;
+    animation:impactIn .28s ease; }
+  .impact-toast.out{ opacity:0; transition:opacity .45s ease; }
+  .impact-toast .it-title{ font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .impact-toast .it-rows{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .impact-toast .it-row{ font-size:13px; font-weight:800; padding:3px 9px; border-radius:999px; background:rgba(255,255,255,.05); }
+  .impact-toast .it-row.up{ color:var(--green); } .impact-toast .it-row.down{ color:#ff5c7a; }
+  .impact-toast .it-row.neutral{ color:var(--accent); font-weight:700; }
+  @keyframes impactIn{ from{ opacity:0; transform:translate(-50%,-12px); } to{ opacity:1; transform:translate(-50%,0); } }
 </style>
 </head>
 <body>
@@ -1784,6 +1795,7 @@ function freshState(lang){
     team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
     battleForm:{ momentum:0, streak:0, injury:null },
+    skills:[], lastTrainingYear:null, trainingOffer:null,
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
     activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null, usedFrag:{}, introConvDone:false,
@@ -1949,7 +1961,7 @@ function topbar(){
 function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
-    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, end:screenEnd };
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, training:screenTraining, end:screenEnd };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -2459,6 +2471,7 @@ function nextMission(){
     S.screen='yearbreak'; render(); return;
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
+  if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
   if(shouldTriggerMentor()){
     S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
     S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
@@ -2538,6 +2551,136 @@ const MOVES_BY_POWER = {
   controle_emotionnel:[{fr:'Vague de doute',en:'Wave of doubt',p:23,acc:.93},{fr:'Rage retournee',en:'Turned rage',p:31,acc:.79}],
   precognition:[{fr:'Coup d\'avance',en:'One step ahead',p:24,acc:1},{fr:'Esquive prophetique',en:'Prophetic dodge',p:13,acc:1,heal:13}],
 };
+
+/* ============================ SKILLS (20) ============================ */
+const SKILLS = [
+  { id:'poing_stellaire', fr:'Poing Stellaire', en:'Stellar Fist', tags:['force','invulnerabilite','saut'], move:{fr:'Poing stellaire',en:'Stellar fist',p:42,acc:.78}, bonus:{courage:4} },
+  { id:'garde_vibranium', fr:'Garde Vibranium', en:'Vibranium Guard', tags:['armure','bouclier_energie','invulnerabilite'], move:{fr:'Garde vibranium',en:'Vibranium guard',p:16,acc:1,heal:22}, bonus:{courage:2,popularity:2} },
+  { id:'foudre_asgardienne', fr:'Foudre Ancestrale', en:'Ancestral Thunder', tags:['elementaire','rayons'], move:{fr:'Foudre ancestrale',en:'Ancestral thunder',p:44,acc:.74}, bonus:{courage:3,popularity:2} },
+  { id:'protocole_singularite', fr:'Protocole Singularite', en:'Singularity Protocol', tags:['ia','drones','nanotech'], move:{fr:'Protocole singularite',en:'Singularity protocol',p:38,acc:.86}, bonus:{intelligence:5} },
+  { id:'toile_sixieme_sens', fr:'Sixieme Sens', en:'Sixth Sense', tags:['sens_aiguises','vitesse','precognition'], move:{fr:'Riposte au sixieme sens',en:'Sixth-sense riposte',p:31,acc:1}, bonus:{intelligence:3,courage:1} },
+  { id:'chaos_ecarlate', fr:'Chaos Ecarlate', en:'Scarlet Chaos', tags:['illusions','telekinesie','controle_emotionnel'], move:{fr:'Vague de chaos',en:'Chaos wave',p:45,acc:.72}, bonus:{intelligence:3,popularity:2} },
+  { id:'mudra_temporel', fr:'Mudra Temporel', en:'Time Mudra', tags:['controle_temporel','portails','projection'], move:{fr:'Mudra temporel',en:'Time mudra',p:36,acc:.9}, bonus:{intelligence:4} },
+  { id:'fureur_gamma', fr:'Fureur Gamma', en:'Gamma Fury', tags:['force','regen','metamorphose'], move:{fr:'Fureur gamma',en:'Gamma fury',p:47,acc:.68}, bonus:{courage:5,popularity:-1} },
+  { id:'danse_veuve', fr:'Danse de la Veuve', en:'Widow Dance', tags:['vitesse','sens_aiguises','illusion_mentale'], move:{fr:'Danse de la veuve',en:'Widow dance',p:33,acc:.95}, bonus:{popularity:3,courage:1} },
+  { id:'pierre_esprit', fr:'Eclat de Pierre d\'Esprit', en:'Mind Stone Shard', tags:['telepathie','projection','ia'], move:{fr:'Eclat de pierre d\'esprit',en:'Mind stone shard',p:40,acc:.82}, bonus:{intelligence:4,popularity:1} },
+  { id:'rugissement_panthere', fr:'Rugissement de Panthere', en:'Panther Roar', tags:['vitesse','force','invulnerabilite'], move:{fr:'Rugissement de panthere',en:'Panther roar',p:37,acc:.88}, bonus:{courage:3,popularity:2} },
+  { id:'souffle_kamar', fr:'Souffle de Kamar', en:'Kamar Breath', tags:['invocation','portails','elementaire'], move:{fr:'Souffle de Kamar',en:'Kamar breath',p:20,acc:1,heal:26}, bonus:{intelligence:3} },
+  { id:'surcharge_arc', fr:'Surcharge Arc', en:'Arc Overload', tags:['armure','rayons','nanotech'], move:{fr:'Surcharge arc',en:'Arc overload',p:46,acc:.7}, bonus:{intelligence:3,courage:2} },
+  { id:'voile_neant', fr:'Voile du Neant', en:'Void Veil', tags:['illusions','illusion_mentale','metamorphose'], move:{fr:'Voile du neant',en:'Void veil',p:18,acc:1,heal:20}, bonus:{intelligence:2,popularity:2} },
+  { id:'jugement_multivers', fr:'Jugement du Multivers', en:'Multiverse Judgment', tags:['controle_temporel','telekinesie','invocation'], move:{fr:'Jugement du multivers',en:'Multiverse judgment',p:49,acc:.66}, bonus:{courage:3,intelligence:2} },
+  { id:'sang_froid_tactique', fr:'Sang-Froid Tactique', en:'Tactical Composure', tags:[], move:{fr:'Lecture du Sanctuaire',en:'Sanctum read',p:29,acc:1}, bonus:{intelligence:4,courage:2} },
+  { id:'endurance_titan', fr:'Endurance de Titan', en:'Titan Endurance', tags:[], move:{fr:'Second souffle du titan',en:'Titan second wind',p:14,acc:1,heal:24}, bonus:{courage:4} },
+  { id:'aura_charismatique', fr:'Aura Charismatique', en:'Charismatic Aura', tags:[], move:{fr:'Provocation magnetique',en:'Magnetic taunt',p:26,acc:1}, bonus:{popularity:6} },
+  { id:'frappe_dimensionnelle', fr:'Frappe Dimensionnelle', en:'Dimensional Strike', tags:['portails','projection','controle_temporel'], move:{fr:'Frappe dimensionnelle',en:'Dimensional strike',p:43,acc:.76}, bonus:{intelligence:2,courage:2} },
+  { id:'venin_symbiote', fr:'Venin Symbiote', en:'Symbiote Venom', tags:['metamorphose','nanotech','force'], move:{fr:'Venin symbiote',en:'Symbiote venom',p:41,acc:.8}, bonus:{courage:2,popularity:-1,intelligence:1} },
+];
+const SAGES = [
+  { fr:"Maitre Aranya, gardienne d'un sanctuaire cache dans l'Himalaya", en:"Master Aranya, keeper of a hidden Himalayan sanctum" },
+  { fr:"le Sorcier Sans Nom, dernier eleve d'une lignee eteinte", en:"the Nameless Sorcerer, last student of an extinct lineage" },
+  { fr:"Vashtar l'Exile, ancien champion d'une Terre effondree", en:"Vashtar the Exiled, former champion of a collapsed Earth" },
+  { fr:"la Doyenne du Sanctum de Kamar", en:"the Elder of the Kamar Sanctum" },
+  { fr:"Oldrik le Forgeron d'Etoiles", en:"Oldrik the Star-Smith" },
+  { fr:"Sister Kaal, moniale d'un ordre efface de la Chronologie Sacree", en:"Sister Kaal, nun of an order erased from the Sacred Timeline" },
+];
+function learnedSkills(){ return (S.skills||[]).map(id=>SKILLS.find(x=>x.id===id)).filter(Boolean); }
+function skillCandidates(){
+  const known = S.skills||[];
+  const pool = SKILLS.filter(sk=>!known.includes(sk.id));
+  const fit = pool.filter(sk=>sk.tags.length && sk.tags.some(tg=>(S.powers||[]).includes(tg)));
+  const generic = pool.filter(sk=>!sk.tags.length);
+  const base = fit.length ? fit : (generic.length ? generic : pool);
+  const extra = pool.filter(x=>!base.includes(x));
+  return shuffle(base).slice(0,2).concat(shuffle(extra).slice(0,1));
+}
+function shouldTriggerTraining(){
+  if(!S.currentMission && S.screen!=='mission') { /* noop */ }
+  if((S.skills||[]).length >= (S.mode==='short'?2:5)) return false;
+  if(S.currentYear < 3) return false;
+  if(S.lastTrainingYear!=null && (S.currentYear - S.lastTrainingYear) < (S.mode==='short'?4:6)) return false;
+  return Math.random() < 0.35;
+}
+function learnSkill(sk){
+  S.skills = S.skills || [];
+  if(!S.skills.includes(sk.id)) S.skills.push(sk.id);
+  const b = sk.bonus||{};
+  const impacts = [];
+  ['courage','intelligence','popularity'].forEach(k=>{ if(b[k]){ S.stats[k] = clamp(S.stats[k] + b[k], 0, 100); impacts.push({ label: statLabel(k), delta: b[k] }); } });
+  impacts.push({ label:(S.lang==='fr'?'Nouvelle attaque':'New move'), text:(S.lang==='fr'?sk.move.fr:sk.move.en) });
+  showImpact(impacts, (S.lang==='fr'?`Competence apprise : ${sk.fr}`:`Skill learned: ${sk.en}`));
+  const label = S.lang==='fr' ? `Retour d'exil : maitrise de ${sk.fr}.` : `Back from exile: mastered ${sk.en}.`;
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false });
+  S.currentYearEntries.push({ tag: label, location:null, type:'training', outcome:'skill' });
+}
+function screenTraining(){
+  const d = document.createElement('div');
+  const sage = pick(SAGES);
+  const cands = S.trainingOffer && S.trainingOffer.length ? S.trainingOffer : (S.trainingOffer = skillCandidates());
+  const sageTxt = S.lang==='fr' ? sage.fr : sage.en;
+  const zone = zoneOf(S.align);
+  const intro = S.lang==='fr'
+    ? (zone==='villain'
+       ? `Une transmission cryptee t'atteint : ${sageTxt} accepte de t'enseigner une technique interdite. Un an loin de tout, sans missions, sans public.`
+       : `Un message ancien t'atteint : ${sageTxt} propose de te former une annee entiere, en exil, loin des projecteurs.`)
+    : (zone==='villain'
+       ? `An encrypted transmission reaches you: ${sageTxt} agrees to teach you a forbidden technique. One year off the grid, no missions, no audience.`
+       : `An old message reaches you: ${sageTxt} offers a full year of training in exile, far from the spotlight.`);
+  d.innerHTML = `<span class="eyebrow">${S.lang==='fr'?'EXIL & ENTRAINEMENT':'EXILE & TRAINING'}</span>
+    <h2 style="margin-top:6px;">${intro}</h2>
+    <p class="lead">${S.lang==='fr'?'Choisis la voie que tu veux maitriser (tu perds l\'annee en cours, ta popularite baisse, mais tu reviens avec une attaque de haut niveau).':'Pick the discipline you want to master (you lose the current year and some popularity, but you return with a high-tier move).'}</p>
+    <div id="choices"></div>`;
+  const cbox = d.querySelector('#choices');
+  cands.forEach(sk=>{
+    const b = document.createElement('button'); b.className='choice';
+    const bonusTxt = Object.keys(sk.bonus||{}).map(k=>`${sk.bonus[k]>0?'+':''}${sk.bonus[k]} ${statLabel(k)}`).join(', ');
+    const mv = S.lang==='fr'?sk.move:{fr:sk.move.en};
+    b.innerHTML = `<b>${S.lang==='fr'?sk.fr:sk.en}</b><br><span style="color:var(--muted);font-size:12.5px;">${S.lang==='fr'?'Attaque':'Move'}: ${S.lang==='fr'?sk.move.fr:sk.move.en} (${sk.move.heal?(S.lang==='fr'?'soin ':'heal ')+sk.move.heal+' - ':''}${S.lang==='fr'?'degats':'dmg'} ${sk.move.p}, ${Math.round(sk.move.acc*100)}%) - ${bonusTxt}</span>`;
+    b.onclick = ()=>{
+      S.trainingOffer = null; S.lastTrainingYear = S.currentYear;
+      S.stats.popularity = clamp(S.stats.popularity - 4, 0, 100);
+      learnSkill(sk);
+      const missionsThisYear = S.missionsPlan[S.currentYear-1];
+      S.currentMissionInYear = missionsThisYear;
+      setTimeout(()=>{ nextMission(); }, 900);
+    };
+    cbox.appendChild(b);
+  });
+  const no = document.createElement('button'); no.className='choice';
+  no.textContent = S.lang==='fr'?'Refuser : rester sur le terrain, la legende ne se construit pas en retraite.':'Decline: stay in the field, legends are not built in retreat.';
+  no.onclick = ()=>{ S.trainingOffer = null; S.lastTrainingYear = S.currentYear;
+    S.stats.popularity = clamp(S.stats.popularity + 2, 0, 100);
+    showImpact([{label:statLabel('popularity'), delta:2}], S.lang==='fr'?'Tu restes sous les projecteurs':'You stay in the spotlight');
+    setTimeout(()=>{ nextMission(); }, 700);
+  };
+  cbox.appendChild(no);
+  return d;
+}
+/* ---------- Impact feedback ---------- */
+function statLabel(k){
+  const fr = { courage:'Attaque', intelligence:'Intelligence', popularity:'Popularite', align:'Alignement' };
+  const en = { courage:'Attack', intelligence:'Intelligence', popularity:'Popularity', align:'Alignment' };
+  return (S.lang==='fr'?fr:en)[k] || k;
+}
+function showImpact(items, title){
+  const list = (items||[]).filter(x=>x && (x.delta || x.text));
+  if(!list.length) return;
+  const old = document.getElementById('impactToast'); if(old) old.remove();
+  const el = document.createElement('div'); el.id='impactToast'; el.className='impact-toast';
+  el.innerHTML = `${title?`<div class="it-title">${title}</div>`:''}<div class="it-rows">${list.map(x=>{
+    if(x.text) return `<span class="it-row neutral">${x.label} : ${x.text}</span>`;
+    const up = x.delta > 0;
+    return `<span class="it-row ${up?'up':'down'}">${up?'+':''}${x.delta} ${x.label}</span>`;
+  }).join('')}</div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 500); }, 2600);
+}
+function impactFromEff(eff, alignDelta){
+  const items = [];
+  ['courage','intelligence','popularity'].forEach(k=>{ if(eff && eff[k]) items.push({ label:statLabel(k), delta:eff[k] }); });
+  if(alignDelta) items.push({ label:(S.lang==='fr'?(alignDelta>0?'vers Hero':'vers Villain'):(alignDelta>0?'toward Hero':'toward Villain')), delta:alignDelta });
+  if(eff && eff.rel){ Object.keys(eff.rel).forEach(k=>{ const c = CHARACTERS[k]; if(c) items.push({ label:(S.lang==='fr'?c.fr:c.en), delta:eff.rel[k] }); }); }
+  return items;
+}
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
 const FOE_MOVES = {
   theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut final',en:'Finishing uppercut',p:38,acc:.68}],
@@ -2570,6 +2713,7 @@ function foeMovesFor(key){
 }
 function playerMoves(){
   const list = [];
+  learnedSkills().slice(-2).forEach(sk=>list.push(sk.move));
   (S.powers||[]).forEach(id=>{ const m = MOVES_BY_POWER[id]; if(m) list.push(m[0], m[1]); });
   BASIC_MOVES.forEach(m=>list.push(m));
   const out = [];
@@ -2912,6 +3056,7 @@ function applyMentorChoice(choice, name){
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
+  showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   handleZoneCheckAndContinue();
 }
 function handleZoneCheckAndContinue(){
@@ -2955,6 +3100,7 @@ function applyChoice(choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
+  showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
   if(checkDeath(m)){
