@@ -1982,6 +1982,30 @@ function computePowerLevel(){
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
   return clamp(base+statBonus+growth,1,100);
 }
+/* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
+function playerStrength(){
+  const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
+  const f = (S.battleForm && S.battleForm) || { momentum:0 };
+  const inj = (typeof injuryActive === 'function') ? injuryActive() : null;
+  let s = computePowerLevel()*0.8 + statAvg*0.35;
+  s += (f.momentum||0)*2.5 + (S.skills||[]).length*2.5;
+  if(inj) s -= inj.sev*6;
+  if(S.team) s += 2 + (S.team.tier||1);
+  return Math.round(clamp(s, 10, 110));
+}
+function foeStrength(foeKey, mission){
+  const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
+  const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
+  const danger = (mission && mission.danger) || 1;
+  const scope = (mission && mission.scope) || 1;
+  return Math.round(34 + danger*8 + scope*1.6 + (tier-24)*1.6);
+}
+function winOdds(foeKey, mission){
+  const diff = playerStrength() - foeStrength(foeKey, mission);
+  const p = 1/(1+Math.exp(-diff/9));
+  return clamp(p, 0.08, 0.93);
+}
+
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
 function heroVillainScore(){ return Math.round(clamp(Math.abs(S.align),0,100)); }
 /* ---------- Note de carriere : composite coherent avec le bilan ---------- */
