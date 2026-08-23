@@ -3,21 +3,31 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VOLT INDUSTRIES — Jeu de gestion industrielle" },
+      { title: "Volt Industries — Laboratoire d'élite" },
       {
         name: "description",
         content:
-          "Jouez à VOLT INDUSTRIES : développez votre empire industriel, gérez la production, l'énergie et vos équipes dans ce jeu de stratégie.",
+          "Volt Industries — Laboratoire d'élite : choisissez votre héros ou votre villain, menez missions, combats et alliances au fil d'une carrière unique.",
       },
-      { property: "og:title", content: "VOLT INDUSTRIES — Jeu de gestion industrielle" },
+      { property: "og:title", content: "Volt Industries — Laboratoire d'élite" },
       {
         property: "og:description",
         content:
-          "Développez votre empire industriel : production, énergie et stratégie dans VOLT INDUSTRIES.",
+          "Choisissez votre héros ou votre villain et menez votre carrière au Laboratoire d'élite Volt Industries.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://volt-industries.lovable.app/" },
+      {
+        property: "og:image",
+        content: "https://volt-industries.lovable.app/og-volt-industries.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:image",
+        content: "https://volt-industries.lovable.app/og-volt-industries.png",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://volt-industries.lovable.app/" }],
   }),
   component: Index,
 });
@@ -25,10 +35,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
-      <h1 className="sr-only">VOLT INDUSTRIES</h1>
+      <h1 className="sr-only">Volt Industries — Laboratoire d'élite</h1>
       <iframe
         src="/game/volt-industries.html"
-        title="VOLT INDUSTRIES"
+        title="Volt Industries — Laboratoire d'élite"
         className="h-full w-full border-0"
       />
     </main>
