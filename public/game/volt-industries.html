@@ -127,10 +127,18 @@
   .scratch-card .pname{ font-weight:900; font-size:16px; }
   .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
   .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.78); backdrop-filter:blur(6px); }
-  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:28px; max-width:480px; width:100%; box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; }
+  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:900px; width:100%; box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
+  .conv-stage{ position:relative; flex:0 0 42%; min-height:400px; background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--cp-color) 26%, transparent), rgba(0,0,0,.55) 70%); overflow:hidden; }
+  .conv-body{ flex:1 1 auto; padding:28px; display:flex; flex-direction:column; justify-content:center; min-width:0; }
   .conv-charname{ font-weight:900; font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
   .conv-dot{ width:10px; height:10px; border-radius:50%; }
   .conv-line{ font-size:16px; line-height:1.6; color:var(--ink); min-height:70px; }
+  @media (max-width:720px){
+    .conv-card{ flex-direction:column; max-width:480px; }
+    .conv-stage{ flex:none; min-height:260px; }
+    .conv-body{ padding:20px; }
+  }
+
   footer.mini{ text-align:center; color:#4b5876; font-size:11px; margin-top:44px; letter-spacing:1px;}
 
   .rankup-toast{ position:fixed; top:90px; right:16px; z-index:90; background:rgba(8,12,22,.92); backdrop-filter:blur(12px);
@@ -160,6 +168,27 @@
   @keyframes materializeIn{ 0%{ opacity:0; transform:scale(.5); filter:blur(6px);} 60%{ opacity:1; transform:scale(1.06); filter:blur(0);} 100%{ transform:scale(1);} }
   @keyframes glitchIn{ 0%{ opacity:0; transform:translateX(-6px);} 20%{opacity:.7; transform:translateX(5px);} 40%{opacity:.3; transform:translateX(-4px);} 60%{opacity:.9; transform:translateX(3px);} 80%{opacity:.5; transform:translateX(-2px);} 100%{ opacity:1; transform:translateX(0);} }
   @keyframes sweepDown{ from{ top:-14px;} to{ top:100%;} }
+
+  /* --- Grand portrait de conversation, faisceau neon --- */
+  .conv-stage .conv-portrait{ width:100%; height:100%; position:absolute; inset:0; margin:0; border-radius:0; background:none; overflow:hidden; }
+  .conv-stage .conv-portrait img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%;
+    filter: drop-shadow(0 0 26px var(--cp-color)) saturate(1.05) contrast(1.05); }
+  .conv-stage .conv-portrait::after{ border:none; border-radius:0;
+    box-shadow: inset 0 0 70px -10px var(--cp-color), inset 0 0 160px -40px var(--cp-color); }
+  .conv-stage .conv-portrait .cp-glyph{ font-size:110px; }
+  .conv-stage .conv-portrait .cp-sweep{ height:34px; animation: sweepDown 1.1s ease; }
+  .conv-beam{ position:absolute; inset:0; pointer-events:none; z-index:3;
+    background:
+      radial-gradient(ellipse at 50% 55%, transparent 45%, color-mix(in srgb, var(--cp-color) 40%, transparent) 100%),
+      linear-gradient(0deg, color-mix(in srgb, var(--cp-color) 35%, transparent), transparent 22%);
+    mix-blend-mode:screen; opacity:.85; animation: beamPulse 2.6s ease-in-out infinite; }
+
+  .conv-beam::before{ content:''; position:absolute; inset:0; border:2px solid var(--cp-color);
+    box-shadow:0 0 30px var(--cp-color), inset 0 0 30px var(--cp-color); opacity:.8; }
+  .conv-beam::after{ content:''; position:absolute; top:0; bottom:0; right:-2px; width:6px;
+    background:var(--cp-color); filter:blur(6px); opacity:.85; }
+  @keyframes beamPulse{ 0%,100%{ opacity:.6; } 50%{ opacity:.95; } }
+
 
   .history-list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:6px; }
   .history-card{ position:relative; border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:rgba(255,255,255,.02); }
@@ -1206,7 +1235,7 @@ function freshState(lang){
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
-    activeConversation:null, convLineIndex:0, usedConvIds:[],
+    activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null,
     lastStars:1, savedToHistory:false,
   };
 }
@@ -1975,16 +2004,22 @@ function screenYearBreak(){
 function maybeTriggerConversation(){
   if(S.dead || S.activeConversation) return;
   if(!(S.screen==='mission' || S.screen==='mentor')) return;
-  if(Math.random() < 0.22){
+  if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
+  const gap = S.currentYear - S.lastConvYear;
+  const forced = gap >= 2;
+  if(forced || Math.random() < 0.5){
     let pool = CONVERSATIONS.filter(c=>!S.usedConvIds.includes(c.id));
     if(pool.length===0){ pool = CONVERSATIONS; S.usedConvIds=[]; }
     const conv = pool[Math.floor(Math.random()*pool.length)];
     S.usedConvIds.push(conv.id); S.activeConversation = conv; S.convLineIndex = 0;
+    S.lastConvYear = S.currentYear;
     renderConversationOverlay();
   }
 }
+function convBeamColor(align){ return align==='villain' ? '#ff2d55' : (align==='hero' ? '#00e5ff' : '#c084fc'); }
 function characterPortraitHTML(charObj, animate){
-  const col = charColor(charObj.align);
+  const col = convBeamColor(charObj.align);
+
   const entranceClass = animate ? (charObj.align==='villain' ? 'glitch-in' : 'materialize-in') : '';
   const name = S.lang==='fr'?charObj.fr:charObj.en;
   const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
@@ -2000,14 +2035,21 @@ function renderConversationOverlay(){
   const lines = S.lang==='fr'?conv.linesFr:conv.linesEn;
   const isLast = S.convLineIndex >= lines.length-1;
   const col = charColor(charObj.align);
+  const beam = convBeamColor(charObj.align);
   const isFirstReveal = S.convLineIndex===0;
   const el = document.createElement('div'); el.id='convOverlay'; el.className='conv-overlay';
   el.innerHTML = `<div class="conv-backdrop"></div><div class="conv-card">
-    ${characterPortraitHTML(charObj, isFirstReveal)}
-    <div class="conv-charname" style="justify-content:center;"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
-    <div class="conv-line">${lines[S.convLineIndex]}</div>
-    ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
+    <div class="conv-stage" style="--cp-color:${beam};">
+      ${characterPortraitHTML(charObj, isFirstReveal)}
+      <div class="conv-beam"></div>
+    </div>
+    <div class="conv-body">
+      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
+      <div class="conv-line">${lines[S.convLineIndex]}</div>
+      ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
+    </div>
   </div>`;
+
   document.body.appendChild(el);
   if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
   else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; }); }
