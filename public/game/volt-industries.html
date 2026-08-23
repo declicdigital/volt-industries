@@ -317,6 +317,25 @@
     .btl-move b{ font-size:11.5px; }
     .btl-move span{ display:none; }
   }
+  /* --- Escouades de combat (visages allies / adverses) --- */
+  .btl-squad{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin-top:2px; }
+  .btl-squad .sq{ width:34px; height:34px; border-radius:9px; overflow:hidden; position:relative; flex:0 0 auto;
+    border:1.5px solid var(--cp-color); box-shadow:0 0 9px var(--cp-color); background:rgba(0,0,0,.45);
+    animation: squadIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .btl-squad .sq img{ width:100%; height:100%; object-fit:cover; object-position:50% 10%; }
+  .btl-squad .sq span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:#fff; opacity:.85; }
+  @keyframes squadIn{ from{ opacity:0; transform:translateY(8px) scale(.8);} to{ opacity:1; transform:none;} }
+  @media (max-width:560px){ .btl-squad .sq{ width:26px; height:26px; border-radius:7px; } .btl-squad{ gap:3px; } }
+
+  /* --- Conversation de groupe : bandeau des participants --- */
+  .conv-cast{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .conv-cast .cc{ width:38px; height:38px; border-radius:10px; overflow:hidden; position:relative; flex:0 0 auto;
+    border:1.5px solid var(--cc-color); box-shadow:0 0 8px var(--cc-color); opacity:.42; filter:grayscale(.5);
+    transition:opacity .3s ease, transform .3s ease, filter .3s ease; }
+  .conv-cast .cc.on{ opacity:1; filter:none; transform:translateY(-2px) scale(1.06); }
+  .conv-cast .cc img{ width:100%; height:100%; object-fit:cover; object-position:50% 10%; }
+  .conv-cast .cc span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:900; color:#fff; }
+  @media (max-width:720px){ .conv-cast .cc{ width:32px; height:32px; } }
 
   .impact-toast{ position:fixed; left:50%; top:14px; transform:translateX(-50%); z-index:9999; padding:10px 14px; border-radius:12px;
     background:rgba(6,10,18,.94); border:1px solid var(--accent); box-shadow:0 0 24px var(--accent-soft); max-width:92vw; text-align:center;
@@ -1335,6 +1354,150 @@ const MENTOR_MISSIONS = [
     ]},
 ];
 
+/* ---------- Intrigues : scenarios sans combat (enquetes, politique, presse, secrets, vie privee) ---------- */
+const INTRIGUE_MISSIONS = [
+  { id:'itg_taupe', tagFr:'Enquete interne', tagEn:'Internal inquiry',
+    fr:"Une taupe fait fuiter les plans de deploiement de Volt Industries. Trois noms remontent, dont celui d'un ami.", en:"A mole is leaking Volt Industries deployment plans. Three names come up, one of them a friend of yours.",
+    choices:[
+      { fr:"Monter un piege discret et laisser la taupe se trahir seule.", en:"Set a quiet trap and let the mole expose themselves.", eff:{intelligence:5, align:2} },
+      { fr:"Interroger les trois publiquement, quitte a briser la confiance.", en:"Question all three publicly, even if trust breaks.", eff:{courage:3, popularity:-4, align:-2} },
+      { fr:"Faire fuiter de faux plans et vendre l'info a un tiers.", en:"Leak fake plans and sell the intel to a third party.", eff:{intelligence:4, align:-7, popularity:2} },
+    ]},
+  { id:'itg_archives', tagFr:'Archives scellees', tagEn:'Sealed archives',
+    fr:"Au sous-sol 7, un dossier scelle porte ton nom de code, ecrit des annees avant ton arrivee.", en:"On sublevel 7, a sealed file bears your codename, written years before you arrived.",
+    choices:[
+      { fr:"Ouvrir le dossier seul, la nuit, et tout lire.", en:"Open the file alone, at night, and read everything.", eff:{intelligence:6, courage:2, align:-1} },
+      { fr:"Le remettre au conseil sans l'ouvrir.", en:"Hand it to the council unopened.", eff:{align:4, popularity:2, intelligence:-1} },
+      { fr:"Le photographier et garder une copie comme levier.", en:"Photograph it and keep a copy as leverage.", eff:{intelligence:4, align:-5} },
+    ]},
+  { id:'itg_presse', tagFr:'Guerre mediatique', tagEn:'Media war',
+    fr:"Une journaliste a filme ton dernier derapage. Elle propose un marche : une interview exclusive contre son silence.", en:"A journalist filmed your last slip. She offers a deal: an exclusive interview in exchange for her silence.",
+    choices:[
+      { fr:"Accepter l'interview et tout assumer face camera.", en:"Take the interview and own everything on camera.", eff:{popularity:6, align:3, courage:3} },
+      { fr:"Refuser et laisser la video sortir.", en:"Refuse and let the video drop.", eff:{popularity:-5, courage:4, align:1} },
+      { fr:"Faire disparaitre la video et l'avertir une seule fois.", en:"Make the footage vanish and warn her once.", eff:{align:-8, intelligence:3, popularity:1} },
+    ]},
+  { id:'itg_heritage', tagFr:'Intrigue familiale', tagEn:'Family intrigue',
+    fr:"Un inconnu se presente a toi comme ton demi-frere, avec les memes marqueurs genetiques que toi.", en:"A stranger introduces himself as your half-brother, carrying the same genetic markers as you.",
+    choices:[
+      { fr:"L'accueillir et l'aider a controler ce qu'il porte.", en:"Take him in and help him control what he carries.", eff:{align:6, popularity:3, courage:2} },
+      { fr:"Exiger des tests, garder tes distances.", en:"Demand tests, keep your distance.", eff:{intelligence:4, align:-1} },
+      { fr:"Le faire disparaitre des registres avant qu'on l'utilise contre toi.", en:"Erase him from the registries before he's used against you.", eff:{align:-9, intelligence:3} },
+    ]},
+  { id:'itg_conseil', tagFr:'Jeu politique', tagEn:'Political play',
+    fr:"Deux directions de Volt Industries s'affrontent pour le budget des operations. Chacune veut ta voix.", en:"Two Volt Industries directorates fight over the operations budget. Each wants your vote.",
+    choices:[
+      { fr:"Voter pour la direction terrain, celle qui protege les equipes.", en:"Vote for the field directorate that protects the teams.", eff:{align:4, popularity:4} },
+      { fr:"Vendre ta voix contre un labo prive et un acces total.", en:"Sell your vote for a private lab and full access.", eff:{intelligence:6, align:-6} },
+      { fr:"T'abstenir et laisser les deux camps s'user.", en:"Abstain and let both sides wear each other out.", eff:{intelligence:3, popularity:-2} },
+    ]},
+  { id:'itg_temoin', tagFr:'Protection de temoin', tagEn:'Witness protection',
+    fr:"Un comptable de PERDITION veut parler, mais il refuse toute escorte officielle.", en:"A PERDITION accountant wants to talk, but refuses any official escort.",
+    choices:[
+      { fr:"L'exfiltrer toi-meme, sans en parler a personne.", en:"Exfiltrate him yourself, telling no one.", eff:{courage:5, intelligence:3, align:3} },
+      { fr:"Le convaincre de temoigner en public, camera allumee.", en:"Convince him to testify publicly, cameras rolling.", eff:{popularity:5, align:2, courage:2} },
+      { fr:"Lui reprendre ses dossiers et le laisser se debrouiller.", en:"Take his files and leave him to it.", eff:{intelligence:5, align:-7, popularity:-2} },
+    ]},
+  { id:'itg_double', tagFr:'Variante', tagEn:'Variant',
+    fr:"Une variante de toi-meme, venue d'une ligne temporelle voisine, demande a te parler sans temoins.", en:"A variant of yourself, from a neighbouring timeline, asks to speak with you alone.",
+    choices:[
+      { fr:"L'ecouter jusqu'au bout et accepter son avertissement.", en:"Hear her out fully and accept the warning.", eff:{intelligence:6, courage:2, align:2} },
+      { fr:"La renvoyer dans sa ligne temporelle immediatement.", en:"Send her back to her timeline immediately.", eff:{align:1, intelligence:2} },
+      { fr:"Prendre sa place et la laisser porter tes dossiers.", en:"Take her place and let her carry your files.", eff:{align:-10, intelligence:4} },
+    ]},
+  { id:'itg_ranon', tagFr:'Chantage', tagEn:'Blackmail',
+    fr:"Quelqu'un possede l'enregistrement d'une promesse que tu n'as jamais tenue. Le prix du silence monte chaque mois.", en:"Someone holds a recording of a promise you never kept. The price of silence rises every month.",
+    choices:[
+      { fr:"Tout avouer avant que ca sorte.", en:"Confess everything before it leaks.", eff:{align:5, popularity:-3, courage:4} },
+      { fr:"Remonter la chaine et couper le maitre-chanteur de ses appuis.", en:"Trace the chain and cut the blackmailer off from support.", eff:{intelligence:6, align:1} },
+      { fr:"Payer, et noter son nom pour plus tard.", en:"Pay, and note the name for later.", eff:{align:-4, popularity:1} },
+    ]},
+  { id:'itg_hopital', tagFr:'Vie civile', tagEn:'Civilian life',
+    fr:"L'hopital du quartier ou tu as grandi va fermer. On te demande d'y mettre ton nom et ton argent.", en:"The hospital in the neighbourhood where you grew up is closing. They ask for your name and your money.",
+    choices:[
+      { fr:"Financer et venir chaque semaine, sans camera.", en:"Fund it and show up weekly, no cameras.", eff:{align:7, popularity:4} },
+      { fr:"Financer avec une conference de presse et ton logo partout.", en:"Fund it with a press conference and your logo everywhere.", eff:{popularity:7, align:1, intelligence:1} },
+      { fr:"Refuser : ton temps vaut plus ailleurs.", en:"Refuse: your time is worth more elsewhere.", eff:{align:-5, popularity:-4, intelligence:2} },
+    ]},
+  { id:'itg_labo', tagFr:'Secret technologique', tagEn:'Tech secret',
+    fr:"Un laboratoire clandestin reproduit ta signature energetique pour armer des mercenaires.", en:"A clandestine lab is replicating your energy signature to arm mercenaries.",
+    choices:[
+      { fr:"Publier tout le dossier et forcer la fermeture legale.", en:"Publish the whole file and force a legal shutdown.", eff:{align:5, popularity:4, intelligence:2} },
+      { fr:"Infiltrer, copier leurs recherches, puis tout effacer.", en:"Infiltrate, copy their research, then wipe it.", eff:{intelligence:7, align:-2, courage:3} },
+      { fr:"Leur proposer un partenariat exclusif.", en:"Offer them an exclusive partnership.", eff:{align:-8, intelligence:5, popularity:2} },
+    ]},
+  { id:'itg_proces', tagFr:'Audience publique', tagEn:'Public hearing',
+    fr:"Une commission internationale te convoque pour repondre des degats du dernier incident.", en:"An international commission summons you to answer for the damage from the last incident.",
+    choices:[
+      { fr:"Y aller seul et repondre a chaque question.", en:"Go alone and answer every question.", eff:{align:5, courage:4, popularity:2} },
+      { fr:"Envoyer un avocat et rester injoignable.", en:"Send a lawyer and stay unreachable.", eff:{intelligence:3, popularity:-3} },
+      { fr:"Menacer de retirer ta protection a la ville.", en:"Threaten to withdraw your protection from the city.", eff:{align:-9, popularity:-2, courage:3} },
+    ]},
+  { id:'itg_disparition', tagFr:'Disparition', tagEn:'Disappearance',
+    fr:"Trois membres d'equipe ont disparu sans signal de detresse. Aucune trace, aucune demande.", en:"Three team members vanished with no distress signal. No trace, no demands.",
+    choices:[
+      { fr:"Reconstituer leurs derniers pas, heure par heure.", en:"Rebuild their last steps, hour by hour.", eff:{intelligence:6, align:3} },
+      { fr:"Lancer une battue massive et mediatisee.", en:"Launch a massive, very public search.", eff:{popularity:4, courage:3, intelligence:-1} },
+      { fr:"Les declarer perdus et passer a la suite.", en:"Declare them lost and move on.", eff:{align:-7, popularity:-3} },
+    ]},
+  { id:'itg_culte', tagFr:'Culte naissant', tagEn:'Rising cult',
+    fr:"Un culte s'est forme autour de ton nom. Ses fideles commencent a agir en ton nom, sans te demander.", en:"A cult has formed around your name. Its followers are starting to act in your name, unasked.",
+    choices:[
+      { fr:"Le dissoudre publiquement et t'excuser aupres des victimes.", en:"Dissolve it publicly and apologise to the victims.", eff:{align:6, popularity:-2, courage:3} },
+      { fr:"L'encadrer et en faire un reseau de renseignement.", en:"Organise it into an intelligence network.", eff:{intelligence:5, align:-3, popularity:3} },
+      { fr:"Prendre la tete du culte.", en:"Take the cult's leadership.", eff:{align:-10, popularity:6, courage:2} },
+    ]},
+  { id:'itg_pacte', tagFr:'Negociation', tagEn:'Negotiation',
+    fr:"Deux factions rivales acceptent une treve, a condition que ce soit toi qui garantisses l'accord.", en:"Two rival factions accept a truce, on the condition that you guarantee the deal.",
+    choices:[
+      { fr:"Garantir l'accord et engager ta parole.", en:"Guarantee the deal and put your word on the line.", eff:{align:5, popularity:5, courage:2} },
+      { fr:"Ajouter une clause secrete qui t'avantage.", en:"Add a secret clause that favours you.", eff:{intelligence:6, align:-5} },
+      { fr:"Faire echouer la treve : le chaos t'arrange.", en:"Sink the truce: chaos suits you.", eff:{align:-9, intelligence:2} },
+    ]},
+  { id:'itg_enfant', tagFr:'Responsabilite', tagEn:'Responsibility',
+    fr:"Un enfant de douze ans manifeste des pouvoirs instables et te reclame, toi, personne d'autre.", en:"A twelve-year-old manifests unstable powers and asks for you, nobody else.",
+    choices:[
+      { fr:"Le prendre sous ton aile et lui apprendre lentement.", en:"Take him under your wing and teach him slowly.", eff:{align:6, intelligence:3, popularity:2} },
+      { fr:"Le confier a une structure specialisee.", en:"Hand him to a specialised program.", eff:{align:1, intelligence:2, popularity:-1} },
+      { fr:"Utiliser ses pouvoirs pour tes propres operations.", en:"Use his powers for your own operations.", eff:{align:-10, courage:2, intelligence:3} },
+    ]},
+  { id:'itg_fuite_temps', tagFr:'Anomalie temporelle', tagEn:'Temporal anomaly',
+    fr:"Un quartier entier revit la meme journee depuis six semaines, et personne a l'exterieur ne l'avait remarque.", en:"An entire district has relived the same day for six weeks, and nobody outside had noticed.",
+    choices:[
+      { fr:"Entrer dans la boucle et la briser de l'interieur.", en:"Step into the loop and break it from inside.", eff:{courage:6, intelligence:4, align:3} },
+      { fr:"Etudier la boucle avant d'agir, quitte a attendre.", en:"Study the loop before acting, even if it means waiting.", eff:{intelligence:7, align:-1} },
+      { fr:"Exploiter la boucle pour repeter un coup parfait.", en:"Exploit the loop to repeat one perfect heist.", eff:{align:-8, intelligence:5, popularity:2} },
+    ]},
+  { id:'itg_ancien', tagFr:'Passe qui remonte', tagEn:'Past resurfacing',
+    fr:"Un ancien coequipier que tu croyais mort refait surface, et il raconte une autre version de votre derniere mission.", en:"A former teammate you thought dead resurfaces, telling a different version of your last mission.",
+    choices:[
+      { fr:"Le laisser parler devant toute l'equipe.", en:"Let him speak in front of the whole team.", eff:{align:5, courage:4, popularity:-2} },
+      { fr:"Confronter sa version aux archives, point par point.", en:"Check his version against the archives, point by point.", eff:{intelligence:6, align:1} },
+      { fr:"Le discrediter avant qu'on l'ecoute.", en:"Discredit him before anyone listens.", eff:{align:-8, popularity:2, intelligence:3} },
+    ]},
+  { id:'itg_greve', tagFr:'Crise interne', tagEn:'Internal crisis',
+    fr:"Le personnel technique de Volt Industries se met en greve : trop de morts, trop peu de moyens.", en:"Volt Industries' technical staff goes on strike: too many deaths, too few resources.",
+    choices:[
+      { fr:"Te mettre de leur cote et negocier pour eux.", en:"Side with them and negotiate on their behalf.", eff:{align:6, popularity:5, intelligence:1} },
+      { fr:"Reprendre leurs taches toi-meme, nuit et jour.", en:"Take over their work yourself, night and day.", eff:{courage:5, intelligence:2, popularity:1} },
+      { fr:"Les remplacer par des systemes automatises.", en:"Replace them with automated systems.", eff:{align:-7, intelligence:5, popularity:-3} },
+    ]},
+  { id:'itg_relique', tagFr:'Relique', tagEn:'Relic',
+    fr:"Une relique ancienne reagit uniquement a ta presence. Trois puissances veulent savoir pourquoi.", en:"An ancient relic reacts only to your presence. Three powers want to know why.",
+    choices:[
+      { fr:"La confier a un gardien neutre et t'en eloigner.", en:"Entrust it to a neutral keeper and walk away.", eff:{align:5, intelligence:2} },
+      { fr:"L'etudier en secret, sans en parler a personne.", en:"Study it in secret, telling nobody.", eff:{intelligence:6, align:-2, courage:2} },
+      { fr:"La reveiller completement, maintenant.", en:"Awaken it fully, right now.", eff:{align:-6, courage:6, popularity:3} },
+    ]},
+  { id:'itg_double_jeu', tagFr:'Double jeu', tagEn:'Double game',
+    fr:"Un agent adverse te propose un canal prive : des informations echangees, sans que vos camps le sachent.", en:"An opposing agent offers a private channel: traded information, with neither faction knowing.",
+    choices:[
+      { fr:"Refuser et signaler le contact a ta hierarchie.", en:"Refuse and report the contact to your chain of command.", eff:{align:4, popularity:2, intelligence:1} },
+      { fr:"Accepter, mais ne donner que du verifiable et de l'inoffensif.", en:"Accept, but hand over only harmless, verifiable material.", eff:{intelligence:6, align:-2, courage:2} },
+      { fr:"Accepter et vendre plus que ce que tu recois.", en:"Accept and sell more than you receive.", eff:{align:-9, intelligence:4, popularity:1} },
+    ]},
+];
+
 /* ============================ CONVERSATIONS ============================ */
 const CONVERSATIONS = [
   { id:'conv_volt', charKey:'volt',
@@ -1793,7 +1956,7 @@ function freshState(lang){
     path:null, powers:[], mode:null, years:10, missionsPlan:[],
     stats:{ courage:50, intelligence:50, popularity:50 }, align:0, initialAlignMagnitude:0, reputationFloor:0, lastZone:'neutral',
     rel:{ volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 },
-    currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], currentMission:null, log:[],
+    currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], usedIntrigueIds:[], orientationCount:0, lastOrientationYear:null, currentMission:null, log:[],
     team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
     battleForm:{ momentum:0, streak:0, injury:null },
@@ -2425,17 +2588,37 @@ function screenSummary(){
 }
 
 /* ---------- Mission engine ---------- */
+/* Les questions d'orientation (choisir son camp) sont rares : 2 par carriere courte, 3-4 sur une longue. */
+function orientationCap(){ return S.mode==='long' ? Math.min(4, 2 + Math.floor((S.years||10)/20)) : 2; }
+function orientationBudgetLeft(){
+  if(S.orientationCount===undefined) S.orientationCount = 0;
+  if(S.orientationCount >= orientationCap()) return false;
+  const last = (S.lastOrientationYear===undefined || S.lastOrientationYear===null) ? -99 : S.lastOrientationYear;
+  const gap = S.mode==='long' ? 5 : 3;
+  return (S.currentYear - last) >= gap && S.currentYear >= 2;
+}
+function pickIntrigueMission(){
+  if(!S.usedIntrigueIds) S.usedIntrigueIds = [];
+  let pool = INTRIGUE_MISSIONS.filter(m=>!S.usedIntrigueIds.includes(m.id));
+  if(!pool.length){ S.usedIntrigueIds = []; pool = INTRIGUE_MISSIONS; }
+  const m = pick(pool); S.usedIntrigueIds.push(m.id);
+  return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+}
 function pickMission(){
   const rank = computeStars();
-  if(Math.random() < 0.05){
+  if(orientationBudgetLeft() && Math.random() < 0.16){
     let pPool = PIVOTAL_MISSIONS.filter((m,i)=>!S.usedPivotalIds.includes(i) && (!m.charKey || m.charKey!==S.playerCharKey));
     if(pPool.length===0){ S.usedPivotalIds = []; pPool = PIVOTAL_MISSIONS; }
     const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
     const m = PIVOTAL_MISSIONS[idx];
+    S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
     return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
   }
-  if(Math.random() < 0.27){ return generateSignatureMission(rank); }
+  /* Intrigues : enquetes, politique, presse, secrets... pour que le jeu avance sans combat. */
+  if(Math.random() < 0.26){ return pickIntrigueMission(); }
+  if(Math.random() < 0.24){ return generateSignatureMission(rank); }
   if(Math.random() < 0.83){ return zoneOf(S.align)==='villain' ? generateVillainMission(rank) : generateProceduralMission(rank); }
+
   let reachable = MISSIONS.filter(m => (m.scope||1) <= rank);
   if(reachable.length===0) reachable = MISSIONS.filter(m=>(m.scope||1)===1);
   reachable = reachable.filter(m=>!m.charKey || m.charKey!==S.playerCharKey);
@@ -2732,7 +2915,7 @@ function battleFoeKey(mission){
 }
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
-  if(mission.pivotal || mission.breakthrough) return false;
+  if(mission.pivotal || mission.breakthrough || mission.intrigue) return false;
   const f = battleForm();
   if(injuryActive()) return false;
   if(f.lastPlayedYear!=null && (S.currentYear - f.lastPlayedYear) < 2) return false;
@@ -2844,6 +3027,31 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
   S.currentYearEntries.push({ tag:(S.lang==='fr'?`Defaite contre ${foeName} - ${label}`:`Defeat vs ${foeName} - ${label}`), location:null, type:'combat', outcome:'lose' });
   showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, 'var(--red)', cb);
 }
+/* ---------- Escouades visuelles : des allies (et des adversaires) au coude a coude ---------- */
+function buildBattleSquads(foeKey){
+  const empty = { allies:[], foes:[] };
+  if(Math.random() < 0.45) return empty;
+  const keys = otherCharKeys().filter(k=>k!==foeKey);
+  const myZone = zoneOf(S.align);
+  const mySide = myZone==='villain' ? 'villain' : 'hero';
+  const allyPool = shuffle(keys.filter(k=>CHARACTERS[k].align===mySide));
+  const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
+  const n = 3 + Math.floor(Math.random()*4); // 3 a 6 visages a tes cotes
+  const allies = allyPool.slice(0, n);
+  const foes = foePool.slice(0, Math.max(1, allies.length - 1 + (Math.random()<0.4?1:0)));
+  if(!allies.length) return empty;
+  return { allies, foes };
+}
+function squadHTML(list){
+  if(!list || !list.length) return '';
+  return `<div class="btl-squad">${list.map((k,i)=>{
+    const c = CHARACTERS[k]; if(!c) return '';
+    const col = convBeamColor(c.align);
+    const nm = S.lang==='fr'?c.fr:c.en;
+    const inner = c.img ? `<img src="${c.img}" alt="${nm}">` : `<span>${nm.charAt(0).toUpperCase()}</span>`;
+    return `<div class="sq" style="--cp-color:${col}; animation-delay:${0.5 + i*0.09}s;" title="${nm}">${inner}</div>`;
+  }).join('')}</div>`;
+}
 function startBattle(mission, done){
   const foeKey = battleFoeKey(mission);
   const foe = CHARACTERS[foeKey];
@@ -2869,6 +3077,9 @@ function startBattle(mission, done){
   st.foeMax = st.foeHP;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
+  /* Escouades : 55% des combats se jouent en groupe (3 a 6 visages de chaque cote). */
+  const squads = buildBattleSquads(foeKey);
+  const allyBonus = 1 + squads.allies.length * 0.03;
 
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro';
@@ -2879,6 +3090,7 @@ function startBattle(mission, done){
         <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlMeNum">${st.myHP} / ${st.myMax}</div></div>
+        ${squadHTML(squads.allies)}
       </div>
       <div class="btl-vs" id="btlVS">VS</div>
       <div class="btl-fighter foe">
@@ -2886,7 +3098,9 @@ function startBattle(mission, done){
         <div class="btl-meta"><div class="btl-name" style="color:${foeCol};">${foeName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlFoeNum">${st.foeHP} / ${st.foeMax}</div></div>
+        ${squadHTML(squads.foes)}
       </div>
+
     </div>
     <div class="btl-log" id="btlLog"></div>
     <div class="btl-moves" id="btlMoves"></div>`;
@@ -2977,7 +3191,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.25, dmgMult);
+    const d = dmgOf(m, pl + S.stats.courage*0.25, dmgMult * allyBonus);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
@@ -2989,15 +3203,23 @@ function startBattle(mission, done){
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
     const fl = formLabel();
+    let delay = 0;
+    if(squads.allies.length){
+      const names = squads.allies.map(k=>S.lang==='fr'?CHARACTERS[k].fr:CHARACTERS[k].en).join(', ');
+      setLog(S.lang==='fr'?`${names} prennent position a tes cotes.`:`${names} take position at your side.`);
+      delay = 1400;
+    }
     // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
     const foeFirst = Math.random() < (0.28 + Math.min(0.22, Math.max(0, form.streak)*0.06));
-    if(foeFirst){
-      setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
-      setTimeout(foeTurn, 1000);
-    } else {
-      setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
-      st.busy = false; setMovesEnabled(true);
-    }
+    setTimeout(()=>{
+      if(foeFirst){
+        setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
+        setTimeout(foeTurn, 1000);
+      } else {
+        setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
+        st.busy = false; setMovesEnabled(true);
+      }
+    }, delay);
   }, 1500);
 
 }
@@ -3478,7 +3700,7 @@ function generateConversation(charKey){
   const pack = CONV_LINES[tone];
   const oi = pickUnused('open_'+tone+'_'+charKey, pack.openFr.length);
   const mi = pickUnused('mid_'+tone, pack.midFr.length);
-  const themeKey = CONV_THEME_KEYS[pickUnused('theme_'+charKey, CONV_THEME_KEYS.length)];
+  const themeKey = pickConvTheme(charKey);
   const theme = CONV_THEMES[themeKey];
   const ti = pickUnused('themeline_'+themeKey, theme.fr.length);
   const buckets = ['noble','pragmatic','ruthless'];
@@ -3498,6 +3720,72 @@ function generateConversation(charKey){
     choices,
   };
 }
+/* Les themes d'orientation (tentation, allegeance) restent rares : le joueur ne doit pas
+   se voir demander son camp toutes les cinq minutes. */
+function pickConvTheme(charKey){
+  const orientationThemes = ['tentation'];
+  let keys = CONV_THEME_KEYS.filter(k=>!orientationThemes.includes(k));
+  if(orientationBudgetLeft() && Math.random() < 0.12){
+    S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
+    return 'tentation';
+  }
+  return keys[pickUnused('theme_'+charKey, keys.length)];
+}
+/* ---------- Conversations de groupe : plusieurs personnages se repondent ---------- */
+function generateGroupConversation(){
+  const keys = otherCharKeys();
+  if(keys.length < 3) return null;
+  const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
+  const base = recurring.length >= 3 ? recurring : keys;
+  const myZone = zoneOf(S.align);
+  const same = base.filter(k=>CHARACTERS[k].align === (myZone==='villain'?'villain':'hero'));
+  const other = base.filter(k=>CHARACTERS[k].align !== (myZone==='villain'?'villain':'hero'));
+  const count = 3 + Math.floor(Math.random()*2); // 3 ou 4 intervenants
+  let cast = shuffle(same.slice()).slice(0, count);
+  if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
+  if(cast.length < 3) cast = shuffle(base.slice()).slice(0,3);
+  const linesFr = [], linesEn = [], lineSpeakers = [];
+  const total = cast.length + 1 + Math.floor(Math.random()*2); // 4 a 6 repliques
+  for(let i=0;i<total;i++){
+    const si = i % cast.length;
+    const key = cast[si]; const c = CHARACTERS[key];
+    const tone = CONV_LINES[c.align] ? c.align : 'neutral';
+    const pack = CONV_LINES[tone];
+    if(i===0){
+      const oi = pickUnused('open_'+tone+'_'+key, pack.openFr.length);
+      linesFr.push(convFill(pack.openFr[oi], c)); linesEn.push(convFill(pack.openEn[oi], c));
+    } else if(i === total-1){
+      const mi = pickUnused('mid_'+tone, pack.midFr.length);
+      linesFr.push(convFill(pack.midFr[mi], c)); linesEn.push(convFill(pack.midEn[mi], c));
+    } else {
+      const tk = pickConvTheme(key); const th = CONV_THEMES[tk];
+      const ti = pickUnused('themeline_'+tk, th.fr.length);
+      linesFr.push(convFill(th.fr[ti], c)); linesEn.push(convFill(th.en[ti], c));
+    }
+    lineSpeakers.push(si);
+  }
+  const buckets = shuffle(['noble','pragmatic','ruthless']);
+  const choices = buckets.map(b=>{
+    const pool = CONV_CHOICE_POOL[b];
+    const ci = pickUnused('ch_'+b, pool.length);
+    const bs = pool[ci];
+    const eff = { align:bs.eff.align||0, courage:bs.eff.courage||0, intelligence:bs.eff.intelligence||0, popularity:bs.eff.popularity||0 };
+    if(bs.eff.rel){
+      eff.rel = {};
+      cast.forEach(k=>{
+        let r = bs.eff.rel;
+        if(CHARACTERS[k].align==='villain') r = -r * (b==='ruthless'?-1:1);
+        eff.rel[k] = Math.round(r*0.7);
+      });
+    }
+    return { fr:bs.fr, en:bs.en, eff };
+  });
+  return {
+    id:'grp_'+cast.join('_')+'_'+S.currentYear+'_'+Math.floor(Math.random()*10000),
+    charKey: cast[0], group:true, speakers:cast, lineSpeakers, linesFr, linesEn, choices,
+  };
+}
+
 /* ---------- Accueil : The G (heros) ou Siddartha (villain) ---------- */
 /* Fragments combinables : ~9 x 8 x 8 = 576 accueils differents par camp. */
 const INTRO_PACK = {
@@ -3949,15 +4237,17 @@ function maybeTriggerConversation(){
   if(maybeTriggerRomance()) return;
   const gap = S.currentYear - S.lastConvYear;
   const forced = gap >= 6;
-  if(forced || Math.random() < 0.30){
+  if(forced || Math.random() < 0.45){
     const keys = otherCharKeys();
     if(!keys.length) return;
     let conv = null;
-    /* conversations signature : rares (12%), jamais deux fois la meme */
-    if(Math.random() < 0.12){
+    /* conversations signature : rares (10%), jamais deux fois la meme */
+    if(Math.random() < 0.10){
       const sigPool = CONVERSATIONS.filter(cv=>!S.usedConvIds.includes(cv.id) && keys.includes(cv.charKey));
       if(sigPool.length){ const sig = pick(sigPool); S.usedConvIds.push(sig.id); conv = sig; }
     }
+    /* ~30% des echanges sont des discussions de groupe (3-4 personnages qui se repondent) */
+    if(!conv && Math.random() < 0.30){ conv = generateGroupConversation(); }
     if(!conv){
       const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
       const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
@@ -3982,15 +4272,28 @@ function characterPortraitHTML(charObj, animate){
     : `<span class="cp-glyph">${initial}</span>`;
   return `<div class="conv-portrait ${entranceClass}" style="--cp-color:${col};">${inner}${animate ? '<div class="cp-sweep"></div>' : ''}</div>`;
 }
+function convCastHTML(conv, activeKey){
+  if(!conv.group || !conv.speakers) return '';
+  return `<div class="conv-cast">${conv.speakers.map(k=>{
+    const c = CHARACTERS[k]; if(!c) return '';
+    const col = convBeamColor(c.align);
+    const nm = S.lang==='fr'?c.fr:c.en;
+    const inner = c.img ? `<img src="${c.img}" alt="${nm}">` : `<span>${nm.charAt(0).toUpperCase()}</span>`;
+    return `<div class="cc ${k===activeKey?'on':''}" style="--cc-color:${col};" title="${nm}">${inner}</div>`;
+  }).join('')}</div>`;
+}
 function renderConversationOverlay(){
   removeConvOverlay();
   const conv = S.activeConversation; if(!conv) return;
-  const charObj = CHARACTERS[conv.charKey];
   const lines = S.lang==='fr'?conv.linesFr:conv.linesEn;
+  const idx = Math.min(S.convLineIndex, lines.length-1);
+  const speakerKey = (conv.group && conv.lineSpeakers) ? conv.speakers[conv.lineSpeakers[idx]] : conv.charKey;
+  const prevKey = (conv.group && conv.lineSpeakers && idx>0) ? conv.speakers[conv.lineSpeakers[idx-1]] : null;
+  const charObj = CHARACTERS[speakerKey];
   const isLast = S.convLineIndex >= lines.length-1;
   const col = charColor(charObj.align);
   const beam = convBeamColor(charObj.align);
-  const isFirstReveal = S.convLineIndex===0;
+  const isFirstReveal = idx===0 || (prevKey && prevKey!==speakerKey);
   const el = document.createElement('div'); el.id='convOverlay'; el.className='conv-overlay';
   el.innerHTML = `<div class="conv-backdrop"></div><div class="conv-card">
     <div class="conv-stage" style="--cp-color:${beam};">
@@ -3998,11 +4301,13 @@ function renderConversationOverlay(){
       <div class="conv-beam"></div>
     </div>
     <div class="conv-body">
+      ${convCastHTML(conv, speakerKey)}
       <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
       <div class="conv-line">${lines[S.convLineIndex]}</div>
       ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
     </div>
   </div>`;
+
 
   document.body.appendChild(el);
   if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
