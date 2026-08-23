@@ -2582,43 +2582,58 @@ function formatDuration(totalSec){
 function estimateCareerTime(years, mode){
   return formatDuration(estimateCareerMissions(years, mode) * 20);
 }
+function careerScaleLabel(years){
+  const fr = S.lang==='fr';
+  if(years<=8) return fr?'Passage eclair':'Flash run';
+  if(years<=14) return fr?'Carriere ramassee':'Compact career';
+  if(years<=24) return fr?'Carriere installee':'Established career';
+  if(years<=36) return fr?'Carriere de reference':'Landmark career';
+  return fr?'Legende sur toute une vie':'Lifelong legend';
+}
 function screenMode(){
   const d = document.createElement('div');
-  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2><p class="lead">${t('modeLead')}</p>
-    <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
-    <div id="yearsBox" style="margin-top:20px; display:none;">
-      <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
-      <input type="range" min="10" max="50" value="${Math.min(50,S.years)}" id="yearsRange">
-      <div id="estBox" style="margin-top:14px;"></div>
+  const fr = S.lang==='fr';
+  if(!S.years || S.years<5) S.years = 10;
+  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2>
+    <p class="lead">${fr?"Choisis la duree de ta carriere. Plus elle est longue, plus les enjeux montent : missions cosmiques, bascules de camp, formation de recrues, risque de mort.":"Pick how long your career runs. The longer it goes, the higher the stakes: cosmic missions, side switches, training recruits, risk of death."}</p>
+    <div id="yearsBox" style="margin-top:22px;">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-weight:800;">${t('yearsLabel')}:</span>
+        <span id="yearsVal" style="font-size:34px;font-weight:900;color:var(--accent);text-shadow:0 0 20px var(--accent);line-height:1;">${S.years}</span>
+        <span id="scaleVal" style="color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12px;">${careerScaleLabel(S.years)}</span>
+      </div>
+      <input type="range" min="5" max="50" step="1" value="${clamp(S.years,5,50)}" id="yearsRange" style="width:100%;">
+      <div style="display:flex;justify-content:space-between;color:var(--dim);font-size:11px;letter-spacing:1px;margin-top:4px;"><span>5</span><span>50</span></div>
+      <div id="estBox" style="margin-top:16px;"></div>
     </div>
-    <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
-  function estHtml(mode){
-    const years = mode==='short' ? 10 : S.years;
-    const total = estimateCareerMissions(years, mode);
+    <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next">${t('beginCareer')} -></button></div>`;
+  function estHtml(){
+    const total = estimateCareerMissions(S.years);
     const dur = formatDuration(total * 20);
-    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} ${S.lang==='fr'?'missions':'missions'})</span></div>`;
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} missions)</span></div>`;
   }
-  function refresh(){
-    d.querySelector('#modeOpt').innerHTML = `<div class="opt ${S.mode==='short'?'selected':''}" data-m="short"><div class="oname">${t('modeShort')}</div><div class="odesc">${t('modeShortDesc')}</div>${estHtml('short')}</div>
-      <div class="opt ${S.mode==='long'?'selected':''}" data-m="long"><div class="oname">${t('modeLong')}</div><div class="odesc">${t('modeLongDesc')}</div>${estHtml('long')}</div>`;
-    d.querySelectorAll('#modeOpt .opt').forEach(el=>{ el.onclick=()=>{ S.mode = el.dataset.m; d.querySelector('#yearsBox').style.display = S.mode==='long' ? 'block' : 'none'; refresh(); d.querySelector('#next').disabled=false; }; });
-    const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long');
-  }
-  refresh();
-  d.querySelector('#yearsRange').oninput=(e)=>{ S.years = parseInt(e.target.value); d.querySelector('#yearsVal').textContent = S.years; const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long'); };
+  d.querySelector('#estBox').innerHTML = estHtml();
+  d.querySelector('#yearsRange').oninput=(e)=>{
+    S.years = parseInt(e.target.value);
+    d.querySelector('#yearsVal').textContent = S.years;
+    d.querySelector('#scaleVal').textContent = careerScaleLabel(S.years);
+    d.querySelector('#estBox').innerHTML = estHtml();
+  };
   d.querySelector('#back').onclick=()=>{ S.screen = 'startside'; render(); };
-  d.querySelector('#next').onclick=()=>{ if(!S.mode) return; buildCareerPlan(); S.screen='summary'; render(); };
+  d.querySelector('#next').onclick=()=>{ buildCareerPlan(); S.screen='summary'; render(); };
   return d;
 }
 function buildCareerPlan(){
   S.missionsPlan = [];
-  if(S.mode==='short'){ S.years = 10; for(let y=0;y<10;y++) S.missionsPlan.push(3); }
-  else { S.years = Math.min(50, S.years); for(let y=0;y<S.years;y++) S.missionsPlan.push(3); }
+  S.years = clamp(S.years||10, 5, 50);
+  S.mode = S.years <= 12 ? 'short' : 'long';
+  for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
-  S.mentorCap = S.mode==='long' ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
+  S.mentorCap = S.years>=14 ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
+
 function findPowerById(id){
   for(const k in POWERS){ const f = POWERS[k].find(x=>x.id===id); if(f) return f; }
   return null;
