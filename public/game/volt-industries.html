@@ -2375,7 +2375,24 @@ function careerScore(){
   return { total, parts, grade, gradeLabel: fr?gradeLabelFr:gradeLabelEn, winRate, fights, locWeight };
 }
 function reputationCap(){ return clamp((S.reputationFloor||0) + S.totalMissionsDone * 6, 0, 100); }
-function clampToReputation(v){ const cap = reputationCap(); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
+/* Plafond de conviction : une carriere faite de contradictions et de defaites ne finit jamais a 100%. */
+function convictionCap(){
+  const fights = S.combat.won + S.combat.lost;
+  const lossPen = fights ? Math.round((S.combat.lost/fights) * 16) : 4;
+  const contra = Math.min(30, (S.alignContradictions||0) * 5);
+  const wobble = S.convictionSeed===undefined ? (S.convictionSeed = 3 + Math.floor(Math.random()*9)) : S.convictionSeed;
+  return clamp(100 - contra - lossPen - wobble, 42, 96);
+}
+/* Les gains d'alignement s'essoufflent quand on est deja tres marque. */
+function softenAlign(delta){
+  if(!delta) return 0;
+  const a = Math.abs(S.align);
+  const sameDir = (delta>0 && S.align>=0) || (delta<0 && S.align<=0);
+  if(!sameDir){ S.alignContradictions = (S.alignContradictions||0) + (Math.abs(delta)>=4 ? 1 : 0); return delta; }
+  const f = a>=85 ? 0.25 : a>=70 ? 0.45 : a>=55 ? 0.7 : 1;
+  return Math.round(delta*f*10)/10;
+}
+function clampToReputation(v){ const cap = Math.min(reputationCap(), convictionCap()); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
 function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
 function computeStars(){ const score = heroVillainScore(); return Math.max(1, Math.min(7, Math.round(score/100*7))); }
 
