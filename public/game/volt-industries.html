@@ -2122,6 +2122,10 @@ function buildCareerPlan(){
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
+function findPowerById(id){
+  for(const k in POWERS){ const f = POWERS[k].find(x=>x.id===id); if(f) return f; }
+  return null;
+}
 function screenSummary(){
   const d = document.createElement('div');
   const totalMissions = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -2129,7 +2133,7 @@ function screenSummary(){
   d.innerHTML = `<span class="eyebrow">${t('summaryTitle')}</span><h2>${S.heroName}</h2>
     <p class="lead" style="margin-top:0;">${t('morphology')}: <b>${S.lang==='fr'?morphObj.fr:morphObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
-    <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=POWERS[S.path].find(x=>x.id===id); return S.lang==='fr'?p.fr:p.en; }).join(', ')}</b></p>
+    <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
     <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
@@ -2621,44 +2625,174 @@ function generateConversation(charKey){
   };
 }
 /* ---------- Accueil : The G (heros) ou Siddartha (villain) ---------- */
-function introConversation(){
-  const isVillain = (S.startSide==='villain') || (S.align < 0);
-  if(isVillain){
-    const c = CHARACTERS.siddartha;
-    return { id:'intro_siddartha', charKey:'siddartha',
-      linesFr:[
-        `Les lumieres tombent. Siddartha t'attend au bout du couloir de Volt Industries. \"Bienvenue, ${S.heroName}. Ne fais pas semblant d'etre surpris : c'est moi qui ai valide ton nom.\"`,
-        "\"Ici, personne ne te protegera et personne ne te jugera. Tu prends, ou on te prend. C'est le seul reglement interieur.\"",
-        "\"Tu vas signer beaucoup de choses dans les annees qui viennent. Souviens-toi juste de qui t'a ouvert la porte.\""
-      ],
-      linesEn:[
-        `The lights drop. Siddartha waits at the end of the Volt Industries corridor. "Welcome, ${S.heroName}. Don't act surprised: I approved your name myself."`,
-        "\"Here nobody protects you and nobody judges you. You take, or you get taken. That's the entire staff handbook.\"",
-        "\"You'll sign a lot of things in the coming years. Just remember who opened the door.\""
-      ],
-      choices:[
-        { fr:"S'incliner et promettre des resultats rapides.", en:"Bow and promise fast results.", eff:{align:-6, rel:{siddartha:6}} },
-        { fr:"Le remercier froidement, sans rien promettre.", en:"Thank him coldly, promising nothing.", eff:{intelligence:3, rel:{siddartha:1}} },
-        { fr:"Lui dire que tu prendras sa place un jour.", en:"Tell him you'll take his seat one day.", eff:{align:-3, courage:5, rel:{siddartha:-4}} },
-      ]};
-  }
-  const c = CHARACTERS.theg;
-  return { id:'intro_theg', charKey:'theg',
-    linesFr:[
-      `The G t'accueille dans le grand hall, main tendue, sourire franc. \"Bienvenue chez Volt Industries, ${S.heroName}. On avait besoin de quelqu'un comme toi.\"`,
-      "\"Ici on ne te demandera jamais d'etre le plus fort. On te demandera d'etre la quand ca compte.\"",
-      "\"Ma porte reste ouverte, meme a trois heures du matin. Surtout a trois heures du matin.\""
+/* Fragments combinables : ~9 x 8 x 8 = 576 accueils differents par camp. */
+const INTRO_PACK = {
+  hero: {
+    openFr:[
+      "The G t'accueille dans le grand hall de Volt Industries, main tendue, sourire franc. \"Bienvenue, {NAME}. On avait besoin de quelqu'un comme toi.\"",
+      "Les portes vitrees s'ouvrent et The G est deja la, manches retroussees. \"Bienvenue chez Volt Industries, {NAME}. Pas de discours, pas de photos : du travail.\"",
+      "The G descend l'escalier central trois marches a la fois. \"{NAME} ! Bienvenue. J'ai lu ton dossier deux fois, et j'ai signe les deux fois.\"",
+      "Dans l'ascenseur panoramique, The G te tend un badge encore chaud. \"Bienvenue a bord, {NAME}. Ce badge ouvre presque tout. Presque.\"",
+      "The G t'attend sur le toit, la ville allumee derriere lui. \"Regarde-la bien, {NAME}. Bienvenue : voila ce qu'on protege.\"",
+      "Au sous-sol, entre deux caisses d'equipement, The G te serre l'epaule. \"Bienvenue chez nous, {NAME}. Ici on commence toujours par le bas, meme les meilleurs.\"",
+      "The G coupe la reunion en cours pour venir te voir. \"Bienvenue, {NAME}. Ils attendront. Toi, non.\"",
+      "Un cafe trop chaud dans chaque main, The G t'en offre un. \"Bienvenue chez Volt Industries, {NAME}. Tu vas apprendre a aimer cette machine a cafe.\"",
+      "The G t'accueille dans la salle des cartes, ecrans partout. \"Bienvenue, {NAME}. Chaque point rouge la-dedans, c'est quelqu'un qui attend de l'aide.\""
     ],
-    linesEn:[
-      `The G greets you in the main hall, hand out, honest smile. "Welcome to Volt Industries, ${S.heroName}. We needed someone like you."`,
+    openEn:[
+      "The G greets you in the Volt Industries main hall, hand out, honest smile. \"Welcome, {NAME}. We needed someone like you.\"",
+      "The glass doors open and The G is already there, sleeves rolled up. \"Welcome to Volt Industries, {NAME}. No speeches, no photos: just work.\"",
+      "The G comes down the central stairs three steps at a time. \"{NAME}! Welcome. I read your file twice, and signed it twice.\"",
+      "In the panoramic elevator, The G hands you a badge still warm from the printer. \"Welcome aboard, {NAME}. That badge opens almost everything. Almost.\"",
+      "The G waits on the roof, the lit city behind him. \"Take a good look, {NAME}. Welcome: that's what we protect.\"",
+      "Down in the basement, between two equipment crates, The G grips your shoulder. \"Welcome in, {NAME}. Everyone starts at the bottom here, even the best.\"",
+      "The G cuts a meeting short to come see you. \"Welcome, {NAME}. They can wait. You can't.\"",
+      "Holding two cups of too-hot coffee, The G offers you one. \"Welcome to Volt Industries, {NAME}. You'll learn to love that machine.\"",
+      "The G greets you in the map room, screens everywhere. \"Welcome, {NAME}. Every red dot in there is someone waiting for help.\""
+    ],
+    midFr:[
+      "\"Ici on ne te demandera jamais d'etre le plus fort. On te demandera d'etre la quand ca compte.\"",
+      "\"On perd parfois. Ce qui compte, c'est ce qu'on fait le lendemain matin.\"",
+      "\"Tu croiseras des gens qui te proposeront des raccourcis. Ils ont tous l'air raisonnables. Aucun ne l'est.\"",
+      "\"Ton nom va circuler vite. Fais en sorte qu'il circule pour les bonnes raisons.\"",
+      "\"On ne travaille pas pour la camera. Si la camera arrive, c'est un bonus, pas un objectif.\"",
+      "\"Tu auras peur. Tout le monde a peur ici. On a juste appris a bosser avec.\"",
+      "\"La regle numero un, c'est les civils. La numero deux, c'est ton equipe. Toi, tu es la trois.\"",
+      "\"Quand tu doutes, tu appelles. Personne n'est mort ici pour avoir demande de l'aide.\""
+    ],
+    midEn:[
       "\"Nobody here will ask you to be the strongest. We'll ask you to be there when it counts.\"",
-      "\"My door stays open, even at three in the morning. Especially at three in the morning.\""
+      "\"We lose sometimes. What matters is what we do the next morning.\"",
+      "\"You'll meet people offering shortcuts. They all sound reasonable. None of them are.\"",
+      "\"Your name will travel fast. Make sure it travels for the right reasons.\"",
+      "\"We don't work for the cameras. If a camera shows up, that's a bonus, not a goal.\"",
+      "\"You'll be scared. Everyone here is scared. We just learned to work with it.\"",
+      "\"Rule one is civilians. Rule two is your team. You're rule three.\"",
+      "\"When you doubt, you call. Nobody ever died here for asking for help.\""
+    ],
+    closeFr:[
+      "\"Ma porte reste ouverte, meme a trois heures du matin. Surtout a trois heures du matin.\"",
+      "\"Va poser tes affaires. Ta premiere alerte tombera avant que tu aies fini de defaire ton sac.\"",
+      "\"Bienvenue dans la famille, {NAME}. Essaie de ne pas nous faire regretter le discours.\"",
+      "\"On se revoit sur le terrain. C'est la que je juge les gens, pas ici.\"",
+      "\"Et {NAME}... reviens toujours. C'est la seule consigne que je repete deux fois.\"",
+      "\"Prends la chambre du fond, elle est calme. Enfin, calme pour ici.\"",
+      "\"Je ne te promets pas la gloire. Je te promets que ce que tu feras comptera.\"",
+      "\"Allez. Le monde n'attend pas la fin des presentations.\""
+    ],
+    closeEn:[
+      "\"My door stays open, even at three in the morning. Especially at three in the morning.\"",
+      "\"Go drop your bags. Your first alert will hit before you finish unpacking.\"",
+      "\"Welcome to the family, {NAME}. Try not to make me regret the speech.\"",
+      "\"See you in the field. That's where I judge people, not in here.\"",
+      "\"And {NAME}... always come back. That's the one order I repeat twice.\"",
+      "\"Take the room at the end, it's quiet. Quiet for this place, anyway.\"",
+      "\"I can't promise you glory. I can promise what you do will matter.\"",
+      "\"Come on. The world doesn't wait for introductions to end.\""
     ],
     choices:[
       { fr:"Serrer sa main et t'engager sincerement.", en:"Shake his hand and commit sincerely.", eff:{align:6, rel:{theg:6}} },
       { fr:"Le remercier, mais preciser que tu travailles seul.", en:"Thank him, but make clear you work alone.", eff:{courage:3, rel:{theg:-1}} },
       { fr:"Lui demander directement quelles sont les vraies regles.", en:"Ask him straight what the real rules are.", eff:{intelligence:4, rel:{theg:3}} },
-    ]};
+      { fr:"Promettre que tu ne laisseras jamais tomber un civil.", en:"Promise you'll never leave a civilian behind.", eff:{align:5, popularity:3, rel:{theg:4}} },
+      { fr:"Demander a partir en mission des ce soir.", en:"Ask to be sent out on a mission tonight.", eff:{courage:5, rel:{theg:2}} },
+      { fr:"Avouer que tu n'es pas sur d'etre a la hauteur.", en:"Admit you're not sure you're good enough.", eff:{intelligence:2, popularity:-1, rel:{theg:5}} },
+      { fr:"Repondre que tu comptes bien depasser sa legende.", en:"Answer that you intend to outgrow his legend.", eff:{courage:4, popularity:3, rel:{theg:-2}} },
+      { fr:"Demander qui, ici, ne merite pas ta confiance.", en:"Ask who, in here, doesn't deserve your trust.", eff:{intelligence:5, rel:{theg:1}} }
+    ]
+  },
+  villain: {
+    openFr:[
+      "Les lumieres tombent. Siddartha t'attend au bout du couloir. \"Bienvenue, {NAME}. Ne fais pas semblant d'etre surpris : c'est moi qui ai valide ton nom.\"",
+      "Siddartha ne se leve pas de son fauteuil. \"Bienvenue chez Volt Industries, {NAME}. Assieds-toi. Ou reste debout, ca ne changera rien.\"",
+      "La porte se verrouille derriere toi. Siddartha sourit sans chaleur. \"Bienvenue, {NAME}. Tu remarqueras qu'ici les portes ferment vers l'interieur.\"",
+      "Siddartha fait tourner un verre vide entre ses doigts. \"Bienvenue, {NAME}. J'ai vu ton dossier. Il pue l'ambition. J'aime ca.\"",
+      "Au bout d'une table trop longue, Siddartha te designe une chaise. \"Bienvenue, {NAME}. Les deux avant toi ne sont pas revenus. Ne le prends pas mal.\"",
+      "Siddartha t'accueille dans une salle sans fenetre. \"Bienvenue chez nous, {NAME}. Ici on ne perd pas de temps a etre aime.\"",
+      "Il t'attend devant un mur d'ecrans de surveillance. \"Bienvenue, {NAME}. Je te regarde depuis six mois. Tu t'en doutais un peu, non ?\"",
+      "Siddartha t'accueille en pleine nuit, dans un parking souterrain. \"Bienvenue, {NAME}. Les vraies embauches se font a cette heure-la.\"",
+      "\"Bienvenue, {NAME}.\" Siddartha n'a meme pas leve les yeux de son dossier. \"Ferme la porte. On va parler de ce que tu es pret a perdre.\""
+    ],
+    openEn:[
+      "The lights drop. Siddartha waits at the end of the corridor. \"Welcome, {NAME}. Don't act surprised: I approved your name myself.\"",
+      "Siddartha doesn't get up from his chair. \"Welcome to Volt Industries, {NAME}. Sit. Or stand, it changes nothing.\"",
+      "The door locks behind you. Siddartha smiles without warmth. \"Welcome, {NAME}. You'll notice the doors here close inward.\"",
+      "Siddartha turns an empty glass between his fingers. \"Welcome, {NAME}. I read your file. It reeks of ambition. I like that.\"",
+      "At the end of a too-long table, Siddartha points at a chair. \"Welcome, {NAME}. The two before you never came back. Don't take it personally.\"",
+      "Siddartha greets you in a room with no windows. \"Welcome in, {NAME}. We don't waste time being liked here.\"",
+      "He waits in front of a wall of surveillance screens. \"Welcome, {NAME}. I've been watching you for six months. You suspected, didn't you?\"",
+      "Siddartha welcomes you at night, in an underground car park. \"Welcome, {NAME}. The real hires happen at this hour.\"",
+      "\"Welcome, {NAME}.\" Siddartha never looks up from his file. \"Close the door. Let's talk about what you're willing to lose.\""
+    ],
+    midFr:[
+      "\"Ici, personne ne te protegera et personne ne te jugera. Tu prends, ou on te prend.\"",
+      "\"La loyaute est une monnaie. Je te conseille de ne pas la depenser trop vite.\"",
+      "\"On ne te demandera jamais d'etre bon. Seulement d'etre utile, et discret.\"",
+      "\"Les heros ont des statues. Nous, on a des comptes en banque et de la memoire.\"",
+      "\"Tu vas te faire des ennemis puissants. C'est le seul indicateur de progres que j'accepte.\"",
+      "\"Si tu trahis, fais-le proprement. Ce qui m'agace, c'est le bruit.\"",
+      "\"Il n'y a pas d'equipe ici. Il y a des interets qui se croisent un moment.\"",
+      "\"Tout le monde ici a fait quelque chose d'impardonnable. Ca rend les reunions plus honnetes.\""
+    ],
+    midEn:[
+      "\"Here nobody protects you and nobody judges you. You take, or you get taken.\"",
+      "\"Loyalty is currency. I'd advise you not to spend it too fast.\"",
+      "\"Nobody will ask you to be good. Only useful, and quiet.\"",
+      "\"Heroes get statues. We get bank accounts and long memories.\"",
+      "\"You'll make powerful enemies. That's the only progress report I accept.\"",
+      "\"If you betray me, do it cleanly. It's the noise that annoys me.\"",
+      "\"There is no team here. There are interests that overlap for a while.\"",
+      "\"Everyone here has done something unforgivable. It makes the meetings more honest.\""
+    ],
+    closeFr:[
+      "\"Tu vas signer beaucoup de choses. Souviens-toi juste de qui t'a ouvert la porte.\"",
+      "\"Va travailler, {NAME}. Je n'aime pas les gens qui restent dans mon bureau.\"",
+      "\"Ne me decois pas. Je n'ai jamais eu besoin de le dire deux fois a personne.\"",
+      "\"Tu as trois mois pour devenir indispensable. Apres, tu deviens remplacable.\"",
+      "\"Si un jour tu veux ma place, viens me le dire en face. Les autres, je les ai trouves dans le fleuve.\"",
+      "\"Bienvenue, {NAME}. Officiellement, cette conversation n'a jamais eu lieu.\"",
+      "\"Prends ce dossier. Ne le lis pas ici. Ne le lis pas chez toi non plus.\"",
+      "\"Sors. Et essaie d'etre plus interessant que ton dossier.\""
+    ],
+    closeEn:[
+      "\"You'll sign a lot of things. Just remember who opened the door.\"",
+      "\"Go work, {NAME}. I don't like people lingering in my office.\"",
+      "\"Don't disappoint me. I've never had to say that twice to anyone.\"",
+      "\"You have three months to become indispensable. After that, you become replaceable.\"",
+      "\"If you ever want my seat, say it to my face. The others, they found in the river.\"",
+      "\"Welcome, {NAME}. Officially, this conversation never happened.\"",
+      "\"Take this file. Don't read it here. Don't read it at home either.\"",
+      "\"Out. And try to be more interesting than your file.\""
+    ],
+    choices:[
+      { fr:"S'incliner et promettre des resultats rapides.", en:"Bow and promise fast results.", eff:{align:-6, rel:{siddartha:6}} },
+      { fr:"Le remercier froidement, sans rien promettre.", en:"Thank him coldly, promising nothing.", eff:{intelligence:3, rel:{siddartha:1}} },
+      { fr:"Lui dire que tu prendras sa place un jour.", en:"Tell him you'll take his seat one day.", eff:{align:-3, courage:5, rel:{siddartha:-4}} },
+      { fr:"Demander combien on paie ici, avant tout le reste.", en:"Ask what the pay is, before anything else.", eff:{align:-4, intelligence:2, rel:{siddartha:3}} },
+      { fr:"Soutenir son regard en silence.", en:"Hold his stare in silence.", eff:{courage:5, rel:{siddartha:2}} },
+      { fr:"Proposer de regler un de ses problemes des ce soir.", en:"Offer to solve one of his problems tonight.", eff:{align:-5, courage:3, rel:{siddartha:5}} },
+      { fr:"Lui demander qui, ici, il faudra eliminer en premier.", en:"Ask who, in here, you'll have to remove first.", eff:{align:-5, intelligence:4, rel:{siddartha:4}} },
+      { fr:"Preciser que tu n'obeis a personne, meme a lui.", en:"Make clear you obey no one, not even him.", eff:{courage:6, popularity:2, rel:{siddartha:-5}} }
+    ]
+  }
+};
+function introConversation(){
+  const isVillain = (S.startSide==='villain') || (S.align < 0);
+  const side = isVillain ? 'villain' : 'hero';
+  const pack = INTRO_PACK[side];
+  const key = isVillain ? 'siddartha' : 'theg';
+  const fill = (s)=> String(s).split('{NAME}').join(S.heroName);
+  const oi = Math.floor(Math.random()*pack.openFr.length);
+  const mi = Math.floor(Math.random()*pack.midFr.length);
+  const ci = Math.floor(Math.random()*pack.closeFr.length);
+  const choices = shuffle(pack.choices.slice()).slice(0,3);
+  return {
+    id:'intro_'+key+'_'+oi+'_'+mi+'_'+ci,
+    charKey:key,
+    linesFr:[ fill(pack.openFr[oi]), fill(pack.midFr[mi]), fill(pack.closeFr[ci]) ],
+    linesEn:[ fill(pack.openEn[oi]), fill(pack.midEn[mi]), fill(pack.closeEn[ci]) ],
+    choices: choices.map(c=>({ fr:c.fr, en:c.en, eff:c.eff }))
+  };
 }
 /* ============================ ROMANCE ============================ */
 function playerSex(){
