@@ -1984,6 +1984,58 @@ function computePowerLevel(){
 }
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
 function heroVillainScore(){ return Math.round(clamp(Math.abs(S.align),0,100)); }
+/* ---------- Note de carriere : composite coherent avec le bilan ---------- */
+function careerScore(){
+  const fr = S.lang==='fr';
+  const fights = S.combat.won + S.combat.lost;
+  // 1) Conviction : la nettete de la trajectoire (heros ou villain assume)
+  const conviction = clamp(Math.abs(S.align),0,100)/100 * 22;
+  // 2) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
+  const winRate = fights ? S.combat.won / fights : 0;
+  const reliability = fights ? Math.min(1, fights/8) : 0;
+  const combatPart = fights ? (winRate * 26 * reliability + 26*(1-reliability)*0.45) : 26*0.35;
+  // 3) Impact terrain : lieux marques, ponderes par leur ampleur
+  const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
+  const locArr = Object.values(uniqueLocs);
+  const locWeight = locArr.reduce((s,l)=> s + (1 + (l.type||1)*0.6), 0);
+  const expected = Math.max(6, (S.missionsPlan.length||10) * 1.6);
+  const impact = clamp(locWeight/expected, 0, 1) * 20;
+  // 4) Puissance : statistiques et niveau atteint
+  const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
+  const power = ((statAvg/100)*0.6 + (computePowerLevel()/100)*0.4) * 16;
+  // 5) Heritage : eleves, alliances, coeur, techniques apprises
+  const side = zoneOf(S.align);
+  const goodMentees = S.mentees.filter(m=> side==='villain' ? m.outcome==='villain' : m.outcome==='hero').length;
+  const lostMentees = S.mentees.filter(m=> m.outcome==='died').length;
+  const relVals = Object.keys(S.rel).map(k=>S.rel[k]);
+  const allies = relVals.filter(v=>v>=8).length;
+  const romancePts = S.romance ? (S.romance.stage>=3 ? 3 : 2) : (S.romanceHistory.length ? 1 : 0);
+  let legacy = Math.min(4, goodMentees*1.5) + Math.min(4, allies*1) + romancePts + Math.min(3, S.skills.length*0.75);
+  legacy = clamp(legacy - lostMentees*1.2, 0, 16);
+  // Malus : defaites en serie, mort, blessure non refermee
+  let malus = 0;
+  if(fights) malus += Math.min(10, S.combat.lost * (winRate<0.4 ? 1.2 : 0.5));
+  if(S.dead) malus += 6;
+  if(S.battleForm && S.battleForm.injury) malus += 2;
+  const parts = [
+    { label: fr?'Conviction':'Conviction', value: conviction, max:22 },
+    { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:26 },
+    { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:20 },
+    { label: fr?'Puissance atteinte':'Power reached', value: power, max:16 },
+    { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:16 },
+    { label: fr?'Sanctions et pertes':'Setbacks', value: -malus, max:0 },
+  ];
+  const total = clamp(Math.round(conviction + combatPart + impact + power + legacy - malus), 1, 100);
+  let grade, gradeLabelFr, gradeLabelEn;
+  if(total>=92){ grade='S'; gradeLabelFr='Legende du multivers'; gradeLabelEn='Multiverse legend'; }
+  else if(total>=82){ grade='A'; gradeLabelFr='Carriere majeure'; gradeLabelEn='Major career'; }
+  else if(total>=70){ grade='B'; gradeLabelFr='Carriere solide'; gradeLabelEn='Solid career'; }
+  else if(total>=56){ grade='C'; gradeLabelFr='Carriere honnete'; gradeLabelEn='Decent career'; }
+  else if(total>=40){ grade='D'; gradeLabelFr='Carriere en dents de scie'; gradeLabelEn='Uneven career'; }
+  else if(total>=25){ grade='E'; gradeLabelFr='Carriere difficile'; gradeLabelEn='Rough career'; }
+  else { grade='F'; gradeLabelFr='Carriere ratee'; gradeLabelEn='Failed career'; }
+  return { total, parts, grade, gradeLabel: fr?gradeLabelFr:gradeLabelEn, winRate, fights, locWeight };
+}
 function reputationCap(){ return clamp((S.reputationFloor||0) + S.totalMissionsDone * 6, 0, 100); }
 function clampToReputation(v){ const cap = reputationCap(); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
 function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
