@@ -179,11 +179,10 @@
   .conv-stage .conv-portrait .cp-sweep{ height:34px; animation: sweepDown 1.1s ease; }
   .conv-beam{ position:absolute; inset:0; pointer-events:none; z-index:3;
     background:
-      linear-gradient(90deg, color-mix(in srgb, var(--cp-color) 55%, transparent), transparent 22%),
-      linear-gradient(-90deg, color-mix(in srgb, var(--cp-color) 45%, transparent), transparent 18%),
-      linear-gradient(0deg, color-mix(in srgb, var(--cp-color) 45%, transparent), transparent 20%),
-      linear-gradient(180deg, color-mix(in srgb, var(--cp-color) 40%, transparent), transparent 18%);
-    mix-blend-mode:screen; opacity:.75; animation: beamPulse 2.6s ease-in-out infinite; }
+      radial-gradient(ellipse at 50% 55%, transparent 45%, color-mix(in srgb, var(--cp-color) 40%, transparent) 100%),
+      linear-gradient(0deg, color-mix(in srgb, var(--cp-color) 35%, transparent), transparent 22%);
+    mix-blend-mode:screen; opacity:.85; animation: beamPulse 2.6s ease-in-out infinite; }
+
   .conv-beam::before{ content:''; position:absolute; inset:0; border:2px solid var(--cp-color);
     box-shadow:0 0 30px var(--cp-color), inset 0 0 30px var(--cp-color); opacity:.8; }
   .conv-beam::after{ content:''; position:absolute; top:0; bottom:0; right:-2px; width:6px;
