@@ -110,6 +110,15 @@
   .choice{ display:block; width:100%; text-align:left; background:rgba(255,255,255,.02); border:1.5px solid var(--line); border-radius:14px;
     padding:16px 18px; margin-top:12px; cursor:pointer; font-size:15px; line-height:1.5; transition:.15s; color:var(--ink); }
   .choice:hover{ border-color:var(--accent); transform:translateX(4px); box-shadow:0 8px 26px -14px var(--accent); background:var(--accent-soft); }
+  .jv-tip{ display:flex; gap:10px; align-items:flex-start; margin-top:14px; padding:11px 14px; border-radius:12px;
+    border:1px solid color-mix(in srgb, var(--jvc, var(--accent)) 55%, transparent); background:color-mix(in srgb, var(--jvc, var(--accent)) 10%, transparent);
+    font-size:13px; line-height:1.5; color:#d6e2f5; box-shadow:0 0 26px -16px var(--jvc, var(--accent)); }
+  .jv-tip .jv-tip-name{ flex:0 0 auto; font-size:10px; letter-spacing:2px; font-weight:900; color:var(--jvc, var(--accent));
+    padding-top:2px; animation:jvTipPulse 2.4s ease-in-out infinite; }
+  @keyframes jvTipPulse{ 0%,100%{ opacity:.65; } 50%{ opacity:1; } }
+  .choice.jv-reco{ border-color:var(--jvc, var(--accent)); box-shadow:0 0 24px -14px var(--jvc, var(--accent)); }
+  .choice.jv-reco::after{ content:attr(data-reco); display:inline-block; margin-left:8px; font-size:9.5px; letter-spacing:1.6px;
+    font-weight:900; color:var(--jvc, var(--accent)); vertical-align:middle; }
   .log-entry{ border-left:3px solid var(--accent); padding:10px 16px; margin-bottom:10px; background:rgba(255,255,255,.02); border-radius:0 10px 10px 0; font-size:14px; color:#c3cee2;}
   .log-entry.villain{ border-left-color:var(--red); }
   .relwrap{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px;}
@@ -3700,6 +3709,31 @@ function screenTraining(){
     setTimeout(()=>{ nextMission(); }, 700);
   };
   cbox.appendChild(no);
+  (function(){
+    const st = S.stats || {};
+    const weakest = ['courage','intelligence','popularity'].sort((a,b)=>(st[a]||0)-(st[b]||0))[0];
+    let bestI = -1, bestSc = -1e9;
+    cands.forEach((sk,i)=>{
+      const bo = sk.bonus || {};
+      let sc = (bo[weakest]||0)*1.6 + (bo.courage||0)*0.7 + (bo.intelligence||0)*0.7 + (bo.popularity||0)*0.5;
+      sc += (sk.move && sk.move.p ? sk.move.p*0.12 : 0) + (sk.move && sk.move.heal ? sk.move.heal*0.08 : 0);
+      if(sc > bestSc){ bestSc = sc; bestI = i; }
+    });
+    const btns = Array.from(cbox.querySelectorAll('.choice'));
+    const wLab = jvL({courage:'ton courage',intelligence:'ton intelligence',popularity:'ta notoriete'}[weakest],
+                     {courage:'your courage',intelligence:'your intelligence',popularity:'your standing'}[weakest]);
+    if(bestI >= 0 && btns[bestI]){
+      btns[bestI].classList.add('jv-reco');
+      btns[bestI].style.setProperty('--jvc', jvColor());
+      btns[bestI].setAttribute('data-reco', (S.lang==='fr'?'CONSEIL ':'ADVICE ') + jvName());
+    }
+    const nm = cands[bestI] ? (S.lang==='fr'?cands[bestI].fr:cands[bestI].en) : '';
+    jvAttachTip(cbox, jvIsUltron()
+      ? jvL('Prends "'+nm+'". C\'est la voie la plus destructrice pour toi et elle comble '+wLab+'.',
+            'Take "'+nm+'". Most destructive path available and it fills the gap in '+wLab+'.')
+      : jvL('Je recommande "'+nm+'" : c\'est ce qui comble '+wLab+' et te rend le plus complet au retour.',
+            'I recommend "'+nm+'": it fills the gap in '+wLab+' and makes you the most complete on your return.'));
+  })();
   return d;
 }
 /* ---------- Impact feedback ---------- */
@@ -4224,6 +4258,7 @@ function screenMission(){
     <h2 style="margin-top:6px;">${S.lang==='fr'?m.fr:m.en}</h2><div id="choices"></div>`;
   const cbox = d.querySelector('#choices');
   m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = S.lang==='fr'?c.fr:c.en; btn.onclick=()=> applyChoice(c); cbox.appendChild(btn); });
+  jvAttachAdvice(cbox, m.choices);
   return d;
 }
 function screenMentor(){
@@ -4245,6 +4280,7 @@ function screenMentor(){
     <h2 style="margin-top:6px;">${text}</h2><div id="choices"></div>`;
   const cbox = d.querySelector('#choices');
   m.choices.forEach((c2)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c2.fr:c2.en); btn.onclick=()=> applyMentorChoice(c2, name); cbox.appendChild(btn); });
+  jvAttachAdvice(cbox, m.choices);
   return d;
 }
 function applyMentorChoice(choice, name){
@@ -4337,6 +4373,23 @@ function screenInvite(){
     const label = S.lang==='fr' ? `Tu as rejoint ${fname}.` : `You joined ${fname}.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero }); nextMission(); };
   d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
+  if(!JV.muted){
+    const zone = zoneOf(S.align);
+    const fits = (zone==='hero' && isHero) || (zone==='villain' && !isHero);
+    const txt = zone==='neutral'
+      ? jvL('Ta ligne n\'est pas encore fixee : signer ici la fige. Si tu veux garder le choix ouvert, refuse.',
+            'Your line isn\'t fixed yet: signing here locks it. If you want to keep options open, decline.')
+      : (fits ? jvL('Accepte : '+fname+' va exactement dans le sens de ce que tu es devenu. Refuser te coute des appuis.',
+                    'Accept: '+fname+' matches exactly what you have become. Declining costs you support.')
+              : jvL('Refuse : '+fname+' te tire a l\'oppose de ta ligne actuelle. Ce virage te couterait ta credibilite.',
+                    'Decline: '+fname+' pulls you against your current line. That turn would cost your credibility.'));
+    const tip = jvTipEl(txt);
+    const act = d.querySelector('.actions');
+    d.insertBefore(tip, act);
+    const rec = fits || zone==='neutral' ? null : null;
+    const target = zone==='neutral' ? d.querySelector('#decline') : (fits ? d.querySelector('#accept') : d.querySelector('#decline'));
+    if(target){ target.style.boxShadow = '0 0 26px -12px ' + jvColor(); target.style.borderColor = jvColor(); }
+  }
   return d;
 }
 /* Bilan d'annee : construit a partir de ce qui s'est reellement passe cette annee. */
@@ -5715,7 +5768,8 @@ function renderConversationOverlay(){
 
   document.body.appendChild(el);
   if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
-  else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; }); }
+  else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; });
+    jvAttachAdvice(el.querySelector('#convChoices'), conv.choices); }
 }
 function applyConvChoice(conv, choice){
   const eff = choice.eff || {};
@@ -6176,24 +6230,64 @@ function jvChoiceScore(c){
   if(e.hp) sc += e.hp * 0.4;
   return sc;
 }
-function jvAdvice(mission){
-  if(!mission || !Array.isArray(mission.choices) || mission.choices.length < 2) return null;
-  const scored = mission.choices.map(c=>({ c, sc: jvChoiceScore(c) })).sort((a,b)=>b.sc-a.sc);
+function jvAdviceFor(choices){
+  if(!Array.isArray(choices) || choices.length < 2) return null;
+  const scored = choices.map((c,i)=>({ c, i, sc: jvChoiceScore(c) })).sort((a,b)=>b.sc-a.sc);
   const best = scored[0], worst = scored[scored.length-1];
-  if(best.sc - worst.sc < 1.5) return jvL("Les options se valent sur le papier. Suis ton instinct, j'assume les consequences avec toi.",
-                                          "The options are equivalent on paper. Follow your instinct; I'll carry the consequences with you.");
-  const label = (S.lang==='fr' ? best.c.fr : best.c.en).replace(/^"|"$/g,'');
-  const short = label.length > 52 ? label.slice(0,50).trim() + '...' : label;
+  const zone = zoneOf(S.align);
+  const sideLab = jvL(zone==='villain'?'ta ligne villain':(zone==='hero'?'ta ligne hero':'ta position encore ouverte'),
+                      zone==='villain'?'your villain line':(zone==='hero'?'your hero line':'your still-open stance'));
   const st = S.stats || {};
   const weakest = ['courage','intelligence','popularity'].sort((a,b)=>(st[a]||0)-(st[b]||0))[0];
   const wLab = jvL({courage:'ton courage',intelligence:'ton intelligence',popularity:'ta notoriete'}[weakest],
                    {courage:'your courage',intelligence:'your intelligence',popularity:'your standing'}[weakest]);
-  if(jvIsUltron()){
-    return jvL('Recommandation : "'+short+'". C\'est l\'option la plus rentable, et elle renforce '+wLab+'. Le reste est du sentiment.',
-               'Recommendation: "'+short+'". Highest yield, and it reinforces '+wLab+'. The rest is sentiment.');
+  if(best.sc - worst.sc < 1.2){
+    return { idx:-1, text: jvIsUltron()
+      ? jvL("Les options se valent sur le papier. Prends la plus brutale, ca fera gagner du temps.",
+            "The options are equivalent on paper. Take the most brutal one, it saves time.")
+      : jvL("Les options se valent sur le papier. Suis ton instinct, je couvre les consequences.",
+            "The options are equivalent on paper. Follow your instinct, I'll cover the fallout.") };
   }
-  return jvL('Mon conseil : "'+short+'". C\'est ce qui sert le mieux ta ligne et '+wLab+'. La decision reste la tienne.',
-             'My advice: "'+short+'". It best serves your line and '+wLab+'. The call is still yours.');
+  const label = (S.lang==='fr' ? (best.c.fr||best.c.label||'') : (best.c.en||best.c.label||'')).replace(/^"|"$/g,'');
+  const short = label.length > 56 ? label.slice(0,54).trim() + '...' : label;
+  const text = jvIsUltron()
+    ? jvL('Recommandation : "'+short+'". Rendement maximal, coherent avec '+sideLab+', et ca renforce '+wLab+'.',
+          'Recommendation: "'+short+'". Highest yield, consistent with '+sideLab+', and it reinforces '+wLab+'.')
+    : jvL('Mon conseil : "'+short+'". C\'est ce qui tient '+sideLab+' et renforce '+wLab+'. La decision reste la tienne.',
+          'My advice: "'+short+'". It holds '+sideLab+' and reinforces '+wLab+'. The call is still yours.');
+  return { idx: best.i, text };
+}
+function jvAdvice(mission){
+  const a = mission && jvAdviceFor(mission.choices);
+  return a ? a.text : null;
+}
+/* Bandeau + badge de recommandation directement au-dessus des boutons de choix. */
+function jvTipEl(text){
+  const el = document.createElement('div');
+  el.className = 'jv-tip';
+  el.style.setProperty('--jvc', jvColor());
+  el.innerHTML = '<span class="jv-tip-name">'+jvName()+'</span><span></span>';
+  el.lastChild.textContent = text;
+  return el;
+}
+/* cbox : conteneur des .choice ; choices : tableau aligne sur l'ordre des boutons. */
+function jvAttachAdvice(cbox, choices){
+  if(JV.muted || !cbox) return;
+  const adv = jvAdviceFor(choices);
+  if(!adv) return;
+  const btns = Array.from(cbox.querySelectorAll('.choice'));
+  if(adv.idx >= 0 && btns[adv.idx]){
+    const b = btns[adv.idx];
+    b.classList.add('jv-reco');
+    b.style.setProperty('--jvc', jvColor());
+    b.setAttribute('data-reco', (S.lang==='fr'?'CONSEIL ':'ADVICE ') + jvName());
+  }
+  cbox.insertBefore(jvTipEl(adv.text), cbox.firstChild);
+}
+/* Conseil libre (ecrans sans .eff exploitables : entrainement, invitation). */
+function jvAttachTip(cbox, text){
+  if(JV.muted || !cbox || !text) return;
+  cbox.insertBefore(jvTipEl(text), cbox.firstChild);
 }
 /* Commentaire contextuel : une ligne par contexte, sans spam. */
 function jarvisAuto(force){
