@@ -3340,7 +3340,7 @@ function pickIntrigueMission(){
 }
 function pickMission(){
   const rank = computeStars();
-  if(orientationBudgetLeft() && Math.random() < 0.16){
+  if(orientationBudgetLeft() && Math.random() < 0.07){
     let pPool = PIVOTAL_MISSIONS.filter((m,i)=>!S.usedPivotalIds.includes(i) && (!m.charKey || m.charKey!==S.playerCharKey));
     if(pPool.length===0){ S.usedPivotalIds = []; pPool = PIVOTAL_MISSIONS; }
     const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
@@ -3414,22 +3414,22 @@ function startRecruitArc(){
    de la popularite, de la nettete de la trajectoire, et restent rares (2-3 par carriere). */
 function checkTeamInvite(){
   const zone = zoneOf(S.align);
-  if(zone==='neutral' || S.totalMissionsDone < 5) return false;
+  if(zone==='neutral' || S.totalMissionsDone < 10) return false;
   const tier = computeStars();
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
   if(tier <= S[key]) return false;
-  if(Math.abs(S.align) < 38) return false;
+  if(Math.abs(S.align) < 55) return false;
   if(S.inviteCount===undefined) S.inviteCount = 0;
-  const cap = Math.min(3, 1 + Math.floor((S.years||10)/16));
+  const cap = (S.years||10) >= 30 ? 2 : 1;
   if(S.inviteCount >= cap) return false;
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
-  const gap = S.team ? 6 : 3;
+  const gap = S.team ? 14 : 7;
   if(S.currentYear - last < gap) return false;
   const fights = S.combat.won + S.combat.lost;
   const winRate = fights ? S.combat.won/fights : 0.35;
-  let p = 0.14 + winRate*0.34 + (S.stats.popularity-50)/320 + (S.locations.length>=3 ? 0.07 : 0);
-  if(S.team) p -= 0.12;
-  if(Math.random() > clamp(p, 0.05, 0.55)) return false;
+  let p = 0.06 + winRate*0.18 + (S.stats.popularity-58)/420 + (S.locations.length>=4 ? 0.04 : 0);
+  if(S.team) p -= 0.10;
+  if(Math.random() > clamp(p, 0.02, 0.26)) return false;
   S[key] = tier; S.inviteCount += 1; S.lastInviteYear = S.currentYear;
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
@@ -4959,7 +4959,7 @@ function pickConvTheme(charKey){
   let keys = CONV_THEME_KEYS.filter(k=>!orientationThemes.includes(k) && k!=='recrue');
   /* Une ancienne recrue parle d'abord de ce que tu lui as transmis */
   if(charKey && menteeKeys().includes(charKey) && Math.random() < 0.55) return 'recrue';
-  if(orientationBudgetLeft() && Math.random() < 0.12){
+  if(orientationBudgetLeft() && Math.random() < 0.05){
     S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
     return 'tentation';
   }
