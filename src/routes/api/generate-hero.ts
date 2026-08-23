@@ -1,62 +1,112 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+/**
+ * Generation du portrait de personnage.
+ *
+ * Source IA : cle Google AI Studio (GEMINI_API_KEY) appelee EN DIRECT.
+ * Aucun credit Lovable n'est consomme par cette route.
+ * Si la cle est absente, on renvoie une erreur explicite : pas de rendu de secours.
+ */
 export const Route = createFileRoute("/api/generate-hero")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const body = (await request.json()) as {
-          image?: string; // data URL or raw base64
+          image?: string; // data URL ou base64 brut
           prompt?: string;
-          stream?: boolean;
+          key?: string; // cle fournie par le joueur (optionnel)
         };
-        const key = process.env["LOVABLE_API_KEY"];
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+
         if (!body.image) return new Response("Missing image", { status: 400 });
         if (!body.prompt) return new Response("Missing prompt", { status: 400 });
 
-        const imageUrl = body.image.startsWith("data:")
-          ? body.image
-          : `data:image/jpeg;base64,${body.image}`;
-        const stream = body.stream !== false;
+        const key = (body.key || process.env["GEMINI_API_KEY"] || "").trim();
+        if (!key) {
+          return new Response(
+            JSON.stringify({
+              error: "no_key",
+              message:
+                "Aucune cle IA configuree. Ajoute une cle Google AI Studio (gratuite) dans les reglages du projet, ou colle ta cle dans le jeu.",
+            }),
+            { status: 428, headers: { "Content-Type": "application/json" } },
+          );
+        }
 
+        // data URL -> { mimeType, data }
+        const raw = body.image;
+        let mimeType = "image/jpeg";
+        let data = raw;
+        const m = /^data:([^;]+);base64,(.*)$/s.exec(raw);
+        if (m) {
+          mimeType = m[1];
+          data = m[2];
+        }
+
+        const model = "gemini-2.5-flash-image";
         const upstream = await fetch(
-          "https://ai.gateway.lovable.dev/v1/images/generations",
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${key}`,
               "Content-Type": "application/json",
+              "x-goog-api-key": key,
             },
             body: JSON.stringify({
-              model: "google/gemini-3-pro-image",
-              messages: [
+              contents: [
                 {
                   role: "user",
-                  content: [
-                    { type: "text", text: body.prompt },
-                    { type: "image_url", image_url: { url: imageUrl } },
+                  parts: [
+                    { text: body.prompt },
+                    { inlineData: { mimeType, data } },
                   ],
                 },
               ],
-              modalities: ["image", "text"],
-              ...(stream ? { stream: true } : {}),
+              generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
             }),
           },
         );
 
-        if (!upstream.ok || !upstream.body) {
-          return new Response(await upstream.text(), { status: upstream.status });
-        }
-        if (!stream) {
-          return new Response(upstream.body, {
+        const text = await upstream.text();
+        if (!upstream.ok) {
+          return new Response(text, {
+            status: upstream.status,
             headers: { "Content-Type": "application/json" },
           });
         }
-        return new Response(upstream.body, {
-          headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-          },
+
+        let b64: string | undefined;
+        try {
+          const json = JSON.parse(text) as {
+            candidates?: {
+              content?: {
+                parts?: { inlineData?: { data?: string }; inline_data?: { data?: string } }[];
+              };
+            }[];
+          };
+          const parts = json.candidates?.[0]?.content?.parts ?? [];
+          for (const p of parts) {
+            const d = p.inlineData?.data ?? p.inline_data?.data;
+            if (d) {
+              b64 = d;
+              break;
+            }
+          }
+        } catch {
+          /* handled below */
+        }
+
+        if (!b64) {
+          return new Response(
+            JSON.stringify({
+              error: "no_image",
+              message: "Le modele n'a pas renvoye d'image. Relance la generation.",
+            }),
+            { status: 502, headers: { "Content-Type": "application/json" } },
+          );
+        }
+
+        return new Response(JSON.stringify({ data: [{ b64_json: b64 }] }), {
+          headers: { "Content-Type": "application/json" },
         });
       },
     },
