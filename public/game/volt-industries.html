@@ -2845,7 +2845,9 @@ function afterMissionRender(mission){
     startBattle(mission, (win)=>{ S.pendingBattleWin = win; maybeTriggerConversation(); });
     return;
   }
+  if(mission && mission.type==='combat'){ S.pendingBattleWin = resolveBattleOffscreen(mission); }
   const epicness = missionEpicness(mission);
+
   if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
   else { maybeTriggerConversation(); }
 }
