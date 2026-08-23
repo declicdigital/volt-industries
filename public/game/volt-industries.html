@@ -4286,10 +4286,13 @@ function maybeTriggerConversation(){
     }
   }
   if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
-  if(maybeTriggerRomance()) return;
+  if(maybeTriggerRomance()){ S.missionsSinceConv = 0; return; }
   const gap = S.currentYear - S.lastConvYear;
-  const forced = gap >= 6;
-  if(forced || Math.random() < 0.45){
+  S.missionsSinceConv = (S.missionsSinceConv||0) + 1;
+  /* La vie sociale est le coeur du jeu : au moins un echange toutes les 2 missions,
+     et une bonne chance a chaque mission. */
+  const forced = gap >= 2 || S.missionsSinceConv >= 2;
+  if(forced || Math.random() < 0.6){
     const keys = otherCharKeys();
     if(!keys.length) return;
     let conv = null;
@@ -4298,8 +4301,8 @@ function maybeTriggerConversation(){
       const sigPool = CONVERSATIONS.filter(cv=>!S.usedConvIds.includes(cv.id) && keys.includes(cv.charKey));
       if(sigPool.length){ const sig = pick(sigPool); S.usedConvIds.push(sig.id); conv = sig; }
     }
-    /* ~30% des echanges sont des discussions de groupe (3-4 personnages qui se repondent) */
-    if(!conv && Math.random() < 0.30){ conv = generateGroupConversation(); }
+    /* ~45% des echanges sont des discussions de groupe (3-5 personnages qui se repondent) */
+    if(!conv && Math.random() < 0.45){ conv = generateGroupConversation(); }
     if(!conv){
       const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
       const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
@@ -4309,6 +4312,7 @@ function maybeTriggerConversation(){
     if(!conv) return;
     S.activeConversation = conv; S.convLineIndex = 0;
     S.lastConvYear = S.currentYear;
+    S.missionsSinceConv = 0;
     renderConversationOverlay();
   }
 }
