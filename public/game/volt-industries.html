@@ -2272,7 +2272,7 @@ function topbar(){
 }
 function screenContent(){
   const wrap = document.createElement('div');
-  const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
+  const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, training:screenTraining, end:screenEnd };
   wrap.appendChild(map[S.screen]());
   return wrap;
