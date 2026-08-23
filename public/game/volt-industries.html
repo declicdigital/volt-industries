@@ -829,28 +829,91 @@ const MISSION_SENTENCE_PATTERNS = [
   { fr:(T,S_,L)=>`Volt Industries te signale ${T} a ${L}. ${cap(S_)} pourrait etre perdu si personne n'intervient.`,
     en:(T,S_,L)=>`Volt Industries flags ${T} in ${L}. ${cap(S_)} could be lost if no one intervenes.` },
 ];
+/* Fragments combinables : chaque categorie depasse 150 formulations distinctes. */
+function expandPhrases(cores, tails){
+  const out = [];
+  cores.forEach(c=>tails.forEach(tl=>{
+    out.push({ fr: (c.fr + (tl.fr||'')).replace(/\.?$/, '.'), en: (c.en + (tl.en||'')).replace(/\.?$/, '.') });
+  }));
+  return out;
+}
+/* Tirage sans repetition tant que le pool n'est pas epuise. */
+function pickNoRepeat(bucket, arr){
+  if(!S.usedChoicePhrases) S.usedChoicePhrases = {};
+  if(!S.usedTextIdx) S.usedTextIdx = {};
+  const store = Object.prototype.hasOwnProperty.call(S.usedChoicePhrases, bucket) ? S.usedChoicePhrases : S.usedTextIdx;
+  let used = store[bucket] || [];
+  if(used.length >= arr.length) used = [];
+  let i, guard = 0;
+  do { i = Math.floor(Math.random()*arr.length); guard++; } while(used.includes(i) && guard < 800);
+  used.push(i); store[bucket] = used;
+  return arr[i];
+}
+const HERO_TAILS = [
+  {fr:"", en:""},
+  {fr:", sans attendre une seconde de plus", en:", without waiting a second longer"},
+  {fr:", quitte a y laisser des plumes", en:", even at your own expense"},
+  {fr:", en gardant les civils hors de portee", en:", keeping civilians out of reach"},
+  {fr:", meme si personne ne te couvre", en:", even with no one covering you"},
+  {fr:", en prevenant Volt Industries en direct", en:", keeping Volt Industries live on comms"},
+  {fr:", avant que la situation ne devienne irreversible", en:", before the situation becomes irreversible"},
+  {fr:", en assumant publiquement le resultat", en:", publicly owning the outcome"},
+  {fr:", sans chercher la moindre reconnaissance", en:", without seeking any credit"},
+  {fr:", en improvisant avec ce que tu as sous la main", en:", improvising with whatever is at hand"},
+  {fr:", avec les secours locaux en appui", en:", with local responders backing you"},
+];
 const CHOICE_PHRASES = {
-  bold: [
-    {fr:"Foncer regler {t} de front, sans attendre de renfort.", en:"Rush to tackle {t} head-on, without waiting for backup."},
-    {fr:"T'exposer en premiere ligne pour stopper {t} immediatement.", en:"Put yourself on the front line to stop {t} immediately."},
-    {fr:"Prendre tous les risques necessaires pour sauver le plus de monde possible.", en:"Take every necessary risk to save as many people as possible."},
-    {fr:"Intervenir seul(e), quitte a payer le prix fort.", en:"Step in alone, whatever the cost."},
-    {fr:"Charger sans hesiter - la priorite est de proteger les gens.", en:"Charge in without hesitation - protecting people comes first."},
-  ],
-  clever: [
-    {fr:"Analyser {t} avant d'agir, pour frapper au bon endroit.", en:"Study {t} before acting, to strike where it counts."},
-    {fr:"Coordonner une reponse methodique avec les equipes sur place.", en:"Coordinate a methodical response with the teams on site."},
-    {fr:"Chercher une solution technique plutot que la confrontation directe.", en:"Look for a technical solution rather than direct confrontation."},
-    {fr:"Prendre le temps de reflechir a la meilleure strategie possible.", en:"Take the time to think through the best possible strategy."},
-    {fr:"Utiliser tes competences pour neutraliser {t} intelligemment.", en:"Use your skills to neutralize {t} intelligently."},
-  ],
-  selfish: [
-    {fr:"Profiter du chaos de {t} pour servir tes propres interets.", en:"Use the chaos of {t} to serve your own interests."},
-    {fr:"Laisser faire et recuperer ce qui peut t'etre utile dans la confusion.", en:"Let it happen and grab whatever is useful amid the confusion."},
-    {fr:"Monnayer ton intervention au prix fort.", en:"Charge a steep price for your intervention."},
-    {fr:"Detourner {t} a ton avantage, peu importe les consequences.", en:"Turn {t} to your advantage, whatever the consequences."},
-    {fr:"Tourner le dos a la situation si cela ne te rapporte rien.", en:"Turn your back on the situation if there's nothing in it for you."},
-  ],
+  bold: expandPhrases([
+    {fr:"Foncer regler {t} de front", en:"Rush to tackle {t} head-on"},
+    {fr:"T'exposer en premiere ligne pour stopper {t}", en:"Put yourself on the front line to stop {t}"},
+    {fr:"Prendre tous les risques pour sauver le plus de monde possible", en:"Take every risk to save as many people as possible"},
+    {fr:"Intervenir seul(e), quitte a payer le prix fort", en:"Step in alone, whatever the cost"},
+    {fr:"Charger sans hesiter, la priorite etant les gens", en:"Charge in without hesitation, people first"},
+    {fr:"Te placer entre {t} et les civils", en:"Put yourself between {t} and the civilians"},
+    {fr:"Entrer par le point le plus dangereux", en:"Go in through the most dangerous point"},
+    {fr:"Encaisser le premier choc a leur place", en:"Take the first hit in their place"},
+    {fr:"Descendre au plus profond de la zone sinistree", en:"Push into the deepest part of the disaster zone"},
+    {fr:"Retenir {t} le temps que tout le monde sorte", en:"Hold {t} back long enough for everyone to get out"},
+    {fr:"Affronter directement celui qui orchestre tout", en:"Confront whoever is orchestrating it directly"},
+    {fr:"Sauter dans le vide pour rattraper les blesses", en:"Leap into the void to catch the wounded"},
+    {fr:"Repousser {t} a mains nues s'il le faut", en:"Push {t} back bare-handed if you must"},
+    {fr:"Rester jusqu'au dernier evacue", en:"Stay until the last person is evacuated"},
+    {fr:"Briser l'obstacle plutot que de perdre du temps", en:"Smash through the obstacle rather than lose time"},
+  ], HERO_TAILS),
+  clever: expandPhrases([
+    {fr:"Analyser {t} avant d'agir, pour frapper au bon endroit", en:"Study {t} before acting, to strike where it counts"},
+    {fr:"Coordonner une reponse methodique avec les equipes sur place", en:"Coordinate a methodical response with the teams on site"},
+    {fr:"Chercher une solution technique plutot que la confrontation", en:"Look for a technical solution rather than confrontation"},
+    {fr:"Prendre le temps de batir la meilleure strategie possible", en:"Take the time to build the best possible strategy"},
+    {fr:"Utiliser tes competences pour neutraliser {t} intelligemment", en:"Use your skills to neutralize {t} intelligently"},
+    {fr:"Couper la source du probleme plutot que ses effets", en:"Cut the source of the problem rather than its effects"},
+    {fr:"Organiser l'evacuation par secteurs prioritaires", en:"Organize the evacuation by priority sectors"},
+    {fr:"Reconstituer la chronologie de {t} pour anticiper la suite", en:"Reconstruct the timeline of {t} to anticipate what's next"},
+    {fr:"Detourner l'attention pendant que tu desamorces", en:"Draw attention away while you defuse it"},
+    {fr:"Interroger les temoins avant de te lancer", en:"Question the witnesses before moving in"},
+    {fr:"Reprogrammer les systemes locaux a ton avantage", en:"Reprogram the local systems to your advantage"},
+    {fr:"Isoler la zone pour limiter la propagation", en:"Seal the area to limit the spread"},
+    {fr:"Demander un appui specialise avant d'entrer", en:"Request specialist support before going in"},
+    {fr:"Negocier pour gagner les minutes qui manquent", en:"Negotiate to buy the minutes you're missing"},
+    {fr:"Tendre un piege propre plutot que d'attaquer de face", en:"Set a clean trap rather than attacking head-on"},
+  ], HERO_TAILS),
+  selfish: expandPhrases([
+    {fr:"Profiter du chaos de {t} pour servir tes propres interets", en:"Use the chaos of {t} to serve your own interests"},
+    {fr:"Laisser faire et recuperer ce qui peut t'etre utile", en:"Let it happen and grab whatever might be useful"},
+    {fr:"Monnayer ton intervention au prix fort", en:"Charge a steep price for your intervention"},
+    {fr:"Detourner {t} a ton avantage, peu importe les consequences", en:"Turn {t} to your advantage, whatever the consequences"},
+    {fr:"Tourner le dos a la situation si elle ne te rapporte rien", en:"Turn your back on the situation if there's nothing in it for you"},
+    {fr:"Sauver d'abord ce qui a de la valeur marchande", en:"Save whatever has resale value first"},
+    {fr:"Mettre en scene ton arrivee pour les cameras", en:"Stage your arrival for the cameras"},
+    {fr:"Laisser un rival s'y casser les dents avant d'intervenir", en:"Let a rival break their teeth on it before stepping in"},
+    {fr:"Recuperer les donnees sensibles pendant {t}", en:"Extract the sensitive data during {t}"},
+    {fr:"Facturer chaque minute de ton temps", en:"Bill every minute of your time"},
+    {fr:"Choisir de sauver la personne la plus influente", en:"Choose to save the most influential person"},
+    {fr:"Effacer les traces de tes propres erreurs sur place", en:"Erase the traces of your own mistakes on site"},
+    {fr:"Faire porter l'echec a l'equipe locale", en:"Pin the failure on the local team"},
+    {fr:"Vendre ton rapport avant de le remettre", en:"Sell your report before filing it"},
+    {fr:"Partir des que les cameras s'eteignent", en:"Leave the moment the cameras go off"},
+  ], HERO_TAILS),
 };
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
