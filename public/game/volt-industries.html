@@ -375,7 +375,8 @@
     background:linear-gradient(90deg, transparent, var(--cp-color), #fff, var(--cp-color), transparent);
     box-shadow:0 0 16px var(--cp-color); animation: tracerGo .48s ease-out forwards; }
   @keyframes tracerGo{ 0%{ opacity:0; clip-path:inset(0 100% 0 0);} 25%{ opacity:1; } 70%{ clip-path:inset(0 0 0 0);} 100%{ opacity:0; clip-path:inset(0 0 0 92%);} }
-  .btl-assist-name{ position:fixed; z-index:10001; pointer-events:none; font-size:12px; font-weight:900; letter-spacing:1.4px;
+  .btl-assist-name{ position:fixed; z-index:10001; pointer-events:none; font-size:11.5px; font-weight:900; letter-spacing:1.4px;
+    padding:3px 8px; border-radius:999px; background:rgba(3,6,13,.88); border:1px solid var(--cp-color); white-space:nowrap;
     text-transform:uppercase; color:var(--cp-color); text-shadow:0 0 12px var(--cp-color); animation: assistName 1s ease-out forwards; }
   @keyframes assistName{ 0%{ opacity:0; transform:translateY(6px); } 20%{ opacity:1; transform:translateY(0); } 100%{ opacity:0; transform:translateY(-14px); } }
 
@@ -3960,7 +3961,7 @@ function battleAssistName(el, name, col){
   const r = el.getBoundingClientRect();
   const n = document.createElement('div'); n.className='btl-assist-name';
   n.style.setProperty('--cp-color', col); n.textContent = name;
-  n.style.left = (r.left + r.width/2)+'px'; n.style.top = (r.top - 16)+'px';
+  n.style.left = (r.left + r.width/2)+'px'; n.style.top = (r.top - 30)+'px';
   n.style.transform = 'translateX(-50%)';
   document.body.appendChild(n); setTimeout(()=>n.remove(), 1050);
 }
