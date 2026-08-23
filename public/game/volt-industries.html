@@ -141,7 +141,7 @@
   .scratch-card .pname{ font-weight:900; font-size:16px; }
   .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
   .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.78); backdrop-filter:blur(6px); }
-  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:760px; width:100%; max-height:min(560px, 86vh); box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
+  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:760px; width:100%; min-height:min(360px, 70vh); max-height:min(540px, 86vh); box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
   .conv-stage{ position:relative; flex:0 0 38%; min-height:0; align-self:stretch; background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--cp-color) 26%, transparent), rgba(0,0,0,.55) 70%); overflow:hidden; }
   .conv-body{ flex:1 1 auto; padding:24px; display:flex; flex-direction:column; justify-content:center; min-width:0; overflow-y:auto; }
   .conv-charname{ font-weight:900; font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
@@ -149,7 +149,7 @@
   .conv-line{ font-size:16px; line-height:1.6; color:var(--ink); min-height:70px; }
   @media (max-width:720px){
     .conv-overlay{ padding:12px; }
-    .conv-card{ flex-direction:column; max-width:440px; max-height:92vh; }
+    .conv-card{ flex-direction:column; max-width:440px; min-height:0; max-height:92vh; }
     .conv-stage{ flex:0 0 auto; height:min(38vh, 240px); min-height:0; }
     .conv-stage .conv-portrait img{ object-position:50% 8%; }
     .conv-body{ padding:16px 16px 18px; justify-content:flex-start; }
@@ -158,7 +158,7 @@
     .conv-stage .conv-portrait .cp-glyph{ font-size:64px; }
   }
   @media (max-width:720px) and (orientation:landscape){
-    .conv-card{ flex-direction:row; max-width:640px; }
+    .conv-card{ flex-direction:row; max-width:640px; min-height:0; }
     .conv-stage{ flex:0 0 34%; height:auto; }
   }
 
