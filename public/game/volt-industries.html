@@ -1611,6 +1611,60 @@ const RECRUIT_ARCS = [
     ]},
 ];
 
+/* ---------- Sessions d'entrainement et d'accompagnement d'une recrue (etapes supplementaires) ---------- */
+const MENTOR_DRILLS = [
+  { id:'drill_dojo', tagFr:'Entrainement', tagEn:'Training session', fr:"Salle d'entrainement de Volt Industries, 5h du matin. {name} t'attend, deja en sueur.", en:"Volt Industries training hall, 5am. {name} is waiting, already sweating.",
+    choices:[
+      { fr:"Travailler la garde et la respiration, encore et encore.", en:"Drill guard and breathing, over and over.", eff:{align:2, courage:3}, recruit:'hero', xp:3 },
+      { fr:"Passer directement au combat libre, sans protection.", en:"Go straight to free sparring, no protection.", eff:{align:-3, courage:4}, recruit:'villain', xp:4 },
+      { fr:"Analyser ses trois derniers combats image par image.", en:"Break down their last three fights frame by frame.", eff:{intelligence:4}, recruit:'neutral', xp:3 },
+    ]},
+  { id:'drill_simu', tagFr:'Simulation', tagEn:'Simulation', fr:"Tu programmes une simulation pour {name} : otages, minuterie, aucune bonne solution.", en:"You program a simulation for {name}: hostages, a timer, no clean answer.",
+    choices:[
+      { fr:"Debriefer chaque erreur avec patience.", en:"Debrief every mistake patiently.", eff:{align:3, intelligence:3}, recruit:'hero', xp:3 },
+      { fr:"Relancer la simulation jusqu'a l'epuisement total.", en:"Restart the sim until total exhaustion.", eff:{align:-3, courage:3}, recruit:'villain', xp:4 },
+      { fr:"Le/la laisser reecrire lui/elle-meme le scenario.", en:"Let them rewrite the scenario themselves.", eff:{intelligence:4, popularity:1}, recruit:'neutral', xp:3 },
+    ]},
+  { id:'drill_patrouille', tagFr:'Patrouille encadree', tagEn:'Supervised patrol', fr:"Premiere patrouille commune : {name} tient le point haut, tu couvres la rue.", en:"First joint patrol: {name} holds the high point, you cover the street.",
+    choices:[
+      { fr:"Le/la laisser mener la manoeuvre et corriger apres.", en:"Let them lead the move and correct afterwards.", eff:{align:3, courage:2}, recruit:'hero', xp:3 },
+      { fr:"Tout diriger a l'oreillette, seconde par seconde.", en:"Direct everything on comms, second by second.", eff:{intelligence:3, popularity:1}, recruit:'neutral', xp:2 },
+      { fr:"Provoquer volontairement l'incident pour tester ses nerfs.", en:"Trigger the incident on purpose to test their nerve.", eff:{align:-5, courage:3}, recruit:'villain', xp:4 },
+    ]},
+  { id:'drill_bilan', tagFr:'Suivi', tagEn:'Follow-up', fr:"Bilan trimestriel de {name} : progres reels, mais deux angles morts dangereux.", en:"{name}'s quarterly review: real progress, but two dangerous blind spots.",
+    choices:[
+      { fr:"Ecrire un plan d'entrainement sur mesure avec lui/elle.", en:"Write a tailored training plan together.", eff:{align:2, intelligence:4}, recruit:'hero', xp:4 },
+      { fr:"Envoyer le rapport tel quel a la direction.", en:"Send the report as-is to the board.", eff:{popularity:2}, recruit:'neutral', xp:1 },
+      { fr:"Menacer de l'ecarter du programme.", en:"Threaten to cut them from the program.", eff:{align:-4, courage:2}, recruit:'villain', xp:2 },
+    ]},
+  { id:'drill_nuit', tagFr:'Veille', tagEn:'Night watch', fr:"3h du matin, toit de la tour. {name} n'arrive plus a dormir apres sa derniere mission.", en:"3am, tower rooftop. {name} can't sleep anymore after the last mission.",
+    choices:[
+      { fr:"Rester la, parler jusqu'au lever du jour.", en:"Stay there, talk until sunrise.", eff:{align:4, popularity:2}, recruit:'hero', xp:3 },
+      { fr:"Lui apprendre a transformer la peur en arme.", en:"Teach them to turn fear into a weapon.", eff:{align:-2, courage:4}, recruit:'villain', xp:4 },
+      { fr:"Lui imposer un repos force et un suivi medical.", en:"Order forced rest and medical follow-up.", eff:{intelligence:3}, recruit:'neutral', xp:2 },
+    ]},
+  { id:'drill_duo', tagFr:'Duo', tagEn:'Tandem op', fr:"Vous partez en duo : {name} veut prouver qu'il/elle peut tenir ton rythme.", en:"You deploy as a pair: {name} wants to prove they can hold your pace.",
+    choices:[
+      { fr:"Adapter ton rythme au sien, mission avant ego.", en:"Match their pace, mission before ego.", eff:{align:3, intelligence:2}, recruit:'hero', xp:3 },
+      { fr:"Ne rien ceder : qu'il/elle suive ou decroche.", en:"Give nothing: they keep up or drop.", eff:{align:-3, courage:4}, recruit:'villain', xp:4 },
+      { fr:"Partager la cible en deux et comparer les resultats.", en:"Split the target in two and compare results.", eff:{intelligence:3, popularity:2}, recruit:'neutral', xp:3 },
+    ]},
+  { id:'drill_signature', tagFr:'Transmission', tagEn:'Transmission', fr:"{name} tente ta technique de signature et se blesse a la troisieme tentative.", en:"{name} attempts your signature technique and gets hurt on the third try.",
+    choices:[
+      { fr:"Reprendre les bases avec lui/elle, sans raccourci.", en:"Go back to basics together, no shortcut.", eff:{align:3, intelligence:3}, recruit:'hero', xp:4 },
+      { fr:"Exiger une quatrieme tentative immediate.", en:"Demand a fourth attempt right now.", eff:{align:-4, courage:4}, recruit:'villain', xp:4 },
+      { fr:"Lui interdire la technique pour l'instant.", en:"Forbid the technique for now.", eff:{intelligence:2, popularity:-1}, recruit:'neutral', xp:1 },
+    ]},
+  { id:'drill_terrain', tagFr:'Accompagnement', tagEn:'Field coaching', fr:"{name} doit gerer sa premiere conference de presse. Il/elle tremble en coulisses.", en:"{name} has to handle a first press conference. They're shaking backstage.",
+    choices:[
+      { fr:"Entrer avec lui/elle et repondre a deux questions.", en:"Walk in together and take two questions.", eff:{align:3, popularity:4}, recruit:'hero', xp:3 },
+      { fr:"Ecrire chaque phrase qu'il/elle devra reciter.", en:"Write every line they must recite.", eff:{intelligence:3, popularity:2}, recruit:'neutral', xp:2 },
+      { fr:"L'envoyer seul(e) : la honte est un professeur.", en:"Send them alone: shame is a teacher.", eff:{align:-4, courage:2}, recruit:'villain', xp:3 },
+    ]},
+];
+
+
+
 
 /* ---------- Intrigues : scenarios sans combat (enquetes, politique, presse, secrets, vie privee) ---------- */
 const INTRIGUE_MISSIONS = [
