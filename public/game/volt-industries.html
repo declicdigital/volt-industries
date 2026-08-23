@@ -2244,10 +2244,65 @@ function showBreakthroughCinematic(){
   setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
   return dur;
 }
+/* ---------- Ecran VERSUS pour les combats a fort enjeu ---------- */
+function versusParticipants(mission){
+  const keys = [];
+  const add = k => { if(k && CHARACTERS[k] && k!==S.playerCharKey && !keys.includes(k)) keys.push(k); };
+  add(mission.charKey);
+  (mission.choices||[]).forEach(c=>{ if(c && c.eff && c.eff.rel) Object.keys(c.eff.rel).forEach(add); });
+  return keys;
+}
+function shouldShowVersus(mission){
+  if(!mission || mission.type!=='combat') return false;
+  if(!((mission.danger||0)>=3 || (mission.scope||1)>=5)) return false;
+  return versusParticipants(mission).length > 0;
+}
+function versusPortraitHTML(charObj){
+  const col = convBeamColor(charObj.align);
+  const name = S.lang==='fr'?charObj.fr:charObj.en;
+  const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
+  const inner = charObj.img ? `<img src="${charObj.img}" alt="${name}">` : `<span class="cp-glyph">${initial}</span>`;
+  const anim = charObj.align==='villain' ? 'glitch-in' : 'materialize-in';
+  return `<div class="vs-slot"><div class="conv-portrait ${anim}" style="--cp-color:${col};">${inner}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${col};">${name}</div></div>`;
+}
+function showVersusScreen(mission){
+  const parts = versusParticipants(mission);
+  const playerZone = zoneOf(S.align);
+  const playerCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
+  const foes = [], allies = [];
+  parts.forEach((k,i)=>{
+    const c = CHARACTERS[k];
+    const sameSide = (playerZone==='villain' && c.align==='villain') || (playerZone!=='villain' && c.align==='hero');
+    if(sameSide && i>0 && foes.length) allies.push(k); else foes.push(k);
+  });
+  const overlay = document.createElement('div'); overlay.className='vs-overlay';
+  overlay.innerHTML = `<div class="vs-flash"></div>
+    <div class="vs-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
+    <div class="vs-row">
+      <div class="vs-side left">
+        <div class="vs-slot"><div class="conv-portrait player materialize-in" style="--cp-color:${playerCol};">${avatarVisual()}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${playerCol};">${S.heroName||'???'}</div></div>
+        ${allies.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}
+      </div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side right">${foes.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dur = 2100;
+  setTimeout(()=>{ overlay.classList.add('vs-out'); setTimeout(()=>overlay.remove(), 450); }, dur);
+  return dur;
+}
 function afterMissionRender(mission){
   if(mission && mission.pivotal){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
   const epicness = missionEpicness(mission);
+  if(shouldShowVersus(mission)){
+    const vsDur = showVersusScreen(mission);
+    setTimeout(()=>{
+      const dur = epicness!=='none' ? showCombatCinematic(mission, epicness) : 0;
+      setTimeout(()=>maybeTriggerConversation(), dur+150);
+    }, vsDur+450);
+    return;
+  }
   if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
   else { maybeTriggerConversation(); }
 }
