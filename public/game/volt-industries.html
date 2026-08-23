@@ -1030,7 +1030,7 @@ function generateProceduralMission(rank){
   const locName = randLocationName();
   const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? pick(otherCharKeys()) : null;
+  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -1140,7 +1140,7 @@ function generateVillainMission(rank){
   const locName = randLocationName();
   const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? pick(otherCharKeys()) : null;
+  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -1192,7 +1192,7 @@ const SIGNATURE_ROLE_TEMPLATES = [
     en:(n,T,S_,L)=>`${n}'s past resurfaces in ${L}, tangled up with ${T}. Some truths are hard to hear.` },
 ];
 function generateSignatureMission(rank){
-  const charKey = pick(otherCharKeys());
+  const charKey = (typeof type!=='undefined' && type==='combat') ? pickOpponentKey() : pick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
   const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
@@ -2407,6 +2407,7 @@ function nextMission(){
     S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
     S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
   }
+  S.pendingBattleWin = null;
   S.currentMission = pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
 function missionEpicness(mission){
@@ -2726,7 +2727,7 @@ function handleZoneCheckAndContinue(){
 function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; }
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; }
   else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost'; if(win){ S.locations.push(mission.location); } }
   return { type, outcome };
 }
