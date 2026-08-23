@@ -2806,36 +2806,36 @@ function screenProfileChoice(){
 
 /* ================= FACE FORGE : creation du perso a partir d'une photo ================= */
 const FF_ARCH = {
-  armure:{ fr:'Armure high-tech', en:'High-tech armor', morphology:'armure', path:'tech', powers:['armure','rayons'],
-    stats:{courage:6,intelligence:12,popularity:6},
-    perkFr:'Blindage Volt : degats recus reduits', perkEn:'Volt plating: reduced incoming damage',
+  armure:{ fr:'Armure high-tech', en:'High-tech armor', morphology:'armure', path:'tech', powers:['armure','rayons','bouclier_energie'],
+    stats:{courage:8,intelligence:16,popularity:8},
+    perkFr:'Blindage Volt : degats recus fortement reduits', perkEn:'Volt plating: incoming damage strongly reduced',
     flawFr:'Maintenance lourde : recuperation plus lente', flawEn:'Heavy maintenance: slower recovery',
-    promptFr:'sleek powered exo-armor with segmented plating, glowing energy reactor on the chest, articulated pauldrons' },
-  colosse:{ fr:'Colosse', en:'Juggernaut', morphology:'colosse', path:'physique', powers:['force','regen'],
-    stats:{courage:14,intelligence:2,popularity:6},
-    perkFr:'Puissance brute : coups physiques majores', perkEn:'Raw power: boosted physical strikes',
-    flawFr:'Peu discret : infiltrations difficiles', flawEn:'Not subtle: infiltration is hard',
-    promptFr:'massive reinforced battle harness over heavy muscular build, torn cape, scarred armor bracers' },
-  agile:{ fr:'Acrobate urbain', en:'Urban acrobat', morphology:'elance', path:'physique', powers:['vitesse','saut'],
-    stats:{courage:9,intelligence:7,popularity:10},
-    perkFr:'Reflexes surhumains : esquive accrue', perkEn:'Superhuman reflexes: better dodging',
-    flawFr:'Corps fragile : blessures plus graves', flawEn:'Fragile frame: worse injuries',
-    promptFr:'skin-tight reinforced kevlar-weave suit with webbed panel lines, wrist gauntlets, athletic silhouette' },
-  mystique:{ fr:'Mystique', en:'Mystic', morphology:'humain', path:'mystique', powers:['elementaire','projection'],
-    stats:{courage:8,intelligence:11,popularity:5},
-    perkFr:'Arcanes : sorts devastateurs', perkEn:'Arcana: devastating spells',
-    flawFr:'Cout mystique : energie instable', flawEn:'Mystic cost: unstable energy',
-    promptFr:'layered ritual robes and levitating cloak, glowing arcane sigils spinning around the hands, amulet' },
-  psy:{ fr:'Psionique', en:'Psionic', morphology:'elance', path:'psychique', powers:['telepathie','telekinesie'],
-    stats:{courage:5,intelligence:14,popularity:7},
-    perkFr:'Esprit-forteresse : controle mental', perkEn:'Fortress mind: mental control',
-    flawFr:'Surcharge : migraines apres combat', flawEn:'Overload: post-fight migraines',
-    promptFr:'minimalist smart-fiber bodysuit with luminous neural circuitry, floating psionic halo of light around the temples' },
-  ombre:{ fr:'Operateur furtif', en:'Stealth operator', morphology:'elance', path:'tech', powers:['vitesse','illusions'],
-    stats:{courage:10,intelligence:9,popularity:3},
-    perkFr:'Ombre : premier coup souvent gagnant', perkEn:'Shadow: often strikes first',
-    flawFr:'Solitaire : moins de soutien allie', flawEn:'Loner: less ally support',
-    promptFr:'matte black tactical stealth suit with harness, holstered gear, hooded half-mask and glowing visor line' }
+    promptFr:'sleek powered exo-armor with segmented plating, glowing energy reactor on the chest, articulated pauldrons, repulsor gauntlets' },
+  colosse:{ fr:'Titan / Colosse', en:'Titan / Juggernaut', morphology:'colosse', path:'physique', powers:['force','invulnerabilite','regen'],
+    stats:{courage:22,intelligence:2,popularity:6},
+    perkFr:'Force titanesque : degats physiques enormes et peau quasi impenetrable', perkEn:'Titanic strength: enormous physical damage and near-impenetrable skin',
+    flawFr:'Masse enorme : lent, repere de loin, infiltration impossible', flawEn:'Enormous mass: slow, spotted from afar, infiltration impossible',
+    promptFr:'colossal 2m40 hyper-muscular titan build, cracked reinforced battle harness over bare tinted skin, torn cape, brutal scarred bracers' },
+  agile:{ fr:'Acrobate urbain', en:'Urban acrobat', morphology:'elance', path:'physique', powers:['vitesse','saut','force'],
+    stats:{courage:12,intelligence:8,popularity:14},
+    perkFr:'Reflexes surhumains : esquive tres elevee et premiere frappe rapide', perkEn:'Superhuman reflexes: high dodge and fast first strike',
+    flawFr:'Corps fragile : les coups encaisses font tres mal', flawEn:'Fragile frame: hits taken hurt badly',
+    promptFr:'skin-tight reinforced kevlar-weave suit with webbed panel lines, wrist gauntlets, wiry athletic silhouette mid-parkour stance' },
+  mystique:{ fr:'Sorcier / Mystique', en:'Sorcerer / Mystic', morphology:'humain', path:'mystique', powers:['elementaire','portails','invocation'],
+    stats:{courage:8,intelligence:18,popularity:7},
+    perkFr:'Arcanes majeures : sorts elementaires devastateurs et portails de fuite', perkEn:'Major arcana: devastating elemental spells and escape portals',
+    flawFr:'Cout mystique : chaque grand sort epuise le corps', flawEn:'Mystic cost: every great spell drains the body',
+    promptFr:'layered ritual sorcerer robes and levitating cloak, glowing arcane rune circles spinning around both hands, ancient relic amulet, spellcasting stance' },
+  psy:{ fr:'Psionique', en:'Psionic', morphology:'elance', path:'psychique', powers:['telepathie','telekinesie','projection'],
+    stats:{courage:6,intelligence:20,popularity:9},
+    perkFr:'Esprit-forteresse : controle mental et telekinesie de combat', perkEn:'Fortress mind: mind control and battle telekinesis',
+    flawFr:'Surcharge : migraines et faiblesse physique apres chaque combat', flawEn:'Overload: migraines and physical weakness after every fight',
+    promptFr:'minimalist smart-fiber bodysuit with luminous neural circuitry, floating psionic halo of light around the temples, glowing eyes, hovering debris' },
+  ombre:{ fr:'Operateur furtif', en:'Stealth operator', morphology:'elance', path:'tech', powers:['drones','ia','nanotech'],
+    stats:{courage:12,intelligence:13,popularity:3},
+    perkFr:'Ombre : frappe presque toujours en premier, degats critiques', perkEn:'Shadow: almost always strikes first, critical damage',
+    flawFr:'Solitaire : tres peu de soutien allie en combat de groupe', flawEn:'Loner: very little ally support in squad fights',
+    promptFr:'matte black tactical stealth suit with combat harness, holstered gear, hooded half-mask and single glowing visor line, micro-drones in the air' }
 };
 const FF_MASK = { aucun:{fr:'Visage decouvert',en:'No mask',p:'face fully uncovered and clearly visible'},
   demi:{fr:'Demi-masque',en:'Half mask',p:'half mask covering only the lower jaw, eyes and upper face fully visible'},
@@ -2883,70 +2883,43 @@ async function ffDownscale(dataUrl, maxW, maxH, quality){
   });
 }
 
+/* ---------- Cle IA du joueur (Google AI Studio, gratuite) ---------- */
+const FF_KEY_STORE = 'vi_ai_key';
+function ffGetKey(){ try{ return localStorage.getItem(FF_KEY_STORE) || ''; }catch(e){ return ''; } }
+function ffSetKey(v){ try{ if(v) localStorage.setItem(FF_KEY_STORE, v); else localStorage.removeItem(FF_KEY_STORE); }catch(e){} }
+
 function ffHttpError(status, body){
   const fr = S.lang==='fr';
   let msg = '';
   try{ const j = JSON.parse(body); msg = (j && (j.message || (j.error && j.error.message))) || ''; }catch(e){}
-  if(status === 402){
-    return new Error(fr ? "Plus de credits IA sur ce projet : la forge de personnage ne peut pas generer d'image pour le moment. Recharge les credits Lovable (Settings > Plans & credits) puis relance, ou choisis un personnage existant dans la liste."
-      : "This project is out of AI credits, so the character forge cannot render an image right now. Top up Lovable credits (Settings > Plans & credits) and retry, or pick an existing character.");
+  if(status === 428){
+    return new Error(fr ? "Aucune cle IA configuree. Colle ta cle Google AI Studio (gratuite) dans le champ CLE IA ci-dessous, ou choisis un personnage existant."
+      : "No AI key configured. Paste your free Google AI Studio key in the AI KEY field below, or pick an existing character.");
+  }
+  if(status === 400 || status === 401 || status === 403){
+    return new Error(fr ? ("Cle IA refusee par Google" + (msg ? " - " + msg : "") + ". Verifie la cle et que le modele image est active sur ton compte.")
+      : ("AI key rejected by Google" + (msg ? " - " + msg : "") + ". Check the key and that image models are enabled on your account."));
   }
   if(status === 429){
-    return new Error(fr ? "Trop de demandes d'un coup. Attends une trentaine de secondes puis relance la forge."
-      : "Too many requests at once. Wait about 30 seconds and retry the forge.");
-  }
-  if(status === 403){
-    return new Error(fr ? "La generation d'image est bloquee par les reglages du projet (IA desactivee ou limite atteinte)."
-      : "Image generation is blocked by the project settings (AI disabled or limit reached).");
+    return new Error(fr ? "Quota gratuit Google atteint pour l'instant. Attends une minute puis relance la generation."
+      : "Google free quota hit for now. Wait a minute and retry the generation.");
   }
   return new Error((fr?'Erreur ':'Error ') + status + (msg ? ' - ' + msg : ''));
 }
 
+/* Generation IA du portrait : appel direct a la cle Google du joueur/projet.
+   Aucun credit Lovable n'est consomme. Pas de rendu de secours : en cas d'echec, erreur claire. */
 async function ffGenerate(onFrame){
   const body = { image: FF.photo, prompt: ffPrompt() };
-  const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:true}, body)) });
-  if(!res.ok || !res.body) throw ffHttpError(res.status, await res.text().catch(()=>''));
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '', sawAny = false, sawFinal = false, streamError = '';
-  const handle = (evName, dataStr)=>{
-    let payload = null; try{ payload = JSON.parse(dataStr); }catch(e){ return; }
-    if(evName === 'error' || (payload && payload.type === 'error')){
-      sawAny = true; streamError = (payload && payload.error && payload.error.message) || 'generation failed'; return;
-    }
-    if(!payload || !payload.b64_json) return;
-    const isFinal = /completed$/.test(evName || '') || /completed$/.test(payload.type || '');
-    sawAny = true; if(isFinal) sawFinal = true;
-    onFrame('data:image/png;base64,' + payload.b64_json, isFinal);
-  };
-  while(true){
-    const r = await reader.read();
-    if(r.done) break;
-    buf += dec.decode(r.value, {stream:true});
-    let idx;
-    while((idx = buf.indexOf('\n\n')) >= 0){
-      const raw = buf.slice(0, idx); buf = buf.slice(idx+2);
-      let ev = '', data = '';
-      raw.split('\n').forEach(line=>{
-        if(line.indexOf('event:')===0) ev = line.slice(6).trim();
-        else if(line.indexOf('data:')===0) data += line.slice(5).trim();
-      });
-      if(data && data !== '[DONE]') handle(ev, data);
-    }
-  }
-  if(streamError) throw new Error(streamError);
-  if(!sawAny){
-    const rep = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:false}, body)) });
-    if(!rep.ok) throw ffHttpError(rep.status, await rep.text().catch(()=>''));
-    const j = await rep.json();
-    const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
-    if(!b64) throw new Error('no image');
-    onFrame('data:image/png;base64,' + b64, true);
-    return;
-  }
-  if(!sawFinal) throw new Error('stream ended without a final image');
+  const k = ffGetKey(); if(k) body.key = k;
+  const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const txt = await res.text().catch(()=>'');
+  if(!res.ok) throw ffHttpError(res.status, txt);
+  let j = null; try{ j = JSON.parse(txt); }catch(e){}
+  const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
+  if(!b64) throw new Error(S.lang==='fr' ? "L'IA n'a renvoye aucune image. Relance la generation." : "The AI returned no image. Retry the generation.");
+  onFrame('data:image/png;base64,' + b64, true);
 }
-
 
 /* ---------- Personnage perso : sauvegarde locale + forge sans IA ---------- */
 const FF_STORE = 'vi_custom_char';
@@ -2968,115 +2941,6 @@ function applyCustomCharacter(cfg){
   });
   S.playerSex = cfg.sex;
 }
-/* Forge locale : composition canvas 100% navigateur, aucun credit IA consomme. */
-function ffLocalForge(){
-  return new Promise((resolve, reject)=>{
-    if(!FF.photo) return reject(new Error('no photo'));
-    const img = new Image();
-    img.onerror = ()=>reject(new Error('bad photo'));
-    img.onload = ()=>{
-      const W = 720, H = 960;
-      const c = document.createElement('canvas'); c.width = W; c.height = H;
-      const x = c.getContext('2d');
-      /* Fond hangar sombre */
-      const bg = x.createRadialGradient(W*0.5, H*0.32, 40, W*0.5, H*0.5, H*0.8);
-      bg.addColorStop(0, '#1b2130'); bg.addColorStop(1, '#070a10');
-      x.fillStyle = bg; x.fillRect(0,0,W,H);
-      /* Photo cadree sur le visage, moitie haute */
-      const faceH = H*0.66;
-      const r = Math.max(W/img.width, faceH/img.height);
-      const dw = img.width*r, dh = img.height*r;
-      x.save();
-      x.beginPath(); x.rect(0,0,W,faceH); x.clip();
-      x.drawImage(img, (W-dw)/2, -dh*0.05, dw, dh);
-      /* Etalonnage cinema : contraste froid + teinte du costume */
-      x.globalCompositeOperation = 'soft-light';
-      x.fillStyle = FF.color; x.globalAlpha = 0.28; x.fillRect(0,0,W,faceH);
-      x.globalCompositeOperation = 'multiply'; x.globalAlpha = 0.22;
-      x.fillStyle = '#0a1020'; x.fillRect(0,0,W,faceH);
-      x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
-      /* Fondu vers le buste */
-      const fade = x.createLinearGradient(0, faceH*0.68, 0, faceH);
-      fade.addColorStop(0,'rgba(7,10,16,0)'); fade.addColorStop(1,'rgba(7,10,16,1)');
-      x.fillStyle = fade; x.fillRect(0, faceH*0.68, W, faceH*0.32);
-      x.restore();
-      /* Masque */
-      if(FF.mask !== 'aucun'){
-        x.save(); x.globalAlpha = FF.mask==='domino' ? 0.72 : 0.6;
-        x.fillStyle = FF.color;
-        if(FF.mask==='domino'){
-          x.beginPath(); x.ellipse(W*0.5, faceH*0.40, W*0.30, faceH*0.085, 0, 0, Math.PI*2); x.fill();
-        } else {
-          x.beginPath(); x.moveTo(W*0.22, faceH*0.52); x.quadraticCurveTo(W*0.5, faceH*0.70, W*0.78, faceH*0.52);
-          x.quadraticCurveTo(W*0.5, faceH*0.60, W*0.22, faceH*0.52); x.fill();
-        }
-        x.restore();
-      }
-      /* Buste blinde */
-      const torso = x.createLinearGradient(0, faceH*0.85, 0, H);
-      torso.addColorStop(0, FF.color); torso.addColorStop(1, '#0d1119');
-      x.fillStyle = torso;
-      x.beginPath();
-      x.moveTo(W*0.06, H);
-      x.quadraticCurveTo(W*0.14, faceH*0.92, W*0.36, faceH*0.86);
-      x.lineTo(W*0.64, faceH*0.86);
-      x.quadraticCurveTo(W*0.86, faceH*0.92, W*0.94, H);
-      x.closePath(); x.fill();
-      /* Plaques + emblem */
-      x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 2;
-      for(let i=0;i<4;i++){
-        const yy = faceH*0.95 + i*(H-faceH*0.95)/5;
-        x.beginPath(); x.moveTo(W*0.20, yy); x.quadraticCurveTo(W*0.5, yy+18, W*0.80, yy); x.stroke();
-      }
-      x.save();
-      x.shadowColor = FF.color; x.shadowBlur = 40;
-      x.fillStyle = 'rgba(255,255,255,0.92)';
-      x.beginPath();
-      x.moveTo(W*0.5-26, H*0.86); x.lineTo(W*0.5+8, H*0.86); x.lineTo(W*0.5-4, H*0.905);
-      x.lineTo(W*0.5+24, H*0.905); x.lineTo(W*0.5-14, H*0.965); x.lineTo(W*0.5, H*0.915);
-      x.lineTo(W*0.5-24, H*0.915); x.closePath(); x.fill();
-      x.restore();
-      /* Cape */
-      if(FF.cape){
-        x.save(); x.globalAlpha = 0.55; x.fillStyle = FF.side==='villain' ? '#2a0710' : '#08131f';
-        x.beginPath(); x.moveTo(W*0.30, faceH*0.90); x.quadraticCurveTo(W*0.02, H*0.85, W*0.10, H); x.lineTo(W*0.30, H); x.closePath(); x.fill();
-        x.beginPath(); x.moveTo(W*0.70, faceH*0.90); x.quadraticCurveTo(W*0.98, H*0.85, W*0.90, H); x.lineTo(W*0.70, H); x.closePath(); x.fill();
-        x.restore();
-      }
-      /* Aura */
-      if(FF.aura !== 'aucune'){
-        x.save(); x.globalCompositeOperation = 'lighter';
-        const g = x.createRadialGradient(W*0.5, faceH*0.45, 30, W*0.5, faceH*0.5, W*0.75);
-        g.addColorStop(0, FF.aura==='fumee' ? 'rgba(180,170,160,0.16)' : 'rgba(255,255,255,0.10)');
-        g.addColorStop(0.5, FF.color + '33'); g.addColorStop(1, 'rgba(0,0,0,0)');
-        x.fillStyle = g; x.fillRect(0,0,W,H);
-        if(FF.aura==='neon'){
-          x.strokeStyle = FF.color; x.lineWidth = 2; x.globalAlpha = 0.55;
-          for(let i=0;i<10;i++){
-            x.beginPath();
-            let px = W*(0.12+Math.random()*0.76), py = H*(0.12+Math.random()*0.6);
-            x.moveTo(px,py);
-            for(let j=0;j<4;j++){ px += (Math.random()-0.5)*70; py += (Math.random()-0.5)*70; x.lineTo(px,py); }
-            x.stroke();
-          }
-        }
-        x.restore();
-      }
-      /* Vignette + grain film */
-      const vg = x.createRadialGradient(W*0.5, H*0.45, H*0.25, W*0.5, H*0.5, H*0.78);
-      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.72)');
-      x.fillStyle = vg; x.fillRect(0,0,W,H);
-      x.globalAlpha = 0.05;
-      for(let i=0;i<5200;i++){
-        x.fillStyle = Math.random()>0.5 ? '#ffffff' : '#000000';
-        x.fillRect(Math.random()*W, Math.random()*H, 1, 1);
-      }
-      x.globalAlpha = 1;
-      resolve(c.toDataURL('image/jpeg', 0.9));
-    };
-    img.src = FF.photo;
-  });
-}
 function screenFaceForge(){
   const fr = S.lang==='fr';
   const d = document.createElement('div');
@@ -3096,6 +2960,10 @@ function screenFaceForge(){
         <input type="file" accept="image/*" id="ffFile" style="display:none;">
         <div class="ff-thumbs" id="ffThumbs"></div>
         <div class="ff-err" id="ffErr"></div>
+        <div class="ff-lab" style="margin-top:12px;">${fr?'CLE IA (GOOGLE AI STUDIO, GRATUITE)':'AI KEY (GOOGLE AI STUDIO, FREE)'}</div>
+        <input id="ffKey" type="password" placeholder="AIza..." value="${ffGetKey()}"
+          style="width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.05); color:inherit; font-size:12px;">
+        <p style="margin:6px 0 0; font-size:11px; opacity:.65;">${fr?'Stockee uniquement dans ton navigateur. Aucun credit Lovable utilise. Cle gratuite sur aistudio.google.com/apikey':'Stored only in your browser. No Lovable credits used. Free key at aistudio.google.com/apikey'}</p>
       </div>
       <div>
         <div class="ff-lab">${fr?'CAMP':'FACTION'}</div>
@@ -3126,7 +2994,6 @@ function screenFaceForge(){
     <div class="actions">
       <button class="btn ghost" id="ffBack">&lt;- ${t('back')}</button>
       <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage (IA)':'Generate my character (AI)'}</button>
-      <button class="btn ghost" id="ffLocal">${fr?'Forge instantanee (sans IA)':'Instant forge (no AI)'}</button>
       <button class="btn cyan" id="ffUse" style="display:none;">${fr?'Utiliser ce personnage ->':'Use this character ->'}</button>
     </div>`;
 
@@ -3135,6 +3002,8 @@ function screenFaceForge(){
   const genBtn = d.querySelector('#ffGen');
   const useBtn = d.querySelector('#ffUse');
   const thumbs = d.querySelector('#ffThumbs');
+  const keyEl = d.querySelector('#ffKey');
+  if(keyEl) keyEl.oninput = ()=>{ ffSetKey(keyEl.value.trim()); };
   const fileInput = d.querySelector('#ffFile');
 
   const refreshTraits = ()=>{
@@ -3225,26 +3094,8 @@ function screenFaceForge(){
       }
     }catch(e){
       errEl.textContent = (e && e.message ? e.message : (fr?'Echec de la generation.':'Generation failed.'));
-      /* Plus de credits / IA bloquee : on bascule sur la forge locale gratuite */
-      try{
-        const out = await ffLocalForge();
-        FF.results.push(out); FF.sel = FF.results.length - 1;
-        errEl.textContent += fr?" Personnage forge en local (sans IA) a la place."
-          :" Character forged locally (no AI) instead.";
-      }catch(e2){}
     }
     FF.busy = false; genBtn.disabled = false;
-    paintStage();
-  };
-
-  d.querySelector('#ffLocal').onclick = async ()=>{
-    if(FF.busy) return;
-    if(!FF.photo){ errEl.textContent = fr?"Ajoute d'abord une photo de ton visage.":"Add a photo of your face first."; return; }
-    ffStopCam(); errEl.textContent = '';
-    try{
-      const out = await ffLocalForge();
-      FF.results.push(out); FF.sel = FF.results.length - 1;
-    }catch(e){ errEl.textContent = fr?'La forge locale a echoue. Reimporte une photo.':'Local forge failed. Re-import a photo.'; }
     paintStage();
   };
 
