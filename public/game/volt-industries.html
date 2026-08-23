@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOLT INDUSTRIES</title>
+<style>
+  :root{
+    --accent:#00c2ff; --accent-dark:#0088cc; --accent-soft: rgba(0,194,255,.15);
+    --gold:#ffb020; --red:#ff3b5c; --green:#22c98a;
+    --bg0:#03060d; --bg1:#070c18;
+    --panel: rgba(14,20,34,.72); --line: rgba(120,180,255,.18);
+    --ink:#eef3fb; --dim:#8ea0bd;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 90% 70% at 50% -10%, var(--accent-soft), transparent 65%),
+      radial-gradient(ellipse 70% 60% at 100% 100%, var(--accent-soft), transparent 60%),
+      linear-gradient(160deg, var(--bg0), var(--bg1) 55%, var(--bg0));
+    color:var(--ink); font-family: -apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; overflow-x:hidden; position:relative; transition: background 1.4s ease;
+  }
+  .bg-grid{ position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 46px 46px; mask-image: radial-gradient(ellipse 100% 90% at 50% 10%, black 30%, transparent 85%); animation: gridshift 30s linear infinite; }
+  @keyframes gridshift{ from{ background-position:0 0,0 0;} to{ background-position:46px 46px,-46px 46px; } }
+  .scanline{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5; background: repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0px, transparent 1px, transparent 3px); }
+  .glow-orb{ position:fixed; border-radius:50%; filter: blur(90px); opacity:.28; z-index:0; animation: float 14s ease-in-out infinite; transition: background 1s ease;}
+  .glow-orb.a{ width:420px;height:420px; background:var(--accent); top:-140px; left:-100px; }
+  .glow-orb.b{ width:360px;height:360px; background:var(--accent-dark); bottom:-120px; right:-80px; animation-delay:4s;}
+  @keyframes float{ 0%,100%{ transform: translateY(0) translateX(0);} 50%{ transform: translateY(-36px) translateX(24px);} }
+  #app{ position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:28px 20px 90px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
+  .brand{ font-weight:800; letter-spacing:4px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--ink); transition:opacity .15s; }
+  .brand:hover{ opacity:.8; }
+  .logo-mark{ width:34px; height:34px; filter: drop-shadow(0 0 8px var(--accent)); flex-shrink:0; }
+  .langsel{ display:flex; gap:6px; }
+  .langsel button{ border:1px solid var(--line); background:rgba(255,255,255,.03); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; color:var(--dim); }
+  .langsel button.active{ background:var(--accent); color:#03060d; border-color:var(--accent);}
+  .rank-badge{ position:fixed; top:16px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
+    border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
+  .rank-badge .rname{ font-size:12px; font-weight:800; color:var(--ink); letter-spacing:1px; }
+  .rank-badge .rlabel{ font-size:9.5px; font-weight:800; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-top:2px;}
+  .rank-badge .stars{ margin-top:4px; font-size:15px; letter-spacing:2px; }
+  .rank-badge .score-line{ margin-top:3px; font-size:13px; font-weight:900; }
+  .game-shell{ display:flex; gap:26px; align-items:flex-start; }
+  .side-avatar{ position:sticky; top:20px; width:300px; flex-shrink:0; }
+  .main-col{ flex:1; min-width:0; }
+  @media (max-width:920px){ .game-shell{ flex-direction:column; } .side-avatar{ position:relative; top:0; width:100%; } }
+  .card{ background: var(--panel); backdrop-filter: blur(18px); border:1px solid var(--line); border-radius:22px; padding:34px;
+    box-shadow: 0 30px 70px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04); animation: rise .5s ease; }
+  @keyframes rise{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
+  h1{ font-size: clamp(26px, 4.5vw, 42px); letter-spacing:-1px; margin:0 0 8px; color:var(--ink);}
+  h2{ font-size:21px; margin:0 0 4px; letter-spacing:-0.4px; color:var(--ink);}
+  h3{ font-size:15.5px; margin:22px 0 6px; color:var(--ink); text-transform:uppercase; letter-spacing:1px;}
+  .eyebrow{ text-transform:uppercase; font-size:11px; letter-spacing:3.5px; font-weight:800; color:var(--accent); margin-bottom:10px; display:block; text-shadow:0 0 12px var(--accent-soft); }
+  p.lead{ color:var(--dim); font-size:15.5px; line-height:1.65; max-width:680px; }
+  input[type=text]{ width:100%; padding:14px 16px; border:1.5px solid var(--line); border-radius:12px; font-size:16px; outline:none; transition:.2s; background:rgba(255,255,255,.03); color:var(--ink); }
+  input[type=text]::placeholder{ color:#5a6a85; }
+  input[type=text]:focus{ border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+  input[type=color]{ width:52px;height:40px;border:1.5px solid var(--line);border-radius:10px;padding:2px;cursor:pointer; background:transparent;}
+  input[type=range]{ accent-color: var(--accent); width:100%; }
+  .btn{ display:inline-flex; align-items:center; gap:8px; justify-content:center; background:rgba(255,255,255,.06); color:var(--ink);
+    border:1px solid var(--line); padding:14px 26px; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; transition:.15s; }
+  .btn:hover{ transform:translateY(-2px); border-color:var(--accent); }
+  .btn:disabled{ opacity:.3; cursor:not-allowed; transform:none; }
+  .btn.ghost{ background:transparent; }
+  .btn.cyan{ background:linear-gradient(135deg, var(--accent), var(--accent-dark)); color:#03060d; border:none; box-shadow:0 12px 28px -10px var(--accent);}
+  .actions{ margin-top:26px; display:flex; gap:12px; flex-wrap:wrap; }
+  .optgrid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-top:12px;}
+  .opt{ border:1.5px solid var(--line); border-radius:14px; padding:14px; cursor:pointer; text-align:left; background:rgba(255,255,255,.02); transition:.15s; color:var(--ink); }
+  .opt:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .opt.selected{ border-color:var(--accent); background:var(--accent-soft); box-shadow:0 0 0 3px var(--accent-soft); }
+  .opt .oname{ font-weight:800; font-size:14px; margin-bottom:3px;}
+  .opt .odesc{ font-size:12px; color:var(--dim); line-height:1.4;}
+  .opt.disabled{ opacity:.3; cursor:not-allowed; }
+  .badge{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:1px; padding:3px 9px; border-radius:20px; margin-left:8px; vertical-align:middle;}
+  .badge.tech{ background:rgba(0,194,255,.18); color:#7fe0ff;} .badge.mystique{ background:rgba(139,92,246,.2); color:#c8b3ff;}
+  .badge.physique{ background:rgba(255,176,32,.2); color:#ffd28a;} .badge.psychique{ background:rgba(34,201,138,.2); color:#8fe8c8;}
+  .avatar-wrap{ background: radial-gradient(ellipse at 50% 15%, var(--accent-soft), transparent 70%), rgba(255,255,255,.015);
+    border:1.5px solid var(--line); border-radius:20px; padding:14px; display:flex; align-items:center; justify-content:center; min-height:320px; position:relative; overflow:hidden; }
+  .avatar-wrap::before{ content:''; position:absolute; inset:0; background-image: repeating-linear-gradient(0deg, var(--accent-soft) 0 1px, transparent 1px 30px); opacity:.35; pointer-events:none; }
+  .hud-label{ position:absolute; top:10px; left:14px; font-size:9.5px; letter-spacing:2px; font-weight:800; color:var(--accent); opacity:.85; }
+  .hud-corner{ position:absolute; width:20px; height:20px; border-color:var(--accent); opacity:.7; }
+  .hud-corner.tl{ top:8px; left:8px; border-top:2px solid; border-left:2px solid; } .hud-corner.tr{ top:8px; right:8px; border-top:2px solid; border-right:2px solid; }
+  .hud-corner.bl{ bottom:8px; left:8px; border-bottom:2px solid; border-left:2px solid; } .hud-corner.br{ bottom:8px; right:8px; border-bottom:2px solid; border-right:2px solid; }
+  .sidebar-stats{ margin-top:14px; }
+  .statbar{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+  .stat{ flex:1; min-width:100px; background:rgba(255,255,255,.03); border-radius:12px; padding:9px 12px; border:1px solid var(--line);}
+  .stat .slabel{ font-size:9.5px; letter-spacing:1.2px; font-weight:800; color:var(--dim); margin-bottom:5px; text-transform:uppercase;}
+  .barbg{ height:6px; background:rgba(255,255,255,.06); border-radius:10px; overflow:hidden;}
+  .barfill{ height:100%; border-radius:10px; transition:width .5s ease; }
+  .align-track{ height:9px; border-radius:10px; background:linear-gradient(90deg, var(--red), rgba(255,255,255,.08) 50%, var(--accent)); position:relative; margin-top:6px;}
+  .align-dot{ position:absolute; top:-4px; width:16px; height:16px; border-radius:50%; background:var(--ink); border:3px solid var(--bg0); box-shadow:0 2px 12px rgba(0,0,0,.6); transition:left .5s ease; transform:translateX(-50%);}
+  .mission-tag{ font-size:11px; font-weight:800; letter-spacing:1.5px; color:var(--gold); text-transform:uppercase;}
+  .mission-year{ font-size:12px; color:var(--dim); font-weight:700; margin-bottom:6px;}
+  .mission-loc{ font-size:12.5px; color:var(--accent); font-weight:700; margin:4px 0 2px; }
+  .choice{ display:block; width:100%; text-align:left; background:rgba(255,255,255,.02); border:1.5px solid var(--line); border-radius:14px;
+    padding:16px 18px; margin-top:12px; cursor:pointer; font-size:15px; line-height:1.5; transition:.15s; color:var(--ink); }
+  .choice:hover{ border-color:var(--accent); transform:translateX(4px); box-shadow:0 8px 26px -14px var(--accent); background:var(--accent-soft); }
+  .log-entry{ border-left:3px solid var(--accent); padding:10px 16px; margin-bottom:10px; background:rgba(255,255,255,.02); border-radius:0 10px 10px 0; font-size:14px; color:#c3cee2;}
+  .log-entry.villain{ border-left-color:var(--red); }
+  .relwrap{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px;}
+  .relcard{ border:1px solid var(--line); border-radius:12px; padding:12px; background:rgba(255,255,255,.02);}
+  .relcard .rn{ font-weight:800; font-size:13px; margin-bottom:6px;}
+  .team-hero-banner{ border-radius:18px; padding:22px; margin-top:18px; text-align:center; background: radial-gradient(ellipse at 50% 0%, var(--accent-soft), transparent 70%); border:1.5px solid var(--accent); }
+  .team-hero-banner .tname{ font-size:22px; font-weight:900; letter-spacing:2px; color:var(--accent); text-shadow:0 0 20px var(--accent);}
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:14px; }
+  .kpi{ border:1px solid var(--line); border-radius:14px; padding:16px; background:rgba(255,255,255,.02); text-align:center;}
+  .kpi .kval{ font-size:24px; font-weight:900; color:var(--accent); } .kpi .klabel{ font-size:10.5px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-top:4px;}
+  details.yearcard{ border:1px solid var(--line); border-radius:12px; padding:10px 16px; margin-top:10px; background:rgba(255,255,255,.02); }
+  details.yearcard summary{ cursor:pointer; font-weight:800; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+  details.yearcard summary .tag{ font-size:11px; font-weight:700; padding:2px 10px; border-radius:12px; }
+  .ymission{ font-size:13px; color:#c3cee2; padding:8px 0; border-top:1px solid var(--line); }
+  .ymission:first-of-type{ border-top:none; }
+  .death-banner{ border:1.5px solid var(--red); background:rgba(255,59,92,.08); border-radius:18px; padding:22px; text-align:center; margin-bottom:22px;}
+  .death-banner .dtitle{ font-size:20px; font-weight:900; letter-spacing:2px; color:var(--red); }
+  .turn-item{ font-size:13.5px; color:#c3cee2; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .preset-card{ border:1.5px solid var(--line); border-radius:16px; padding:14px; background:rgba(255,255,255,.02); cursor:pointer; transition:.15s; text-align:center; }
+  .preset-card:hover{ border-color:var(--accent); transform:translateY(-3px); }
+  .preset-card .pname{ font-weight:900; font-size:14px; margin-top:8px; }
+  .preset-card .pdesc{ font-size:11.5px; color:var(--dim); margin-top:4px; line-height:1.4;}
+  .preset-mini{ width:100%; display:flex; justify-content:center; }
+  .scratch-card{ border:1.5px dashed var(--accent); border-radius:16px; padding:22px; text-align:center; cursor:pointer; background: var(--accent-soft); margin-bottom:18px; }
+  .scratch-card .pname{ font-weight:900; font-size:16px; }
+  .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.78); backdrop-filter:blur(6px); }
+  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:28px; max-width:480px; width:100%; box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; }
+  .conv-charname{ font-weight:900; font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .conv-dot{ width:10px; height:10px; border-radius:50%; }
+  .conv-line{ font-size:16px; line-height:1.6; color:var(--ink); min-height:70px; }
+  footer.mini{ text-align:center; color:#4b5876; font-size:11px; margin-top:44px; letter-spacing:1px;}
+
+  .rankup-toast{ position:fixed; top:90px; right:16px; z-index:90; background:rgba(8,12,22,.92); backdrop-filter:blur(12px);
+    border:1.5px solid var(--toast-color); border-radius:14px; padding:12px 18px; text-align:right;
+    box-shadow:0 0 30px -4px var(--toast-color); animation: toastIn .4s ease; }
+  .rankup-toast.fadeout{ animation: toastOut .7s ease forwards; }
+  .rankup-toast .ru-title{ font-size:10px; font-weight:800; letter-spacing:2px; color:var(--toast-color); }
+  .rankup-toast .ru-sub{ font-size:15px; font-weight:900; color:var(--ink); margin-top:2px; }
+  @keyframes toastIn{ from{ opacity:0; transform:translateX(30px); } to{ opacity:1; transform:translateX(0);} }
+  @keyframes toastOut{ to{ opacity:0; transform:translateX(30px);} }
+
+  .particle-layer{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .particle{ position:absolute; border-radius:50%; background:var(--accent); opacity:.5; filter:blur(.5px);
+    animation: particleFloat linear infinite; box-shadow:0 0 6px var(--accent); }
+  @keyframes particleFloat{ 0%{ transform:translateY(0) translateX(0); opacity:0;} 10%{opacity:.6;} 90%{opacity:.4;} 100%{ transform:translateY(-110vh) translateX(20px); opacity:0;} }
+
+  .conv-portrait{ width:76px; height:76px; border-radius:50%; margin:0 auto 14px; position:relative; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; background:radial-gradient(circle at 40% 30%, rgba(255,255,255,.08), rgba(0,0,0,.3)); }
+  .conv-portrait img{ width:100%; height:100%; object-fit:cover; }
+  .conv-portrait .cp-glyph{ font-size:28px; font-weight:900; color:#fff; opacity:.85; }
+  .conv-portrait.materialize-in{ animation: materializeIn .7s cubic-bezier(.2,.8,.3,1); }
+  .conv-portrait.glitch-in{ animation: glitchIn .6s steps(2,end); }
+  .conv-portrait::after{ content:''; position:absolute; inset:0; border-radius:50%; border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 18px var(--cp-color, var(--accent)); }
+  .conv-portrait .cp-sweep{ position:absolute; left:0; right:0; height:14px; background:linear-gradient(180deg, transparent, rgba(255,255,255,.55), transparent);
+    animation: sweepDown .7s ease; }
+  @keyframes materializeIn{ 0%{ opacity:0; transform:scale(.5); filter:blur(6px);} 60%{ opacity:1; transform:scale(1.06); filter:blur(0);} 100%{ transform:scale(1);} }
+  @keyframes glitchIn{ 0%{ opacity:0; transform:translateX(-6px);} 20%{opacity:.7; transform:translateX(5px);} 40%{opacity:.3; transform:translateX(-4px);} 60%{opacity:.9; transform:translateX(3px);} 80%{opacity:.5; transform:translateX(-2px);} 100%{ opacity:1; transform:translateX(0);} }
+  @keyframes sweepDown{ from{ top:-14px;} to{ top:100%;} }
+
+  .history-list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:6px; }
+  .history-card{ position:relative; border:1px solid var(--line); border-radius:14px; padding:14px 16px; background:rgba(255,255,255,.02); }
+  .history-card .hc-name{ font-weight:900; font-size:14px; margin-bottom:4px; padding-right:20px; }
+  .history-card .hc-meta{ font-size:11.5px; color:var(--dim); margin-top:2px; }
+  .history-del{ position:absolute; top:8px; right:10px; background:none; border:none; color:var(--dim); font-size:16px; cursor:pointer; line-height:1; }
+  .history-del:hover{ color:var(--red); }
+
+  .cine-overlay{ position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;
+    animation: cineIn .25s ease; }
+  .cine-overlay.cine-out{ animation: cineOut .5s ease forwards; }
+  .cine-overlay .cine-flash{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, var(--accent-soft), transparent 70%); }
+  .cine-overlay.major .cine-flash{ opacity:.7; }
+  .cine-overlay.epic .cine-flash{ animation: cinePulse 1.1s ease-in-out infinite; }
+  .cine-overlay.pivotal .cine-flash{ background:radial-gradient(ellipse at 50% 50%, rgba(255,178,32,.35), transparent 70%); }
+  .cine-overlay.pivotal .cine-scope{ color:var(--gold); text-shadow:0 0 16px var(--gold); }
+  .cine-overlay.pivotal .cine-title{ text-shadow:0 0 30px var(--gold), 0 0 60px var(--gold); }
+  .cine-content{ position:relative; z-index:2; text-align:center; }
+  .cine-scope{ font-size:12px; letter-spacing:6px; font-weight:800; color:var(--accent); text-shadow:0 0 16px var(--accent); margin-bottom:10px; animation: cineFadeUp .5s ease; }
+  .cine-title{ font-size: clamp(26px,6vw,54px); font-weight:900; letter-spacing:2px; color:#fff; text-transform:uppercase; text-shadow:0 0 30px var(--accent), 0 0 60px var(--accent); animation: cineZoom .6s cubic-bezier(.2,.8,.3,1); }
+  .cine-overlay.epic .cine-title{ animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
+  @keyframes cineIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes cineOut{ to{opacity:0;} }
+  @keyframes cinePulse{ 0%,100%{ opacity:.5;} 50%{ opacity:1;} }
+  @keyframes cineFadeUp{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+  @keyframes cineZoom{ from{ opacity:0; transform:scale(.85);} to{ opacity:1; transform:scale(1);} }
+  @keyframes cineZoomBig{ 0%{ opacity:0; transform:scale(1.6);} 60%{ opacity:1; transform:scale(.95);} 100%{ transform:scale(1);} }
+  @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
+  body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div><div class="scanline"></div>
+<div class="glow-orb a"></div><div class="glow-orb b"></div>
+<div id="app"></div>
+
+<script>
+/* ============================ THEME ============================ */
+function lerp(a,b,tt){ return a+(b-a)*tt; }
+function hexToRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)]; }
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join(''); }
+function themeColors(align){
+  const tt = clamp((align+40)/80, 0, 1);
+  const villain = hexToRgb('#ff3b5c'), villainDark = hexToRgb('#a5122f');
+  const hero = hexToRgb('#00c2ff'), heroDark = hexToRgb('#0088cc');
+  const bg0Villain = hexToRgb('#200308'), bg0Hero = hexToRgb('#020913');
+  const bg1Villain = hexToRgb('#4a0d18'), bg1Hero = hexToRgb('#071429');
+  return {
+    accent: rgbToHex(lerp(villain[0],hero[0],tt), lerp(villain[1],hero[1],tt), lerp(villain[2],hero[2],tt)),
+    accentDark: rgbToHex(lerp(villainDark[0],heroDark[0],tt), lerp(villainDark[1],heroDark[1],tt), lerp(villainDark[2],heroDark[2],tt)),
+    bg0: rgbToHex(lerp(bg0Villain[0],bg0Hero[0],tt), lerp(bg0Villain[1],bg0Hero[1],tt), lerp(bg0Villain[2],bg0Hero[2],tt)),
+    bg1: rgbToHex(lerp(bg1Villain[0],bg1Hero[0],tt), lerp(bg1Villain[1],bg1Hero[1],tt), lerp(bg1Villain[2],bg1Hero[2],tt)),
+  };
+}
+function applyTheme(){
+  const {accent, accentDark, bg0, bg1} = themeColors(S.align);
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-dark', accentDark);
+  document.documentElement.style.setProperty('--bg0', bg0);
+  document.documentElement.style.setProperty('--bg1', bg1);
+  const rgb = hexToRgb(accent);
+  document.documentElement.style.setProperty('--accent-soft', `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.24)`);
+}
+
+/* ============================ LOGO ============================ */
+function logoSVG(size, withText){
+  const uid = 'lg'+Math.random().toString(36).slice(2,7);
+  const ticks = Array.from({length:12}).map((_,i)=>{
+    const ang=i*30*Math.PI/180;
+    const x1=(50+41*Math.cos(ang)).toFixed(1), y1=(50+41*Math.sin(ang)).toFixed(1);
+    const x2=(50+46*Math.cos(ang)).toFixed(1), y2=(50+46*Math.sin(ang)).toFixed(1);
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="url(#${uid}g)" stroke-width="1.4" opacity="0.55"/>`;
+  }).join('');
+  const textPart = withText ? `
+    <path id="${uid}circ" d="M 50,50 m -33,0 a 33,33 0 1,1 66,0 a 33,33 0 1,1 -66,0" fill="none"/>
+    <text font-size="6.6" font-weight="800" letter-spacing="2.6" fill="url(#${uid}g)">
+      <textPath href="#${uid}circ" startOffset="1%">VOLT INDUSTRIES • VOLT INDUSTRIES •</textPath>
+    </text>` : '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="${uid}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent-dark)"/></linearGradient>
+      <filter id="${uid}f" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <circle cx="50" cy="50" r="46" fill="none" stroke="url(#${uid}g)" stroke-width="2.5" opacity="0.9"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="url(#${uid}g)" stroke-width="1" opacity="0.45"/>
+    ${ticks}
+    ${textPart}
+    <polygon points="50,20 76,68 24,68" fill="none" stroke="url(#${uid}g)" stroke-width="4.5" stroke-linejoin="round" filter="url(#${uid}f)"/>
+    <polygon points="50,36 64,60 36,60" fill="url(#${uid}g)" opacity="0.9"/>
+    <circle cx="50" cy="50" r="2.6" fill="#ffffff"/>
+  </svg>`;
+}
+
+/* ============================ i18n ============================ */
+const T = {
+  fr: {
+    brand:"VOLT INDUSTRIES", welcomeEyebrow:"Programme d'entrainement experimental", welcomeTitle:"Bienvenue chez VOLT INDUSTRIES",
+    welcomeLead:"Un laboratoire d'elite forme la prochaine generation d'etres exceptionnels. Ton chemin s'ecrira choix apres choix, annee apres annee, jusqu'a 50 ans de carriere. Rien n'est scripte deux fois de la meme facon.",
+    start:"Commencer",
+    profileChoiceTitle:"Comment veux-tu commencer ?", profileChoiceLead:"Cree ton heros de A a Z, ou choisis l'un des 10 profils deja prets - tous radicalement differents.",
+    scratchTitle:"Creer mon heros de A a Z", scratchDesc:"Choisis chaque detail toi-meme : morphologie, equipement, pouvoirs...",
+    usePreset:"Choisir ce profil",
+    nameLabel:"Quel est ton nom civil ?", heroNameLabel:"Choisis ton nom de code",
+    namePh:"Ex: Alex Moreau", heroPh:"Ex: Eclipse, Fulgur, Cendre...",
+    next:"Continuer", back:"Retour",
+    lookTitle:"Apparence & equipement", lookLead:"Un panel enorme de choix : morphologie, armure, accessoires... Compose un heros unique. Chaque element se voit sur ton avatar holographique a gauche.",
+    morphology:"Morphologie",
+    helmet:"Casque", helmetNone:"Aucun", helmetFull:"Integral", helmetVisor:"Visiere holographique",
+    cape:"Cape", capeYes:"Porter une cape", capeNo:"Sans cape",
+    glasses:"Lunettes", glassesNone:"Aucune", glassesAviator:"Aviateur", glassesHud:"HUD tactique",
+    gloves:"Gants", glovesNone:"Mains nues", glovesStandard:"Gants standards", glovesClaws:"Griffes", glovesArmored:"Gantelets blindes",
+    boots:"Bottes", bootsNone:"Pieds nus", bootsStandard:"Bottes standards", bootsThruster:"Bottes-reacteurs", bootsArmored:"Bottes blindees",
+    aura:"Aura", auraNone:"Aucune", auraFlame:"Flamboyante", auraElectric:"Electrique", auraDark:"Sombre",
+    weapon:"Arme", weaponNone:"Aucune", weaponSword:"Epee energetique", weaponShield:"Bouclier", weaponSpear:"Lance",
+    suitColor:"Couleur principale", secondaryColor:"Couleur secondaire", symbol:"Symbole (3 lettres max)", symbolPh:"Ex: APX",
+    pathTitle:"Ta voie de pouvoir", pathLead:"Ta voie determine la nature profonde de tes capacites, et ta resistance au danger.",
+    powersTitle:"Tes pouvoirs", powersLead:"Choisis jusqu'a 3 pouvoirs parmi 6. Personne ne peut tout avoir - chaque choix ferme une autre porte.",
+    startSideTitle:"Ton point de depart", startSideLead:"Avant meme ta premiere mission, ou te situes-tu ?",
+    startHero:"Heros", startHeroDesc:"Tu commences avec une reputation deja heroique.",
+    startNeutral:"Ambigu", startNeutralDesc:"Tu n'as encore choisi aucun camp.",
+    startVillain:"Vilain", startVillainDesc:"Tu commences deja marque comme une menace.",
+    modeTitle:"Ta carriere", modeLead:"Deux formats de partie sont possibles.",
+    modeShort:"Carriere courte", modeShortDesc:"10 annees fixes, 3 missions par an, 3 choix par mission.",
+    modeLong:"Carriere longue", modeLongDesc:"Jusqu'a 80 annees, 3 a 10 missions par an. Le niveau des missions proposees suit ton rang - de simples affaires de quartier jusqu'aux crises cosmiques. Formation de recrues, bascules multiples entre lumiere et ombre, risque de mort, discussions marquantes avec d'autres figures, bilan complet a la fin.",
+    yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere",
+    summaryTitle:"Ton dossier VOLT INDUSTRIES", year:"Annee", mission:"Mission",
+    alignHero:"Heros", alignVillain:"Fleau", alignNeutral:"Equilibre",
+    courage:"Courage", intelligence:"Intelligence", popularity:"Popularite", power:"Puissance",
+    endTitle:"Fin de carriere", restart:"Recommencer une nouvelle carriere",
+    relations:"Relations", logTitle:"Journal de carriere", continueMission:"Mission suivante",
+    inviteHeroTitle:"Invitation officielle", inviteHeroText:"Tes exploits n'ont pas echappe a une organisation etablie, qui souhaite t'accueillir formellement dans ses rangs.",
+    inviteVillainTitle:"Une offre dans l'ombre", inviteVillainText:"Ta reputation grandit dans les cercles obscurs. Une organisation souhaite faire de toi l'un des siens.",
+    accept:"Accepter", decline:"Refuser", teamPrime:"VANGUARD", teamOmega:"PERDITION",
+    joinedPrime:"Tu as rejoint le VANGUARD.", joinedOmega:"Tu as rejoint PERDITION.", declinedTeam:"Tu as choisi de rester independant.",
+    location:"Lieu", locVille:"Ville", locPays:"Pays", locPlanete:"Planete",
+    inMemoriam:"IN MEMORIAM", diedAt:"disparu(e) en", causeLabel:"Cause",
+    fullReportTitle:"Bilan complet de carriere", locationsSaved:"Lieux sauves", locationsDestroyed:"Lieux detruits", fightsWon:"Combats gagnes", fightsLost:"Combats perdus",
+    yearsServed:"Annees de service", missionsTotal:"Missions accomplies", menteesCount:"Recrues formees",
+    menteeHero:"devenues heroines", menteeVillain:"tournees vilaines", menteeDied:"mortes en formation", menteeNeutral:"parties de leur cote",
+    turningPointsTitle:"Bascules majeures de la carriere", noTurning:"Un parcours d'une remarquable constance - aucune bascule majeure.",
+    yearByYearTitle:"Detail annee par annee",
+    combatOutcomeWin:"Victoire", combatOutcomeLose:"Defaite", rescueSaved:"Sauve", rescueLost:"Perdu",
+    mentorTag:"Formation", rankHero:"Rang heroique", rankVillain:"Rang fleau", rankNeutral:"Rang independant",
+    convNext:"Suivant",
+  },
+  en: {
+    brand:"VOLT INDUSTRIES", welcomeEyebrow:"Experimental training program", welcomeTitle:"Welcome to VOLT INDUSTRIES",
+    welcomeLead:"An elite lab is training the next generation of extraordinary beings. Your path will be written choice by choice, year by year, across up to 50 years of career. Nothing plays out the same way twice.",
+    start:"Begin",
+    profileChoiceTitle:"How do you want to start?", profileChoiceLead:"Build your hero from scratch, or pick one of 10 ready-made profiles - all radically different.",
+    scratchTitle:"Build my hero from scratch", scratchDesc:"Choose every detail yourself: morphology, gear, powers...",
+    usePreset:"Choose this profile",
+    nameLabel:"What's your civilian name?", heroNameLabel:"Choose your codename",
+    namePh:"e.g. Alex Moreau", heroPh:"e.g. Eclipse, Fulgur, Ash...",
+    next:"Continue", back:"Back",
+    lookTitle:"Look & gear", lookLead:"A huge range of choices: morphology, armor, accessories... Build a truly unique hero. Every element shows live on your holographic avatar to the left.",
+    morphology:"Morphology",
+    helmet:"Helmet", helmetNone:"None", helmetFull:"Full", helmetVisor:"Holographic visor",
+    cape:"Cape", capeYes:"Wear a cape", capeNo:"No cape",
+    glasses:"Glasses", glassesNone:"None", glassesAviator:"Aviator", glassesHud:"Tactical HUD",
+    gloves:"Gloves", glovesNone:"Bare hands", glovesStandard:"Standard gloves", glovesClaws:"Claws", glovesArmored:"Armored gauntlets",
+    boots:"Boots", bootsNone:"Bare feet", bootsStandard:"Standard boots", bootsThruster:"Thruster boots", bootsArmored:"Armored boots",
+    aura:"Aura", auraNone:"None", auraFlame:"Flaming", auraElectric:"Electric", auraDark:"Dark",
+    weapon:"Weapon", weaponNone:"None", weaponSword:"Energy sword", weaponShield:"Shield", weaponSpear:"Spear",
+    suitColor:"Primary color", secondaryColor:"Secondary color", symbol:"Symbol (max 3 letters)", symbolPh:"e.g. APX",
+    pathTitle:"Your power path", pathLead:"Your path determines the deep nature of your abilities, and your resistance to danger.",
+    powersTitle:"Your powers", powersLead:"Pick up to 3 powers out of 6. No one gets everything - each choice closes another door.",
+    startSideTitle:"Your starting point", startSideLead:"Even before your first mission, where do you stand?",
+    startHero:"Hero", startHeroDesc:"You start with an already heroic reputation.",
+    startNeutral:"Ambiguous", startNeutralDesc:"You haven't picked a side yet.",
+    startVillain:"Villain", startVillainDesc:"You already start marked as a menace.",
+    modeTitle:"Your career", modeLead:"Two game formats are available.",
+    modeShort:"Short career", modeShortDesc:"Fixed 10 years, 3 missions per year, 3 choices per mission.",
+    modeLong:"Long career", modeLongDesc:"Up to 80 years, 3 to 10 missions per year. Mission scale follows your rank - from small neighborhood affairs up to cosmic crises. Train recruits, shift repeatedly between light and darkness, risk death, have meaningful talks with other figures, get a full report at the end.",
+    yearsLabel:"Number of years", beginCareer:"Start career",
+    summaryTitle:"Your VOLT INDUSTRIES file", year:"Year", mission:"Mission",
+    alignHero:"Hero", alignVillain:"Menace", alignNeutral:"Balance",
+    courage:"Courage", intelligence:"Intelligence", popularity:"Popularity", power:"Power",
+    endTitle:"Career over", restart:"Start a new career",
+    relations:"Relations", logTitle:"Career log", continueMission:"Next mission",
+    inviteHeroTitle:"Official invitation", inviteHeroText:"Your exploits have not gone unnoticed - an established organization wants to formally welcome you into its ranks.",
+    inviteVillainTitle:"An offer from the shadows", inviteVillainText:"Your reputation is growing in dark circles. An organization wants you as one of their own.",
+    accept:"Accept", decline:"Decline", teamPrime:"VANGUARD", teamOmega:"PERDITION",
+    joinedPrime:"You joined the VANGUARD.", joinedOmega:"You joined PERDITION.", declinedTeam:"You chose to remain independent.",
+    location:"Location", locVille:"City", locPays:"Country", locPlanete:"Planet",
+    inMemoriam:"IN MEMORIAM", diedAt:"lost in", causeLabel:"Cause",
+    fullReportTitle:"Full career report", locationsSaved:"Locations saved", locationsDestroyed:"Locations destroyed", fightsWon:"Fights won", fightsLost:"Fights lost",
+    yearsServed:"Years served", missionsTotal:"Missions completed", menteesCount:"Recruits trained",
+    menteeHero:"became heroes", menteeVillain:"turned villain", menteeDied:"died in training", menteeNeutral:"went their own way",
+    turningPointsTitle:"Major career turning points", noTurning:"A remarkably steady path - no major turning point.",
+    yearByYearTitle:"Year-by-year detail",
+    combatOutcomeWin:"Victory", combatOutcomeLose:"Defeat", rescueSaved:"Saved", rescueLost:"Lost",
+    mentorTag:"Training", rankHero:"Hero rank", rankVillain:"Menace rank", rankNeutral:"Independent rank",
+    convNext:"Next",
+  }
+};
+
+const PATHS = [
+  { id:'tech', fr:'Technologie', en:'Technology', color:'tech', descFr:"Armures, IA de combat, ingenierie de pointe.", descEn:"Powered armor, combat AI, cutting-edge engineering." },
+  { id:'mystique', fr:'Mystique', en:'Mystic', color:'mystique', descFr:"Magie, illusions, portails dimensionnels.", descEn:"Magic, illusions, dimensional rifts." },
+  { id:'physique', fr:'Physique', en:'Physical', color:'physique', descFr:"Force brute, regeneration, vitesse.", descEn:"Raw strength, regeneration, speed." },
+  { id:'psychique', fr:'Psychique', en:'Psychic', color:'psychique', descFr:"Telepathie, telekinesie, projection mentale.", descEn:"Telepathy, telekinesis, mental projection." },
+];
+const POWERS = {
+  tech: [
+    {id:'armure', fr:'Armure propulsee', en:'Powered armor', descFr:"Vol et protection blindee.", descEn:"Flight and armored protection."},
+    {id:'rayons', fr:"Rayons d'energie", en:'Energy blasters', descFr:"Tirs de force concentree.", descEn:"Concentrated force blasts."},
+    {id:'ia', fr:'IA de combat', en:'Combat AI', descFr:"Assistant tactique en temps reel.", descEn:"Real-time tactical assistant."},
+    {id:'drones', fr:'Essaim de drones', en:'Drone swarm', descFr:"Une nuee de drones autonomes.", descEn:"A swarm of autonomous drones."},
+    {id:'bouclier_energie', fr:"Bouclier d'energie", en:'Energy shield', descFr:"Un champ de force deployable.", descEn:"A deployable force field."},
+    {id:'nanotech', fr:'Nanotechnologie', en:'Nanotech', descFr:"Nanorobots auto-reparateurs.", descEn:"Self-repairing nanobots."},
+  ],
+  mystique:[
+    {id:'elementaire', fr:'Magie elementaire', en:'Elemental magic', descFr:"Controle du feu, de la glace, de la foudre.", descEn:"Control over fire, ice, lightning."},
+    {id:'illusions', fr:'Illusions', en:'Illusions', descFr:"Tromper les sens de l'ennemi.", descEn:"Deceive an enemy's senses."},
+    {id:'portails', fr:'Portails dimensionnels', en:'Dimensional portals', descFr:"Deplacement instantane.", descEn:"Instant travel."},
+    {id:'invocation', fr:"Invocation d'entites", en:'Entity summoning', descFr:"Appeler des allies d'un autre plan.", descEn:"Summon allies from another plane."},
+    {id:'metamorphose', fr:'Metamorphose', en:'Shapeshifting', descFr:"Changer de forme a volonte.", descEn:"Change form at will."},
+    {id:'controle_temporel', fr:'Distorsion temporelle', en:'Time distortion', descFr:"Ralentir ou accelerer le temps localement.", descEn:"Slow or speed up time locally."},
+  ],
+  physique:[
+    {id:'force', fr:'Force surhumaine', en:'Superhuman strength', descFr:"Une puissance colossale.", descEn:"Colossal raw power."},
+    {id:'regen', fr:'Regeneration', en:'Regeneration', descFr:"Guerison acceleree.", descEn:"Accelerated healing."},
+    {id:'vitesse', fr:'Vitesse surhumaine', en:'Superhuman speed', descFr:"Reflexes et deplacement extremes.", descEn:"Extreme reflexes and movement."},
+    {id:'invulnerabilite', fr:'Peau blindee', en:'Armored skin', descFr:"Une resistance quasi totale aux impacts.", descEn:"Near-total resistance to impacts."},
+    {id:'saut', fr:'Bonds surhumains', en:'Superhuman leaps', descFr:"Franchir des immeubles d'un saut.", descEn:"Clear buildings in a single leap."},
+    {id:'sens_aiguises', fr:'Sens aiguises', en:'Enhanced senses', descFr:"Vue, ouie et odorat largement amplifies.", descEn:"Vastly enhanced sight, hearing and smell."},
+  ],
+  psychique:[
+    {id:'telepathie', fr:'Telepathie', en:'Telepathy', descFr:"Lire et influencer les esprits.", descEn:"Read and influence minds."},
+    {id:'telekinesie', fr:'Telekinesie', en:'Telekinesis', descFr:"Deplacer la matiere par la pensee.", descEn:"Move matter with the mind."},
+    {id:'projection', fr:'Projection astrale', en:'Astral projection', descFr:"Quitter son corps pour explorer.", descEn:"Leave the body to explore."},
+    {id:'illusion_mentale', fr:'Illusions mentales', en:'Mental illusions', descFr:"Faire voir ce qui n'existe pas.", descEn:"Make others see what isn't there."},
+    {id:'controle_emotionnel', fr:'Controle emotionnel', en:'Emotion control', descFr:"Apaiser ou attiser les emotions d'autrui.", descEn:"Calm or inflame others' emotions."},
+    {id:'precognition', fr:'Precognition', en:'Precognition', descFr:"Entrevoir des bribes du futur proche.", descEn:"Glimpse fragments of the near future."},
+  ]
+};
+const MORPHOLOGIES = [
+  { id:'humain', fr:'Humain', en:'Human', descFr:'Silhouette humaine standard, agile et polyvalente.', descEn:'Standard human silhouette, agile and versatile.' },
+  { id:'colosse', fr:'Colosse', en:'Colossus', descFr:'Masse musculaire titanesque a la peau teintee, facon brute increvable.', descEn:'Titanic tinted-skin muscle mass, an unstoppable brute.' },
+  { id:'armure', fr:'Armure lourde', en:'Heavy armor', descFr:'Exosquelette blinde complet, plaques metalliques et reacteurs integres.', descEn:'Full armored exosuit, metal plating and built-in thrusters.' },
+  { id:'spectral', fr:'Spectral', en:'Spectral', descFr:'Forme translucide et immaterielle, a peine ancree dans le reel.', descEn:'Translucent, immaterial form, barely anchored in reality.' },
+  { id:'elance', fr:'Elance', en:'Lithe', descFr:'Silhouette fine, rapide et acrobatique.', descEn:'Slim, fast and acrobatic silhouette.' },
+];
+const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none','standard','thruster','armored'];
+const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
+
+const CHARACTERS = {
+  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', img:null}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', img:null},
+  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', img:null}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', img:null},
+  malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', img:null}, mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', img:null},
+  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', img:null}, obsidian:{fr:"Obsidian",en:"Obsidian",align:'villain', img:null},
+};
+/* To use real portraits: set e.g. CHARACTERS.volt.img = "data:image/png;base64,...." (or a relative path)
+   once the PNGs are provided - the conversation overlay will automatically use them instead of the placeholder glyph. */
+
+/* ============================ FACTIONS (7 tiers per side) ============================ */
+const FACTIONS = {
+  hero: [ null,
+    { fr:'Garde de Quartier', en:'Neighborhood Watch', icon:'house' },
+    { fr:'Sentinelles Urbaines', en:'Urban Sentinels', icon:'skyline' },
+    { fr:'Legion Nationale', en:'National Legion', icon:'flag' },
+    { fr:'Alliance Continentale', en:'Continental Alliance', icon:'globe-segment' },
+    { fr:'VANGUARD', en:'VANGUARD', icon:'globe' },
+    { fr:'Concorde Stellaire', en:'Stellar Concord', icon:'rings' },
+    { fr:'AEGIS ETERNEL', en:'ETERNAL AEGIS', icon:'galaxy' },
+  ],
+  villain: [ null,
+    { fr:"Bande de l'Ombre", en:'Shadow Gang', icon:'fist' },
+    { fr:'Cartel Urbain', en:'Urban Cartel', icon:'chain' },
+    { fr:'LE MANDAT', en:'THE MANDATE', icon:'gauntlet' },
+    { fr:'Les Sinistres', en:'The Afflicted', icon:'crack' },
+    { fr:'PERDITION', en:'PERDITION', icon:'coil' },
+    { fr:"L'Ordre Fracture", en:'The Fractured Order', icon:'comet' },
+    { fr:'MENACE COSMIQUE', en:'COSMIC MENACE', icon:'void' },
+  ],
+};
+function factionEmblemSVG(side, tier, size){
+  const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return '';
+  const uid = 'fe'+Math.random().toString(36).slice(2,7);
+  const isHero = side==='hero';
+  const c1 = isHero ? '#5fd4ff' : '#ff7b8c', c2 = isHero ? '#0088cc' : '#a5122f', dark = isHero ? '#04263a' : '#3a0a14';
+  let icon = '';
+  switch(fac.icon){
+    case 'house': icon = `<path d="M50 28 L70 44 L70 68 L58 68 L58 54 L42 54 L42 68 L30 68 L30 44 Z" fill="#fff" opacity="0.92"/>`; break;
+    case 'skyline': icon = `<rect x="30" y="46" width="10" height="24" fill="#fff" opacity="0.9"/><rect x="44" y="34" width="12" height="36" fill="#fff" opacity="0.95"/><rect x="60" y="52" width="10" height="18" fill="#fff" opacity="0.85"/>`; break;
+    case 'flag': icon = `<rect x="38" y="26" width="4" height="46" fill="#fff"/><path d="M42 28 L66 34 L42 44 Z" fill="#fff" opacity="0.9"/>`; break;
+    case 'globe-segment': icon = `<circle cx="50" cy="48" r="20" fill="none" stroke="#fff" stroke-width="3" opacity="0.4"/><path d="M50 28 A20 20 0 0 1 68 52" fill="none" stroke="#fff" stroke-width="4"/>`; break;
+    case 'globe': icon = `<circle cx="50" cy="48" r="20" fill="none" stroke="#fff" stroke-width="3"/><ellipse cx="50" cy="48" rx="8" ry="20" fill="none" stroke="#fff" stroke-width="2" opacity="0.7"/><line x1="30" y1="48" x2="70" y2="48" stroke="#fff" stroke-width="2" opacity="0.7"/>`; break;
+    case 'rings': icon = `<circle cx="50" cy="48" r="9" fill="#fff"/><ellipse cx="50" cy="48" rx="24" ry="8" fill="none" stroke="#fff" stroke-width="2.4" opacity="0.85" transform="rotate(-18 50 48)"/><ellipse cx="50" cy="48" rx="24" ry="8" fill="none" stroke="#fff" stroke-width="1.6" opacity="0.5" transform="rotate(18 50 48)"/>`; break;
+    case 'galaxy': icon = `<path d="M50 48 C60 40 62 30 50 26 C40 30 40 40 50 48 C58 56 58 66 48 70 C38 66 38 56 50 48 Z" fill="#fff" opacity="0.9"/>`; break;
+    case 'fist': icon = `<rect x="36" y="38" width="28" height="24" rx="8" fill="#fff" opacity="0.92"/><rect x="34" y="30" width="8" height="16" rx="3" fill="#fff"/><rect x="44" y="26" width="8" height="20" rx="3" fill="#fff"/><rect x="54" y="28" width="8" height="18" rx="3" fill="#fff"/>`; break;
+    case 'chain': icon = `<ellipse cx="42" cy="42" rx="10" ry="7" fill="none" stroke="#fff" stroke-width="4"/><ellipse cx="60" cy="56" rx="10" ry="7" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="8 6"/>`; break;
+    case 'gauntlet': icon = `<rect x="36" y="44" width="28" height="20" rx="4" fill="#fff" opacity="0.9"/><rect x="38" y="30" width="6" height="16" fill="#fff"/><rect x="47" y="26" width="6" height="20" fill="#fff"/><rect x="56" y="30" width="6" height="16" fill="#fff"/>`; break;
+    case 'crack': icon = `<path d="M50 26 L44 44 L52 46 L40 70 L58 48 L50 46 L60 30 Z" fill="#fff" opacity="0.92"/>`; break;
+    case 'coil': icon = `<path d="M50 28 a11 11 0 1 1 -0.1 0" fill="none" stroke="#fff" stroke-width="4"/><path d="M50 40 a7 7 0 1 1 -0.1 0" fill="none" stroke="#fff" stroke-width="4"/><circle cx="50" cy="48" r="2.4" fill="#fff"/>`; break;
+    case 'comet': icon = `<circle cx="56" cy="40" r="6" fill="#fff"/><path d="M52 44 L30 66 L46 50 L34 68 L50 52 Z" fill="#fff" opacity="0.7"/>`; break;
+    case 'void': icon = `<circle cx="50" cy="48" r="12" fill="#050008"/><circle cx="50" cy="48" r="12" fill="none" stroke="#fff" stroke-width="1.6" opacity="0.6"/><circle cx="34" cy="34" r="1.6" fill="#fff"/><circle cx="68" cy="38" r="1.2" fill="#fff"/><circle cx="66" cy="60" r="1.8" fill="#fff"/><circle cx="36" cy="62" r="1.3" fill="#fff"/>`; break;
+    default: icon = `<circle cx="50" cy="48" r="12" fill="#fff"/>`;
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="${uid}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient>
+    <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <path d="M50,6 L86,18 L86,54 C86,80 68,93 50,100 C32,93 14,80 14,54 L14,18 Z" fill="url(#${uid}g)" stroke="${dark}" stroke-width="2" filter="url(#${uid}f)"/>
+    <path d="M50,12 L80,22 L80,54 C80,76 65,87 50,93 C35,87 20,76 20,54 L20,22 Z" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35"/>
+    ${icon}
+    <text x="50" y="102" font-size="8" font-weight="800" fill="${dark}" text-anchor="middle" font-family="Arial">${tier}</text>
+  </svg>`;
+}
+function factionName(side, tier){ const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
+
+const MISSIONS = [
+  { id:'sauvetage', type:'rescue', danger:1, scope:2, tagFr:'Catastrophe', tagEn:'Disaster',
+    fr:"Un pont s'effondre avec des dizaines de civils pieges. Les secours sont depasses.", en:"A bridge collapses with dozens of civilians trapped. Rescue teams are overwhelmed.",
+    choices:[
+      { fr:"Foncer sauver un maximum de civils, quitte a s'epuiser.", en:"Rush to save as many civilians as possible, exhausting yourself.", eff:{align:8, courage:6, popularity:6, rel:{volt:3}} },
+      { fr:"Coordonner froidement les secours pour une efficacite maximale.", en:"Coldly coordinate rescue efforts for maximum efficiency.", eff:{align:3, intelligence:6, popularity:2, rel:{marsh:3}} },
+      { fr:"Profiter du chaos pour disparaitre avec ce que tu es venu chercher.", en:"Use the chaos to slip away with what you came for.", eff:{align:-9, intelligence:3, popularity:-4, rel:{obsidian:3}} },
+    ]},
+  { id:'braquage', type:'combat', danger:1, scope:1, tagFr:'Crime organise', tagEn:'Organized crime',
+    fr:"Un gang tente de voler une technologie experimentale au sein meme de Volt Industries.", en:"A gang tries to steal experimental tech from inside Volt Industries itself.",
+    choices:[
+      { fr:"Intervenir seul, sans prevenir personne, pour prouver ta valeur.", en:"Step in alone, telling no one, to prove your worth.", eff:{align:4, courage:7, popularity:1, rel:{volt:-1}} },
+      { fr:"Appeler du renfort et agir en equipe.", en:"Call for backup and act as a team.", eff:{align:5, intelligence:3, popularity:3, rel:{marsh:2, nyx:2}} },
+      { fr:"Negocier discretement avec le gang pour une part du butin.", en:"Quietly negotiate with the gang for a cut.", eff:{align:-10, intelligence:2, popularity:-5, rel:{mandate:3}} },
+    ]},
+  { id:'dilemme', type:'rescue', danger:1, scope:1, tagFr:'Dilemme moral', tagEn:'Moral dilemma',
+    fr:"Tu peux capturer un criminel recherche, mais cela signifie abandonner un allie blesse.", en:"You can capture a wanted criminal, but it means abandoning a wounded ally.",
+    choices:[
+      { fr:"Sauver ton allie, laisser filer le criminel.", en:"Save your ally, let the criminal go.", eff:{align:6, courage:2, popularity:-2, rel:{marsh:4}} },
+      { fr:"Capturer le criminel - le bien commun avant tout.", en:"Capture the criminal - the greater good first.", eff:{align:2, intelligence:2, popularity:4, rel:{volt:2}} },
+      { fr:"Laisser les deux se debrouiller et t'eclipser.", en:"Let both fend for themselves and slip away.", eff:{align:-6, popularity:-6, rel:{lorelei:2}} },
+    ]},
+  { id:'media', type:'social', danger:0, scope:1, tagFr:'Opinion publique', tagEn:'Public opinion',
+    fr:"Une chaine d'info veut t'interviewer en direct apres un incident controverse.", en:"A news network wants to interview you live after a controversial incident.",
+    choices:[
+      { fr:"Assumer pleinement tes actes, sans filtre.", en:"Fully own your actions, no filter.", eff:{align:3, popularity:5, courage:3} },
+      { fr:"Rester evasif et proteger ton identite.", en:"Stay evasive and protect your identity.", eff:{intelligence:4, popularity:1} },
+      { fr:"Manipuler le discours pour ternir un rival.", en:"Spin the narrative to smear a rival.", eff:{align:-5, intelligence:3, popularity:-2, rel:{obsidian:2}} },
+    ]},
+  { id:'recrutement_heros', type:'social', danger:0, scope:1, charKey:'volt', tagFr:'Recrutement', tagEn:'Recruitment',
+    fr:"Cassius Volt t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Cassius Volt personally invites you to join his elite response team.",
+    choices:[
+      { fr:"Accepter avec enthousiasme.", en:"Accept enthusiastically.", eff:{align:9, popularity:3, rel:{volt:6}} },
+      { fr:"Accepter, mais a tes conditions.", en:"Accept, but on your own terms.", eff:{align:4, intelligence:3, rel:{volt:2}} },
+      { fr:"Refuser - tu preferes agir seul.", en:"Refuse - you prefer working alone.", eff:{align:0, courage:3, rel:{volt:-3}} },
+    ]},
+  { id:'approche_villain', type:'social', danger:0, scope:1, charKey:'mandate', tagFr:'Tentation', tagEn:'Temptation',
+    fr:"Le Mandat t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"The Mandate secretly approaches you, offering unlimited resources for your loyalty.",
+    choices:[
+      { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to the authorities.", eff:{align:8, popularity:2, rel:{mandate:-5, volt:3}} },
+      { fr:"Ecouter, sans t'engager, pour recolter des informations.", en:"Listen without committing, to gather intel.", eff:{align:-1, intelligence:4, rel:{mandate:1, nyx:2}} },
+      { fr:"Accepter l'offre - le pouvoir a un prix que tu es pret a payer.", en:"Accept the offer - power has a price you're willing to pay.", eff:{align:-12, popularity:-3, rel:{mandate:6}} },
+    ]},
+  { id:'deuil_malachar', type:'combat', danger:2, scope:3, charKey:'malachar', tagFr:'Rencontre', tagEn:'Encounter',
+    fr:"Malachar le Sans-Dieu te confronte, ronge par le deuil, et te demande de l'aider dans sa quete de vengeance.", en:"Malachar the Godless confronts you, consumed by grief, and asks for your help in his quest for vengeance.",
+    choices:[
+      { fr:"Essayer de le raisonner et l'aider a faire son deuil autrement.", en:"Try to reason with him and help him grieve differently.", eff:{align:6, intelligence:3, rel:{malachar:4}} },
+      { fr:"Le combattre pour proteger ses cibles.", en:"Fight him to protect his targets.", eff:{align:5, courage:5, rel:{malachar:-4}} },
+      { fr:"Rejoindre sa croisade - sa douleur resonne en toi.", en:"Join his crusade - his pain resonates with you.", eff:{align:-11, courage:4, rel:{malachar:7}} },
+    ]},
+  { id:'duel_rival', type:'combat', danger:1, scope:1, charKey:'obsidian', tagFr:'Rivalite', tagEn:'Rivalry',
+    fr:"Obsidian, rival inventeur dechu, sabote publiquement l'une de tes inventions pour t'humilier.", en:"Obsidian, a fallen rival inventor, publicly sabotages one of your inventions to humiliate you.",
+    choices:[
+      { fr:"Repondre par une demonstration publique magistrale.", en:"Respond with a masterful public demonstration.", eff:{align:2, intelligence:5, popularity:4, rel:{obsidian:-2}} },
+      { fr:"Lui offrir une seconde chance et une collaboration.", en:"Offer him a second chance and a collaboration.", eff:{align:7, rel:{obsidian:5}} },
+      { fr:"Detruire sa reputation en retour, sans pitie.", en:"Destroy his reputation in return, without mercy.", eff:{align:-7, popularity:-3, rel:{obsidian:-6}} },
+    ]},
+  { id:'sacrifice', type:'rescue', danger:3, scope:2, tagFr:'Sacrifice', tagEn:'Sacrifice',
+    fr:"Pour stopper une attaque, il faut desamorcer un dispositif au prix d'une exposition a une energie instable.", en:"To stop an attack, a device must be disarmed at the cost of exposure to unstable energy.",
+    choices:[
+      { fr:"Le faire toi-meme, sans hesiter.", en:"Do it yourself, without hesitation.", eff:{align:10, courage:8, popularity:5} },
+      { fr:"Trouver une solution technique pour eviter le sacrifice.", en:"Find a technical workaround to avoid the sacrifice.", eff:{align:5, intelligence:8, rel:{volt:3}} },
+      { fr:"Laisser quelqu'un d'autre prendre le risque a ta place.", en:"Let someone else take the risk instead.", eff:{align:-8, popularity:-6} },
+    ]},
+  { id:'infiltration', type:'combat', danger:2, scope:2, charKey:'nyx', tagFr:'Infiltration', tagEn:'Infiltration',
+    fr:"Nyx te propose de t'infiltrer dans une organisation criminelle pour la demanteler de l'interieur.", en:"Nyx proposes infiltrating a criminal organization to dismantle it from within.",
+    choices:[
+      { fr:"Accepter la mission, quitte a mentir longtemps.", en:"Accept the mission, even if it means lying for a long time.", eff:{align:4, intelligence:5, rel:{nyx:5}} },
+      { fr:"Refuser - ce n'est pas ton style.", en:"Refuse - it's not your style.", eff:{courage:2, rel:{nyx:-2}} },
+      { fr:"Accepter, mais garder les benefices de l'organisation pour toi.", en:"Accept, but keep the organization's profits for yourself.", eff:{align:-9, intelligence:2, rel:{nyx:-6, mandate:2}} },
+    ]},
+  { id:'trickster', type:'social', danger:0, scope:1, charKey:'lorelei', tagFr:'Manipulation', tagEn:'Manipulation',
+    fr:"Lorelei te propose un marche ambigu : elle t'aide contre une menace, en echange d'une faveur non precisee.", en:"Lorelei offers an ambiguous deal: she helps against a threat, for an unspecified future favor.",
+    choices:[
+      { fr:"Refuser tout marche avec elle.", en:"Refuse any deal with her.", eff:{align:2, courage:3, rel:{lorelei:-3}} },
+      { fr:"Accepter, prudemment.", en:"Accept, cautiously.", eff:{intelligence:4, rel:{lorelei:4}} },
+      { fr:"Essayer de la doubler a son propre jeu.", en:"Try to outplay her at her own game.", eff:{align:-2, intelligence:6, rel:{lorelei:2}} },
+    ]},
+  { id:'catastrophe_naturelle', type:'rescue', danger:2, scope:3, charKey:'vaelor', tagFr:'Catastrophe naturelle', tagEn:'Natural disaster',
+    fr:"Un phenomene climatique extreme menace une region entiere. Vaelor te demande de l'aide.", en:"An extreme weather phenomenon threatens an entire region. Vaelor asks for your help.",
+    choices:[
+      { fr:"Combattre en premiere ligne a ses cotes.", en:"Fight on the front line at his side.", eff:{align:7, courage:6, rel:{vaelor:5}} },
+      { fr:"Organiser l'evacuation des populations pendant qu'il agit.", en:"Organize civilian evacuation while he acts.", eff:{align:5, intelligence:4, popularity:4} },
+      { fr:"Profiter du chaos pour tester une arme experimentale sur la tempete.", en:"Use the chaos to test an experimental weapon on the storm.", eff:{align:-6, intelligence:3, popularity:-3, rel:{obsidian:2}} },
+    ]},
+  { id:'proces', type:'social', danger:0, scope:2, tagFr:'Justice', tagEn:'Justice',
+    fr:"Un tribunal veut reguler l'activite des etres exceptionnels et te convoque a temoigner.", en:"A tribunal wants to regulate exceptional beings' activity and summons you to testify.",
+    choices:[
+      { fr:"Plaider pour une supervision responsable.", en:"Argue for responsible oversight.", eff:{align:4, intelligence:4, popularity:2, rel:{marsh:3}} },
+      { fr:"Defendre une liberte d'action totale.", en:"Defend total freedom of action.", eff:{align:-1, courage:4, popularity:-1, rel:{mandate:1}} },
+      { fr:"Refuser de te presenter, au mepris des consequences.", en:"Refuse to appear, defying the consequences.", eff:{align:-5, popularity:-5, courage:2} },
+    ]},
+  { id:'trahison', type:'social', danger:1, scope:1, tagFr:'Trahison', tagEn:'Betrayal',
+    fr:"Tu decouvres qu'un allie proche transmet des informations sensibles a un ennemi.", en:"You discover a close ally is leaking sensitive information to an enemy.",
+    choices:[
+      { fr:"Le confronter directement et lui offrir une chance de s'expliquer.", en:"Confront him directly and give him a chance to explain.", eff:{align:5, courage:3, intelligence:2} },
+      { fr:"Le denoncer immediatement a Volt Industries.", en:"Report him immediately to Volt Industries.", eff:{align:2, intelligence:3, rel:{volt:3}} },
+      { fr:"Le faire chanter pour en tirer profit toi-meme.", en:"Blackmail him for your own gain.", eff:{align:-10, intelligence:4, popularity:-4} },
+    ]},
+  { id:'confrontation_finale', type:'combat', danger:3, scope:4, tagFr:'Confrontation majeure', tagEn:'Major confrontation',
+    fr:"Une coalition de forces menace de detruire le siege de Volt Industries. Le moment decisif est arrive.", en:"A coalition of forces threatens to destroy Volt Industries headquarters. The decisive moment has come.",
+    choices:[
+      { fr:"Prendre la tete de la defense, coute que coute.", en:"Lead the defense, whatever the cost.", eff:{align:10, courage:9, popularity:7, rel:{volt:5}} },
+      { fr:"Negocier une treve fragile avec la coalition.", en:"Negotiate a fragile truce with the coalition.", eff:{align:2, intelligence:7, popularity:2} },
+      { fr:"Retourner ta veste et rejoindre la coalition au moment critique.", en:"Switch sides and join the coalition at the critical moment.", eff:{align:-14, popularity:-8, rel:{mandate:6, malachar:3}} },
+    ]},
+  { id:'siege_continental', type:'combat', danger:2, scope:4, charKey:'mandate', tagFr:'Crise continentale', tagEn:'Continental crisis',
+    fr:"Les forces du Mandat s'emparent methodiquement d'un continent entier, region par region.", en:"The Mandate's forces are methodically seizing an entire continent, region by region.",
+    choices:[
+      { fr:"Coordonner une resistance continentale avec Volt Industries.", en:"Coordinate a continent-wide resistance with Volt Industries.", eff:{align:9, courage:5, popularity:5, rel:{volt:4}} },
+      { fr:"Negocier une zone tampon pour proteger les civils en priorite.", en:"Negotiate a buffer zone to protect civilians first.", eff:{align:4, intelligence:6, rel:{marsh:2}} },
+      { fr:"Profiter du chaos pour etendre ta propre influence sur la region.", en:"Use the chaos to extend your own influence over the region.", eff:{align:-13, popularity:-4, rel:{mandate:5}} },
+    ]},
+  { id:'invasion_planetaire', type:'combat', danger:3, scope:5, charKey:'vaelor', tagFr:'Invasion planetaire', tagEn:'Planetary invasion',
+    fr:"Une force venue d'ailleurs entame l'invasion de la planete tout entiere. Le monde entier retient son souffle.", en:"A force from beyond begins invading the entire planet. The whole world holds its breath.",
+    choices:[
+      { fr:"Prendre le commandement de la defense planetaire.", en:"Take command of the planetary defense.", eff:{align:12, courage:8, popularity:8, rel:{volt:5, vaelor:3}} },
+      { fr:"Chercher une solution diplomatique avec l'envahisseur.", en:"Seek a diplomatic solution with the invader.", eff:{align:6, intelligence:9, rel:{marsh:3}} },
+      { fr:"Negocier ta propre survie en echange d'informations sur les defenses.", en:"Negotiate your own survival in exchange for defense intel.", eff:{align:-16, popularity:-9, rel:{mandate:6}} },
+    ]},
+  { id:'faille_systeme', type:'rescue', danger:3, scope:6, charKey:'vaelor', tagFr:'Faille stellaire', tagEn:'Stellar rift',
+    fr:"Une faille spatio-temporelle menace de destabiliser le systeme stellaire tout entier. Vaelor te demande une aide vitale.", en:"A space-time rift threatens to destabilize the entire star system. Vaelor asks for your vital help.",
+    choices:[
+      { fr:"Te jeter corps et ame dans la stabilisation de la faille.", en:"Throw yourself entirely into stabilizing the rift.", eff:{align:13, courage:9, rel:{vaelor:6}} },
+      { fr:"Concevoir une solution technique a distance, plus prudente.", en:"Design a safer technical solution from a distance.", eff:{align:6, intelligence:10, rel:{volt:3}} },
+      { fr:"Laisser Vaelor s'en charger seul et observer depuis un lieu sur.", en:"Let Vaelor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
+    ]},
+  { id:'guerre_cosmique', type:'combat', danger:3, scope:7, tagFr:'Guerre cosmique', tagEn:'Cosmic war',
+    fr:"Une entite ancestrale, aussi vieille que le deuil de Malachar lui-meme, menace l'existence de la realite connue.", en:"An ancestral entity, as old as Malachar's own grief, threatens the existence of known reality.",
+    choices:[
+      { fr:"Unir tous tes allies, heros comme rivaux, dans une derniere alliance.", en:"Unite every ally, heroes and rivals alike, in one final alliance.", eff:{align:15, courage:10, popularity:9, rel:{volt:5, vaelor:4, marsh:3, nyx:3}} },
+      { fr:"Chercher une issue plus subtile, en epargnant un maximum de vies.", en:"Seek a subtler solution, sparing as many lives as possible.", eff:{align:8, intelligence:11, rel:{marsh:4}} },
+      { fr:"Saisir ce chaos cosmique pour t'approprier un pouvoir absolu.", en:"Seize this cosmic chaos to claim absolute power for yourself.", eff:{align:-20, popularity:-10, rel:{mandate:7, malachar:5}} },
+    ]},
+];
+
+/* ============================ PROCEDURAL MISSION GENERATOR ============================ */
+/* Combines threats x stakes x sentence patterns x locations x optional characters x choice phrasings.
+   This produces an effectively unbounded number of distinct missions rather than a fixed list. */
+const THREATS = [
+  {fr:"un incendie incontrolable", en:"an uncontrollable fire"},
+  {fr:"une prise d'otages", en:"a hostage situation"},
+  {fr:"un vol de technologie sensible", en:"a theft of sensitive technology"},
+  {fr:"une manifestation qui degenere", en:"a protest turning violent"},
+  {fr:"un accident industriel majeur", en:"a major industrial accident"},
+  {fr:"une fuite de donnees critiques", en:"a critical data leak"},
+  {fr:"un culte fanatique en plein rituel", en:"a fanatical cult mid-ritual"},
+  {fr:"une emeute organisee", en:"an organized riot"},
+  {fr:"un train hors de controle", en:"a runaway train"},
+  {fr:"une epidemie suspecte", en:"a suspicious outbreak"},
+  {fr:"un sabotage du reseau electrique", en:"a sabotage of the power grid"},
+  {fr:"des experiences genetiques hors de controle", en:"genetic experiments running wild"},
+  {fr:"un vaisseau en perdition qui s'ecrase", en:"a crashing derelict ship"},
+  {fr:"une tempete electromagnetique", en:"an electromagnetic storm"},
+  {fr:"un virus informatique paralysant les infrastructures", en:"a computer virus paralyzing infrastructure"},
+  {fr:"un braquage a main armee dans une banque high-tech", en:"an armed heist at a high-tech bank"},
+  {fr:"un attentat presque dejoue", en:"a nearly-thwarted bombing plot"},
+  {fr:"une fracture dimensionnelle qui s'ouvre", en:"a dimensional rift tearing open"},
+  {fr:"des drones autonomes qui se retournent contre leurs createurs", en:"autonomous drones turning on their creators"},
+  {fr:"une prise de controle hostile d'un satellite", en:"a hostile takeover of a satellite"},
+  {fr:"un effondrement structurel imminent", en:"an imminent structural collapse"},
+  {fr:"une contamination toxique en cours", en:"an ongoing toxic contamination"},
+  {fr:"un chantage a grande echelle", en:"a large-scale blackmail scheme"},
+  {fr:"une evasion massive d'une prison de haute securite", en:"a mass breakout from a high-security prison"},
+  {fr:"un piratage des systemes de defense", en:"a hack of the defense systems"},
+  {fr:"une secte technologique preparant un coup d'eclat", en:"a tech cult preparing a major strike"},
+];
+const STAKES = [
+  {fr:"des centaines de civils", en:"hundreds of civilians"},
+  {fr:"l'approvisionnement energetique de toute la region", en:"the entire region's power supply"},
+  {fr:"la reputation de Volt Industries", en:"Volt Industries' reputation"},
+  {fr:"un temoin cle", en:"a key witness"},
+  {fr:"des archives scientifiques inestimables", en:"invaluable scientific archives"},
+  {fr:"la stabilite politique locale", en:"local political stability"},
+  {fr:"une decouverte technologique majeure", en:"a major technological breakthrough"},
+  {fr:"la vie d'un proche allie", en:"the life of a close ally"},
+  {fr:"l'equilibre ecologique de la zone", en:"the area's ecological balance"},
+  {fr:"la securite de milliers de familles", en:"the safety of thousands of families"},
+  {fr:"des secrets sensibles", en:"sensitive secrets"},
+  {fr:"la confiance du public envers les heros", en:"public trust in heroes"},
+  {fr:"un vaccin vital en cours de production", en:"a vital vaccine in production"},
+  {fr:"l'avenir economique de la ville", en:"the city's economic future"},
+  {fr:"une infrastructure critique", en:"critical infrastructure"},
+  {fr:"la vie d'un enfant pris au piege", en:"the life of a trapped child"},
+];
+const MISSION_SENTENCE_PATTERNS = [
+  { fr:(T,S_,L)=>`${cap(T)} eclate a ${L} et menace ${S_}. Chaque seconde compte.`,
+    en:(T,S_,L)=>`${cap(T)} erupts in ${L} and threatens ${S_}. Every second counts.` },
+  { fr:(T,S_,L)=>`A ${L}, ${T} met en peril ${S_}. Les autorites locales sont depassees.`,
+    en:(T,S_,L)=>`In ${L}, ${T} endangers ${S_}. Local authorities are overwhelmed.` },
+  { fr:(T,S_,L)=>`Les rapports affluent : ${T} frappe ${L}, avec ${S_} en jeu.`,
+    en:(T,S_,L)=>`Reports are flooding in: ${T} strikes ${L}, with ${S_} at stake.` },
+  { fr:(T,S_,L)=>`Volt Industries te signale ${T} a ${L}. ${cap(S_)} pourrait etre perdu si personne n'intervient.`,
+    en:(T,S_,L)=>`Volt Industries flags ${T} in ${L}. ${cap(S_)} could be lost if no one intervenes.` },
+];
+const CHOICE_PHRASES = {
+  bold: [
+    {fr:"Foncer regler {t} de front, sans attendre de renfort.", en:"Rush to tackle {t} head-on, without waiting for backup."},
+    {fr:"T'exposer en premiere ligne pour stopper {t} immediatement.", en:"Put yourself on the front line to stop {t} immediately."},
+    {fr:"Prendre tous les risques necessaires pour sauver le plus de monde possible.", en:"Take every necessary risk to save as many people as possible."},
+    {fr:"Intervenir seul(e), quitte a payer le prix fort.", en:"Step in alone, whatever the cost."},
+    {fr:"Charger sans hesiter - la priorite est de proteger les gens.", en:"Charge in without hesitation - protecting people comes first."},
+  ],
+  clever: [
+    {fr:"Analyser {t} avant d'agir, pour frapper au bon endroit.", en:"Study {t} before acting, to strike where it counts."},
+    {fr:"Coordonner une reponse methodique avec les equipes sur place.", en:"Coordinate a methodical response with the teams on site."},
+    {fr:"Chercher une solution technique plutot que la confrontation directe.", en:"Look for a technical solution rather than direct confrontation."},
+    {fr:"Prendre le temps de reflechir a la meilleure strategie possible.", en:"Take the time to think through the best possible strategy."},
+    {fr:"Utiliser tes competences pour neutraliser {t} intelligemment.", en:"Use your skills to neutralize {t} intelligently."},
+  ],
+  selfish: [
+    {fr:"Profiter du chaos de {t} pour servir tes propres interets.", en:"Use the chaos of {t} to serve your own interests."},
+    {fr:"Laisser faire et recuperer ce qui peut t'etre utile dans la confusion.", en:"Let it happen and grab whatever is useful amid the confusion."},
+    {fr:"Monnayer ton intervention au prix fort.", en:"Charge a steep price for your intervention."},
+    {fr:"Detourner {t} a ton avantage, peu importe les consequences.", en:"Turn {t} to your advantage, whatever the consequences."},
+    {fr:"Tourner le dos a la situation si cela ne te rapporte rien.", en:"Turn your back on the situation if there's nothing in it for you."},
+  ],
+};
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randInt(min,max){ return min + Math.floor(Math.random()*(max-min+1)); }
+function pickScopeForRank(rank){
+  const r = Math.random();
+  if(r<0.45) return rank;
+  if(r<0.75 && rank>1) return rank-1;
+  return 1 + Math.floor(Math.random()*rank);
+}
+function dangerForScope(scope, type){ if(type==='social') return scope>=5?1:0; return scope>=5?3:(scope>=3?2:1); }
+function generateProceduralMission(rank){
+  const type = pick(['combat','combat','rescue','rescue','social']);
+  const scope = pickScopeForRank(rank);
+  const danger = dangerForScope(scope, type);
+  const threat = pick(THREATS);
+  const stakes = pick(STAKES);
+  const locName = randLocationName();
+  const pattern = pick(MISSION_SENTENCE_PATTERNS);
+  const useChar = Math.random() < 0.3;
+  const charKey = useChar ? pick(Object.keys(CHARACTERS)) : null;
+  let fr = pattern.fr(threat.fr, stakes.fr, locName);
+  let en = pattern.en(threat.en, stakes.en, locName);
+  if(charKey){
+    const c = CHARACTERS[charKey];
+    fr += ` ${c.fr} t'alerte personnellement de la situation.`;
+    en += ` ${c.en} personally alerts you to the situation.`;
+  }
+  const boldP = pick(CHOICE_PHRASES.bold), cleverP = pick(CHOICE_PHRASES.clever), selfishP = pick(CHOICE_PHRASES.selfish);
+  const fillT = (s, T) => s.replace('{t}', T);
+  const choices = [
+    { fr: fillT(boldP.fr, threat.fr), en: fillT(boldP.en, threat.en),
+      eff: Object.assign({ align: randInt(6,11), courage: randInt(4,8), popularity: randInt(2,6) }, charKey ? { rel:{[charKey]: randInt(2,5)} } : {}) },
+    { fr: fillT(cleverP.fr, threat.fr), en: fillT(cleverP.en, threat.en),
+      eff: Object.assign({ align: randInt(2,6), intelligence: randInt(4,9), popularity: randInt(1,3) }, charKey ? { rel:{[charKey]: randInt(1,3)} } : {}) },
+    { fr: fillT(selfishP.fr, threat.fr), en: fillT(selfishP.en, threat.en),
+      eff: Object.assign({ align: -randInt(6,12), popularity: -randInt(2,6), intelligence: randInt(0,3) }, charKey ? { rel:{[charKey]: -randInt(2,5)} } : {}) },
+  ];
+  const tagFr = type==='combat' ? 'Affrontement' : (type==='rescue' ? 'Sauvetage' : 'Situation');
+  const tagEn = type==='combat' ? 'Confrontation' : (type==='rescue' ? 'Rescue' : 'Situation');
+  return { id:'gen', generated:true, type, danger, scope, charKey, tagFr, tagEn, fr, en, choices,
+    location: { name: locName, type: scope } };
+}
+
+/* ---------- Villain-flavored procedural missions: you are the instigator, not the responder ---------- */
+const MISSION_SENTENCE_PATTERNS_VILLAIN = [
+  { fr:(T,S_,L)=>`Tu orchestres ${T} a ${L}, mettant directement ${S_} en danger. Personne ne doit t'arreter.`,
+    en:(T,S_,L)=>`You orchestrate ${T} in ${L}, directly endangering ${S_}. No one must stop you.` },
+  { fr:(T,S_,L)=>`A ${L}, tu declenches ${T} pour asseoir ta domination sur ${S_}.`,
+    en:(T,S_,L)=>`In ${L}, you unleash ${T} to assert your dominance over ${S_}.` },
+  { fr:(T,S_,L)=>`Ton plan prend forme a ${L} : ${T} n'est qu'un prelude a la chute de ${S_}.`,
+    en:(T,S_,L)=>`Your plan takes shape in ${L}: ${T} is only a prelude to the fall of ${S_}.` },
+  { fr:(T,S_,L)=>`Volt Industries ignore encore que tu es derriere ${T} a ${L}, qui menace deja ${S_}.`,
+    en:(T,S_,L)=>`Volt Industries doesn't yet know you're behind ${T} in ${L}, already threatening ${S_}.` },
+];
+const CHOICE_PHRASES_VILLAIN = {
+  ruthless: [
+    {fr:"Aller jusqu'au bout, sans aucune pitie.", en:"Go all the way, without any mercy."},
+    {fr:"Ecraser toute resistance immediatement.", en:"Crush any resistance immediately."},
+    {fr:"Faire un exemple pour que personne n'ose plus s'opposer a toi.", en:"Make an example so no one dares oppose you again."},
+    {fr:"Semer le chaos pour mieux regner ensuite.", en:"Sow chaos to rule more easily afterward."},
+    {fr:"Ne laisser aucun temoin de ton passage.", en:"Leave no witness behind."},
+  ],
+  calculating: [
+    {fr:"Calculer chaque etape pour maximiser les degats sans te compromettre.", en:"Calculate every step to maximize damage without compromising yourself."},
+    {fr:"Utiliser {t} comme diversion pour un objectif plus vaste.", en:"Use {t} as a diversion for a larger goal."},
+    {fr:"Manipuler les evenements depuis l'ombre.", en:"Manipulate events from the shadows."},
+    {fr:"Laisser d'autres porter le chapeau a ta place.", en:"Let others take the blame in your place."},
+    {fr:"Avancer tes pions avec une froide precision.", en:"Advance your pieces with cold precision."},
+  ],
+  hesitation: [
+    {fr:"Ressentir un doute soudain et epargner des innocents.", en:"Feel a sudden doubt and spare innocents."},
+    {fr:"Laisser filer l'occasion, trouble(e) par ce que tu es en train de devenir.", en:"Let the opportunity slip, troubled by what you're becoming."},
+    {fr:"Te retenir au dernier moment, sans trop savoir pourquoi.", en:"Hold back at the last moment, not quite knowing why."},
+    {fr:"Ecouter une derniere once de conscience.", en:"Listen to one last shred of conscience."},
+    {fr:"Detourner le regard, incapable d'aller jusqu'au bout.", en:"Look away, unable to go through with it."},
+  ],
+};
+function generateVillainMission(rank){
+  const type = pick(['combat','combat','rescue','rescue','social']);
+  const scope = pickScopeForRank(rank);
+  const danger = dangerForScope(scope, type);
+  const threat = pick(THREATS);
+  const stakes = pick(STAKES);
+  const locName = randLocationName();
+  const pattern = pick(MISSION_SENTENCE_PATTERNS_VILLAIN);
+  const useChar = Math.random() < 0.3;
+  const charKey = useChar ? pick(Object.keys(CHARACTERS)) : null;
+  let fr = pattern.fr(threat.fr, stakes.fr, locName);
+  let en = pattern.en(threat.en, stakes.en, locName);
+  if(charKey){
+    const c = CHARACTERS[charKey];
+    fr += ` ${c.fr} observe tes agissements de pres.`;
+    en += ` ${c.en} is watching your actions closely.`;
+  }
+  const ruthP = pick(CHOICE_PHRASES_VILLAIN.ruthless), calcP = pick(CHOICE_PHRASES_VILLAIN.calculating), hesP = pick(CHOICE_PHRASES_VILLAIN.hesitation);
+  const fillT = (s, T) => s.replace('{t}', T);
+  const choices = [
+    { fr: fillT(ruthP.fr, threat.fr), en: fillT(ruthP.en, threat.en),
+      eff: Object.assign({ align: -randInt(8,13), courage: randInt(3,7), popularity: -randInt(3,7) }, charKey ? { rel:{[charKey]: -randInt(1,4)} } : {}) },
+    { fr: fillT(calcP.fr, threat.fr), en: fillT(calcP.en, threat.en),
+      eff: Object.assign({ align: -randInt(3,7), intelligence: randInt(4,8), popularity: -randInt(1,3) }, charKey ? { rel:{[charKey]: -randInt(0,2)} } : {}) },
+    { fr: fillT(hesP.fr, threat.fr), en: fillT(hesP.en, threat.en),
+      eff: Object.assign({ align: randInt(4,9), courage: randInt(1,3), popularity: randInt(0,3) }, charKey ? { rel:{[charKey]: randInt(1,3)} } : {}) },
+  ];
+  const tagFr = type==='combat' ? 'Assaut' : (type==='rescue' ? 'Sabotage' : 'Manipulation');
+  const tagEn = type==='combat' ? 'Assault' : (type==='rescue' ? 'Sabotage' : 'Manipulation');
+  return { id:'genvillain', generated:true, villainFlavor:true, type, danger, scope, charKey, tagFr, tagEn, fr, en, choices,
+    location: { name: locName, type: scope } };
+}
+
+/* ---------- Signature missions: procedurally generated, always tied to a named character ---------- */
+const SIGNATURE_ROLE_TEMPLATES = [
+  { fr:(n,T,S_,L)=>`${n} te contacte en urgence : ${T} menace ${S_} a ${L}, et seul un effort commun peut l'arreter.`,
+    en:(n,T,S_,L)=>`${n} contacts you urgently: ${T} threatens ${S_} in ${L}, and only a joint effort can stop it.` },
+  { fr:(n,T,S_,L)=>`Une vieille dette te rattrape : ${n} a besoin de toi pour affronter ${T} a ${L}, quoi qu'il en coute.`,
+    en:(n,T,S_,L)=>`An old debt catches up with you: ${n} needs you to face ${T} in ${L}, whatever the cost.` },
+  { fr:(n,T,S_,L)=>`${n} traverse une epreuve personnelle a ${L} pendant que ${T} complique tout. Ton soutien pourrait tout changer.`,
+    en:(n,T,S_,L)=>`${n} is going through a personal ordeal in ${L} while ${T} complicates everything. Your support could change everything.` },
+  { fr:(n,T,S_,L)=>`Un piege se referme sur ${n} a ${L}, orchestre en marge de ${T}. Vas-tu intervenir ?`,
+    en:(n,T,S_,L)=>`A trap is closing around ${n} in ${L}, set up in the margins of ${T}. Will you step in?` },
+  { fr:(n,T,S_,L)=>`${n} te met a l'epreuve : resoudre ${T} a ${L} sans faire appel a personne d'autre.`,
+    en:(n,T,S_,L)=>`${n} puts you to the test: resolve ${T} in ${L} without calling on anyone else.` },
+  { fr:(n,T,S_,L)=>`Face a ${T} qui menace ${S_}, ${n} te propose une alliance temporaire a ${L}.`,
+    en:(n,T,S_,L)=>`Facing ${T} threatening ${S_}, ${n} offers you a temporary alliance in ${L}.` },
+  { fr:(n,T,S_,L)=>`Une rumeur circule : ${n} serait implique dans ${T} a ${L}. La verite pourrait tout changer entre vous.`,
+    en:(n,T,S_,L)=>`A rumor is spreading: ${n} may be involved in ${T} in ${L}. The truth could change everything between you.` },
+  { fr:(n,T,S_,L)=>`${n} te demande une faveur delicate liee a ${T}, qui pourrait redefinir votre relation.`,
+    en:(n,T,S_,L)=>`${n} asks you for a delicate favor related to ${T}, which could redefine your relationship.` },
+  { fr:(n,T,S_,L)=>`A ${L}, ${n} affronte seul(e) ${T}. Le temps presse si tu veux l'aider... ou en profiter.`,
+    en:(n,T,S_,L)=>`In ${L}, ${n} is facing ${T} alone. Time is short if you want to help... or take advantage.` },
+  { fr:(n,T,S_,L)=>`Un choix cornelien : aider ${n} a contenir ${T}, ou saisir ${S_} pour toi-meme.`,
+    en:(n,T,S_,L)=>`A gut-wrenching choice: help ${n} contain ${T}, or seize ${S_} for yourself.` },
+  { fr:(n,T,S_,L)=>`${n} t'envoie un message crypte depuis ${L} : ${T} est bien plus grave qu'il n'y parait.`,
+    en:(n,T,S_,L)=>`${n} sends you an encrypted message from ${L}: ${T} is far more serious than it appears.` },
+  { fr:(n,T,S_,L)=>`Le passe de ${n} refait surface a ${L}, entremele a ${T}. Certaines verites sont difficiles a entendre.`,
+    en:(n,T,S_,L)=>`${n}'s past resurfaces in ${L}, tangled up with ${T}. Some truths are hard to hear.` },
+];
+function generateSignatureMission(rank){
+  const charKey = pick(Object.keys(CHARACTERS));
+  const c = CHARACTERS[charKey];
+  const roleT = pick(SIGNATURE_ROLE_TEMPLATES);
+  const threat = pick(THREATS), stakes = pick(STAKES), locName = randLocationName();
+  const type = pick(['combat','combat','rescue','social']);
+  const scope = pickScopeForRank(rank);
+  const danger = dangerForScope(scope, type);
+  const fr = roleT.fr(c.fr, threat.fr, stakes.fr, locName);
+  const en = roleT.en(c.en, threat.en, stakes.en, locName);
+  const dirSign = c.align==='hero' ? 1 : (c.align==='villain' ? -1 : (Math.random()<0.5?1:-1));
+  const choices = [
+    { fr:`Te ranger sans hesiter aux cotes de ${c.fr}.`, en:`Stand without hesitation by ${c.en}'s side.`,
+      eff:{ align: dirSign*randInt(7,12), courage:randInt(3,7), rel:{[charKey]: randInt(4,7)} } },
+    { fr:`Aider ${c.fr}, tout en gardant tes distances.`, en:`Help ${c.en}, while keeping your distance.`,
+      eff:{ align: dirSign*randInt(2,5), intelligence:randInt(3,7), rel:{[charKey]: randInt(1,3)} } },
+    { fr:`Profiter de la situation de ${c.fr} a ton propre avantage.`, en:`Use ${c.en}'s situation to your own advantage.`,
+      eff:{ align: -dirSign*randInt(6,11), popularity:-randInt(2,6), rel:{[charKey]: -randInt(4,8)} } },
+  ];
+  return { id:'gensig', generated:true, signature:true, type, danger, scope, charKey,
+    tagFr:'Personnage', tagEn:'Character arc', fr, en, choices, location:{ name: locName, type: scope } };
+}
+
+/* ---------- Pivotal missions: rare, dramatic, can flip your entire alignment in one choice ---------- */
+const PIVOTAL_MISSIONS = [
+  { tagFr:'Moment decisif', tagEn:'Decisive moment',
+    fr:"Une organisation rivale t'offre une occasion unique de tout changer : renier ton parcours actuel, pour de bon.", en:"A rival organization offers you a one-time chance to completely change course - for good.",
+    choices:[
+      { fr:"Tout abandonner et basculer entierement de l'autre cote.", en:"Abandon everything and switch sides completely.", eff:{flip:true, magnitude:55} },
+      { fr:"Refuser categoriquement - ta voie est deja tracee.", en:"Refuse categorically - your path is already set.", eff:{reinforce:true, magnitude:14} },
+      { fr:"Rester dans l'incertitude, sans t'engager ni d'un cote ni de l'autre.", en:"Stay uncertain, committing to neither side.", eff:{balance:true, magnitude:12} },
+    ]},
+  { tagFr:'Moment decisif', tagEn:'Decisive moment',
+    fr:"Face a une perte immense, tu te retrouves a un carrefour : la personne que tu etais pourrait ne plus exister demain.", en:"Facing an immense loss, you stand at a crossroads: the person you were might not exist tomorrow.",
+    choices:[
+      { fr:"Laisser cette epreuve te transformer completement.", en:"Let this ordeal transform you completely.", eff:{flip:true, magnitude:50} },
+      { fr:"Puiser dans tes convictions pour rester toi-meme, plus fort(e) que jamais.", en:"Draw on your convictions to remain yourself, stronger than ever.", eff:{reinforce:true, magnitude:16} },
+      { fr:"Prendre du recul et ne rien decider pour l'instant.", en:"Step back and decide nothing for now.", eff:{balance:true, magnitude:10} },
+    ]},
+  { tagFr:'Moment decisif', tagEn:'Decisive moment',
+    fr:"On te propose un marche qui reglerait tous tes problemes d'un coup, au prix de tout ce que tu defendais jusque-la.", en:"You're offered a deal that would solve every problem at once, at the cost of everything you once stood for.",
+    choices:[
+      { fr:"Accepter sans regarder en arriere.", en:"Accept without looking back.", eff:{flip:true, magnitude:58} },
+      { fr:"Rejeter l'offre avec force, quel qu'en soit le cout.", en:"Reject the offer forcefully, whatever the cost.", eff:{reinforce:true, magnitude:15} },
+      { fr:"Demander du temps pour reflechir - une esquive prudente.", en:"Ask for time to think it over - a cautious dodge.", eff:{balance:true, magnitude:11} },
+    ]},
+  { tagFr:'Moment decisif', tagEn:'Decisive moment',
+    fr:"Un ancien allie te met au defi de prouver, une fois pour toutes, de quel cote tu te trouves vraiment.", en:"A former ally challenges you to prove, once and for all, which side you're truly on.",
+    choices:[
+      { fr:"Le surprendre completement en changeant de camp devant lui.", en:"Completely surprise him by switching sides in front of him.", eff:{flip:true, magnitude:48} },
+      { fr:"Affirmer ta position avec une clarte inebranlable.", en:"State your position with unshakeable clarity.", eff:{reinforce:true, magnitude:13} },
+      { fr:"Refuser de te laisser enfermer dans une case.", en:"Refuse to be boxed into a label.", eff:{balance:true, magnitude:9} },
+    ]},
+  { tagFr:'Moment decisif', tagEn:'Decisive moment',
+    fr:"Une revelation choquante sur les origines de Volt Industries remet en question tout ce que tu croyais savoir.", en:"A shocking revelation about Volt Industries' origins calls everything you believed into question.",
+    choices:[
+      { fr:"Laisser cette trahison te pousser definitivement de l'autre cote.", en:"Let this betrayal push you decisively to the other side.", eff:{flip:true, magnitude:52} },
+      { fr:"Choisir de continuer a croire en ce que tu batis, malgre tout.", en:"Choose to keep believing in what you're building, despite everything.", eff:{reinforce:true, magnitude:14} },
+      { fr:"Prendre de la distance avec toutes les organisations, pour l'instant.", en:"Distance yourself from every organization, for now.", eff:{balance:true, magnitude:13} },
+    ]},
+];
+
+/* ---------- Breakthrough missions: a huge one-shot opportunity to leap several ranks at once ---------- */
+const BREAKTHROUGH_MISSIONS = [
+  { tagFr:'Opportunite rare', tagEn:'Rare opportunity',
+    fr:"Une occasion inespere se presente : une operation d'une ampleur inedite, capable de transformer ta reputation du jour au lendemain.", en:"An unexpected opening appears: an operation of unprecedented scale, able to transform your reputation overnight.",
+    choices:[
+      { fr:"Tout miser dessus, sans filet de securite.", en:"Bet everything on it, with no safety net.", eff:{reinforce:true, magnitude:38} },
+      { fr:"Avancer, mais en gardant une marge de securite.", en:"Move forward, but keep a safety margin.", eff:{reinforce:true, magnitude:14} },
+      { fr:"Decliner - le risque te semble disproportionne.", en:"Decline - the risk seems disproportionate.", eff:{align:1} },
+    ]},
+  { tagFr:'Opportunite rare', tagEn:'Rare opportunity',
+    fr:"Les circonstances s'alignent parfaitement pour une action d'eclat qui pourrait definir le reste de ta carriere.", en:"Circumstances align perfectly for a decisive action that could define the rest of your career.",
+    choices:[
+      { fr:"Foncer tete baissee vers ce coup d'eclat.", en:"Charge headlong into this defining moment.", eff:{reinforce:true, magnitude:34} },
+      { fr:"Preparer soigneusement chaque etape avant d'agir.", en:"Carefully prepare each step before acting.", eff:{reinforce:true, magnitude:12} },
+      { fr:"Laisser passer cette chance, trop incertaine a ton gout.", en:"Let this chance pass - too uncertain for your taste.", eff:{align:1} },
+    ]},
+  { tagFr:'Opportunite rare', tagEn:'Rare opportunity',
+    fr:"Un evenement majeur retient l'attention du monde entier. C'est l'occasion ou jamais de marquer les esprits durablement.", en:"A major event has the whole world's attention. It's now or never to leave a lasting mark.",
+    choices:[
+      { fr:"Saisir ce moment a bras le corps, quelles qu'en soient les consequences.", en:"Seize this moment fully, whatever the consequences.", eff:{reinforce:true, magnitude:40} },
+      { fr:"Participer avec mesure, sans t'exposer outre mesure.", en:"Take part with measure, without overexposing yourself.", eff:{reinforce:true, magnitude:15} },
+      { fr:"Rester en retrait et observer les autres agir.", en:"Stay back and watch others act.", eff:{align:0} },
+    ]},
+];
+const MENTOR_MISSIONS = [
+  { id:'mentor_rigueur', tagFr:'Formation', tagEn:'Training', fr:"{name}, une jeune recrue pleine de promesses, rejoint Volt Industries sous ta tutelle.", en:"{name}, a promising young recruit, joins Volt Industries under your mentorship.",
+    choices:[
+      { fr:"La former avec rigueur, discipline et exigence.", en:"Train her with rigor, discipline and high standards.", eff:{align:3, intelligence:3}, recruit:'hero' },
+      { fr:"La laisser experimenter librement, sans trop encadrer.", en:"Let her experiment freely, without much oversight.", eff:{align:-2}, recruit:'villain' },
+      { fr:"Deleguer sa formation, trop occupe par tes propres exploits.", en:"Delegate her training, too busy with your own exploits.", eff:{popularity:-1}, recruit:'neutral' },
+    ]},
+  { id:'mentor_epreuve', tagFr:'Formation', tagEn:'Training', fr:"{name} echoue une epreuve difficile et perd confiance en elle-meme.", en:"{name} fails a difficult trial and loses confidence in herself.",
+    choices:[
+      { fr:"La soutenir personnellement, quitte a y consacrer beaucoup de temps.", en:"Support her personally, even if it takes a lot of your time.", eff:{align:4, courage:2}, recruit:'hero' },
+      { fr:"L'envoyer seule sur une mission a haut risque pour l'endurcir.", en:"Send her alone on a high-risk mission to toughen her up.", eff:{align:-3}, recruit:'died' },
+      { fr:"La laisser abandonner son entrainement.", en:"Let her drop out of her training.", eff:{}, recruit:'neutral' },
+    ]},
+  { id:'mentor_tentation', tagFr:'Formation', tagEn:'Training', fr:"{name} est approchee en secret par PERDITION, qui lui promet un raccourci vers le pouvoir.", en:"{name} is secretly approached by PERDITION, promising her a shortcut to power.",
+    choices:[
+      { fr:"La mettre en garde et renforcer son lien avec Volt Industries.", en:"Warn her and strengthen her bond with Volt Industries.", eff:{align:5, rel:{volt:2}}, recruit:'hero' },
+      { fr:"Ignorer les signes avant-coureurs, trop pris par autre chose.", en:"Ignore the warning signs, too caught up in other things.", eff:{align:-4}, recruit:'villain' },
+      { fr:"La confronter durement, au risque de la braquer.", en:"Confront her harshly, risking pushing her away.", eff:{align:1}, recruit:'neutral' },
+    ]},
+];
+
+/* ============================ CONVERSATIONS ============================ */
+const CONVERSATIONS = [
+  { id:'conv_volt', charKey:'volt',
+    linesFr:["Cassius Volt t'observe un instant. \"Tu progresses vite. Trop vite, peut-etre.\"","\"Le pouvoir sans responsabilite finit toujours par se retourner contre son porteur.\""],
+    linesEn:["Cassius Volt watches you for a moment. \"You're progressing fast. Maybe too fast.\"","\"Power without responsibility always turns on its bearer eventually.\""],
+    choices:[
+      { fr:"Le remercier pour son conseil et t'engager a etre prudent.", en:"Thank him for the advice and commit to being careful.", eff:{align:5, rel:{volt:4}} },
+      { fr:"Lui repondre que tu n'as besoin des conseils de personne.", en:"Tell him you don't need anyone's advice.", eff:{courage:3, rel:{volt:-3}} },
+      { fr:"Ecouter poliment, sans vraiment l'ecouter.", en:"Listen politely, without really taking it in.", eff:{rel:{volt:-1}} },
+    ]},
+  { id:'conv_marsh', charKey:'marsh',
+    linesFr:["Le Dr Elena Marsh consulte ton dossier avec inquietude. \"Tes rapports de mission deviennent de plus en plus risques.\"","\"Je ne te juge pas. Je veux juste m'assurer que tu tiens le coup.\""],
+    linesEn:["Dr. Elena Marsh reviews your file with concern. \"Your mission reports are getting riskier and riskier.\"","\"I'm not judging you. I just want to make sure you're holding up.\""],
+    choices:[
+      { fr:"Te confier sincerement sur tes doutes.", en:"Open up honestly about your doubts.", eff:{align:6, intelligence:2, rel:{marsh:5}} },
+      { fr:"La rassurer d'un ton detache.", en:"Reassure her in a detached tone.", eff:{rel:{marsh:1}} },
+      { fr:"Lui dire de se meler de ses affaires.", en:"Tell her to mind her own business.", eff:{align:-3, rel:{marsh:-4}} },
+    ]},
+  { id:'conv_vaelor', charKey:'vaelor',
+    linesFr:["Vaelor Skoll te rejoint sur le toit de Volt Industries, le regard tourne vers le ciel. \"Dans mon royaume, la survie exigeait le sacrifice permanent.\"","\"Je me demande parfois si votre monde comprend vraiment ce que cela coute.\""],
+    linesEn:["Vaelor Skoll joins you on the Volt Industries rooftop, eyes on the sky. \"In my realm, survival demanded constant sacrifice.\"","\"I sometimes wonder if your world truly understands what that costs.\""],
+    choices:[
+      { fr:"Lui promettre de porter ce fardeau a ses cotes.", en:"Promise to carry that burden alongside him.", eff:{align:5, courage:3, rel:{vaelor:5}} },
+      { fr:"Questionner la sagesse de ses methodes.", en:"Question the wisdom of his methods.", eff:{intelligence:3, rel:{vaelor:-2}} },
+      { fr:"Tourner sa grandiloquence en derision.", en:"Mock his grandiosity.", eff:{align:-4, rel:{vaelor:-5}} },
+    ]},
+  { id:'conv_nyx', charKey:'nyx',
+    linesFr:["Nyx apparait sans bruit derriere toi. \"J'ai decouvert quelque chose de compromettant sur un membre du conseil. Je ne sais pas encore quoi en faire.\"","\"Tu es la seule personne en qui j'ai encore confiance ici.\""],
+    linesEn:["Nyx appears silently behind you. \"I found something compromising about a council member. I don't know what to do with it yet.\"","\"You're the only person here I still trust.\""],
+    choices:[
+      { fr:"Garder le secret avec elle, quoi qu'il arrive.", en:"Keep the secret with her, whatever happens.", eff:{rel:{nyx:6}} },
+      { fr:"L'encourager a remonter l'information officiellement.", en:"Encourage her to report it officially.", eff:{align:4, rel:{nyx:-1}} },
+      { fr:"Lui proposer d'utiliser cette information a votre avantage.", en:"Suggest using the information to your advantage.", eff:{align:-8, intelligence:3, rel:{nyx:-5}} },
+    ]},
+  { id:'conv_malachar', charKey:'malachar',
+    linesFr:["Malachar le Sans-Dieu t'aborde dans un silence pesant. \"J'ai perdu tout ce qui comptait pour moi, et personne n'a repondu de rien.\"","\"Dis-moi honnetement : que ferais-tu, a ma place ?\""],
+    linesEn:["Malachar the Godless approaches you in heavy silence. \"I lost everything that mattered, and no one answered for it.\"","\"Tell me honestly: what would you do, in my place?\""],
+    choices:[
+      { fr:"Lui offrir une sincere compassion.", en:"Offer him sincere compassion.", eff:{align:6, rel:{malachar:5}} },
+      { fr:"Lui rappeler que la vengeance ne repare rien.", en:"Remind him that vengeance repairs nothing.", eff:{courage:2, rel:{malachar:-3}} },
+      { fr:"Admettre que tu ressens la meme rage que lui.", en:"Admit you feel the same rage he does.", eff:{align:-9, rel:{malachar:7}} },
+    ]},
+  { id:'conv_mandate', charKey:'mandate',
+    linesFr:["Le Mandat t'intercepte discretement, un sourire calcule aux levres. \"Mon offre tient toujours. Reflechis bien avant de refuser une seconde fois.\"","\"Le monde recompense ceux qui savent saisir leur chance.\""],
+    linesEn:["The Mandate discreetly intercepts you, a calculated smile on his lips. \"My offer still stands. Think carefully before refusing a second time.\"","\"The world rewards those who know how to seize their chance.\""],
+    choices:[
+      { fr:"Refuser fermement, sans laisser place au doute.", en:"Refuse firmly, leaving no room for doubt.", eff:{align:6, rel:{mandate:-5}} },
+      { fr:"Rester volontairement ambigu.", en:"Stay deliberately ambiguous.", eff:{intelligence:3, rel:{mandate:2}} },
+      { fr:"Accepter discretement, sans que personne ne le sache.", en:"Quietly accept, with no one the wiser.", eff:{align:-10, rel:{mandate:7}} },
+    ]},
+  { id:'conv_lorelei', charKey:'lorelei',
+    linesFr:["Lorelei surgit, amusee, dans un jeu de reflets. \"Dis-moi, entre nous : agis-tu vraiment par conviction, ou par habitude ?\"","\"J'adore observer les gens se mentir a eux-memes.\""],
+    linesEn:["Lorelei appears, amused, in a play of reflections. \"Tell me, just between us: do you act from real conviction, or out of habit?\"","\"I love watching people lie to themselves.\""],
+    choices:[
+      { fr:"Jouer le jeu avec elle, avec humour.", en:"Play along with her, playfully.", eff:{intelligence:3, rel:{lorelei:4}} },
+      { fr:"Refuser de te laisser deconcentrer par ses provocations.", en:"Refuse to be thrown off by her provocations.", eff:{align:3} },
+      { fr:"Essayer de retourner la manipulation contre elle.", en:"Try to turn the manipulation back on her.", eff:{align:-3, intelligence:2, rel:{lorelei:3}} },
+    ]},
+  { id:'conv_obsidian', charKey:'obsidian',
+    linesFr:["Obsidian t'aborde avec un sourire condescendant. \"Tes petits exploits font parler, mais on sait tous les deux qui a vraiment de l'imagination ici.\"","\"J'attends de voir combien de temps ta chance va durer.\""],
+    linesEn:["Obsidian approaches with a condescending smile. \"Your little exploits get talked about, but we both know who actually has vision here.\"","\"I'm waiting to see how long your luck lasts.\""],
+    choices:[
+      { fr:"Rester professionnel et courtois malgre la provocation.", en:"Stay professional and courteous despite the provocation.", eff:{align:4, popularity:2} },
+      { fr:"Le defier ouvertement sur le terrain de l'innovation.", en:"Openly challenge him on innovation.", eff:{intelligence:4, rel:{obsidian:-2}} },
+      { fr:"Detruire publiquement sa credibilite.", en:"Publicly destroy his credibility.", eff:{align:-6, popularity:3, rel:{obsidian:-7}} },
+    ]},
+];
+
+const LOC_A = ['Nova','Astra','Vex','Kaer','Sol','Umbra','Lys','Drak','Zeph','Ilya','Cor','Thal','Bryn','Oster','Val','Mira','Iron','Sil'];
+const LOC_B = ['opolis','andra','ovia','ith','burg','mere','vane','stead','horn','dor','wyn','grad','fell','sen','mont','haven','cite','port'];
+function randLocationName(){ return LOC_A[Math.floor(Math.random()*LOC_A.length)] + LOC_B[Math.floor(Math.random()*LOC_B.length)]; }
+const SCOPE_TIERS = [
+  null,
+  { fr:'Quartier', en:'Neighborhood' },
+  { fr:'Ville', en:'City' },
+  { fr:'Pays', en:'Country' },
+  { fr:'Continent', en:'Continent' },
+  { fr:'Monde', en:'World' },
+  { fr:'Systeme', en:'System' },
+  { fr:'Cosmique', en:'Cosmic' },
+];
+function scopeLabel(level){ const s = SCOPE_TIERS[clamp(level,1,7)]; return S.lang==='fr'?s.fr:s.en; }
+function locTypeLabel(level){ return scopeLabel(level); }
+const RECRUIT_NAMES = ['Kess','Bren','Toria','Mira','Jace','Lior','Sena','Ruven','Talia','Dorin','Nyle','Ashka','Corin','Vesper','Halo','Ombre'];
+function randRecruitName(){ return RECRUIT_NAMES[Math.floor(Math.random()*RECRUIT_NAMES.length)]; }
+const DEATH_CAUSES = {
+  fr:[ "ecrase(e) par un pan de mur effondre", "frappe(e) par une pierre tombee d'un immeuble en ruine", "victime d'une surcharge energetique non maitrisee",
+       "tombe(e) d'une hauteur fatale lors d'une poursuite", "pris(e) au piege dans une explosion secondaire", "abattu(e) lors d'une embuscade mal anticipee" ],
+  en:[ "crushed by a collapsing wall", "struck by a falling stone from a ruined building", "killed by an uncontrolled energy overload",
+       "fell from a fatal height during a chase", "caught in a secondary explosion", "cut down in a poorly anticipated ambush" ]
+};
+
+/* ============================ PRESETS ============================ */
+const PRESETS = [
+  { id:'colosse', nameFr:'Le Colosse', nameEn:'The Colossus', heroFr:'Titan', heroEn:'Titan', morphology:'colosse', path:'physique', powers:['force','regen'],
+    look:{ helmet:'none', cape:false, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#6fae63', secondaryColor:'#2b2b2b', symbol:'' },
+    align:5, descFr:'Une masse musculaire increvable, la peau teintee, aux poings devastateurs.', descEn:'An unbreakable wall of muscle, tinted skin, devastating fists.' },
+  { id:'armure', nameFr:"L'Armure Ultime", nameEn:'The Ultimate Armor', heroFr:'Vulcain', heroEn:'Vulcan', morphology:'armure', path:'tech', powers:['armure','rayons'],
+    look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#ff3b1f', secondaryColor:'#ffd23f', symbol:'VLC' },
+    align:15, descFr:'Un exosquelette blinde de pointe, propulseurs et rayons integres.', descEn:'A cutting-edge armored exosuit, built-in thrusters and blasters.' },
+  { id:'ombre', nameFr:"L'Ombre Silencieuse", nameEn:'The Silent Shadow', heroFr:'Voile', heroEn:'Veil', morphology:'elance', path:'psychique', powers:['telepathie','telekinesie'],
+    look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'standard', aura:'dark', weapon:'sword', suitColor:'#1c1c26', secondaryColor:'#7a5cff', symbol:'' },
+    align:-5, descFr:'Une tacticienne insaisissable qui joue sur les esprits plus que sur la force.', descEn:'An elusive tactician who plays minds rather than muscle.' },
+  { id:'sorciere', nameFr:'La Sorciere Elementaire', nameEn:'The Elemental Witch', heroFr:'Ignea', heroEn:'Ignea', morphology:'humain', path:'mystique', powers:['elementaire','illusions'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'spear', suitColor:'#7b2ff7', secondaryColor:'#ff9d3f', symbol:'' },
+    align:10, descFr:"Feu, glace et illusions au service d'une magie flamboyante.", descEn:'Fire, ice and illusions serving a flamboyant magic.' },
+  { id:'spectre', nameFr:'Le Spectre', nameEn:'The Spectre', heroFr:'Brume', heroEn:'Wraith', morphology:'spectral', path:'mystique', powers:['portails','illusions'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'none', boots:'none', aura:'dark', weapon:'none', suitColor:'#8ea0ff', secondaryColor:'#e6e9ff', symbol:'' },
+    align:-10, descFr:'A peine ancre dans le reel, il traverse murs et frontieres.', descEn:'Barely anchored in reality, passing through walls and borders.' },
+  { id:'foudre', nameFr:'La Foudre', nameEn:'The Lightning', heroFr:'Zephyra', heroEn:'Zephyra', morphology:'elance', path:'physique', powers:['vitesse','force'],
+    look:{ helmet:'none', cape:false, glasses:'aviator', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#00c2ff', secondaryColor:'#ffffff', symbol:'ZPH' },
+    align:20, descFr:'Plus rapide que le regard, elle frappe et disparait.', descEn:'Faster than the eye, she strikes and vanishes.' },
+  { id:'tacticien', nameFr:'Le Tacticien', nameEn:'The Tactician', heroFr:'Sentinel', heroEn:'Sentinel', morphology:'humain', path:'tech', powers:['ia','rayons'],
+    look:{ helmet:'visor', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'shield', suitColor:'#2c3e66', secondaryColor:'#c0c8d8', symbol:'SNT' },
+    align:8, descFr:'Un strategiste froid, appuye par une IA de combat redoutable.', descEn:'A cold strategist, backed by a formidable combat AI.' },
+  { id:'titan_cosmique', nameFr:'Le Titan Cosmique', nameEn:'The Cosmic Titan', heroFr:'Aetherion', heroEn:'Aetherion', morphology:'colosse', path:'mystique', powers:['elementaire','portails'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'spear', suitColor:'#1fd6c4', secondaryColor:'#ffd23f', symbol:'' },
+    align:0, descFr:'Une entite cosmique gigantesque, aux pouvoirs a peine maitrises.', descEn:'A gigantic cosmic entity, its powers barely under control.' },
+  { id:'renegate', nameFr:'La Renegate', nameEn:'The Renegade', heroFr:'Ecarlate', heroEn:'Scarlet', morphology:'elance', path:'psychique', powers:['telekinesie','projection'],
+    look:{ helmet:'none', cape:false, glasses:'none', gloves:'claws', boots:'standard', aura:'dark', weapon:'sword', suitColor:'#8a0f2a', secondaryColor:'#1a1a1a', symbol:'' },
+    align:-25, descFr:'Trahie par ses pairs, elle a choisi sa propre voie, sombre et solitaire.', descEn:'Betrayed by her peers, she chose her own dark, solitary path.' },
+  { id:'boss', nameFr:'Le Boss Final', nameEn:'The Final Boss', heroFr:'Dominus', heroEn:'Dominus', morphology:'armure', path:'physique', powers:['force','vitesse'],
+    look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'dark', weapon:'spear', suitColor:'#161616', secondaryColor:'#ff3b5c', symbol:'DOM' },
+    align:-45, descFr:'Concu pour incarner immediatement une figure de fleau redoutable et surpuissante.', descEn:'Designed to immediately embody a formidable, overpowered menace.' },
+];
+
+/* ============================ STATE ============================ */
+function freshState(lang){
+  return {
+    lang: lang||'fr', screen:'welcome', civilName:'', heroName:'', usingPreset:false, startSide:'neutral',
+    look:{ morphology:'humain', helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3aa7ff', secondaryColor:'#ffffff', symbol:'' },
+    path:null, powers:[], mode:null, years:10, missionsPlan:[],
+    stats:{ courage:50, intelligence:50, popularity:50 }, align:0, initialAlignMagnitude:0, reputationFloor:0, lastZone:'neutral',
+    rel:{ volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 },
+    currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], currentMission:null, log:[],
+    team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
+    combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
+    turningPoints:[], yearsHistory:[], currentYearEntries:[],
+    dead:false, deathInfo:null,
+    activeConversation:null, convLineIndex:0, usedConvIds:[],
+    lastStars:1, savedToHistory:false,
+  };
+}
+let S = freshState('fr');
+function t(key){ return T[S.lang][key]; }
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function computePowerLevel(){
+  const base = 12 + S.powers.length*6;
+  const statBonus = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/9);
+  const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
+  return clamp(base+statBonus+growth,1,100);
+}
+function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
+function heroVillainScore(){ return Math.round(clamp(Math.abs(S.align),0,100)); }
+function reputationCap(){ return clamp((S.reputationFloor||0) + S.totalMissionsDone * 6, 0, 100); }
+function clampToReputation(v){ const cap = reputationCap(); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
+function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
+function computeStars(){ const score = heroVillainScore(); return Math.max(1, Math.min(7, Math.round(score/100*7))); }
+
+/* ============================ RENDER ============================ */
+const app = document.getElementById('app');
+function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
+function render(){
+  applyTheme();
+  app.innerHTML = '';
+  app.appendChild(topbar());
+  renderRankBadge();
+  if(shouldShowSidebar()){
+    const shell = document.createElement('div'); shell.className='game-shell';
+    const side = document.createElement('div'); side.className='side-avatar'; side.innerHTML = sideAvatarPanel();
+    const main = document.createElement('div'); main.className='main-col';
+    const card = document.createElement('div'); card.className='card'; card.appendChild(screenContent());
+    main.appendChild(card);
+    shell.appendChild(side); shell.appendChild(main);
+    app.appendChild(shell);
+  } else {
+    const card = document.createElement('div'); card.className='card'; card.appendChild(screenContent());
+    app.appendChild(card);
+  }
+  const foot = document.createElement('footer'); foot.className='mini';
+  foot.textContent = S.lang==='fr' ? "VOLT INDUSTRIES - univers de fiction original" : "VOLT INDUSTRIES - original fictional universe";
+  app.appendChild(foot);
+  scheduleSaveGame();
+}
+let _saveTimer = null;
+function scheduleSaveGame(){
+  if(!window.storage) return;
+  if(!['mission','mentor','yearbreak','invite','summary'].includes(S.screen)) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(()=>{ saveGameState(); }, 400);
+}
+async function saveGameState(){
+  if(!window.storage) return;
+  try{ await window.storage.set('currentGame', JSON.stringify(S), false); }catch(e){ /* storage unavailable */ }
+}
+async function loadGameState(){
+  if(!window.storage) return null;
+  try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? JSON.parse(r.value) : null; }
+  catch(e){ return null; }
+}
+async function clearGameState(){
+  if(!window.storage) return;
+  try{ await window.storage.delete('currentGame', false); }catch(e){ /* nothing to clear */ }
+}
+function renderRankBadge(){
+  let el = document.getElementById('rankBadgeFixed');
+  if(!shouldShowSidebar()){ if(el) el.remove(); return; }
+  if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); }
+  const zone = zoneOf(S.align);
+  const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
+  const stars = computeStars();
+  const score = heroVillainScore();
+  const starColor = zone==='hero' ? '#ffd23f' : (zone==='villain' ? 'var(--red)' : '#b98bff');
+  let starsHtml = ''; for(let i=1;i<=7;i++){ starsHtml += `<span style="color:${i<=stars?starColor:'rgba(255,255,255,.15)'}">&#9733;</span>`; }
+  const factionHtml = S.team ? `<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
+      <span style="font-size:10px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
+      <div style="width:24px;height:24px;">${factionEmblemSVG(S.team.side, S.team.tier, 24)}</div>
+    </div>` : '';
+  el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span></div>${factionHtml}`;
+  if(stars > S.lastStars){ showRankUpToast(stars, zone); }
+  S.lastStars = stars;
+}
+function showRankUpToast(stars, zone){
+  const old = document.getElementById('rankUpToast'); if(old) old.remove();
+  const color = zone==='villain' ? 'var(--red)' : (zone==='hero' ? '#ffd23f' : '#b98bff');
+  const toast = document.createElement('div'); toast.id='rankUpToast'; toast.className='rankup-toast';
+  toast.style.setProperty('--toast-color', color);
+  toast.innerHTML = `<div class="ru-title">${S.lang==='fr'?'PORTEE ETENDUE':'REACH EXPANDED'}</div><div class="ru-sub">${scopeLabel(stars)}</div>`;
+  document.body.appendChild(toast);
+  setTimeout(()=>{ toast.classList.add('fadeout'); setTimeout(()=>toast.remove(), 700); }, 3200);
+}
+function showExpelToast(facName){
+  const old = document.getElementById('rankUpToast'); if(old) old.remove();
+  const toast = document.createElement('div'); toast.id='rankUpToast'; toast.className='rankup-toast';
+  toast.style.setProperty('--toast-color', 'var(--red)');
+  toast.innerHTML = `<div class="ru-title">${S.lang==='fr'?'EXCLUSION':'EXPELLED'}</div><div class="ru-sub">${facName}</div>`;
+  document.body.appendChild(toast);
+  setTimeout(()=>{ toast.classList.add('fadeout'); setTimeout(()=>toast.remove(), 700); }, 3600);
+}
+function checkFactionExpulsion(){
+  if(!S.team) return false;
+  const zone = zoneOf(S.align); const stars = computeStars();
+  let expelled = false, reasonBetrayal = false;
+  if(zone !== 'neutral' && zone !== S.team.side){ expelled = true; reasonBetrayal = true; }
+  else if(stars < S.team.tier - 1){ expelled = true; }
+  if(!expelled) return false;
+  const facName = factionName(S.team.side, S.team.tier);
+  const label = reasonBetrayal
+    ? (S.lang==='fr' ? `${facName} t'a exclu(e) sans appel apres ta trahison.` : `${facName} expelled you without appeal after your betrayal.`)
+    : (S.lang==='fr' ? `${facName} t'a discretement ecarte(e), jugeant que tu n'etais plus a la hauteur.` : `${facName} quietly cut you loose, deeming you no longer up to standard.`);
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: S.team.side==='villain' });
+  const key = S.team.side==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
+  S[key] = Math.max(0, S.team.tier - 2);
+  S.team = null;
+  showExpelToast(facName);
+  renderRankBadge();
+  const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
+  return true;
+}
+function wordmarkLogoSVG(heightPx){
+  const uid = 'wm'+Math.random().toString(36).slice(2,7);
+  const w = Math.round(heightPx*1.85);
+  return `<svg width="${w}" height="${heightPx}" viewBox="0 0 185 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="${uid}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent-dark)"/></linearGradient>
+      <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <text x="4" y="56" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" font-size="52" letter-spacing="-1" fill="url(#${uid}g)" filter="url(#${uid}f)">VOLT</text>
+    <text x="8" y="82" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-style="italic" font-size="17" letter-spacing="7" fill="url(#${uid}g)">INDUSTRIES</text>
+    <line x1="4" y1="88" x2="181" y2="88" stroke="url(#${uid}g)" stroke-width="2.5" opacity="0.8"/>
+  </svg>`;
+}
+function topbar(){
+  const bar = document.createElement('div'); bar.className='topbar';
+  bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(52)}</div>
+    <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>`;
+  bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
+  bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
+  return bar;
+}
+function screenContent(){
+  const wrap = document.createElement('div');
+  const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, end:screenEnd };
+  wrap.appendChild(map[S.screen]());
+  return wrap;
+}
+
+/* ---------- Avatar (proportioned silhouette, rim-lit, holographic) ---------- */
+function morphConfig(m){
+  const cfgs = {
+    humain:  { shoulderW:96,  waistW:58, hipW:72, torsoH:130, limbW:20, headR:32, legLen:150, opacity:1,   blocky:false, skinBody:false, ghost:false },
+    colosse: { shoulderW:134, waistW:80, hipW:94, torsoH:140, limbW:34, headR:34, legLen:150, opacity:1,   blocky:false, skinBody:true,  ghost:false },
+    armure:  { shoulderW:114, waistW:70, hipW:88, torsoH:138, limbW:27, headR:36, legLen:150, opacity:1,   blocky:true,  skinBody:false, ghost:false },
+    spectral:{ shoulderW:82,  waistW:50, hipW:60, torsoH:126, limbW:16, headR:30, legLen:140, opacity:0.5, blocky:false, skinBody:false, ghost:true },
+    elance:  { shoulderW:78,  waistW:46, hipW:56, torsoH:124, limbW:14, headR:28, legLen:150, opacity:1,   blocky:false, skinBody:false, ghost:false },
+  };
+  return cfgs[m] || cfgs.humain;
+}
+function torsoPath(cx, top, shoulderW, waistW, hipW, h){
+  const hs=shoulderW/2, hw=waistW/2, hh=hipW/2, waistY=top+h*0.48, bottom=top+h;
+  return `M ${cx-hs} ${top}
+    C ${cx-hs} ${top+h*0.16} ${cx-hw} ${top+h*0.3} ${cx-hw} ${waistY}
+    C ${cx-hw} ${top+h*0.66} ${cx-hh} ${top+h*0.82} ${cx-hh} ${bottom}
+    L ${cx+hh} ${bottom}
+    C ${cx+hh} ${top+h*0.82} ${cx+hw} ${top+h*0.66} ${cx+hw} ${waistY}
+    C ${cx+hw} ${top+h*0.3} ${cx+hs} ${top+h*0.16} ${cx+hs} ${top} Z`;
+}
+function limbPath(cx, top, len, wTop, wBottom){
+  const rt=wTop/2, rb=wBottom/2, bottom=top+len;
+  return `M ${cx-rt} ${top+rt} A ${rt} ${rt} 0 0 1 ${cx+rt} ${top+rt}
+    L ${cx+rb} ${bottom-rb} A ${rb} ${rb} 0 0 1 ${cx-rb} ${bottom-rb} Z`;
+}
+function avatarSVG(){
+  const L = S.look; const cfg = morphConfig(L.morphology);
+  const primary = L.suitColor, secondary = L.secondaryColor;
+  const rgb = hexToRgb(primary);
+  const light = rgbToHex(rgb[0]+45, rgb[1]+45, rgb[2]+45), dark = rgbToHex(rgb[0]*0.42, rgb[1]*0.42, rgb[2]*0.42);
+  const pathColor = { tech:'#00e5ff', mystique:'#b98bff', physique:'#ffb020', psychique:'#37e6a8' }[S.path] || '#00e5ff';
+  const uid = 'g'+Math.random().toString(36).slice(2,7);
+  const cx=140, torsoTop=76, torsoBottom=torsoTop+cfg.torsoH;
+  const isArmure = L.morphology==='armure';
+  const helmet = isArmure ? 'full' : L.helmet;
+  const glasses = (helmet==='full') ? 'none' : L.glasses;
+  const symbol = (L.symbol||'').toUpperCase().slice(0,3);
+  const headCy = torsoTop - cfg.headR*1.15;
+  const totalH = torsoBottom + cfg.legLen + 46;
+  const rim = cfg.ghost ? 0 : 2.4;
+
+  let auraHtml = '';
+  if(L.aura==='flame'){ auraHtml = `<circle cx="${cx}" cy="${torsoTop+cfg.torsoH*0.45}" r="${cfg.shoulderW*0.95}" fill="#ff7a1f" opacity="0.12"><animate attributeName="r" values="${cfg.shoulderW*0.95};${cfg.shoulderW*1.2};${cfg.shoulderW*0.95}" dur="2.4s" repeatCount="indefinite"/></circle>`; }
+  else if(L.aura==='electric'){ auraHtml = `<circle cx="${cx}" cy="${torsoTop+cfg.torsoH*0.45}" r="${cfg.shoulderW*0.95}" fill="#00e5ff" opacity="0.1"><animate attributeName="opacity" values="0.05;0.18;0.05" dur="1s" repeatCount="indefinite"/></circle>`; }
+  else if(L.aura==='dark'){ auraHtml = `<circle cx="${cx}" cy="${torsoTop+cfg.torsoH*0.45}" r="${cfg.shoulderW*0.9}" fill="#5b2b8a" opacity="0.17"><animate attributeName="r" values="${cfg.shoulderW*0.9};${cfg.shoulderW*1.15};${cfg.shoulderW*0.9}" dur="3.2s" repeatCount="indefinite"/></circle>`; }
+
+  let weaponHtml = '';
+  if(L.weapon==='sword'){ weaponHtml = `<rect x="${cx+cfg.shoulderW/2+38}" y="${torsoTop+30}" width="7" height="96" rx="3" fill="${pathColor}" filter="url(#${uid}glow)" transform="rotate(16 ${cx+cfg.shoulderW/2+42} ${torsoTop+78})"/>`; }
+  else if(L.weapon==='shield'){ weaponHtml = `<ellipse cx="${cx-cfg.shoulderW/2-34}" cy="${torsoTop+70}" rx="19" ry="27" fill="${secondary}" stroke="${pathColor}" stroke-width="3"/>`; }
+  else if(L.weapon==='spear'){ weaponHtml = `<rect x="${cx+cfg.shoulderW/2+40}" y="${torsoTop-10}" width="5" height="160" fill="${secondary}"/><polygon points="${cx+cfg.shoulderW/2+42.5},${torsoTop-22} ${cx+cfg.shoulderW/2+35},${torsoTop-4} ${cx+cfg.shoulderW/2+50},${torsoTop-4}" fill="${pathColor}"/>`; }
+
+  const glovesR = L.gloves==='armored' ? (cfg.limbW*0.62) : (L.gloves==='claws' ? (cfg.limbW*0.42) : (cfg.limbW*0.5));
+  const armLen = cfg.torsoH*0.72, armTop = torsoTop+8;
+  const armLx = cx-cfg.shoulderW/2-cfg.limbW*0.35, armRx = cx+cfg.shoulderW/2+cfg.limbW*0.35;
+  const handY = armTop+armLen;
+  const glovesExtra = L.gloves==='claws' ? `<path d="M${armLx-9} ${handY} l-5 -9 M${armLx} ${handY+4} l-2 -11 M${armLx+9} ${handY} l5 -9" stroke="#e8e8e8" stroke-width="2" fill="none"/><path d="M${armRx-9} ${handY} l-5 -9 M${armRx} ${handY+4} l-2 -11 M${armRx+9} ${handY} l5 -9" stroke="#e8e8e8" stroke-width="2" fill="none"/>` : '';
+
+  const legTop = torsoBottom-8, legLx = cx-cfg.hipW*0.28, legRx = cx+cfg.hipW*0.28;
+  const footY = legTop+cfg.legLen;
+  const bootsFill = L.boots==='armored' ? dark : (L.boots==='none' ? '#e0b088' : dark);
+  const bootsRy = L.boots==='none' ? 8 : (L.boots==='armored' ? 13 : 10);
+  const bootsExtra = L.boots==='thruster' ? `<circle cx="${legLx}" cy="${footY+2}" r="5" fill="${pathColor}" opacity="0.9"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite"/></circle><circle cx="${legRx}" cy="${footY+2}" r="5" fill="${pathColor}" opacity="0.9"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.9s" repeatCount="indefinite"/></circle>` : '';
+
+  const legsBlock = cfg.ghost ? `
+    <path d="M${cx-cfg.hipW*0.42} ${torsoBottom-6} Q${cx-cfg.hipW*0.5} ${torsoBottom+cfg.legLen*0.6} ${cx} ${torsoBottom+cfg.legLen} Q${cx+cfg.hipW*0.5} ${torsoBottom+cfg.legLen*0.6} ${cx+cfg.hipW*0.42} ${torsoBottom-6} Z" fill="url(#${uid}suit)" opacity="0.45"/>` : `
+    <path d="${limbPath(legLx, legTop, cfg.legLen, cfg.limbW*1.5, cfg.limbW*1.0)}" fill="url(#${uid}suit)" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.55"/>
+    <path d="${limbPath(legRx, legTop, cfg.legLen, cfg.limbW*1.5, cfg.limbW*1.0)}" fill="url(#${uid}suit)" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.55"/>
+    <ellipse cx="${legLx}" cy="${footY}" rx="${cfg.limbW*0.85}" ry="${bootsRy}" fill="${bootsFill}"/>
+    <ellipse cx="${legRx}" cy="${footY}" rx="${cfg.limbW*0.85}" ry="${bootsRy}" fill="${bootsFill}"/>
+    ${bootsExtra}`;
+
+  return `<svg width="280" height="${Math.round(totalH*0.92)}" viewBox="0 0 280 ${totalH}" xmlns="http://www.w3.org/2000/svg" opacity="${cfg.opacity}">
+    <defs>
+      <linearGradient id="${uid}suit" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${light}"/><stop offset="50%" stop-color="${primary}"/><stop offset="100%" stop-color="${dark}"/></linearGradient>
+      <radialGradient id="${uid}skin" cx="35%" cy="30%" r="80%"><stop offset="0%" stop-color="#ffe0c2"/><stop offset="100%" stop-color="#e0b088"/></radialGradient>
+      <filter id="${uid}glow" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <radialGradient id="${uid}floor" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${pathColor}" stop-opacity="0.35"/><stop offset="100%" stop-color="${pathColor}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${uid}spec" cx="50%" cy="20%" r="70%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <ellipse cx="${cx}" cy="${footY+16}" rx="100" ry="15" fill="url(#${uid}floor)"/>
+    ${auraHtml}
+    ${L.cape ? `<path d="M${cx-cfg.shoulderW*0.4} ${torsoTop-6} C ${cx-cfg.shoulderW*1.05} ${torsoTop+cfg.torsoH*0.5}, ${cx-cfg.shoulderW*1.2} ${footY-20}, ${cx-cfg.hipW*0.7} ${footY+10} L ${cx} ${torsoBottom+cfg.legLen*0.55} L ${cx+cfg.hipW*0.7} ${footY+10} C ${cx+cfg.shoulderW*1.2} ${footY-20}, ${cx+cfg.shoulderW*1.05} ${torsoTop+cfg.torsoH*0.5}, ${cx+cfg.shoulderW*0.4} ${torsoTop-6} Z" fill="${primary}" opacity="0.2"/>` : ''}
+    ${legsBlock}
+    <path d="${limbPath(armLx, armTop, armLen, cfg.limbW*1.15, cfg.limbW*0.75)}" fill="url(#${uid}suit)" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.55"/>
+    <path d="${limbPath(armRx, armTop, armLen, cfg.limbW*1.15, cfg.limbW*0.75)}" fill="url(#${uid}suit)" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.55"/>
+    <circle cx="${armLx}" cy="${handY}" r="${glovesR}" fill="${L.gloves==='none' ? '#e0b088' : pathColor}" opacity="0.92" filter="url(#${uid}glow)"/>
+    <circle cx="${armRx}" cy="${handY}" r="${glovesR}" fill="${L.gloves==='none' ? '#e0b088' : pathColor}" opacity="0.92" filter="url(#${uid}glow)"/>
+    ${glovesExtra}
+    <path d="${torsoPath(cx, torsoTop, cfg.shoulderW, cfg.waistW, cfg.hipW, cfg.torsoH)}" fill="url(#${uid}suit)" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.7" filter="url(#${uid}glow)"/>
+    <ellipse cx="${cx}" cy="${torsoTop+cfg.torsoH*0.22}" rx="${cfg.shoulderW*0.32}" ry="${cfg.torsoH*0.14}" fill="url(#${uid}spec)"/>
+    ${cfg.blocky ? `<rect x="${cx-cfg.waistW*0.62}" y="${torsoTop+cfg.torsoH*0.18}" width="${cfg.waistW*1.24}" height="5" fill="${secondary}" opacity="0.55"/><rect x="${cx-cfg.hipW*0.62}" y="${torsoTop+cfg.torsoH*0.78}" width="${cfg.hipW*1.24}" height="5" fill="${secondary}" opacity="0.55"/>` : ''}
+    ${cfg.skinBody ? `<path d="M${cx-cfg.shoulderW*0.28} ${torsoTop+cfg.torsoH*0.18} Q${cx} ${torsoTop+cfg.torsoH*0.26} ${cx+cfg.shoulderW*0.28} ${torsoTop+cfg.torsoH*0.18}" stroke="${dark}" stroke-width="3" fill="none" opacity="0.5"/><path d="M${cx-cfg.waistW*0.6} ${torsoTop+cfg.torsoH*0.48} Q${cx} ${torsoTop+cfg.torsoH*0.58} ${cx+cfg.waistW*0.6} ${torsoTop+cfg.torsoH*0.48}" stroke="${dark}" stroke-width="3" fill="none" opacity="0.45"/>` : ''}
+    <circle cx="${cx}" cy="${torsoTop+cfg.torsoH*0.3}" r="9" fill="${pathColor}" filter="url(#${uid}glow)"/><circle cx="${cx}" cy="${torsoTop+cfg.torsoH*0.3}" r="3.6" fill="#ffffff"/>
+    ${symbol ? `<text x="${cx}" y="${torsoTop+cfg.torsoH*0.68}" font-size="16" font-weight="800" fill="#ffffffdd" text-anchor="middle" font-family="Arial, sans-serif" letter-spacing="1">${symbol}</text>` : ''}
+    <rect x="${cx-9}" y="${headCy+cfg.headR*0.7}" width="18" height="18" rx="7" fill="${(L.helmet==='none'&&!isArmure) ? 'url(#'+uid+'skin)' : dark}"/>
+    <ellipse cx="${cx}" cy="${headCy}" rx="${cfg.headR*0.86}" ry="${cfg.headR}" fill="${(helmet==='none') ? 'url(#'+uid+'skin)' : 'url(#'+uid+'suit)'}" stroke="${pathColor}" stroke-width="${rim}" stroke-opacity="0.7" filter="url(#${uid}glow)"/>
+    ${helmet==='full' ? `<path d="M${cx-cfg.headR*0.5} ${headCy-2} Q${cx} ${headCy-8} ${cx+cfg.headR*0.5} ${headCy-2} L${cx+cfg.headR*0.42} ${headCy+8} Q${cx} ${headCy+2} ${cx-cfg.headR*0.42} ${headCy+8} Z" fill="${pathColor}" opacity="0.95" filter="url(#${uid}glow)"/>` : ''}
+    ${helmet==='visor' ? `<rect x="${cx-cfg.headR*0.62}" y="${headCy-6}" width="${cfg.headR*1.24}" height="11" rx="5.5" fill="${pathColor}" opacity="0.9" filter="url(#${uid}glow)"/>` : ''}
+    ${helmet==='none' ? `<rect x="${cx-cfg.headR*0.5}" y="${headCy-3}" width="${cfg.headR*1.0}" height="6" rx="3" fill="${pathColor}" opacity="0.9" filter="url(#${uid}glow)"/>` : ''}
+    ${glasses==='aviator' ? `<ellipse cx="${cx-cfg.headR*0.3}" cy="${headCy}" rx="10" ry="8" fill="#111820" opacity="0.9"/><ellipse cx="${cx+cfg.headR*0.34}" cy="${headCy}" rx="10" ry="8" fill="#111820" opacity="0.9"/>` : ''}
+    ${glasses==='hud' ? `<rect x="${cx-cfg.headR*0.62}" y="${headCy-4}" width="${cfg.headR*1.24}" height="8" rx="4" fill="${pathColor}" opacity="0.95"/>` : ''}
+    ${weaponHtml}
+    <circle cx="${cx-cfg.shoulderW*0.7}" cy="${footY+6}" r="3" fill="${pathColor}" opacity="0.7"><animate attributeName="cy" values="${footY+6};${footY-16};${footY+6}" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="${cx+cfg.shoulderW*0.72}" cy="${footY+10}" r="2.5" fill="${pathColor}" opacity="0.6"><animate attributeName="cy" values="${footY+10};${footY-14};${footY+10}" dur="3.6s" repeatCount="indefinite"/></circle>
+  </svg>`;
+}
+function avatarBoxInner(){
+  return `<div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="hud-label">${S.heroName || '???'}</div><div id="avatarBox">${avatarSVG()}</div>`;
+}
+function sideAvatarPanel(){
+  return `<div class="avatar-wrap">${avatarBoxInner()}</div>
+    <div class="sidebar-stats">
+      <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), computePowerLevel(), 'var(--green)')}</div>
+      <div class="statbar">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
+      <div class="align-track"><div class="align-dot" style="left:${clamp((S.align+100)/2,0,100)}%;"></div></div>
+      <div class="slabel" style="margin-top:6px; text-align:center;">${heroVillainScore()}<span style="color:var(--dim);">/100</span></div>
+      ${S.team ? `<div style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <div style="width:28px;height:28px;">${factionEmblemSVG(S.team.side, S.team.tier, 28)}</div>
+        <span style="font-size:11px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
+      </div>` : ''}
+    </div>`;
+}
+function statBar(label, val, color){ return `<div class="stat"><div class="slabel">${label}</div><div class="barbg"><div class="barfill" style="width:${clamp(val,0,100)}%; background:${color};"></div></div></div>`; }
+
+/* ---------- Screens: setup ---------- */
+function screenWelcome(){
+  const d = document.createElement('div');
+  d.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
+    <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
+    <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
+    <div id="resumeBox"></div>
+    <div class="actions" style="justify-content:center;"><button class="btn cyan" id="go">${t('start')} -></button></div>
+    <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
+    <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>`;
+  d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
+  loadCareerHistory(d.querySelector('#historyBox'));
+  loadGameState().then(saved=>{
+    if(!saved || !saved.heroName || !saved.missionsPlan || !saved.missionsPlan.length) return;
+    const box = d.querySelector('#resumeBox'); if(!box) return;
+    const doneCount = saved.totalMissionsDone||0;
+    box.innerHTML = `<div class="scratch-card" id="resumeCard" style="border-color:var(--accent); margin-top:22px;">
+      <div class="pname">${S.lang==='fr'?'Reprendre ta partie en cours':'Resume your ongoing career'}</div>
+      <div class="pdesc">${saved.heroName} - ${S.lang==='fr'?'annee':'year'} ${saved.currentYear||1}/${saved.missionsPlan.length} - ${doneCount} ${S.lang==='fr'?'missions accomplies':'missions completed'}</div>
+    </div>`;
+    box.querySelector('#resumeCard').onclick = ()=>{ S = saved; render(); };
+  });
+  return d;
+}
+async function saveCareerToHistory(){
+  if(!window.storage || S.savedToHistory) return;
+  try{
+    const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
+    const zone = zoneOf(S.align);
+    const record = {
+      heroName: S.heroName, mode: S.mode,
+      years: S.dead ? S.deathInfo.year : S.missionsPlan.length,
+      missionsTotal: S.totalMissionsDone, align: S.align, zone,
+      dead: S.dead, deathCause: S.dead ? S.deathInfo.cause : null,
+      team: S.team, fightsWon: S.combat.won, fightsLost: S.combat.lost,
+      locationsCount: Object.keys(uniqueLocs).length, mentees: S.mentees.length,
+      morphology: S.look.morphology, path: S.path, stars: computeStars(),
+      timestamp: Date.now(),
+    };
+    const key = 'career:'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    await window.storage.set(key, JSON.stringify(record), false);
+    S.savedToHistory = true;
+  }catch(e){ /* storage unavailable - silently skip */ }
+}
+async function loadCareerHistory(box){
+  if(!window.storage){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Historique indisponible dans ce contexte.':'History unavailable in this context.'}</p>`; return; }
+  try{
+    const listResult = await window.storage.list('career:', false);
+    const keys = (listResult && listResult.keys ? listResult.keys.slice() : []).sort().reverse().slice(0,12);
+    if(!keys.length){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
+    const items = [];
+    for(const k of keys){
+      try{ const r = await window.storage.get(k, false); if(r && r.value) items.push({ key:k, data: JSON.parse(r.value) }); }catch(e){}
+    }
+    renderCareerHistoryList(box, items);
+  }catch(e){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Historique indisponible.':'History unavailable.'}</p>`; }
+}
+function renderCareerHistoryList(box, items){
+  if(!items.length){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
+  box.innerHTML = `<div class="history-list">${items.map(it=>{
+    const c = it.data;
+    const zoneLabel = c.zone==='hero'?t('alignHero'):(c.zone==='villain'?t('alignVillain'):t('alignNeutral'));
+    const zoneColor = c.zone==='hero'?'#00e5ff':(c.zone==='villain'?'var(--red)':'#b98bff');
+    const dateStr = new Date(c.timestamp).toLocaleDateString(S.lang==='fr'?'fr-FR':'en-US');
+    return `<div class="history-card">
+      <button class="history-del" data-key="${it.key}" title="${S.lang==='fr'?'Supprimer':'Delete'}">&times;</button>
+      <div class="hc-name">${c.heroName}${c.dead ? ' &#10013;':''}</div>
+      <div class="hc-meta" style="color:${zoneColor};">${zoneLabel} - ${'&#9733;'.repeat(c.stars||1)}</div>
+      <div class="hc-meta">${c.years} ${S.lang==='fr'?'ans':'yrs'} - ${c.missionsTotal} ${S.lang==='fr'?'missions':'missions'} - ${dateStr}</div>
+    </div>`;
+  }).join('')}</div>
+  <div class="actions" style="justify-content:center;"><button class="btn ghost" id="clearHistory" style="font-size:12px; padding:8px 16px;">${S.lang==="fr"?"Vider l'historique":"Clear history"}</button></div>`;
+  box.querySelectorAll('.history-del').forEach(btn=>{
+    btn.onclick = async ()=>{ try{ await window.storage.delete(btn.dataset.key, false); }catch(e){} loadCareerHistory(box); };
+  });
+  const clearBtn = box.querySelector('#clearHistory');
+  if(clearBtn) clearBtn.onclick = async ()=>{ for(const it of items){ try{ await window.storage.delete(it.key, false); }catch(e){} } loadCareerHistory(box); };
+}
+function applyPreset(p){
+  S.usingPreset = true; S.look = Object.assign({}, S.look, p.look, { morphology:p.morphology });
+  S.path = p.path; S.powers = p.powers.slice(); S.align = p.align || 0; S.lastZone = zoneOf(S.align);
+  S.initialAlignMagnitude = Math.abs(p.align||0);
+  S.reputationFloor = S.initialAlignMagnitude;
+  S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
+  S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
+}
+function screenProfileChoice(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
+    <div class="scratch-card" id="scratchCard"><div class="pname">${t('scratchTitle')}</div><div class="pdesc">${t('scratchDesc')}</div></div>
+    <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
+  d.querySelector('#scratchCard').onclick = ()=>{ S.usingPreset=false; S.screen='name'; render(); };
+  const grid = d.querySelector('#presetGrid');
+  grid.innerHTML = PRESETS.map(p=>`<div class="preset-card" data-id="${p.id}"><div class="preset-mini" id="mini-${p.id}"></div>
+      <div class="pname">${S.lang==='fr'?p.nameFr:p.nameEn}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`).join('');
+  PRESETS.forEach(p=>{
+    const savedLook = S.look, savedPath=S.path, savedPowers=S.powers, savedHero=S.heroName;
+    S.look = Object.assign({}, S.look, p.look, { morphology:p.morphology }); S.path = p.path; S.powers = p.powers; S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
+    const svg = avatarSVG();
+    S.look = savedLook; S.path = savedPath; S.powers = savedPowers; S.heroName = savedHero;
+    d.querySelector('#mini-'+p.id).innerHTML = `<div style="transform:scale(0.55); transform-origin:top center; height:150px; overflow:hidden;">${svg}</div>`;
+  });
+  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
+  return d;
+}
+function screenName(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">01</span><h2>${t('nameLabel')}</h2>
+    <div style="margin:14px 0 22px;"><input type="text" id="civilName" placeholder="${t('namePh')}" value="${S.civilName}"></div>
+    <h2>${t('heroNameLabel')}</h2><div style="margin:14px 0;"><input type="text" id="heroName" placeholder="${t('heroPh')}" value="${S.heroName}"></div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next">${t('next')} -></button></div>`;
+  d.querySelector('#back').onclick=()=>{ S.screen='profileChoice'; render(); };
+  d.querySelector('#next').onclick=()=>{
+    S.civilName = d.querySelector('#civilName').value.trim() || S.civilName;
+    S.heroName = d.querySelector('#heroName').value.trim() || S.heroName;
+    if(!S.heroName){ d.querySelector('#heroName').style.borderColor='var(--red)'; return; }
+    S.screen = S.usingPreset ? 'startside' : 'look'; render();
+  };
+  return d;
+}
+function screenLook(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">02</span><h2>${t('lookTitle')}</h2><p class="lead">${t('lookLead')}</p>
+    <h3>${t('morphology')}</h3><div class="optgrid" id="morphOpt"></div>
+    <h3>${t('helmet')}</h3><div class="optgrid" id="helmetOpt"></div>
+    <h3>${t('cape')}</h3><div class="optgrid" id="capeOpt"></div>
+    <h3>${t('glasses')}</h3><div class="optgrid" id="glassesOpt"></div>
+    <h3>${t('gloves')}</h3><div class="optgrid" id="glovesOpt"></div>
+    <h3>${t('boots')}</h3><div class="optgrid" id="bootsOpt"></div>
+    <h3>${t('aura')}</h3><div class="optgrid" id="auraOpt"></div>
+    <h3>${t('weapon')}</h3><div class="optgrid" id="weaponOpt"></div>
+    <h3>${t('suitColor')} / ${t('secondaryColor')} / ${t('symbol')}</h3>
+    <div style="display:flex; gap:20px; margin-top:10px; align-items:flex-end; flex-wrap:wrap;">
+      <div><div style="font-weight:800;margin-bottom:8px; font-size:13px;">${t('suitColor')}</div><input type="color" id="suitColor" value="${S.look.suitColor}"></div>
+      <div><div style="font-weight:800;margin-bottom:8px; font-size:13px;">${t('secondaryColor')}</div><input type="color" id="secondaryColor" value="${S.look.secondaryColor}"></div>
+      <div style="flex:1; min-width:160px;"><div style="font-weight:800;margin-bottom:8px; font-size:13px;">${t('symbol')}</div><input type="text" id="symbol" maxlength="3" placeholder="${t('symbolPh')}" value="${S.look.symbol}"></div>
+    </div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next">${t('next')} -></button></div>`;
+  function refreshAvatar(){ renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarSVG(); }
+  function opts(containerId, options, onPick){
+    const c = d.querySelector('#'+containerId);
+    c.innerHTML = options.map(o=>`<div class="opt ${o.sel?'selected':''} ${o.disabled?'disabled':''}" data-key="${o.key}"><div class="oname">${o.label}</div>${o.desc?`<div class="odesc">${o.desc}</div>`:''}</div>`).join('');
+    c.querySelectorAll('.opt:not(.disabled)').forEach(el=>{ el.onclick=()=>{ onPick(el.dataset.key); rerenderOpts(); refreshAvatar(); }; });
+  }
+  function rerenderOpts(){
+    opts('morphOpt', MORPHOLOGIES.map(m=>({key:m.id, label:S.lang==='fr'?m.fr:m.en, desc:S.lang==='fr'?m.descFr:m.descEn, sel:S.look.morphology===m.id})),
+      (k)=>{ S.look.morphology=k; if(k==='armure'){ S.look.helmet='full'; S.look.glasses='none'; } });
+    const isArmure = S.look.morphology==='armure';
+    opts('helmetOpt', [ {key:'none', label:t('helmetNone'), sel:S.look.helmet==='none', disabled:isArmure}, {key:'full', label:t('helmetFull'), sel:S.look.helmet==='full'}, {key:'visor', label:t('helmetVisor'), sel:S.look.helmet==='visor', disabled:isArmure} ],
+      (k)=>{ S.look.helmet=k; if(k==='full') S.look.glasses='none'; });
+    opts('capeOpt', [ {key:'yes', label:t('capeYes'), sel:S.look.cape}, {key:'no', label:t('capeNo'), sel:!S.look.cape} ], (k)=>{ S.look.cape=(k==='yes'); });
+    const glassesDisabled = S.look.helmet==='full';
+    opts('glassesOpt', [ {key:'none', label:t('glassesNone'), sel:S.look.glasses==='none', disabled:glassesDisabled},
+      {key:'aviator', label:t('glassesAviator'), sel:S.look.glasses==='aviator', disabled:glassesDisabled},
+      {key:'hud', label:t('glassesHud'), sel:S.look.glasses==='hud', disabled:glassesDisabled} ], (k)=>{ S.look.glasses=k; });
+    opts('glovesOpt', [ {key:'none', label:t('glovesNone'), sel:S.look.gloves==='none'}, {key:'standard', label:t('glovesStandard'), sel:S.look.gloves==='standard'},
+      {key:'claws', label:t('glovesClaws'), sel:S.look.gloves==='claws'}, {key:'armored', label:t('glovesArmored'), sel:S.look.gloves==='armored'} ], (k)=>{ S.look.gloves=k; });
+    opts('bootsOpt', [ {key:'none', label:t('bootsNone'), sel:S.look.boots==='none'}, {key:'standard', label:t('bootsStandard'), sel:S.look.boots==='standard'},
+      {key:'thruster', label:t('bootsThruster'), sel:S.look.boots==='thruster'}, {key:'armored', label:t('bootsArmored'), sel:S.look.boots==='armored'} ], (k)=>{ S.look.boots=k; });
+    opts('auraOpt', [ {key:'none', label:t('auraNone'), sel:S.look.aura==='none'}, {key:'flame', label:t('auraFlame'), sel:S.look.aura==='flame'},
+      {key:'electric', label:t('auraElectric'), sel:S.look.aura==='electric'}, {key:'dark', label:t('auraDark'), sel:S.look.aura==='dark'} ], (k)=>{ S.look.aura=k; });
+    opts('weaponOpt', [ {key:'none', label:t('weaponNone'), sel:S.look.weapon==='none'}, {key:'sword', label:t('weaponSword'), sel:S.look.weapon==='sword'},
+      {key:'shield', label:t('weaponShield'), sel:S.look.weapon==='shield'}, {key:'spear', label:t('weaponSpear'), sel:S.look.weapon==='spear'} ], (k)=>{ S.look.weapon=k; });
+  }
+  rerenderOpts();
+  d.querySelector('#suitColor').oninput = (e)=>{ S.look.suitColor = e.target.value; refreshAvatar(); };
+  d.querySelector('#secondaryColor').oninput = (e)=>{ S.look.secondaryColor = e.target.value; refreshAvatar(); };
+  d.querySelector('#symbol').oninput = (e)=>{ S.look.symbol = e.target.value; refreshAvatar(); };
+  d.querySelector('#back').onclick=()=>{ S.screen='name'; render(); };
+  d.querySelector('#next').onclick=()=>{ S.screen='path'; render(); };
+  return d;
+}
+function screenPath(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">03</span><h2>${t('pathTitle')}</h2><p class="lead">${t('pathLead')}</p>
+    <div class="optgrid" id="pathOpt" style="grid-template-columns:1fr; max-width:520px;"></div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next" ${S.path?'':'disabled'}>${t('next')} -></button></div>`;
+  function refresh(){
+    d.querySelector('#pathOpt').innerHTML = PATHS.map(p=>`<div class="opt ${S.path===p.id?'selected':''}" data-id="${p.id}">
+      <div class="oname">${S.lang==='fr'?p.fr:p.en} <span class="badge ${p.color}">${p.color.toUpperCase()}</span></div>
+      <div class="odesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`).join('');
+    d.querySelectorAll('#pathOpt .opt').forEach(el=>{ el.onclick=()=>{ if(S.path!==el.dataset.id){ S.path = el.dataset.id; S.powers=[]; } renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarSVG(); refresh(); d.querySelector('#next').disabled = !S.path; }; });
+  }
+  refresh();
+  d.querySelector('#back').onclick=()=>{ S.screen='look'; render(); };
+  d.querySelector('#next').onclick=()=>{ if(S.path){ S.screen='powers'; render(); } };
+  return d;
+}
+function screenPowers(){
+  const d = document.createElement('div'); const list = POWERS[S.path];
+  d.innerHTML = `<span class="eyebrow">04</span><h2>${t('powersTitle')}</h2><p class="lead">${t('powersLead')}</p>
+    <div class="optgrid" id="powOpt" style="margin-top:20px;"></div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next" ${S.powers.length? '' : 'disabled'}>${t('next')} -></button></div>`;
+  function refresh(){
+    d.querySelector('#powOpt').innerHTML = list.map(p=>{ const sel = S.powers.includes(p.id); const disabled = !sel && S.powers.length>=3;
+      return `<div class="opt ${sel?'selected':''} ${disabled?'disabled':''}" data-id="${p.id}"><div class="oname">${S.lang==='fr'?p.fr:p.en}</div><div class="odesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`; }).join('');
+    d.querySelectorAll('#powOpt .opt').forEach(el=>{ el.onclick=()=>{ const id = el.dataset.id;
+      if(S.powers.includes(id)){ S.powers = S.powers.filter(x=>x!==id); } else if(S.powers.length<3){ S.powers.push(id); }
+      refresh(); d.querySelector('#next').disabled = !S.powers.length; renderRankBadge(); }; });
+  }
+  refresh();
+  d.querySelector('#back').onclick=()=>{ S.screen='path'; render(); };
+  d.querySelector('#next').onclick=()=>{ if(S.powers.length){ S.screen='startside'; render(); } };
+  return d;
+}
+function screenStartSide(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('startSideTitle')}</h2><p class="lead">${t('startSideLead')}</p>
+    <div class="optgrid" id="sideOpt" style="margin-top:20px;"></div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next">${t('next')} -></button></div>`;
+  function refresh(){
+    d.querySelector('#sideOpt').innerHTML = `
+      <div class="opt ${S.startSide==='hero'?'selected':''}" data-s="hero"><div class="oname" style="color:#00c2ff;">${t('startHero')}</div><div class="odesc">${t('startHeroDesc')}</div></div>
+      <div class="opt ${S.startSide==='neutral'?'selected':''}" data-s="neutral"><div class="oname">${t('startNeutral')}</div><div class="odesc">${t('startNeutralDesc')}</div></div>
+      <div class="opt ${S.startSide==='villain'?'selected':''}" data-s="villain"><div class="oname" style="color:var(--red);">${t('startVillain')}</div><div class="odesc">${t('startVillainDesc')}</div></div>`;
+    d.querySelectorAll('#sideOpt .opt').forEach(el=>{ el.onclick=()=>{ S.startSide = el.dataset.s; refresh(); }; });
+  }
+  refresh();
+  d.querySelector('#back').onclick=()=>{ S.screen = S.usingPreset ? 'name' : 'powers'; render(); };
+  d.querySelector('#next').onclick=()=>{
+    S.align = S.startSide==='hero' ? 25 : (S.startSide==='villain' ? -25 : 0);
+    S.initialAlignMagnitude = Math.abs(S.align);
+    S.reputationFloor = S.initialAlignMagnitude;
+    S.lastZone = zoneOf(S.align);
+    S.screen='mode'; render();
+  };
+  return d;
+}
+function screenMode(){
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2><p class="lead">${t('modeLead')}</p>
+    <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
+    <div id="yearsBox" style="margin-top:20px; display:none;">
+      <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
+      <input type="range" min="10" max="80" value="${S.years}" id="yearsRange"></div>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
+  function refresh(){
+    d.querySelector('#modeOpt').innerHTML = `<div class="opt ${S.mode==='short'?'selected':''}" data-m="short"><div class="oname">${t('modeShort')}</div><div class="odesc">${t('modeShortDesc')}</div></div>
+      <div class="opt ${S.mode==='long'?'selected':''}" data-m="long"><div class="oname">${t('modeLong')}</div><div class="odesc">${t('modeLongDesc')}</div></div>`;
+    d.querySelectorAll('#modeOpt .opt').forEach(el=>{ el.onclick=()=>{ S.mode = el.dataset.m; d.querySelector('#yearsBox').style.display = S.mode==='long' ? 'block' : 'none'; refresh(); d.querySelector('#next').disabled=false; }; });
+  }
+  refresh();
+  d.querySelector('#yearsRange').oninput=(e)=>{ S.years = parseInt(e.target.value); d.querySelector('#yearsVal').textContent = S.years; };
+  d.querySelector('#back').onclick=()=>{ S.screen = 'startside'; render(); };
+  d.querySelector('#next').onclick=()=>{ if(!S.mode) return; buildCareerPlan(); S.screen='summary'; render(); };
+  return d;
+}
+function buildCareerPlan(){
+  S.missionsPlan = [];
+  if(S.mode==='short'){ S.years = 10; for(let y=0;y<10;y++) S.missionsPlan.push(3); }
+  else { for(let y=0;y<S.years;y++) S.missionsPlan.push(3 + Math.floor(Math.random()*8)); }
+  S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
+  S.mentorCap = S.mode==='long' ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
+  const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
+  S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
+}
+function screenSummary(){
+  const d = document.createElement('div');
+  const totalMissions = S.missionsPlan.reduce((a,b)=>a+b,0);
+  const pathObj = PATHS.find(p=>p.id===S.path); const morphObj = MORPHOLOGIES.find(m=>m.id===S.look.morphology);
+  d.innerHTML = `<span class="eyebrow">${t('summaryTitle')}</span><h2>${S.heroName}</h2>
+    <p class="lead" style="margin-top:0;">${t('morphology')}: <b>${S.lang==='fr'?morphObj.fr:morphObj.en}</b></p>
+    <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
+    <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=POWERS[S.path].find(x=>x.id===id); return S.lang==='fr'?p.fr:p.en; }).join(', ')}</b></p>
+    <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
+    <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
+  d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
+  d.querySelector('#go').onclick=()=>{ nextMission(); };
+  return d;
+}
+
+/* ---------- Mission engine ---------- */
+function pickMission(){
+  const rank = computeStars();
+  if(Math.random() < 0.05){
+    let pPool = PIVOTAL_MISSIONS.filter((m,i)=>!S.usedPivotalIds.includes(i));
+    if(pPool.length===0){ S.usedPivotalIds = []; pPool = PIVOTAL_MISSIONS; }
+    const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
+    const m = PIVOTAL_MISSIONS[idx];
+    return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+  }
+  if(Math.random() < 0.052){
+    let bPool = BREAKTHROUGH_MISSIONS.filter((m,i)=>!S.usedBreakthroughIds.includes(i));
+    if(bPool.length===0){ S.usedBreakthroughIds = []; bPool = BREAKTHROUGH_MISSIONS; }
+    const idx = BREAKTHROUGH_MISSIONS.indexOf(pick(bPool)); S.usedBreakthroughIds.push(idx);
+    const m = BREAKTHROUGH_MISSIONS[idx];
+    return Object.assign({}, m, { breakthrough:true, type:'social', danger:1, scope:Math.max(1,rank), location: { name: randLocationName(), type: Math.max(1,rank) } });
+  }
+  if(Math.random() < 0.27){ return generateSignatureMission(rank); }
+  if(Math.random() < 0.83){ return zoneOf(S.align)==='villain' ? generateVillainMission(rank) : generateProceduralMission(rank); }
+  let reachable = MISSIONS.filter(m => (m.scope||1) <= rank);
+  if(reachable.length===0) reachable = MISSIONS.filter(m=>(m.scope||1)===1);
+  let pool = reachable.filter(m=>!S.usedIds.includes(m.id));
+  if(pool.length===0){ pool = reachable; S.usedIds = S.usedIds.filter(id=>!reachable.some(m=>m.id===id)); }
+  pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
+  return Object.assign({}, m, { location: { name: randLocationName(), type: m.scope||1 } });
+}
+function shouldTriggerMentor(){ if(S.mode!=='long') return false; if(S.currentYear < 10) return false; if(S.mentorCount >= S.mentorCap) return false; return Math.random() < 0.22; }
+function checkTeamInvite(){
+  const zone = zoneOf(S.align);
+  if(zone==='neutral' || S.totalMissionsDone < 2) return false;
+  const tier = computeStars();
+  const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
+  if(tier > S[key]){
+    S[key] = tier;
+    S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
+    return true;
+  }
+  return false;
+}
+function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
+function nextMission(){
+  const missionsThisYear = S.missionsPlan[S.currentYear-1];
+  if(S.currentMissionInYear >= missionsThisYear){
+    pushYearHistoryIfDone();
+    if(S.currentYear >= S.missionsPlan.length){ S.screen='end'; render(); return; }
+    S.screen='yearbreak'; render(); return;
+  }
+  S.currentMissionInYear += 1; S.totalMissionsDone += 1;
+  if(shouldTriggerMentor()){
+    S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
+    S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
+  }
+  S.currentMission = pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
+}
+function missionEpicness(mission){
+  if(!mission || mission.type!=='combat') return 'none';
+  if((mission.danger||0)>=3 || (mission.scope||1)>=5) return 'epic';
+  if((mission.danger||0)>=2) return 'major';
+  return 'none';
+}
+function showCombatCinematic(mission, epicness){
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + epicness;
+  const bigLabel = S.lang==='fr' ? (epicness==='epic'?'AFFRONTEMENT MAJEUR':'COMBAT') : (epicness==='epic'?'MAJOR SHOWDOWN':'COMBAT');
+  if(mission.charKey){ overlay.style.setProperty('--accent', charColor(CHARACTERS[mission.charKey].align)); }
+  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-content">
+      <div class="cine-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
+      <div class="cine-title">${bigLabel}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  if(epicness==='epic') document.body.classList.add('shake');
+  const dur = epicness==='epic' ? 2200 : 1100;
+  setTimeout(()=>{
+    overlay.classList.add('cine-out'); document.body.classList.remove('shake');
+    setTimeout(()=>overlay.remove(), 500);
+  }, dur);
+  return dur;
+}
+function showPivotalCinematic(mission){
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay epic pivotal';
+  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-content">
+      <div class="cine-scope">${S.lang==='fr'?'CHOIX IRREVERSIBLE':'IRREVERSIBLE CHOICE'}</div>
+      <div class="cine-title">${S.lang==='fr'?'MOMENT DECISIF':'DECISIVE MOMENT'}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dur = 2000;
+  setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
+  return dur;
+}
+function showBreakthroughCinematic(){
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay epic pivotal';
+  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-content">
+      <div class="cine-scope">${S.lang==='fr'?'OCCASION UNIQUE':'ONE-TIME CHANCE'}</div>
+      <div class="cine-title">${S.lang==='fr'?'OPPORTUNITE RARE':'RARE OPPORTUNITY'}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dur = 1900;
+  setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
+  return dur;
+}
+function afterMissionRender(mission){
+  if(mission && mission.pivotal){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
+  if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
+  const epicness = missionEpicness(mission);
+  if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
+  else { maybeTriggerConversation(); }
+}
+function screenMission(){
+  const d = document.createElement('div'); const m = S.currentMission;
+  const missionsThisYear = S.missionsPlan[S.currentYear-1];
+  const missionCol = m.charKey ? charColor(CHARACTERS[m.charKey].align) : 'var(--gold)';
+  d.innerHTML = `<div class="mission-year">${t('year')} ${S.currentYear} / ${S.missionsPlan.length} - ${t('mission')} ${S.currentMissionInYear} / ${missionsThisYear}</div>
+    <div class="mission-tag" style="color:${missionCol};">${S.lang==='fr'?m.tagFr:m.tagEn}</div>
+    <div class="mission-loc" style="color:${missionCol};">${t('location')}: ${m.location.name} (${locTypeLabel(m.location.type)})</div>
+    <h2 style="margin-top:6px;">${S.lang==='fr'?m.fr:m.en}</h2><div id="choices"></div>`;
+  const cbox = d.querySelector('#choices');
+  m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = S.lang==='fr'?c.fr:c.en; btn.onclick=()=> applyChoice(c); cbox.appendChild(btn); });
+  return d;
+}
+function screenMentor(){
+  const d = document.createElement('div'); const m = S.currentMission; const name = m.recruitName;
+  const text = (S.lang==='fr'?m.fr:m.en).replace('{name}', name);
+  d.innerHTML = `<div class="mission-year">${t('year')} ${S.currentYear} / ${S.missionsPlan.length}</div>
+    <div class="mission-tag">${S.lang==='fr'?m.tagFr:m.tagEn}</div>
+    <h2 style="margin-top:6px;">${text}</h2><div id="choices"></div>`;
+  const cbox = d.querySelector('#choices');
+  m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c.fr:c.en); btn.onclick=()=> applyMentorChoice(c, name); cbox.appendChild(btn); });
+  return d;
+}
+function applyMentorChoice(choice, name){
+  const eff = choice.eff || {};
+  S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
+  S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
+  S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
+  S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
+  if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
+  S.mentees.push({ name, outcome: choice.recruit });
+  const label = S.lang==='fr' ? choice.fr : choice.en;
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
+  S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
+  handleZoneCheckAndContinue();
+}
+function handleZoneCheckAndContinue(){
+  const newZone = zoneOf(S.align);
+  if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
+  if(checkFactionExpulsion()){ nextMission(); return; }
+  if(checkTeamInvite()){ render(); return; }
+  nextMission();
+}
+function resolveOutcome(mission){
+  const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
+  const scopePenalty = ((mission.scope||1)-1) * 0.06;
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; }
+  else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost'; if(win){ S.locations.push(mission.location); } }
+  return { type, outcome };
+}
+function checkDeath(mission){
+  const pl = computePowerLevel(); const danger = mission.danger || 0; const scope = mission.scope || 1;
+  const budget = S.deathBudgetPerMission || 0.003;
+  const dangerFactor = danger>0 ? (0.4 + danger*0.45) : 0.22;
+  const powerFactor = clamp((100-pl)/65, 0.18, 2.0);
+  const scopeFactor = 1 + (scope-1)*0.09;
+  return Math.random() < (budget * dangerFactor * powerFactor * scopeFactor);
+}
+function applyChoice(choice){
+  const m = S.currentMission; const eff = choice.eff || {};
+  const isChaosEvent = !!(eff.flip || eff.reinforce || eff.balance);
+  let alignDelta = eff.align||0;
+  if(eff.flip){ alignDelta = (S.align >= 0 ? -1 : 1) * eff.magnitude; }
+  else if(eff.reinforce){ alignDelta = (S.align >= 0 ? 1 : -1) * eff.magnitude; }
+  else if(eff.balance){ alignDelta = S.align > 0 ? -Math.min(eff.magnitude, S.align) : (S.align < 0 ? Math.min(eff.magnitude, -S.align) : 0); }
+  const newAlign = clamp(S.align + alignDelta, -100, 100);
+  if(isChaosEvent){
+    S.align = newAlign;
+    S.reputationFloor = Math.max(S.reputationFloor||0, Math.abs(S.align));
+  } else {
+    S.align = clampToReputation(newAlign);
+  }
+  S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
+  S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
+  S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
+  if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
+  S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
+  const res = resolveOutcome(m);
+  S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
+  if(checkDeath(m)){
+    const causes = DEATH_CAUSES[S.lang]; const cause = causes[Math.floor(Math.random()*causes.length)];
+    S.dead = true; S.deathInfo = { year: S.currentYear, cause };
+    S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
+    S.screen='end'; render(); return;
+  }
+  handleZoneCheckAndContinue();
+}
+function screenInvite(){
+  const d = document.createElement('div'); const isHero = S.inviteSide==='hero'; const tier = S.inviteTier;
+  const fname = factionName(S.inviteSide, tier);
+  d.innerHTML = `<span class="eyebrow">${scopeLabel(tier).toUpperCase()}</span><h2>${isHero?t('inviteHeroTitle'):t('inviteVillainTitle')}</h2>
+    <p class="lead">${isHero?t('inviteHeroText'):t('inviteVillainText')}</p>
+    <div class="team-hero-banner" style="border-color:${charColor(S.inviteSide)};">
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.inviteSide, tier, 84)}</div>
+      <div class="tname" style="color:${charColor(S.inviteSide)}; text-shadow:0 0 20px ${charColor(S.inviteSide)};">${fname}</div>
+    </div>
+    <div class="actions"><button class="btn ghost" id="decline">${t('decline')}</button><button class="btn cyan" id="accept">${t('accept')}</button></div>`;
+  d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier };
+    const label = S.lang==='fr' ? `Tu as rejoint ${fname}.` : `You joined ${fname}.`;
+    S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero }); nextMission(); };
+  d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
+  return d;
+}
+function screenYearBreak(){
+  const d = document.createElement('div'); const y = S.currentYear;
+  d.innerHTML = `<span class="eyebrow">${t('year')} ${y}</span><h2>${S.lang==='fr' ? `Fin de l'annee ${y}` : `End of year ${y}`}</h2>
+    <p class="lead">${S.lang==='fr' ? "Le bilan de cette annee facconne deja ta legende." : "This year's outcome is already shaping your legend."}</p>
+    <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
+  d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
+    if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
+  return d;
+}
+
+/* ---------- Conversation overlay ---------- */
+function maybeTriggerConversation(){
+  if(S.dead || S.activeConversation) return;
+  if(!(S.screen==='mission' || S.screen==='mentor')) return;
+  if(Math.random() < 0.22){
+    let pool = CONVERSATIONS.filter(c=>!S.usedConvIds.includes(c.id));
+    if(pool.length===0){ pool = CONVERSATIONS; S.usedConvIds=[]; }
+    const conv = pool[Math.floor(Math.random()*pool.length)];
+    S.usedConvIds.push(conv.id); S.activeConversation = conv; S.convLineIndex = 0;
+    renderConversationOverlay();
+  }
+}
+function characterPortraitHTML(charObj, animate){
+  const col = charColor(charObj.align);
+  const entranceClass = animate ? (charObj.align==='villain' ? 'glitch-in' : 'materialize-in') : '';
+  const name = S.lang==='fr'?charObj.fr:charObj.en;
+  const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
+  const inner = charObj.img
+    ? `<img src="${charObj.img}" alt="${name}">`
+    : `<span class="cp-glyph">${initial}</span>`;
+  return `<div class="conv-portrait ${entranceClass}" style="--cp-color:${col};">${inner}${animate ? '<div class="cp-sweep"></div>' : ''}</div>`;
+}
+function renderConversationOverlay(){
+  removeConvOverlay();
+  const conv = S.activeConversation; if(!conv) return;
+  const charObj = CHARACTERS[conv.charKey];
+  const lines = S.lang==='fr'?conv.linesFr:conv.linesEn;
+  const isLast = S.convLineIndex >= lines.length-1;
+  const col = charColor(charObj.align);
+  const isFirstReveal = S.convLineIndex===0;
+  const el = document.createElement('div'); el.id='convOverlay'; el.className='conv-overlay';
+  el.innerHTML = `<div class="conv-backdrop"></div><div class="conv-card">
+    ${characterPortraitHTML(charObj, isFirstReveal)}
+    <div class="conv-charname" style="justify-content:center;"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
+    <div class="conv-line">${lines[S.convLineIndex]}</div>
+    ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
+  </div>`;
+  document.body.appendChild(el);
+  if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
+  else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; }); }
+}
+function applyConvChoice(conv, choice){
+  const eff = choice.eff || {};
+  S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
+  S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
+  S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
+  S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
+  if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
+  const label = S.lang==='fr' ? choice.fr : choice.en;
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
+  const newZone = zoneOf(S.align);
+  if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
+  checkFactionExpulsion();
+  removeConvOverlay(); S.activeConversation=null; S.convLineIndex=0;
+  applyTheme(); renderRankBadge();
+  const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
+}
+function removeConvOverlay(){ const el=document.getElementById('convOverlay'); if(el) el.remove(); }
+
+/* ---------- End screen ---------- */
+function screenEnd(){
+  saveCareerToHistory();
+  clearGameState();
+  const d = document.createElement('div');
+  const topRelKey = Object.keys(S.rel).reduce((a,b)=> (S.rel[b]>S.rel[a] ? b : a), Object.keys(S.rel)[0]);
+  const topRel = CHARACTERS[topRelKey];
+  const teamLineFr = S.team ? ` En tant que membre de ${factionName(S.team.side,S.team.tier)}, ${S.heroName} ${S.team.side==='hero'?'combat aux cotes des plus grands':"etend son influence dans l'ombre"}.` : '';
+  const teamLineEn = S.team ? ` As a member of ${factionName(S.team.side,S.team.tier)}, ${S.heroName} ${S.team.side==='hero'?'fights alongside the greatest':'extends their influence from the shadows'}.` : '';
+  let endingFr, endingEn;
+  if(S.dead){ endingFr = `${S.heroName} n'aura pas vu la fin de cette carriere. ${topRel.fr} se souvient neanmoins d'un destin marquant.`; endingEn = `${S.heroName} did not live to see the end of this career. ${topRel.en} still remembers a remarkable fate.`; }
+  else if(S.align >= 40){ endingFr = `${S.heroName} est devenu(e) une legende protectrice apres ${S.missionsPlan.length} annees de service. ${topRel.fr} le/la considere comme un allie indefectible.${teamLineFr}`; endingEn = `${S.heroName} became a protective legend after ${S.missionsPlan.length} years of service. ${topRel.en} considers them an unshakeable ally.${teamLineEn}`; }
+  else if(S.align <= -40){ endingFr = `${S.heroName} a sombre du cote des fleaux au fil de ${S.missionsPlan.length} annees, semant la crainte partout ou il/elle passe. ${topRel.fr} salue cette ascension.${teamLineFr}`; endingEn = `${S.heroName} fell to the side of menace over ${S.missionsPlan.length} years, sowing fear wherever they go. ${topRel.en} welcomes this rise.${teamLineEn}`; }
+  else { endingFr = `Apres ${S.missionsPlan.length} annees, ${S.heroName} trace sa propre voie, entre ombre et lumiere. ${topRel.fr} reste la relation la plus marquante.${teamLineFr}`; endingEn = `After ${S.missionsPlan.length} years, ${S.heroName} walks their own path, between shadow and light. ${topRel.en} remains the most defining relationship.${teamLineEn}`; }
+  const alignLabel = S.align>=15 ? t('alignHero') : (S.align<=-15 ? t('alignVillain') : t('alignNeutral'));
+  const finalZone = zoneOf(S.align);
+  const locLabel = finalZone==='villain' ? t('locationsDestroyed') : t('locationsSaved');
+  const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; }); const locArr = Object.values(uniqueLocs);
+  const tierCounts = [0,0,0,0,0,0,0,0]; locArr.forEach(l=>{ tierCounts[l.type] = (tierCounts[l.type]||0)+1; });
+  const menteeHero = S.mentees.filter(m=>m.outcome==='hero').length, menteeVillain = S.mentees.filter(m=>m.outcome==='villain').length;
+  const menteeDied = S.mentees.filter(m=>m.outcome==='died').length, menteeNeutral = S.mentees.filter(m=>m.outcome==='neutral').length;
+  const kpiHtml = `<div class="kpi-grid">
+    <div class="kpi"><div class="kval">${S.dead ? S.deathInfo.year : S.missionsPlan.length}</div><div class="klabel">${t('yearsServed')}</div></div>
+    <div class="kpi"><div class="kval">${S.totalMissionsDone}</div><div class="klabel">${t('missionsTotal')}</div></div>
+    <div class="kpi"><div class="kval">${locArr.length}</div><div class="klabel">${locLabel}</div></div>
+    <div class="kpi"><div class="kval">${S.combat.won}</div><div class="klabel">${t('fightsWon')}</div></div>
+    <div class="kpi"><div class="kval">${S.combat.lost}</div><div class="klabel">${t('fightsLost')}</div></div>
+    <div class="kpi"><div class="kval">${S.mentees.length}</div><div class="klabel">${t('menteesCount')}</div></div></div>`;
+  const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>` : '';
+  const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
+  const turningHtml = S.turningPoints.length ? S.turningPoints.map(tp=>{ const fromL = tp.from==='hero'?t('alignHero'):(tp.from==='villain'?t('alignVillain'):t('alignNeutral')); const toL = tp.to==='hero'?t('alignHero'):(tp.to==='villain'?t('alignVillain'):t('alignNeutral'));
+    return `<div class="turn-item">${t('year')} ${tp.year}: ${fromL} -> ${toL}</div>`; }).join('') : `<p class="lead">${t('noTurning')}</p>`;
+  const yearsHtml = S.yearsHistory.map(yh=>{ const zone = zoneOf(yh.endAlign); const col = zone==='hero'?'#00e5ff':(zone==='villain'?'var(--red)':'#b98bff');
+    const missionsHtml = yh.entries.map(e=>{ if(e.type==='mentor'){ const lbl = e.outcome==='hero'? t('menteeHero') : e.outcome==='villain'? t('menteeVillain') : e.outcome==='died'? t('menteeDied') : t('menteeNeutral'); return `<div class="ymission">${t('mentorTag')} - ${lbl}</div>`; }
+      let outcomeLabel = ''; if(e.type==='combat') outcomeLabel = e.outcome==='win' ? t('combatOutcomeWin') : t('combatOutcomeLose'); else if(e.type==='rescue') outcomeLabel = e.outcome==='saved' ? t('rescueSaved') : t('rescueLost');
+      const locTxt = e.location ? ` - ${e.location.name} (${locTypeLabel(e.location.type)})` : ''; return `<div class="ymission">${e.tag}${locTxt}${outcomeLabel? ' - '+outcomeLabel:''}</div>`; }).join('');
+    return `<details class="yearcard"><summary>${t('year')} ${yh.year} <span class="tag" style="background:${col}22; color:${col};">${zone==='hero'?t('alignHero'):(zone==='villain'?t('alignVillain'):t('alignNeutral'))}</span></summary>${missionsHtml}</details>`; }).join('');
+  d.innerHTML = `
+    ${S.dead ? `<div class="death-banner"><div class="dtitle">${t('inMemoriam')}</div><p class="lead" style="margin:8px auto 0;">${S.heroName} - ${t('diedAt')} ${t('year').toLowerCase()} ${S.deathInfo.year}. ${t('causeLabel')}: ${S.deathInfo.cause}.</p></div>` : ''}
+    <span class="eyebrow">${t('endTitle')}</span><h1>${S.heroName}</h1>
+    <p class="lead" style="font-size:17px;">${S.lang==='fr'?endingFr:endingEn}</p>
+    ${S.team ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84)}</div>
+      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${factionName(S.team.side,S.team.tier)}</div></div>` : ''}
+    <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
+    <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
+    ${kpiHtml}${locBreak}${menteeDetail}
+    <h3>${t('turningPointsTitle')}</h3>${turningHtml}
+    <h3>${t('relations')}</h3>
+    <div class="relwrap">${Object.keys(CHARACTERS).map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
+      const col = charColor(c.align);
+      return `<div class="relcard"><div class="rn">${S.lang==='fr'?c.fr:c.en}</div><div class="barbg"><div class="barfill" style="width:${pct}%; background:${col};"></div></div></div>`; }).join('')}</div>
+    <h3>${t('yearByYearTitle')}</h3><div style="margin-top:6px;">${yearsHtml}</div>
+    <h3>${t('logTitle')}</h3>
+    <div style="margin-top:10px; max-height:280px; overflow:auto;">${S.log.map(e=>`<div class="log-entry ${e.villain?'villain':''}">${t('year')} ${e.year} - ${S.lang==='fr'?e.textFr:e.textEn}</div>`).join('')}</div>
+    <div class="actions"><button class="btn cyan" id="restart">${t('restart')}</button></div>`;
+  d.querySelector('#restart').onclick=()=>{ const lang = S.lang; S = freshState(lang); const badge=document.getElementById('rankBadgeFixed'); if(badge) badge.remove(); removeConvOverlay(); render(); };
+  return d;
+}
+
+function initParticles(){
+  const layer = document.createElement('div'); layer.className='particle-layer';
+  const n = 22;
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div'); p.className='particle';
+    const size = 2 + Math.random()*3;
+    p.style.width = size+'px'; p.style.height = size+'px';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.top = 100 + Math.random()*20 + 'vh';
+    p.style.animationDuration = (14 + Math.random()*16) + 's';
+    p.style.animationDelay = (Math.random()*18) + 's';
+    layer.appendChild(p);
+  }
+  document.body.insertBefore(layer, document.body.firstChild);
+}
+initParticles();
+render();
+</script>
+</body>
+</html>
