@@ -252,6 +252,29 @@
   @keyframes cineZoomBig{ 0%{ opacity:0; transform:scale(1.6);} 60%{ opacity:1; transform:scale(.95);} 100%{ transform:scale(1);} }
   @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
+
+  /* --- Ecran VERSUS --- */
+  .vs-overlay{ position:fixed; inset:0; z-index:320; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; overflow:hidden; animation: cineIn .25s ease; }
+  .vs-overlay.vs-out{ animation: cineOut .45s ease forwards; }
+  .vs-overlay .vs-flash{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, var(--accent-soft), transparent 70%); animation: cinePulse 1.2s ease-in-out infinite; }
+  .vs-scope{ position:relative; z-index:2; font-size:11px; letter-spacing:6px; font-weight:800; color:var(--accent); text-shadow:0 0 16px var(--accent); }
+  .vs-row{ position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:min(4vw,34px); width:100%; padding:0 12px; }
+  .vs-side{ display:flex; align-items:center; gap:10px; flex:1; }
+  .vs-side.left{ justify-content:flex-end; }
+  .vs-side.right{ justify-content:flex-start; }
+  .vs-slot{ display:flex; flex-direction:column; align-items:center; gap:8px; max-width:150px; }
+  .vs-slot .conv-portrait{ width:min(30vw,140px); height:min(30vw,140px); margin:0; }
+  .vs-slot .conv-portrait.player svg, .vs-slot .conv-portrait.player .portrait-avatar{ width:100%; height:100%; }
+  .vs-slot .conv-portrait.player .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .vs-name{ font-size:11.5px; font-weight:900; letter-spacing:.5px; text-align:center; text-shadow:0 0 12px currentColor; }
+  .vs-mid{ font-size:clamp(30px,8vw,72px); font-weight:900; color:#fff; letter-spacing:2px;
+    text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
+  @media (max-width:560px){
+    .vs-row{ gap:10px; }
+    .vs-slot{ max-width:96px; }
+    .vs-slot .conv-portrait{ width:26vw; height:26vw; }
+  }
 </style>
 </head>
 <body>
@@ -829,28 +852,91 @@ const MISSION_SENTENCE_PATTERNS = [
   { fr:(T,S_,L)=>`Volt Industries te signale ${T} a ${L}. ${cap(S_)} pourrait etre perdu si personne n'intervient.`,
     en:(T,S_,L)=>`Volt Industries flags ${T} in ${L}. ${cap(S_)} could be lost if no one intervenes.` },
 ];
+/* Fragments combinables : chaque categorie depasse 150 formulations distinctes. */
+function expandPhrases(cores, tails){
+  const out = [];
+  cores.forEach(c=>tails.forEach(tl=>{
+    out.push({ fr: (c.fr + (tl.fr||'')).replace(/\.?$/, '.'), en: (c.en + (tl.en||'')).replace(/\.?$/, '.') });
+  }));
+  return out;
+}
+/* Tirage sans repetition tant que le pool n'est pas epuise. */
+function pickNoRepeat(bucket, arr){
+  if(!S.usedChoicePhrases) S.usedChoicePhrases = {};
+  if(!S.usedTextIdx) S.usedTextIdx = {};
+  const store = Object.prototype.hasOwnProperty.call(S.usedChoicePhrases, bucket) ? S.usedChoicePhrases : S.usedTextIdx;
+  let used = store[bucket] || [];
+  if(used.length >= arr.length) used = [];
+  let i, guard = 0;
+  do { i = Math.floor(Math.random()*arr.length); guard++; } while(used.includes(i) && guard < 800);
+  used.push(i); store[bucket] = used;
+  return arr[i];
+}
+const HERO_TAILS = [
+  {fr:"", en:""},
+  {fr:", sans attendre une seconde de plus", en:", without waiting a second longer"},
+  {fr:", quitte a y laisser des plumes", en:", even at your own expense"},
+  {fr:", en gardant les civils hors de portee", en:", keeping civilians out of reach"},
+  {fr:", meme si personne ne te couvre", en:", even with no one covering you"},
+  {fr:", en prevenant Volt Industries en direct", en:", keeping Volt Industries live on comms"},
+  {fr:", avant que la situation ne devienne irreversible", en:", before the situation becomes irreversible"},
+  {fr:", en assumant publiquement le resultat", en:", publicly owning the outcome"},
+  {fr:", sans chercher la moindre reconnaissance", en:", without seeking any credit"},
+  {fr:", en improvisant avec ce que tu as sous la main", en:", improvising with whatever is at hand"},
+  {fr:", avec les secours locaux en appui", en:", with local responders backing you"},
+];
 const CHOICE_PHRASES = {
-  bold: [
-    {fr:"Foncer regler {t} de front, sans attendre de renfort.", en:"Rush to tackle {t} head-on, without waiting for backup."},
-    {fr:"T'exposer en premiere ligne pour stopper {t} immediatement.", en:"Put yourself on the front line to stop {t} immediately."},
-    {fr:"Prendre tous les risques necessaires pour sauver le plus de monde possible.", en:"Take every necessary risk to save as many people as possible."},
-    {fr:"Intervenir seul(e), quitte a payer le prix fort.", en:"Step in alone, whatever the cost."},
-    {fr:"Charger sans hesiter - la priorite est de proteger les gens.", en:"Charge in without hesitation - protecting people comes first."},
-  ],
-  clever: [
-    {fr:"Analyser {t} avant d'agir, pour frapper au bon endroit.", en:"Study {t} before acting, to strike where it counts."},
-    {fr:"Coordonner une reponse methodique avec les equipes sur place.", en:"Coordinate a methodical response with the teams on site."},
-    {fr:"Chercher une solution technique plutot que la confrontation directe.", en:"Look for a technical solution rather than direct confrontation."},
-    {fr:"Prendre le temps de reflechir a la meilleure strategie possible.", en:"Take the time to think through the best possible strategy."},
-    {fr:"Utiliser tes competences pour neutraliser {t} intelligemment.", en:"Use your skills to neutralize {t} intelligently."},
-  ],
-  selfish: [
-    {fr:"Profiter du chaos de {t} pour servir tes propres interets.", en:"Use the chaos of {t} to serve your own interests."},
-    {fr:"Laisser faire et recuperer ce qui peut t'etre utile dans la confusion.", en:"Let it happen and grab whatever is useful amid the confusion."},
-    {fr:"Monnayer ton intervention au prix fort.", en:"Charge a steep price for your intervention."},
-    {fr:"Detourner {t} a ton avantage, peu importe les consequences.", en:"Turn {t} to your advantage, whatever the consequences."},
-    {fr:"Tourner le dos a la situation si cela ne te rapporte rien.", en:"Turn your back on the situation if there's nothing in it for you."},
-  ],
+  bold: expandPhrases([
+    {fr:"Foncer regler {t} de front", en:"Rush to tackle {t} head-on"},
+    {fr:"T'exposer en premiere ligne pour stopper {t}", en:"Put yourself on the front line to stop {t}"},
+    {fr:"Prendre tous les risques pour sauver le plus de monde possible", en:"Take every risk to save as many people as possible"},
+    {fr:"Intervenir seul(e), quitte a payer le prix fort", en:"Step in alone, whatever the cost"},
+    {fr:"Charger sans hesiter, la priorite etant les gens", en:"Charge in without hesitation, people first"},
+    {fr:"Te placer entre {t} et les civils", en:"Put yourself between {t} and the civilians"},
+    {fr:"Entrer par le point le plus dangereux", en:"Go in through the most dangerous point"},
+    {fr:"Encaisser le premier choc a leur place", en:"Take the first hit in their place"},
+    {fr:"Descendre au plus profond de la zone sinistree", en:"Push into the deepest part of the disaster zone"},
+    {fr:"Retenir {t} le temps que tout le monde sorte", en:"Hold {t} back long enough for everyone to get out"},
+    {fr:"Affronter directement celui qui orchestre tout", en:"Confront whoever is orchestrating it directly"},
+    {fr:"Sauter dans le vide pour rattraper les blesses", en:"Leap into the void to catch the wounded"},
+    {fr:"Repousser {t} a mains nues s'il le faut", en:"Push {t} back bare-handed if you must"},
+    {fr:"Rester jusqu'au dernier evacue", en:"Stay until the last person is evacuated"},
+    {fr:"Briser l'obstacle plutot que de perdre du temps", en:"Smash through the obstacle rather than lose time"},
+  ], HERO_TAILS),
+  clever: expandPhrases([
+    {fr:"Analyser {t} avant d'agir, pour frapper au bon endroit", en:"Study {t} before acting, to strike where it counts"},
+    {fr:"Coordonner une reponse methodique avec les equipes sur place", en:"Coordinate a methodical response with the teams on site"},
+    {fr:"Chercher une solution technique plutot que la confrontation", en:"Look for a technical solution rather than confrontation"},
+    {fr:"Prendre le temps de batir la meilleure strategie possible", en:"Take the time to build the best possible strategy"},
+    {fr:"Utiliser tes competences pour neutraliser {t} intelligemment", en:"Use your skills to neutralize {t} intelligently"},
+    {fr:"Couper la source du probleme plutot que ses effets", en:"Cut the source of the problem rather than its effects"},
+    {fr:"Organiser l'evacuation par secteurs prioritaires", en:"Organize the evacuation by priority sectors"},
+    {fr:"Reconstituer la chronologie de {t} pour anticiper la suite", en:"Reconstruct the timeline of {t} to anticipate what's next"},
+    {fr:"Detourner l'attention pendant que tu desamorces", en:"Draw attention away while you defuse it"},
+    {fr:"Interroger les temoins avant de te lancer", en:"Question the witnesses before moving in"},
+    {fr:"Reprogrammer les systemes locaux a ton avantage", en:"Reprogram the local systems to your advantage"},
+    {fr:"Isoler la zone pour limiter la propagation", en:"Seal the area to limit the spread"},
+    {fr:"Demander un appui specialise avant d'entrer", en:"Request specialist support before going in"},
+    {fr:"Negocier pour gagner les minutes qui manquent", en:"Negotiate to buy the minutes you're missing"},
+    {fr:"Tendre un piege propre plutot que d'attaquer de face", en:"Set a clean trap rather than attacking head-on"},
+  ], HERO_TAILS),
+  selfish: expandPhrases([
+    {fr:"Profiter du chaos de {t} pour servir tes propres interets", en:"Use the chaos of {t} to serve your own interests"},
+    {fr:"Laisser faire et recuperer ce qui peut t'etre utile", en:"Let it happen and grab whatever might be useful"},
+    {fr:"Monnayer ton intervention au prix fort", en:"Charge a steep price for your intervention"},
+    {fr:"Detourner {t} a ton avantage, peu importe les consequences", en:"Turn {t} to your advantage, whatever the consequences"},
+    {fr:"Tourner le dos a la situation si elle ne te rapporte rien", en:"Turn your back on the situation if there's nothing in it for you"},
+    {fr:"Sauver d'abord ce qui a de la valeur marchande", en:"Save whatever has resale value first"},
+    {fr:"Mettre en scene ton arrivee pour les cameras", en:"Stage your arrival for the cameras"},
+    {fr:"Laisser un rival s'y casser les dents avant d'intervenir", en:"Let a rival break their teeth on it before stepping in"},
+    {fr:"Recuperer les donnees sensibles pendant {t}", en:"Extract the sensitive data during {t}"},
+    {fr:"Facturer chaque minute de ton temps", en:"Bill every minute of your time"},
+    {fr:"Choisir de sauver la personne la plus influente", en:"Choose to save the most influential person"},
+    {fr:"Effacer les traces de tes propres erreurs sur place", en:"Erase the traces of your own mistakes on site"},
+    {fr:"Faire porter l'echec a l'equipe locale", en:"Pin the failure on the local team"},
+    {fr:"Vendre ton rapport avant de le remettre", en:"Sell your report before filing it"},
+    {fr:"Partir des que les cameras s'eteignent", en:"Leave the moment the cameras go off"},
+  ], HERO_TAILS),
 };
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -866,10 +952,10 @@ function generateProceduralMission(rank){
   const type = pick(['combat','combat','rescue','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
-  const threat = pick(THREATS);
-  const stakes = pick(STAKES);
+  const threat = pickNoRepeat('threats', THREATS);
+  const stakes = pickNoRepeat('stakes', STAKES);
   const locName = randLocationName();
-  const pattern = pick(MISSION_SENTENCE_PATTERNS);
+  const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
@@ -879,7 +965,7 @@ function generateProceduralMission(rank){
     fr += ` ${c.fr} t'alerte personnellement de la situation.`;
     en += ` ${c.en} personally alerts you to the situation.`;
   }
-  const boldP = pick(CHOICE_PHRASES.bold), cleverP = pick(CHOICE_PHRASES.clever), selfishP = pick(CHOICE_PHRASES.selfish);
+  const boldP = pickNoRepeat('bold', CHOICE_PHRASES.bold), cleverP = pickNoRepeat('clever', CHOICE_PHRASES.clever), selfishP = pickNoRepeat('selfish', CHOICE_PHRASES.selfish);
   const fillT = (s, T) => s.replace('{t}', T);
   const choices = [
     { fr: fillT(boldP.fr, threat.fr), en: fillT(boldP.en, threat.en),
@@ -906,37 +992,80 @@ const MISSION_SENTENCE_PATTERNS_VILLAIN = [
   { fr:(T,S_,L)=>`Volt Industries ignore encore que tu es derriere ${T} a ${L}, qui menace deja ${S_}.`,
     en:(T,S_,L)=>`Volt Industries doesn't yet know you're behind ${T} in ${L}, already threatening ${S_}.` },
 ];
+const VILLAIN_TAILS = [
+  {fr:"", en:""},
+  {fr:", sans laisser la moindre trace derriere toi", en:", leaving no trace behind you"},
+  {fr:", quitte a bruler tes derniers appuis", en:", even if it burns your last support"},
+  {fr:", en filmant tout pour l'exemple", en:", recording all of it as an example"},
+  {fr:", pendant que les secours regardent ailleurs", en:", while the responders look elsewhere"},
+  {fr:", devant temoins, volontairement", en:", in front of witnesses, deliberately"},
+  {fr:", avec une precision qui glace le sang", en:", with blood-chilling precision"},
+  {fr:", puis disparaitre avant les sirenes", en:", then vanish before the sirens"},
+  {fr:", sans jamais expliquer pourquoi", en:", without ever explaining why"},
+  {fr:", en laissant ta marque bien visible", en:", leaving your mark clearly visible"},
+  {fr:", meme si ca t'expose a Volt Industries", en:", even if it exposes you to Volt Industries"},
+];
 const CHOICE_PHRASES_VILLAIN = {
-  ruthless: [
-    {fr:"Aller jusqu'au bout, sans aucune pitie.", en:"Go all the way, without any mercy."},
-    {fr:"Ecraser toute resistance immediatement.", en:"Crush any resistance immediately."},
-    {fr:"Faire un exemple pour que personne n'ose plus s'opposer a toi.", en:"Make an example so no one dares oppose you again."},
-    {fr:"Semer le chaos pour mieux regner ensuite.", en:"Sow chaos to rule more easily afterward."},
-    {fr:"Ne laisser aucun temoin de ton passage.", en:"Leave no witness behind."},
-  ],
-  calculating: [
-    {fr:"Calculer chaque etape pour maximiser les degats sans te compromettre.", en:"Calculate every step to maximize damage without compromising yourself."},
-    {fr:"Utiliser {t} comme diversion pour un objectif plus vaste.", en:"Use {t} as a diversion for a larger goal."},
-    {fr:"Manipuler les evenements depuis l'ombre.", en:"Manipulate events from the shadows."},
-    {fr:"Laisser d'autres porter le chapeau a ta place.", en:"Let others take the blame in your place."},
-    {fr:"Avancer tes pions avec une froide precision.", en:"Advance your pieces with cold precision."},
-  ],
-  hesitation: [
-    {fr:"Ressentir un doute soudain et epargner des innocents.", en:"Feel a sudden doubt and spare innocents."},
-    {fr:"Laisser filer l'occasion, trouble(e) par ce que tu es en train de devenir.", en:"Let the opportunity slip, troubled by what you're becoming."},
-    {fr:"Te retenir au dernier moment, sans trop savoir pourquoi.", en:"Hold back at the last moment, not quite knowing why."},
-    {fr:"Ecouter une derniere once de conscience.", en:"Listen to one last shred of conscience."},
-    {fr:"Detourner le regard, incapable d'aller jusqu'au bout.", en:"Look away, unable to go through with it."},
-  ],
+  ruthless: expandPhrases([
+    {fr:"Aller jusqu'au bout, sans aucune pitie", en:"Go all the way, without any mercy"},
+    {fr:"Ecraser toute resistance immediatement", en:"Crush any resistance immediately"},
+    {fr:"Faire un exemple pour que personne n'ose plus s'opposer a toi", en:"Make an example so no one dares oppose you again"},
+    {fr:"Amplifier {t} jusqu'a ce que la ville cede", en:"Amplify {t} until the city gives in"},
+    {fr:"Ne laisser aucun temoin de ton passage", en:"Leave no witness behind"},
+    {fr:"Briser publiquement celui qui essaie de t'arreter", en:"Publicly break whoever tries to stop you"},
+    {fr:"Raser l'endroit plutot que de negocier", en:"Level the place rather than negotiate"},
+    {fr:"Transformer {t} en demonstration de force", en:"Turn {t} into a show of force"},
+    {fr:"Couper toute issue et laisser la panique agir", en:"Seal every exit and let panic do the work"},
+    {fr:"Frapper les responsables chez eux, la nuit", en:"Hit those responsible at home, at night"},
+    {fr:"Reclamer une reddition totale, immediatement", en:"Demand total surrender, immediately"},
+    {fr:"Sacrifier tes propres hommes pour finir le travail", en:"Sacrifice your own people to finish the job"},
+    {fr:"Executer le plan sans une seconde de doute", en:"Execute the plan without a second of doubt"},
+    {fr:"Detruire ce que les heros essaient de sauver", en:"Destroy whatever the heroes are trying to save"},
+    {fr:"Terroriser assez fort pour qu'on cesse de te chercher", en:"Terrorize hard enough that they stop looking for you"},
+  ], VILLAIN_TAILS),
+  calculating: expandPhrases([
+    {fr:"Calculer chaque etape pour maximiser les degats sans te compromettre", en:"Calculate every step to maximize damage without compromising yourself"},
+    {fr:"Utiliser {t} comme diversion pour un objectif plus vaste", en:"Use {t} as a diversion for a larger goal"},
+    {fr:"Manipuler les evenements depuis l'ombre", en:"Manipulate events from the shadows"},
+    {fr:"Laisser d'autres porter le chapeau a ta place", en:"Let others take the blame in your place"},
+    {fr:"Avancer tes pions avec une froide precision", en:"Advance your pieces with cold precision"},
+    {fr:"Acheter le silence de ceux qui ont tout vu", en:"Buy the silence of everyone who saw it"},
+    {fr:"Fabriquer de fausses preuves contre un rival", en:"Fabricate false evidence against a rival"},
+    {fr:"Retarder l'intervention officielle par un dossier truque", en:"Delay the official response with a doctored file"},
+    {fr:"Etudier {t} pour en tirer une arme reutilisable", en:"Study {t} to turn it into a reusable weapon"},
+    {fr:"Infiltrer l'equipe adverse avant d'agir", en:"Infiltrate the opposing team before acting"},
+    {fr:"Faire fuiter juste assez d'informations pour semer le doute", en:"Leak just enough information to sow doubt"},
+    {fr:"Negocier une immunite avant que ca n'eclate", en:"Negotiate immunity before it all comes out"},
+    {fr:"Cartographier les faiblesses de chaque camp", en:"Map out every camp's weaknesses"},
+    {fr:"Deplacer l'operation la ou personne ne surveille", en:"Move the operation where nobody is watching"},
+    {fr:"Attendre que les heros s'epuisent avant de conclure", en:"Wait for the heroes to exhaust themselves before closing"},
+  ], VILLAIN_TAILS),
+  hesitation: expandPhrases([
+    {fr:"Ressentir un doute soudain et epargner des innocents", en:"Feel a sudden doubt and spare innocents"},
+    {fr:"Laisser filer l'occasion, trouble(e) par ce que tu deviens", en:"Let the opportunity slip, troubled by what you're becoming"},
+    {fr:"Te retenir au dernier moment, sans trop savoir pourquoi", en:"Hold back at the last moment, not quite knowing why"},
+    {fr:"Ecouter une derniere once de conscience", en:"Listen to one last shred of conscience"},
+    {fr:"Detourner le regard, incapable d'aller jusqu'au bout", en:"Look away, unable to go through with it"},
+    {fr:"Prevenir anonymement les secours", en:"Anonymously tip off the responders"},
+    {fr:"Interrompre {t} avant que ca ne devienne irreparable", en:"Interrupt {t} before it becomes irreparable"},
+    {fr:"Ouvrir une issue pour les civils pieges", en:"Open an exit for the trapped civilians"},
+    {fr:"Reconnaitre que tu es alle trop loin cette fois", en:"Admit you went too far this time"},
+    {fr:"Epargner un enfant qui te regarde droit dans les yeux", en:"Spare a child looking you straight in the eye"},
+    {fr:"Abandonner le plan et rentrer sans un mot", en:"Abandon the plan and go home without a word"},
+    {fr:"Sauver quelqu'un que tu etais venu detruire", en:"Save someone you came to destroy"},
+    {fr:"Rendre ce que tu venais de prendre", en:"Give back what you'd just taken"},
+    {fr:"Laisser une preuve qui permettra de tout arreter", en:"Leave behind evidence that can stop all of it"},
+    {fr:"Douter assez longtemps pour que l'occasion disparaisse", en:"Doubt long enough for the window to close"},
+  ], VILLAIN_TAILS),
 };
 function generateVillainMission(rank){
   const type = pick(['combat','combat','rescue','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
-  const threat = pick(THREATS);
-  const stakes = pick(STAKES);
+  const threat = pickNoRepeat('threats', THREATS);
+  const stakes = pickNoRepeat('stakes', STAKES);
   const locName = randLocationName();
-  const pattern = pick(MISSION_SENTENCE_PATTERNS_VILLAIN);
+  const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
@@ -946,7 +1075,7 @@ function generateVillainMission(rank){
     fr += ` ${c.fr} observe tes agissements de pres.`;
     en += ` ${c.en} is watching your actions closely.`;
   }
-  const ruthP = pick(CHOICE_PHRASES_VILLAIN.ruthless), calcP = pick(CHOICE_PHRASES_VILLAIN.calculating), hesP = pick(CHOICE_PHRASES_VILLAIN.hesitation);
+  const ruthP = pickNoRepeat('ruthless', CHOICE_PHRASES_VILLAIN.ruthless), calcP = pickNoRepeat('calculating', CHOICE_PHRASES_VILLAIN.calculating), hesP = pickNoRepeat('hesitation', CHOICE_PHRASES_VILLAIN.hesitation);
   const fillT = (s, T) => s.replace('{t}', T);
   const choices = [
     { fr: fillT(ruthP.fr, threat.fr), en: fillT(ruthP.en, threat.en),
@@ -992,8 +1121,8 @@ const SIGNATURE_ROLE_TEMPLATES = [
 function generateSignatureMission(rank){
   const charKey = pick(otherCharKeys());
   const c = CHARACTERS[charKey];
-  const roleT = pick(SIGNATURE_ROLE_TEMPLATES);
-  const threat = pick(THREATS), stakes = pick(STAKES), locName = randLocationName();
+  const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
+  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
   const type = pick(['combat','combat','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
@@ -1559,6 +1688,7 @@ function freshState(lang){
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
     activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null, usedFrag:{}, introConvDone:false,
+    usedChoicePhrases:{ bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }, usedTextIdx:{},
     portrait:null, playerCharKey:null,
     romance:null, romanceHistory:[], lastRomanceYear:null,
     lastStars:1, savedToHistory:false,
@@ -2244,10 +2374,65 @@ function showBreakthroughCinematic(){
   setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
   return dur;
 }
+/* ---------- Ecran VERSUS pour les combats a fort enjeu ---------- */
+function versusParticipants(mission){
+  const keys = [];
+  const add = k => { if(k && CHARACTERS[k] && k!==S.playerCharKey && !keys.includes(k)) keys.push(k); };
+  add(mission.charKey);
+  (mission.choices||[]).forEach(c=>{ if(c && c.eff && c.eff.rel) Object.keys(c.eff.rel).forEach(add); });
+  return keys;
+}
+function shouldShowVersus(mission){
+  if(!mission || mission.type!=='combat') return false;
+  if(!((mission.danger||0)>=3 || (mission.scope||1)>=5)) return false;
+  return versusParticipants(mission).length > 0;
+}
+function versusPortraitHTML(charObj){
+  const col = convBeamColor(charObj.align);
+  const name = S.lang==='fr'?charObj.fr:charObj.en;
+  const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
+  const inner = charObj.img ? `<img src="${charObj.img}" alt="${name}">` : `<span class="cp-glyph">${initial}</span>`;
+  const anim = charObj.align==='villain' ? 'glitch-in' : 'materialize-in';
+  return `<div class="vs-slot"><div class="conv-portrait ${anim}" style="--cp-color:${col};">${inner}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${col};">${name}</div></div>`;
+}
+function showVersusScreen(mission){
+  const parts = versusParticipants(mission);
+  const playerZone = zoneOf(S.align);
+  const playerCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
+  const foes = [], allies = [];
+  parts.forEach((k,i)=>{
+    const c = CHARACTERS[k];
+    const sameSide = (playerZone==='villain' && c.align==='villain') || (playerZone!=='villain' && c.align==='hero');
+    if(sameSide && i>0 && foes.length) allies.push(k); else foes.push(k);
+  });
+  const overlay = document.createElement('div'); overlay.className='vs-overlay';
+  overlay.innerHTML = `<div class="vs-flash"></div>
+    <div class="vs-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
+    <div class="vs-row">
+      <div class="vs-side left">
+        <div class="vs-slot"><div class="conv-portrait player materialize-in" style="--cp-color:${playerCol};">${avatarVisual()}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${playerCol};">${S.heroName||'???'}</div></div>
+        ${allies.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}
+      </div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side right">${foes.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const dur = 2100;
+  setTimeout(()=>{ overlay.classList.add('vs-out'); setTimeout(()=>overlay.remove(), 450); }, dur);
+  return dur;
+}
 function afterMissionRender(mission){
   if(mission && mission.pivotal){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
   const epicness = missionEpicness(mission);
+  if(shouldShowVersus(mission)){
+    const vsDur = showVersusScreen(mission);
+    setTimeout(()=>{
+      const dur = epicness!=='none' ? showCombatCinematic(mission, epicness) : 0;
+      setTimeout(()=>maybeTriggerConversation(), dur+150);
+    }, vsDur+450);
+    return;
+  }
   if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
   else { maybeTriggerConversation(); }
 }
@@ -2604,12 +2789,51 @@ function pickUnused(bucket, len){
   used.push(i); S.usedFrag[bucket] = used;
   return i;
 }
+/* ---------- Sujets/tons de conversation : couche supplementaire de variete ---------- */
+const CONV_THEMES = {
+  mentorat: {
+    fr:["\"Laisse-moi te dire ce que personne ne t'apprendra en briefing.\"","\"J'ai commence comme toi. J'ai fait toutes les erreurs, dans l'ordre.\"","\"Ton probleme n'est pas la puissance. C'est le rythme.\"","\"Ecoute-moi deux minutes, ca t'evitera deux ans de galere.\"","\"On ne devient pas solide en gagnant. On devient solide en recommencant.\"","\"Tu improvises bien. Trop bien. Un jour ca te coutera cher.\"","\"Apprends a partir avant la fin. C'est la lecon la plus dure.\"","\"Note ce que tu ressens la, maintenant. Tu en auras besoin plus tard.\""],
+    en:["\"Let me tell you what no briefing will ever teach you.\"","\"I started where you are. I made every mistake, in order.\"","\"Your problem isn't power. It's pacing.\"","\"Give me two minutes, it'll save you two years of pain.\"","\"You don't get solid by winning. You get solid by starting over.\"","\"You improvise well. Too well. One day that bill comes due.\"","\"Learn to leave before the end. Hardest lesson there is.\"","\"Remember what you feel right now. You'll need it later.\""],
+  },
+  tentation: {
+    fr:["\"J'ai une proposition. Elle est sale, elle est simple, elle marche.\"","\"Imagine ne plus jamais demander l'autorisation a personne.\"","\"Tout le monde ici a deja accepte quelque chose. Toi aussi, bientot.\"","\"Un seul nom, un seul dossier, et tu deviens intouchable.\"","\"Ce n'est pas de la trahison. C'est une reorientation de carriere.\"","\"Le prix est fixe. C'est toi qui decides ce que tu vends.\"","\"Tu peux dire non. Mais tu y penseras chaque nuit.\"","\"Ceux qui refusent finissent par travailler pour ceux qui acceptent.\""],
+    en:["\"I have an offer. It's dirty, it's simple, it works.\"","\"Imagine never asking anyone's permission again.\"","\"Everyone here has already said yes to something. You will too.\"","\"One name, one file, and you become untouchable.\"","\"It isn't betrayal. It's a career adjustment.\"","\"The price is set. You decide what you're selling.\"","\"You can say no. But you'll think about it every night.\"","\"The ones who refuse end up working for the ones who accepted.\""],
+  },
+  doute: {
+    fr:["\"Je ne sais plus si ce qu'on fait sert encore a quelque chose.\"","\"Cette nuit-la, j'ai hesite. Je n'ai jamais ose l'ecrire dans le rapport.\"","\"Tu dors, toi ? Moi j'ai arrete d'essayer.\"","\"Et si on s'etait trompes depuis le debut ?\"","\"On sauve des gens et personne ne compte ceux qu'on perd.\"","\"J'ai relu mes anciens dossiers. Je ne me reconnais pas.\"","\"Parfois je me demande qui je protege vraiment.\"","\"Dis-moi que ca vaut le coup. Meme si tu n'en es pas sur.\""],
+    en:["\"I don't know anymore whether what we do still matters.\"","\"That night, I hesitated. I never dared put it in the report.\"","\"Do you sleep? I stopped trying.\"","\"What if we've been wrong from the start?\"","\"We save people and nobody counts the ones we lose.\"","\"I reread my old files. I don't recognize myself.\"","\"Sometimes I wonder who I'm actually protecting.\"","\"Tell me it's worth it. Even if you're not sure.\""],
+  },
+  rivalite: {
+    fr:["\"On va bientot devoir savoir lequel de nous deux compte vraiment.\"","\"Tes chiffres sont bons. Les miens sont meilleurs.\"","\"Tu prends ma place, et tu le sais parfaitement.\"","\"Je n'ai rien contre toi. J'ai juste l'intention de gagner.\"","\"Ce terrain etait le mien avant que tu arrives.\"","\"Un de nous deux va se planter. Je parie sur toi.\"","\"Continue comme ca, et on reglera ca autrement qu'en parlant.\"","\"Tu es doue. C'est precisement ce qui me derange.\""],
+    en:["\"Soon we'll have to find out which of us actually matters.\"","\"Your numbers are good. Mine are better.\"","\"You're taking my place, and you know it perfectly well.\"","\"Nothing personal. I just intend to win.\"","\"This ground was mine before you showed up.\"","\"One of us is going to crash. My money's on you.\"","\"Keep this up and we'll settle it without words.\"","\"You're good. That's exactly what bothers me.\""],
+  },
+  confidence: {
+    fr:["\"Je ne l'ai dit a personne. Vraiment personne.\"","\"Il y a une chose dans mon passe que je n'assume toujours pas.\"","\"Si je te confie ca, tu deviens responsable de moi aussi.\"","\"J'ai menti dans un rapport, une fois. Une seule.\"","\"Ma famille ne sait rien de ce que je fais reellement.\"","\"J'ai garde quelque chose qui n'aurait jamais du sortir des archives.\"","\"Tu es la seule personne a qui je peux dire ca sans finir en dossier.\"","\"Ce que j'ai vu la-bas, je ne l'ai pas raconte. Pas entierement.\""],
+    en:["\"I've told no one. Genuinely no one.\"","\"There's something in my past I still can't own.\"","\"If I trust you with this, you become responsible for me too.\"","\"I lied in a report once. Only once.\"","\"My family knows nothing about what I actually do.\"","\"I kept something that should never have left the archives.\"","\"You're the only person I can say this to without becoming a file.\"","\"What I saw out there, I didn't report. Not all of it.\""],
+  },
+  avertissement: {
+    fr:["\"Ne rentre pas chez toi ce soir. Crois-moi.\"","\"Quelqu'un dans ton entourage parle. Beaucoup.\"","\"Ton nom est apparu dans une liste que tu ne veux pas lire.\"","\"Le prochain contrat qu'on te proposera est un piege.\"","\"Ils preparent quelque chose pour toi. Pas pour ton equipe : pour toi.\"","\"Verifie tes communications. Elles ne sont plus a toi.\"","\"Je te previens une fois. Il n'y aura pas de deuxieme fois.\"","\"Ce que tu crois etre un allie porte deux badges.\""],
+    en:["\"Don't go home tonight. Trust me.\"","\"Someone close to you is talking. A lot.\"","\"Your name showed up on a list you don't want to read.\"","\"The next contract they offer you is a trap.\"","\"They're preparing something for you. Not your team: you.\"","\"Check your comms. They're not yours anymore.\"","\"I'm warning you once. There won't be a second time.\"","\"What you think is an ally carries two badges.\""],
+  },
+  alliance: {
+    fr:["\"Une operation, une seule, et on ne se doit plus rien.\"","\"Tu couvres mon flanc, je couvre le tien. Rien de plus.\"","\"Separement on perd. Ensemble on a une chance reelle.\"","\"Je te propose un pacte, pas une amitie.\"","\"J'ai les acces. Tu as la force. Le reste est un detail.\"","\"On signe maintenant, on discutera des conditions plus tard.\"","\"Personne ne doit savoir qu'on a travaille ensemble.\"","\"Une alliance temporaire dure exactement le temps qu'elle sert.\""],
+    en:["\"One operation, just one, and we're even.\"","\"You cover my flank, I cover yours. Nothing more.\"","\"Apart we lose. Together we have a real shot.\"","\"I'm offering a pact, not a friendship.\"","\"I have the access. You have the force. The rest is detail.\"","\"We sign now, we argue terms later.\"","\"No one can know we worked together.\"","\"A temporary alliance lasts exactly as long as it's useful.\""],
+  },
+  retrouvailles: {
+    fr:["\"Combien de temps, cette fois ? Trois ans ? Quatre ?\"","\"Tu as change. Pas en mieux, pas en pire. Juste change.\"","\"J'ai cru que tu etais mort. J'avais presque fait mon deuil.\"","\"La derniere fois qu'on s'est vus, on ne s'est pas quittes bien.\"","\"Tu te souviens de cette nuit-la ? Moi oui. Chaque detail.\"","\"On reprend ou on avait laisse, ou on fait comme si de rien n'etait ?\"","\"Je pensais ne plus jamais avoir cette conversation avec toi.\"","\"Le temps a passe, mais la question, elle, n'a pas bouge.\""],
+    en:["\"How long this time? Three years? Four?\"","\"You've changed. Not better, not worse. Just changed.\"","\"I thought you were dead. I'd nearly grieved you.\"","\"Last time we saw each other, we didn't part well.\"","\"You remember that night? I do. Every detail.\"","\"Do we pick up where we left off, or pretend nothing happened?\"","\"I never thought I'd have this conversation with you again.\"","\"Time passed, but the question hasn't moved an inch.\""],
+  },
+};
+const CONV_THEME_KEYS = Object.keys(CONV_THEMES);
 function generateConversation(charKey){
   const c = CHARACTERS[charKey]; if(!c) return null;
   const tone = CONV_LINES[c.align] ? c.align : 'neutral';
   const pack = CONV_LINES[tone];
   const oi = pickUnused('open_'+tone+'_'+charKey, pack.openFr.length);
   const mi = pickUnused('mid_'+tone, pack.midFr.length);
+  const themeKey = CONV_THEME_KEYS[pickUnused('theme_'+charKey, CONV_THEME_KEYS.length)];
+  const theme = CONV_THEMES[themeKey];
+  const ti = pickUnused('themeline_'+themeKey, theme.fr.length);
   const buckets = ['noble','pragmatic','ruthless'];
   const choices = shuffle(buckets).map(b=>{
     const pool = CONV_CHOICE_POOL[b];
@@ -2620,10 +2844,10 @@ function generateConversation(charKey){
     return { fr:base.fr, en:base.en, eff };
   });
   return {
-    id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+Date.now(),
-    charKey,
-    linesFr:[ convFill(pack.openFr[oi], c), convFill(pack.midFr[mi], c) ],
-    linesEn:[ convFill(pack.openEn[oi], c), convFill(pack.midEn[mi], c) ],
+    id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+themeKey+'_'+ti,
+    charKey, theme:themeKey,
+    linesFr:[ convFill(pack.openFr[oi], c), convFill(theme.fr[ti], c), convFill(pack.midFr[mi], c) ],
+    linesEn:[ convFill(pack.openEn[oi], c), convFill(theme.en[ti], c), convFill(pack.midEn[mi], c) ],
     choices,
   };
 }
@@ -2998,13 +3222,21 @@ function maybeTriggerConversation(){
   if(maybeTriggerRomance()) return;
   const gap = S.currentYear - S.lastConvYear;
   const forced = gap >= 2;
-  if(forced || Math.random() < 0.5){
+  if(forced || Math.random() < 0.88){
     const keys = otherCharKeys();
     if(!keys.length) return;
-    const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
-    const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
-    const charKey = pool[Math.floor(Math.random()*pool.length)];
-    const conv = generateConversation(charKey);
+    let conv = null;
+    /* conversations signature : rares (12%), jamais deux fois la meme */
+    if(Math.random() < 0.12){
+      const sigPool = CONVERSATIONS.filter(cv=>!S.usedConvIds.includes(cv.id) && keys.includes(cv.charKey));
+      if(sigPool.length){ const sig = pick(sigPool); S.usedConvIds.push(sig.id); conv = sig; }
+    }
+    if(!conv){
+      const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
+      const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
+      const charKey = pool[Math.floor(Math.random()*pool.length)];
+      conv = generateConversation(charKey);
+    }
     if(!conv) return;
     S.activeConversation = conv; S.convLineIndex = 0;
     S.lastConvYear = S.currentYear;
