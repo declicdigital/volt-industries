@@ -260,6 +260,40 @@
 <div id="app"></div>
 
 <script>
+/* ============================ STORAGE (localStorage) ============================ */
+(function(){
+  var PREFIX = 'volt:';
+  function ok(v){ return Promise.resolve(v); }
+  window.storage = {
+    set: function(key, value){
+      try{ localStorage.setItem(PREFIX+key, String(value)); }catch(e){}
+      return ok({ key:key, ok:true });
+    },
+    get: function(key){
+      var v = null;
+      try{ v = localStorage.getItem(PREFIX+key); }catch(e){}
+      return ok(v===null ? null : { key:key, value:v });
+    },
+    delete: function(key){
+      try{ localStorage.removeItem(PREFIX+key); }catch(e){}
+      return ok({ key:key, ok:true });
+    },
+    list: function(prefix){
+      var keys = [];
+      try{
+        for(var i=0;i<localStorage.length;i++){
+          var k = localStorage.key(i);
+          if(k && k.indexOf(PREFIX)===0){
+            var bare = k.slice(PREFIX.length);
+            if(!prefix || bare.indexOf(prefix)===0) keys.push(bare);
+          }
+        }
+      }catch(e){}
+      return ok({ keys:keys });
+    }
+  };
+})();
+
 /* ============================ THEME ============================ */
 function lerp(a,b,tt){ return a+(b-a)*tt; }
 function hexToRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)]; }
@@ -1502,8 +1536,8 @@ const PRESETS = [
 
 /* Personnages jouables : uniquement la nouvelle generation. Les 20 premiers restent des PNJ
    qui interviennent tout au long de la carriere (rencontres, alliances, rivalites). */
-const SELECTABLE_IDS = ['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','inferno','archange',
-  'baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur','zeroday'];
+const SELECTABLE_IDS = ['nightlark','titanwolf','bastion','tempest','glitch',
+  'baronvex','warlock','pyra','zeroday','rustjaw'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 const NPC_ONLY_KEYS = PRESETS.filter(p=>!SELECTABLE_IDS.includes(p.id)).map(p=>p.charKey);
 
