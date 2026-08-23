@@ -2190,12 +2190,12 @@ const PRESETS = [
     descFr:'Operateur en veste tactique, visiere lumineuse et brassard energetique.', descEn:'Operator in a tactical jacket with a glowing visor and energy armband.' },
 ];
 
-/* Personnages jouables : les nouveaux heros (+ villains d'origine en attendant). */
+/* Personnages jouables : les nouveaux heros et villains. */
 const SELECTABLE_IDS = ['ferrolux','faucon','cobalt','rocktan','arcanor','arcania','veuvebleue','thoria','vizor',
-  'malachar','kaerus','aurelia','vipera','sepulcre','obsidian','nihil','mandate','fuchsia','boomnpc'];
+  'malvorax','nocturnus','aurelys','medusia','sylvarn','vantar','orbulon','messire','fourose'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
-/* Les personnages qui interviennent pendant la carriere : les 20 d'origine + Kid-Spider, Doctor Boom et les nouveaux heros. */
-const NEW_HERO_IMGS = ['nh1','nh2','nh3','nh4','nh5','nh6','nh7','nh8','nh9'].map(k=>CHAR_IMG[k]);
+/* Les personnages qui interviennent pendant la carriere : les 20 d'origine + Kid-Spider, Doctor Boom et les nouveaux. */
+const NEW_HERO_IMGS = ['nh1','nh2','nh3','nh4','nh5','nh6','nh7','nh8','nh9','nv1','nv2','nv3','nv4','nv5','nv6','nv7','nv8','nv9'].map(k=>CHAR_IMG[k]);
 const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(NEW_HERO_IMGS).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
