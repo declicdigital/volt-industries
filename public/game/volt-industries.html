@@ -2815,7 +2815,7 @@ function screenFaceForge(){
       morphology:a.morphology, path:a.path, powers:a.powers,
       align: FF.side==='villain' ? -30 : 30,
       stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
-      look:{ suitColor:FF.color, aura:FF.aura==='aucune'?'aucune':'neon', cape: FF.cape?'longue':'aucune' },
+      look:{ suitColor:FF.color, secondaryColor:'#0f1420', aura:FF.aura==='aucune'?'none':'electric', cape: !!FF.cape, helmet: FF.mask==='aucun'?'none':'none', glasses: FF.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
       descFr:fr?FF_ARCH[FF.arch].fr:'', descEn:FF_ARCH[FF.arch].en
     });
     S.heroName = '';
