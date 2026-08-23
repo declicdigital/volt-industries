@@ -827,6 +827,24 @@ const THREATS = [
   {fr:"une evasion massive d'une prison de haute securite", en:"a mass breakout from a high-security prison"},
   {fr:"un piratage des systemes de defense", en:"a hack of the defense systems"},
   {fr:"une secte technologique preparant un coup d'eclat", en:"a tech cult preparing a major strike"},
+  {fr:"une breche multiverselle instable", en:"an unstable multiverse breach"},
+  {fr:"un artefact cosmique vole dans un coffre blinde", en:"a cosmic artifact stolen from a vault"},
+  {fr:"une variante hostile venue d'une autre ligne temporelle", en:"a hostile variant from another timeline"},
+  {fr:"une fuite de radiations gamma dans un laboratoire", en:"a gamma radiation leak in a lab"},
+  {fr:"un symbiote echappe d'un caisson de confinement", en:"a symbiote escaped from a containment pod"},
+  {fr:"un portail dimensionnel ouvert en pleine ville", en:"a dimensional portal open in the middle of the city"},
+  {fr:"une flotte d'eclaireurs extraterrestres en approche", en:"an incoming alien scout fleet"},
+  {fr:"une armure de combat autonome devenue incontrolable", en:"a rogue autonomous combat armor"},
+  {fr:"un culte de la fin des temps invoquant une entite ancienne", en:"an apocalypse cult summoning an ancient entity"},
+  {fr:"un serum d'amelioration humaine detourne au marche noir", en:"an enhancement serum diverted to the black market"},
+  {fr:"un reacteur a particules en surcharge critique", en:"a particle reactor in critical overload"},
+  {fr:"une anomalie temporelle qui rejoue la meme heure", en:"a temporal anomaly looping the same hour"},
+  {fr:"un sceptre psychique retrouve entre de mauvaises mains", en:"a psychic scepter found in the wrong hands"},
+  {fr:"une armee de sentinelles synthetiques activee a distance", en:"an army of synthetic sentinels remotely activated"},
+  {fr:"un vaisseau-mere en orbite basse qui charge ses canons", en:"a mothership in low orbit charging its cannons"},
+  {fr:"un pillard cosmique reclamant un tribut planetaire", en:"a cosmic raider demanding planetary tribute"},
+  {fr:"une faille de dimension miroir qui aspire des quartiers entiers", en:"a mirror-dimension fault swallowing whole blocks"},
+  {fr:"un sorcier renegat brisant les sceaux d'un sanctuaire", en:"a rogue sorcerer breaking a sanctum's seals"},
 ];
 const STAKES = [
   {fr:"des centaines de civils", en:"hundreds of civilians"},
@@ -845,6 +863,16 @@ const STAKES = [
   {fr:"l'avenir economique de la ville", en:"the city's economic future"},
   {fr:"une infrastructure critique", en:"critical infrastructure"},
   {fr:"la vie d'un enfant pris au piege", en:"the life of a trapped child"},
+  {fr:"l'integrite de la ligne temporelle sacree", en:"the integrity of the sacred timeline"},
+  {fr:"un artefact cosmique capable de reecrire la realite", en:"a cosmic artifact able to rewrite reality"},
+  {fr:"la moitie de la population d'un continent", en:"half a continent's population"},
+  {fr:"les sceaux d'un sanctuaire millenaire", en:"the seals of a thousand-year-old sanctum"},
+  {fr:"le secret de l'identite civile de ton equipe", en:"your team's secret civilian identities"},
+  {fr:"les accords qui encadrent les surhumains", en:"the accords governing enhanced individuals"},
+  {fr:"la barriere entre deux univers voisins", en:"the barrier between two neighboring universes"},
+  {fr:"un reacteur ARC de derniere generation", en:"a next-generation arc reactor"},
+  {fr:"le dernier echantillon du serum d'amelioration", en:"the last sample of the enhancement serum"},
+  {fr:"l'existence meme de ta variante dans une autre realite", en:"the very existence of your variant in another reality"},
 ];
 const MISSION_SENTENCE_PATTERNS = [
   { fr:(T,S_,L)=>`${cap(T)} eclate a ${L} et menace ${S_}. Chaque seconde compte.`,
@@ -855,6 +883,18 @@ const MISSION_SENTENCE_PATTERNS = [
     en:(T,S_,L)=>`Reports are flooding in: ${T} strikes ${L}, with ${S_} at stake.` },
   { fr:(T,S_,L)=>`Volt Industries te signale ${T} a ${L}. ${cap(S_)} pourrait etre perdu si personne n'intervient.`,
     en:(T,S_,L)=>`Volt Industries flags ${T} in ${L}. ${cap(S_)} could be lost if no one intervenes.` },
+  { fr:(T,S_,L)=>`Code rouge au centre de commandement : ${T} a ${L}. Protocole d'intervention niveau 7, ${S_} en premiere ligne.`,
+    en:(T,S_,L)=>`Code red at command: ${T} in ${L}. Level 7 response protocol, ${S_} on the line.` },
+  { fr:(T,S_,L)=>`Les capteurs orbitaux confirment ${T} au-dessus de ${L}. Signature energetique inconnue, ${S_} directement expose.`,
+    en:(T,S_,L)=>`Orbital sensors confirm ${T} above ${L}. Unknown energy signature, ${S_} directly exposed.` },
+  { fr:(T,S_,L)=>`L'agence de surveillance des anomalies classe ${T} a ${L} en menace de classe Omega. En jeu : ${S_}.`,
+    en:(T,S_,L)=>`The anomaly watch agency rates ${T} in ${L} an Omega-class threat. At stake: ${S_}.` },
+  { fr:(T,S_,L)=>`Un flash energetique deforme le ciel de ${L} : ${T}. Les analystes parlent deja d'incident de niveau extinction pour ${S_}.`,
+    en:(T,S_,L)=>`An energy flash warps the sky over ${L}: ${T}. Analysts are already calling it an extinction-level event for ${S_}.` },
+  { fr:(T,S_,L)=>`Ta comm crache un ordre de deploiement immediat : ${T} a ${L}. Objectif prioritaire : ${S_}.`,
+    en:(T,S_,L)=>`Your comm spits an immediate deployment order: ${T} in ${L}. Priority objective: ${S_}.` },
+  { fr:(T,S_,L)=>`Le mur de retro-ingenierie affiche ${T} a ${L} en boucle. Si la breche s'elargit, ${S_} disparait avec elle.`,
+    en:(T,S_,L)=>`The analysis wall loops ${T} in ${L}. If the breach widens, ${S_} goes with it.` },
 ];
 /* Fragments combinables : chaque categorie depasse 150 formulations distinctes. */
 function expandPhrases(cores, tails){
@@ -2786,6 +2826,37 @@ const CONV_CHOICE_POOL = {
     { fr:"Vendre l'information au plus offrant.", en:"Sell the information to the highest bidder.", eff:{align:-8, popularity:1, rel:-3} },
   ],
 };
+/* Options supplementaires, champ lexical MCU */
+CONV_CHOICE_POOL.noble.push(
+  { fr:"Refuser d'utiliser l'artefact, meme pour gagner.", en:"Refuse to use the artifact, even to win.", eff:{align:8, rel:3, intelligence:1} },
+  { fr:"Assembler l'equipe au complet avant d'intervenir.", en:"Assemble the full team before moving in.", eff:{align:5, popularity:3, rel:4} },
+  { fr:"Evacuer les civils avant d'affronter la breche.", en:"Evacuate civilians before facing the breach.", eff:{align:8, courage:2, rel:2} },
+  { fr:"Signer les accords de supervision et l'assumer.", en:"Sign the oversight accords and own it.", eff:{align:6, popularity:2, rel:1} },
+  { fr:"Protéger la ligne temporelle plutot que ton propre passe.", en:"Protect the timeline instead of your own past.", eff:{align:9, courage:3, rel:2} },
+  { fr:"Tendre la main a ta variante au lieu de la neutraliser.", en:"Reach out to your variant instead of neutralizing them.", eff:{align:7, rel:5} },
+  { fr:"Rendre le sceptre au sanctuaire, sans conditions.", en:"Return the scepter to the sanctum, no conditions.", eff:{align:8, rel:3} },
+  { fr:"Porter seul le cout du dommage collateral.", en:"Carry the collateral damage cost alone.", eff:{align:7, popularity:-3, courage:3, rel:3} },
+);
+CONV_CHOICE_POOL.pragmatic.push(
+  { fr:"Confiner l'artefact et etudier sa signature energetique.", en:"Contain the artifact and study its energy signature.", eff:{intelligence:5, rel:1} },
+  { fr:"Demander une analyse de divergence avant d'agir.", en:"Request a divergence analysis before acting.", eff:{intelligence:5} },
+  { fr:"Negocier un couloir de portail securise.", en:"Negotiate a secured portal corridor.", eff:{intelligence:4, rel:3} },
+  { fr:"Verrouiller la breche a minima et gagner du temps.", en:"Minimally lock the breach and buy time.", eff:{intelligence:4, courage:1} },
+  { fr:"Deployer l'essaim de drones en reconnaissance.", en:"Deploy the drone swarm for recon.", eff:{intelligence:4, popularity:1} },
+  { fr:"Proposer un protocole conjoint avec sa faction.", en:"Propose a joint protocol with their faction.", eff:{intelligence:3, rel:4} },
+  { fr:"Falsifier le rapport de dommages pour eviter l'audience.", en:"Doctor the damage report to dodge the hearing.", eff:{intelligence:4, align:-3, popularity:2} },
+  { fr:"Garder le prototype d'armure en reserve, hors inventaire.", en:"Keep the armor prototype off the books.", eff:{intelligence:5, align:-2} },
+);
+CONV_CHOICE_POOL.ruthless.push(
+  { fr:"Prendre l'artefact et l'utiliser sur-le-champ.", en:"Take the artifact and use it on the spot.", eff:{align:-9, courage:4, rel:-5} },
+  { fr:"Effacer sa variante avant qu'elle ne devienne un probleme.", en:"Erase their variant before it becomes a problem.", eff:{align:-10, intelligence:3, rel:-7} },
+  { fr:"Ouvrir la breche plus grand pour couvrir ta fuite.", en:"Widen the breach to cover your escape.", eff:{align:-9, courage:3, rel:-4} },
+  { fr:"Reclamer un tribut a la ville que tu viens de sauver.", en:"Demand tribute from the city you just saved.", eff:{align:-8, popularity:2, rel:-3} },
+  { fr:"Retourner l'IA de defense contre ses proprietaires.", en:"Turn the defense AI against its owners.", eff:{align:-8, intelligence:4, rel:-4} },
+  { fr:"Injecter le serum sans attendre les tests.", en:"Inject the serum without waiting for tests.", eff:{align:-6, courage:5, intelligence:-2, rel:-2} },
+  { fr:"Livrer les identites civiles de ton equipe au conseil.", en:"Hand your team's civilian identities to the council.", eff:{align:-10, popularity:3, rel:-8} },
+  { fr:"Laisser la moitie de la zone tomber pour sauver l'autre.", en:"Let half the zone fall to save the other.", eff:{align:-7, courage:3, rel:-5} },
+);
 function convFill(str, charObj){
   return str.replace(/\{char\}/g, S.lang==='fr'?charObj.fr:charObj.en)
             .replace(/\{hero\}/g, S.heroName || (S.lang==='fr'?'toi':'you'))
@@ -2833,6 +2904,38 @@ const CONV_THEMES = {
   retrouvailles: {
     fr:["\"Combien de temps, cette fois ? Trois ans ? Quatre ?\"","\"Tu as change. Pas en mieux, pas en pire. Juste change.\"","\"J'ai cru que tu etais mort. J'avais presque fait mon deuil.\"","\"La derniere fois qu'on s'est vus, on ne s'est pas quittes bien.\"","\"Tu te souviens de cette nuit-la ? Moi oui. Chaque detail.\"","\"On reprend ou on avait laisse, ou on fait comme si de rien n'etait ?\"","\"Je pensais ne plus jamais avoir cette conversation avec toi.\"","\"Le temps a passe, mais la question, elle, n'a pas bouge.\""],
     en:["\"How long this time? Three years? Four?\"","\"You've changed. Not better, not worse. Just changed.\"","\"I thought you were dead. I'd nearly grieved you.\"","\"Last time we saw each other, we didn't part well.\"","\"You remember that night? I do. Every detail.\"","\"Do we pick up where we left off, or pretend nothing happened?\"","\"I never thought I'd have this conversation with you again.\"","\"Time passed, but the question hasn't moved an inch.\""],
+  },
+  multivers: {
+    fr:["\"Il existe une version de toi qui a dit oui. Elle a fini bien pire que toi.\"","\"J'ai vu ta variante dans une autre ligne temporelle. Elle portait notre insigne.\"","\"Chaque choix que tu fais fait bourgeonner une realite entiere. Dors bien.\"","\"La breche s'elargit. Le multivers ne pardonne pas les improvisations.\"","\"On a mesure la divergence : on est deja hors de la ligne temporelle sacree.\"","\"Dans un autre univers, on est amis. Dans un autre, tu m'as tue.\"","\"Les incursions ont commence. Deux realites se touchent, une seule survit.\"","\"Ne cherche pas ta variante. Ce qu'elle est devenue te briserait.\"","\"L'agence temporelle a ouvert un dossier sur toi. Divergence critique.\"","\"Les portails ne sont pas des raccourcis. Ce sont des blessures.\"","\"J'ai un point d'ancrage. Une seule traversee, aller simple.\"","\"Si tu croises ton double, ne lui parle pas. Surtout pas de la fin.\""],
+    en:["\"There's a version of you who said yes. It ended far worse for them.\"","\"I saw your variant on another timeline. They wore our insignia.\"","\"Every choice you make branches a whole reality. Sleep well.\"","\"The breach is widening. The multiverse doesn't forgive improvisation.\"","\"We measured the divergence: we're already off the sacred timeline.\"","\"In another universe we're friends. In another, you killed me.\"","\"The incursions have started. Two realities touch, only one survives.\"","\"Don't look for your variant. What they became would break you.\"","\"The time agency opened a file on you. Critical divergence.\"","\"Portals aren't shortcuts. They're wounds.\"","\"I have an anchor point. One crossing, one way.\"","\"If you meet your double, don't talk to them. Especially not about the ending.\""],
+  },
+  artefacts: {
+    fr:["\"Six artefacts cosmiques, un seul gantelet. Tu comprends l'urgence ?\"","\"Le sceptre chuchote. A moi aussi, il a chuchote.\"","\"Cette pierre n'obeit pas. Elle choisit.\"","\"Le cube contient plus d'energie que toute notre grille electrique.\"","\"Ce metal absorbe les vibrations. Il n'existe qu'un seul filon.\"","\"L'armure tient sur un reacteur gros comme mon poing. Ne le fais pas tomber.\"","\"Le marteau ne pese rien. Sauf pour ceux qui n'en sont pas dignes.\"","\"On a scelle la relique sous trois sanctuaires. Quelqu'un a ouvert le premier.\"","\"Le serum ne cree rien. Il amplifie ce que tu es deja.\"","\"Cet oeil abrite une pierre du temps. Tu ne l'utiliseras pas.\"","\"Le prototype d'armure numero neuf a disparu de l'inventaire.\"","\"Les radiations gamma ne se soignent pas. On apprend a vivre avec le monstre.\""],
+    en:["\"Six cosmic artifacts, one gauntlet. Do you get the urgency?\"","\"The scepter whispers. It whispered to me too.\"","\"That stone doesn't obey. It chooses.\"","\"The cube holds more energy than our entire grid.\"","\"That metal eats vibration. There's only one vein of it.\"","\"The armor runs on a reactor the size of my fist. Don't drop it.\"","\"The hammer weighs nothing. Except for those who aren't worthy.\"","\"We sealed the relic under three sanctums. Someone opened the first.\"","\"The serum creates nothing. It amplifies what you already are.\"","\"That eye holds a time stone. You will not use it.\"","\"Armor prototype number nine is missing from inventory.\"","\"Gamma radiation doesn't heal. You learn to live with the monster.\""],
+  },
+  accords: {
+    fr:["\"Cent dix-sept pays ont signe. Toi, tu signes quand ?\"","\"Sans supervision, on n'est plus des heros : on est une menace non declaree.\"","\"Le conseil veut nos identites civiles dans un registre. Tu imagines la suite ?\"","\"Ils appellent ca de la responsabilite. Moi j'appelle ca une laisse.\"","\"Une equipe divisee par un traite, c'est deja une equipe vaincue.\"","\"Le comite de surveillance a ouvert une enquete sur ta derniere intervention.\"","\"Les dommages collateraux de la bataille sont chiffres. On te presente la facture.\"","\"Si on refuse la supervision, on devient des fugitifs. Simple, non ?\"","\"Le protocole exige un ordre ecrit avant chaque deploiement. Chaque seconde perdue tue.\"","\"Ils ont vote la dissolution de l'unite. Officiellement, on n'existe plus.\"","\"Un tribunal international nous attend. Amene ton meilleur discours.\"","\"L'audience est publique. Le monde entier va choisir un camp.\""],
+    en:["\"A hundred and seventeen countries signed. When do you sign?\"","\"Without oversight we're not heroes: we're an undeclared threat.\"","\"The council wants our civilian identities on a registry. See where that goes?\"","\"They call it accountability. I call it a leash.\"","\"A team split by a treaty is already a beaten team.\"","\"The oversight committee opened an inquiry into your last intervention.\"","\"They've priced the collateral damage from the battle. The bill's yours.\"","\"Refuse oversight and we become fugitives. Simple, right?\"","\"Protocol demands written orders before every deployment. Every lost second kills.\"","\"They voted to dissolve the unit. Officially, we don't exist.\"","\"An international tribunal is waiting. Bring your best speech.\"","\"The hearing is public. The whole world is going to pick a side.\""],
+  },
+  cosmique: {
+    fr:["\"Il y a des choses la-haut qui considerent la Terre comme un garde-manger.\"","\"Un titan arrive. Il pense rendre service a l'univers.\"","\"Le vaisseau-mere est deja en orbite basse. On a peut-etre six heures.\"","\"On a intercepte un signal d'empire. Ils reclament un tribut planetaire.\"","\"J'ai vu mourir des planetes entieres. La tienne n'a rien d'exceptionnel.\"","\"Les gardiens de cette galaxie sont morts. Personne ne viendra.\"","\"Il faut un portail de masse ou on n'atteindra jamais leur flotte.\"","\"L'equilibre, c'est leur mot pour genocide organise.\"","\"Une entite ancienne s'est reveillee entre deux dimensions.\"","\"Le royaume quantique n'a pas de bas. Juste des couches.\"","\"On ne gagne pas dans l'espace. On survit et on rentre.\"","\"Un dieu mort vaut mieux qu'un dieu decu. Souviens-t'en.\""],
+    en:["\"There are things up there that see Earth as a pantry.\"","\"A titan is coming. He thinks he's doing the universe a favor.\"","\"The mothership is already in low orbit. Maybe six hours.\"","\"We intercepted an imperial signal. They're demanding planetary tribute.\"","\"I've watched whole planets die. Yours isn't special.\"","\"This galaxy's guardians are dead. Nobody's coming.\"","\"We need a mass portal or we'll never reach their fleet.\"","\"Balance is their word for organized genocide.\"","\"An ancient entity woke up between two dimensions.\"","\"The quantum realm has no bottom. Just layers.\"","\"You don't win in space. You survive and come home.\"","\"A dead god is better than a disappointed one. Remember that.\""],
+  },
+  equipe: {
+    fr:["\"On n'est pas une equipe. On est une bombe a retardement bien habillee.\"","\"L'initiative n'a jamais eu pour but de gagner. Elle sert a repondre.\"","\"Assemblez-vous, ou perdez separement. Choisis.\"","\"Le protocole de secours porte ton nom. Ne me deçois pas.\"","\"J'ai perdu trop de coequipiers pour te laisser jouer les solitaires.\"","\"Le nouveau recrue te regarde comme tu me regardais avant.\"","\"Une equipe, ce n'est pas six pouvoirs. C'est six personnes qui restent.\"","\"On enterre nos morts avec les insignes. Pas avec les explications.\"","\"Si l'un de nous tombe, la formation change, pas la mission.\"","\"La derniere fois qu'on s'est assembles, une ville est tombee du ciel.\"","\"Ce quartier general a deja ete detruit deux fois. Statistiquement, on est due.\"","\"Il faut un plan B qui ne depende ni de moi ni de toi.\""],
+    en:["\"We're not a team. We're a well-dressed time bomb.\"","\"The initiative was never meant to win. It's meant to respond.\"","\"Assemble, or lose separately. Pick one.\"","\"The fallback protocol has your name on it. Don't disappoint me.\"","\"I've lost too many teammates to let you play lone wolf.\"","\"The new recruit looks at you the way you used to look at me.\"","\"A team isn't six powers. It's six people who stay.\"","\"We bury our dead with the insignia. Not with the explanations.\"","\"If one of us falls, the formation changes, not the mission.\"","\"Last time we assembled, a city fell out of the sky.\"","\"This HQ has been destroyed twice already. Statistically we're due.\"","\"We need a plan B that depends on neither of us.\""],
+  },
+  identite: {
+    fr:["\"Le masque n'est pas un deguisement. C'est ce qui protege les tiens.\"","\"Un grand pouvoir, une grande facture. Personne ne te previent du montant.\"","\"Ton nom civil a fuite sur le reseau. Ils savent ou dort ta famille.\"","\"Tu es devenu un symbole. Les symboles n'ont pas droit aux mauvais jours.\"","\"Ils t'aiment ce mois-ci. Attends le prochain rapport de dommages.\"","\"J'ai porte ce costume avant toi. Il ne pardonne pas les doutes.\"","\"Ce n'est pas la puissance qui te definit, c'est ce que tu refuses de faire.\"","\"On ne prend pas ta retraite dans ce metier. On te la prend.\"","\"Ta vraie identite est deja un dossier ouvert quelque part.\"","\"Le monde a besoin d'un heros. Toi tu as besoin d'une nuit de sommeil.\"","\"Tu portes un insigne : chaque erreur devient une politique publique.\"","\"Un jour tu devras choisir entre le masque et la personne dessous.\""],
+    en:["\"The mask isn't a costume. It's what protects your people.\"","\"Great power, great invoice. Nobody tells you the amount.\"","\"Your civilian name leaked on the net. They know where your family sleeps.\"","\"You became a symbol. Symbols aren't allowed bad days.\"","\"They love you this month. Wait for the next damage report.\"","\"I wore that suit before you. It doesn't forgive doubt.\"","\"Power doesn't define you; what you refuse to do does.\"","\"Nobody retires in this job. Retirement is taken from you.\"","\"Your real identity is already an open file somewhere.\"","\"The world needs a hero. You need one night of sleep.\"","\"You wear an insignia: every mistake becomes public policy.\"","\"One day you'll choose between the mask and the person under it.\""],
+  },
+  technologie: {
+    fr:["\"L'IA de defense a pris ses propres conclusions. Elle nous trouve redondants.\"","\"J'ai un essaim de drones qui obeit a la voix. La mienne, pour l'instant.\"","\"Le nanotech se reforme plus vite qu'on ne le detruit.\"","\"Ils ont copie nos plans d'armure. En pire, donc en plus dangereux.\"","\"Le systeme de surveillance orbitale peut viser n'importe qui, n'importe quand.\"","\"Une intelligence synthetique a demande l'asile. Reflechis avant de repondre.\"","\"Mon assistant vocal a menti dans un rapport. Ca commence comme ca.\"","\"Le prototype d'exosquelette est instable au-dela de mach un.\"","\"On a inverse la polarite du reacteur. Ne demande pas comment.\"","\"Les sentinelles synthetiques se reactivent par signal radio. Coupe tout.\"","\"On peut cloner une conscience. On ne peut pas cloner une conscience morale.\"","\"L'algorithme predit tes decisions a 91 %. C'est le probleme.\""],
+    en:["\"The defense AI drew its own conclusions. It finds us redundant.\"","\"I have a drone swarm that answers to a voice. Mine, for now.\"","\"The nanotech reassembles faster than we can break it.\"","\"They copied our armor schematics. Worse, so more dangerous.\"","\"The orbital surveillance grid can target anyone, anytime.\"","\"A synthetic intelligence asked for asylum. Think before you answer.\"","\"My voice assistant lied in a report. That's how it starts.\"","\"The exosuit prototype is unstable past mach one.\"","\"We reversed the reactor polarity. Don't ask how.\"","\"The synthetic sentinels reactivate on a radio signal. Kill everything.\"","\"You can clone a consciousness. You can't clone a conscience.\"","\"The algorithm predicts your decisions 91% of the time. That's the problem.\""],
+  },
+  sacrifice: {
+    fr:["\"Il y a un chemin sur quatorze millions. Un seul.\"","\"Quelqu'un doit rester en bas pour refermer la breche. Devine qui.\"","\"Une ame contre une pierre. Le prix ne se negocie pas.\"","\"Si je ne remonte pas, tu diras a l'equipe que c'etait mon choix.\"","\"On perd cette bataille pour gagner la suivante. Accepte-le.\"","\"J'ai fait le calcul dix mille fois. Tu ne survis pas dans la majorite.\"","\"Le monde entier ou une personne. Les vrais heros hesitent quand meme.\"","\"Ne me sauve pas. Sauve le protocole.\"","\"Tout ce que je peux te promettre, c'est que ca aura servi.\"","\"Cette porte se referme de l'interieur. Toujours.\"","\"On ne echange pas des vies. On choisit lesquelles porter.\"","\"Si ca tourne mal, brule tout, y compris mon dossier.\""],
+    en:["\"There's one path out of fourteen million. One.\"","\"Someone has to stay down there to close the breach. Guess who.\"","\"A soul for a stone. The price isn't negotiable.\"","\"If I don't come back, tell the team it was my call.\"","\"We lose this battle to win the next one. Accept it.\"","\"I ran the numbers ten thousand times. You don't survive in most.\"","\"The whole world or one person. Real heroes still hesitate.\"","\"Don't save me. Save the protocol.\"","\"All I can promise you is that it will have counted.\"","\"That door only closes from the inside. Always.\"","\"We don't trade lives. We choose which ones to carry.\"","\"If this goes bad, burn it all, my file included.\""],
   },
 };
 const CONV_THEME_KEYS = Object.keys(CONV_THEMES);
@@ -3306,8 +3409,8 @@ function maybeTriggerConversation(){
   if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
   if(maybeTriggerRomance()) return;
   const gap = S.currentYear - S.lastConvYear;
-  const forced = gap >= 2;
-  if(forced || Math.random() < 0.88){
+  const forced = gap >= 6;
+  if(forced || Math.random() < 0.30){
     const keys = otherCharKeys();
     if(!keys.length) return;
     let conv = null;
