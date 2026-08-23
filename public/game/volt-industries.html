@@ -3316,7 +3316,8 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  S.mentorCap = Math.max(1, Math.floor(S.years/5));
+  /* 1 recrue mini, 3 maxi meme sur une tres longue carriere. */
+  S.mentorCap = Math.min(3, Math.max(1, Math.floor(S.years/8)));
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
