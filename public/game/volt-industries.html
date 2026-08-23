@@ -39,6 +39,12 @@
   .langsel{ display:flex; gap:6px; }
   .langsel button{ border:1px solid var(--line); background:rgba(255,255,255,.03); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; color:var(--dim); }
   .langsel button.active{ background:var(--accent); color:#03060d; border-color:var(--accent);}
+  .topopts{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+  .palsel{ display:flex; gap:5px; flex-wrap:wrap; }
+  .palsel .swatch{ width:20px; height:20px; border-radius:50%; border:1.5px solid var(--line); cursor:pointer; padding:0; transition:transform .12s, box-shadow .12s; }
+  .palsel .swatch:hover{ transform:scale(1.15); }
+  .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
+  @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
   .rank-badge{ position:fixed; top:16px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .rank-badge .rname{ font-size:12px; font-weight:800; color:var(--ink); letter-spacing:1px; }
