@@ -147,10 +147,11 @@
     animation: particleFloat linear infinite; box-shadow:0 0 6px var(--accent); }
   @keyframes particleFloat{ 0%{ transform:translateY(0) translateX(0); opacity:0;} 10%{opacity:.6;} 90%{opacity:.4;} 100%{ transform:translateY(-110vh) translateX(20px); opacity:0;} }
 
-  .conv-portrait{ width:76px; height:76px; border-radius:50%; margin:0 auto 14px; position:relative; display:flex; align-items:center; justify-content:center;
+  .conv-portrait{ width:118px; height:118px; border-radius:50%; margin:0 auto 14px; position:relative; display:flex; align-items:center; justify-content:center;
     overflow:hidden; background:radial-gradient(circle at 40% 30%, rgba(255,255,255,.08), rgba(0,0,0,.3)); }
-  .conv-portrait img{ width:100%; height:100%; object-fit:cover; }
-  .conv-portrait .cp-glyph{ font-size:28px; font-weight:900; color:#fff; opacity:.85; }
+  .conv-portrait img{ width:125%; height:125%; object-fit:cover; object-position:50% 8%; }
+  .conv-portrait .cp-glyph{ font-size:40px; font-weight:900; color:#fff; opacity:.85; }
+
   .conv-portrait.materialize-in{ animation: materializeIn .7s cubic-bezier(.2,.8,.3,1); }
   .conv-portrait.glitch-in{ animation: glitchIn .6s steps(2,end); }
   .conv-portrait::after{ content:''; position:absolute; inset:0; border-radius:50%; border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 18px var(--cp-color, var(--accent)); }
@@ -406,14 +407,30 @@ const MORPHOLOGIES = [
 const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none','standard','thruster','armored'];
 const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
 
-const CHARACTERS = {
-  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', img:null}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', img:null},
-  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', img:null}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', img:null},
-  malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', img:null}, mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', img:null},
-  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', img:null}, obsidian:{fr:"Obsidian",en:"Obsidian",align:'villain', img:null},
+const CHAR_IMG = {
+  char1:"/__l5e/assets-v1/cf2378dd-c610-4926-931c-b9c686868de5/char1.png",
+  char2:"/__l5e/assets-v1/ac6e7356-9e29-41bf-9a0b-d6845d9668e0/char2.png",
+  char3:"/__l5e/assets-v1/c85bed7f-dbc2-4c27-9705-2feada839811/char3.png",
+  char4:"/__l5e/assets-v1/c73ce399-db3d-48cc-b783-e8c798646ca3/char4.png",
+  char5:"/__l5e/assets-v1/a1110626-8508-441e-9aa9-12bfe8c01fc1/char5.png",
+  char6:"/__l5e/assets-v1/a5a1f131-fbd0-468e-858f-427b91401a02/char6.png",
+  char7:"/__l5e/assets-v1/1e7a2066-6dec-4835-86f0-8231cacba1e4/char7.png",
+  char8:"/__l5e/assets-v1/c582e6fa-37e3-4ab1-993f-78ff7809d4b7/char8.png",
+  char9:"/__l5e/assets-v1/861f3863-5d02-4954-96bf-f2d6e866593a/char9.png",
+  char10:"/__l5e/assets-v1/5bae346d-58b4-4f57-ad5d-07e08d962e5c/char10.png",
 };
-/* To use real portraits: set e.g. CHARACTERS.volt.img = "data:image/png;base64,...." (or a relative path)
-   once the PNGs are provided - the conversation overlay will automatically use them instead of the placeholder glyph. */
+const CHARACTERS = {
+  theg:{fr:"The G",en:"The G",align:'hero', img:CHAR_IMG.char10},
+  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', img:CHAR_IMG.char1}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', img:CHAR_IMG.char5},
+  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', img:CHAR_IMG.char7}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', img:CHAR_IMG.char6},
+  aegis:{fr:"Aegis",en:"Aegis",align:'hero', img:CHAR_IMG.char3},
+  ferrum:{fr:"Ferrum",en:"Ferrum",align:'hero', img:CHAR_IMG.char4},
+  solen:{fr:"Kilian Solen",en:"Kilian Solen",align:'hero', img:CHAR_IMG.char9},
+  sable:{fr:"Sable",en:"Sable",align:'hero', img:CHAR_IMG.char2},
+  malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', img:null}, mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', img:null},
+  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', img:CHAR_IMG.char8}, obsidian:{fr:"Obsidian",en:"Obsidian",align:'villain', img:null},
+};
+
 
 /* ============================ FACTIONS (7 tiers per side) ============================ */
 const FACTIONS = {
@@ -998,7 +1015,48 @@ const CONVERSATIONS = [
       { fr:"Le defier ouvertement sur le terrain de l'innovation.", en:"Openly challenge him on innovation.", eff:{intelligence:4, rel:{obsidian:-2}} },
       { fr:"Detruire publiquement sa credibilite.", en:"Publicly destroy his credibility.", eff:{align:-6, popularity:3, rel:{obsidian:-7}} },
     ]},
+  { id:'conv_theg', charKey:'theg',
+    linesFr:["The G t'attend, l'interface holographique de son bras encore allumee. \"Tout le monde ici parle de toi. Moi, je prefere juger sur le terrain.\"","\"Si tu veux marcher a mes cotes, il faudra tenir la ligne meme quand personne ne regarde.\""],
+    linesEn:["The G waits for you, the holo interface on his arm still lit. \"Everyone here talks about you. I'd rather judge you in the field.\"","\"If you want to walk beside me, you'll hold the line even when nobody's watching.\""],
+    choices:[
+      { fr:"Accepter son alliance et jurer de tenir la ligne.", en:"Accept his alliance and swear to hold the line.", eff:{align:7, courage:3, rel:{theg:6}} },
+      { fr:"Lui demander de prouver d'abord ce qu'il vaut.", en:"Ask him to prove his own worth first.", eff:{courage:3, rel:{theg:-2}} },
+      { fr:"Lui repondre que tu n'obeis a aucune ligne.", en:"Tell him you follow no one's line.", eff:{align:-6, rel:{theg:-5}} },
+    ]},
+  { id:'conv_aegis', charKey:'aegis',
+    linesFr:["Aegis se releve de sa position de garde. \"J'ai vu ton dernier deploiement. Tu couvres mal ton flanc gauche.\"","\"Je peux t'entrainer. Ou je peux te ramasser plus tard, en morceaux.\""],
+    linesEn:["Aegis rises from a guard stance. \"I saw your last deployment. You leave your left flank open.\"","\"I can train you. Or I can scrape you off the pavement later.\""],
+    choices:[
+      { fr:"Accepter son entrainement, humblement.", en:"Accept her training, humbly.", eff:{align:4, courage:4, rel:{aegis:5}} },
+      { fr:"Proposer un duel amical pour tester sa theorie.", en:"Propose a friendly duel to test the theory.", eff:{courage:5, rel:{aegis:2}} },
+      { fr:"Balayer la remarque d'un geste.", en:"Wave the remark off.", eff:{align:-3, rel:{aegis:-4}} },
+    ]},
+  { id:'conv_ferrum', charKey:'ferrum',
+    linesFr:["Ferrum pose une main enorme sur ton epaule. \"Les gens comme nous cassent tout, meme sans le vouloir.\"","\"Alors moi j'ai appris a compter jusqu'a trois avant de frapper. Toi aussi tu devrais.\""],
+    linesEn:["Ferrum drops a huge hand on your shoulder. \"People like us break things, even by accident.\"","\"So I learned to count to three before I swing. You should too.\""],
+    choices:[
+      { fr:"Promettre de mesurer chacun de tes coups.", en:"Promise to measure every blow.", eff:{align:6, rel:{ferrum:5}} },
+      { fr:"Lui dire que la retenue coute des vies.", en:"Tell him restraint costs lives.", eff:{courage:4, rel:{ferrum:-2}} },
+      { fr:"Rire de sa prudence de vieux colosse.", en:"Laugh at the old colossus's caution.", eff:{align:-5, rel:{ferrum:-5}} },
+    ]},
+  { id:'conv_solen', charKey:'solen',
+    linesFr:["Kilian Solen fait defiler des donnees sur son avant-bras. \"J'ai intercepte des transferts internes qui ne devraient pas exister.\"","\"Je te partage tout, mais on garde ca entre nous jusqu'a preuve solide.\""],
+    linesEn:["Kilian Solen scrolls data on his forearm. \"I intercepted internal transfers that shouldn't exist.\"","\"I'll share everything, but this stays between us until we have hard proof.\""],
+    choices:[
+      { fr:"Enqueter ensemble, discretement et proprement.", en:"Investigate together, quietly and cleanly.", eff:{intelligence:5, rel:{solen:5}} },
+      { fr:"Exiger de tout rendre public immediatement.", en:"Demand it all go public immediately.", eff:{align:4, popularity:3, rel:{solen:-2}} },
+      { fr:"Lui proposer de monnayer l'information.", en:"Suggest cashing in on the information.", eff:{align:-8, rel:{solen:-6}} },
+    ]},
+  { id:'conv_sable', charKey:'sable',
+    linesFr:["Sable surgit d'une ruelle, masque baisse. \"Je bosse dans l'ombre, mais je choisis toujours mon camp.\"","\"Une alliance ? Tu me couvres, je te ramene ce que personne d'autre ne peut trouver.\""],
+    linesEn:["Sable slips out of an alley, mask down. \"I work in the dark, but I always pick a side.\"","\"An alliance? You cover me, I bring back what nobody else can find.\""],
+    choices:[
+      { fr:"Sceller l'alliance sur une poignee de main.", en:"Seal the alliance with a handshake.", eff:{align:3, intelligence:3, rel:{sable:6}} },
+      { fr:"Accepter, mais poser des regles strictes.", en:"Accept, but set strict rules.", eff:{align:5, rel:{sable:2}} },
+      { fr:"Refuser de travailler avec un electron libre.", en:"Refuse to work with a loose cannon.", eff:{courage:2, rel:{sable:-5}} },
+    ]},
 ];
+
 
 const LOC_A = ['Nova','Astra','Vex','Kaer','Sol','Umbra','Lys','Drak','Zeph','Ilya','Cor','Thal','Bryn','Oster','Val','Mira','Iron','Sil'];
 const LOC_B = ['opolis','andra','ovia','ith','burg','mere','vane','stead','horn','dor','wyn','grad','fell','sen','mont','haven','cite','port'];
