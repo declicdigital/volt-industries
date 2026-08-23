@@ -3304,7 +3304,7 @@ function startBattle(mission, done){
       delay = 1400;
     }
     // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
-    const foeFirst = Math.random() < (0.28 + Math.min(0.22, Math.max(0, form.streak)*0.06));
+    const foeFirst = Math.random() < clamp(0.30 + (fs-ps)*0.012, 0.1, 0.6);
     setTimeout(()=>{
       if(foeFirst){
         setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
