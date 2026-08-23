@@ -3285,7 +3285,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.25, dmgMult * allyBonus);
+    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
