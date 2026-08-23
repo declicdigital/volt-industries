@@ -4414,6 +4414,47 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${S.combat.won}</div><div class="klabel">${t('fightsWon')}</div></div>
     <div class="kpi"><div class="kval">${S.combat.lost}</div><div class="klabel">${t('fightsLost')}</div></div>
     <div class="kpi"><div class="kval">${S.mentees.length}</div><div class="klabel">${t('menteesCount')}</div></div></div>`;
+  /* ---------- Note de carriere detaillee ---------- */
+  const isFr = S.lang==='fr';
+  const cs = careerScore();
+  const gradeCol = cs.total>=82 ? '#ffd23f' : (cs.total>=56 ? '#00e5ff' : (cs.total>=40 ? '#b98bff' : 'var(--red)'));
+  const fights = S.combat.won + S.combat.lost;
+  const winPct = fights ? Math.round(cs.winRate*100) : 0;
+  const statAvg = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/3);
+  const bestStat = (function(){ const e = [['courage',S.stats.courage],['intelligence',S.stats.intelligence],['popularity',S.stats.popularity]].sort((a,b)=>b[1]-a[1])[0]; return t(e[0])+' '+e[1]; })();
+  const scoreBars = cs.parts.map(p=>{
+    const neg = p.max===0;
+    const pct = neg ? clamp(Math.abs(p.value)*8,0,100) : clamp(p.value/p.max*100,0,100);
+    const col = neg ? 'var(--red)' : gradeCol;
+    const val = neg ? (p.value===0 ? '0' : Math.round(p.value)) : `${Math.round(p.value)}/${p.max}`;
+    return `<div class="relcard"><div class="rn" style="display:flex; justify-content:space-between; gap:8px;"><span>${p.label}</span><span style="color:${col};">${val}</span></div>
+      <div class="barbg"><div class="barfill" style="width:${pct}%; background:${col};"></div></div></div>`;
+  }).join('');
+  const verdicts = [];
+  if(fights >= 3 && cs.winRate < 0.35) verdicts.push(isFr?`Un palmares tres lourd : ${S.combat.lost} defaites pour ${S.combat.won} victoires. Les infirmeries de Volt Industries connaissent ${S.heroName} par coeur.`:`A brutal record: ${S.combat.lost} defeats for ${S.combat.won} wins. Volt Industries' medbays know ${S.heroName} by heart.`);
+  else if(fights >= 3 && cs.winRate >= 0.7) verdicts.push(isFr?`Une domination nette sur le terrain : ${winPct}% de combats remportes.`:`Clear field dominance: ${winPct}% of fights won.`);
+  else if(fights) verdicts.push(isFr?`Un palmares en equilibre instable : ${winPct}% de victoires.`:`A knife-edge record: ${winPct}% wins.`);
+  else verdicts.push(isFr?`Une carriere menee presque sans affrontement direct.`:`A career waged almost without direct confrontation.`);
+  if(locArr.length===0) verdicts.push(isFr?`Aucun lieu ne porte durablement sa marque.`:`No location bears a lasting mark.`);
+  else if(cs.locWeight > (S.missionsPlan.length||10)*1.6) verdicts.push(isFr?`Son empreinte depasse largement le cadre local : la Timeline Sacree en garde la trace.`:`Their footprint goes far beyond local: the Sacred Timeline keeps the record.`);
+  if(Math.abs(S.align) < 15) verdicts.push(isFr?`Ni heros ni villain assume : l'histoire retiendra surtout ses hesitations.`:`Neither committed hero nor villain: history will mostly remember the hesitation.`);
+  if(S.skills.length) verdicts.push(isFr?`${S.skills.length} technique(s) rare(s) maitrisee(s) au fil des exils et des entrainements.`:`${S.skills.length} rare technique(s) mastered through exile and training.`);
+  if(S.turningPoints.length >= 2) verdicts.push(isFr?`${S.turningPoints.length} basculements de camp : une trajectoire imprevisible.`:`${S.turningPoints.length} side switches: an unpredictable trajectory.`);
+  if(S.battleForm && S.battleForm.injury) verdicts.push(isFr?`La carriere se termine sur une blessure encore ouverte.`:`The career ends on a wound still open.`);
+  const scoreHtml = `<div class="team-hero-banner" style="border-color:${gradeCol}; margin-top:14px;">
+      <div style="font-size:44px; font-weight:900; color:${gradeCol}; text-shadow:0 0 24px ${gradeCol}; line-height:1;">${cs.total}<span style="font-size:20px; color:var(--dim);">/100</span></div>
+      <div class="tname" style="color:${gradeCol}; font-size:16px; margin-top:4px;">${cs.grade} - ${cs.gradeLabel}</div>
+    </div>
+    <div class="relwrap" style="margin-top:12px;">${scoreBars}</div>
+    <div style="margin-top:10px;">${verdicts.map(v=>`<div class="turn-item">${v}</div>`).join('')}</div>`;
+  const kpiHtml2 = `<div class="kpi-grid" style="margin-top:10px;">
+    <div class="kpi"><div class="kval">${fights? winPct+'%':'-'}</div><div class="klabel">${isFr?'Taux de victoire':'Win rate'}</div></div>
+    <div class="kpi"><div class="kval">${S.skills.length}</div><div class="klabel">${isFr?'Techniques rares':'Rare techniques'}</div></div>
+    <div class="kpi"><div class="kval">${S.turningPoints.length}</div><div class="klabel">${isFr?'Basculements':'Side switches'}</div></div>
+    <div class="kpi"><div class="kval">${computePowerLevel()}</div><div class="klabel">${t('power')}</div></div>
+    <div class="kpi"><div class="kval">${statAvg}</div><div class="klabel">${isFr?'Moyenne des stats':'Average stats'}</div></div>
+    <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?'Histoires d\\'amour':'Romances'}</div></div></div>
+    <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>` : '';
   const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
   const turningHtml = S.turningPoints.length ? S.turningPoints.map(tp=>{ const fromL = tp.from==='hero'?t('alignHero'):(tp.from==='villain'?t('alignVillain'):t('alignNeutral')); const toL = tp.to==='hero'?t('alignHero'):(tp.to==='villain'?t('alignVillain'):t('alignNeutral'));
