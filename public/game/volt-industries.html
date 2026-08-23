@@ -1731,21 +1731,35 @@ function applyPreset(p){
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
   S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
+  S.presetId = p.id;
+  const st = p.stats || {};
+  S.stats = {
+    courage: Math.max(5, Math.min(95, 50 + (st.courage||0))),
+    intelligence: Math.max(5, Math.min(95, 50 + (st.intelligence||0))),
+    popularity: Math.max(5, Math.min(95, 50 + (st.popularity||0)))
+  };
+  S.presetPerk = S.lang==='fr'?p.perkFr:p.perkEn;
+  S.presetFlaw = S.lang==='fr'?p.flawFr:p.flawEn;
 }
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
-    <div class="scratch-card" id="scratchCard"><div class="pname">${t('scratchTitle')}</div><div class="pdesc">${t('scratchDesc')}</div></div>
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
-  d.querySelector('#scratchCard').onclick = ()=>{ S.usingPreset=false; S.portrait=null; S.playerCharKey=null; S.screen='name'; render(); };
   const grid = d.querySelector('#presetGrid');
+  const statLine = (s)=>{
+    const sign = (v)=> (v>0?'+':'')+v;
+    return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
+  };
   grid.innerHTML = PRESETS.map(p=>{
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
-    const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HERO':'HERO');
+    const badge = p.side==='villain' ? 'VILLAIN' : 'HERO';
     const nm = S.lang==='fr'?p.nameFr:p.nameEn;
     return `<div class="preset-card ${p.side}" data-id="${p.id}" style="--pc-color:${col};">
       <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span></div>
-      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`;
+      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
+      ${statLine(p.stats||{})}
+      <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
+      <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div></div>`;
   }).join('');
 
   grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
