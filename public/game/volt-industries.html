@@ -2583,6 +2583,7 @@ function applyPreset(p){
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
   S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
+  S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
   S.stats = {
@@ -2663,19 +2664,22 @@ const FF_MASK = { aucun:{fr:'Visage decouvert',en:'No mask',p:'face fully uncove
 const FF_AURA = { neon:{fr:'Aura neon',en:'Neon aura',p:'crackling neon energy arcs around the body'},
   fumee:{fr:'Fumee',en:'Smoke',p:'swirling smoke and embers around the body'},
   aucune:{fr:'Aucune',en:'None',p:'no supernatural effects, grounded realism'} };
-const FF = { photo:null, results:[], sel:-1, side:'hero', arch:'armure', color:'#00e5ff', cape:true, mask:'demi', aura:'neon', busy:false, err:'', camStream:null };
+const FF_SEX = { m:{fr:'Homme',en:'Male',p:'an adult man', pr:'male'}, f:{fr:'Femme',en:'Female',p:'an adult woman', pr:'female'} };
+const FF = { photo:null, results:[], sel:-1, side:'hero', sex:'m', arch:'armure', color:'#00e5ff', cape:true, mask:'demi', aura:'neon', busy:false, err:'', camStream:null };
 const FF_COLORS = ['#00e5ff','#ff2d55','#7c5cff','#ffd166','#22c55e','#ff7a1a','#e5e7eb','#ff4fd8'];
 
 function ffStopCam(){ if(FF.camStream){ FF.camStream.getTracks().forEach(t=>t.stop()); FF.camStream=null; } }
 
 function ffPrompt(){
   const a = FF_ARCH[FF.arch];
-  const side = FF.side==='villain'
-    ? 'a menacing supervillain, intimidating and darkly charismatic'
-    : 'a heroic superhero, confident and inspiring';
+  const sx = FF_SEX[FF.sex] || FF_SEX.m;
+  const side = (FF.side==='villain'
+    ? 'a menacing ' + (FF.sex==='f' ? 'supervillainess' : 'supervillain') + ', intimidating and darkly charismatic'
+    : 'a heroic ' + (FF.sex==='f' ? 'superheroine' : 'superhero') + ', confident and inspiring');
   return [
     'Ultra photorealistic cinematic movie still, shot on 85mm lens, shallow depth of field, dramatic volumetric rim lighting, high dynamic range, film grain, 8k detail.',
-    'Full upper-body portrait (head to waist) of ' + side + ' standing in a dark futuristic laboratory hangar.',
+    'Full upper-body portrait (head to waist) of ' + side + ', ' + sx.p + ', standing in a dark futuristic laboratory hangar.',
+    'The character is ' + sx.pr + '; the body, build and costume fit must read clearly as ' + sx.pr + '.',
     'CRITICAL: keep the EXACT face, facial features, skin tone, age, hair and identity of the person in the reference photo. Do not beautify, do not change ethnicity or gender, do not replace the face. It must be immediately recognizable as the same real human being.',
     'Costume: ' + a.promptFr + '. Primary suit color ' + FF.color + ' with dark charcoal and metallic accents.',
     FF.cape ? 'Wearing a long dramatic cape catching the wind.' : 'No cape.',
@@ -2700,10 +2704,29 @@ async function ffDownscale(dataUrl, maxW, maxH, quality){
   });
 }
 
+function ffHttpError(status, body){
+  const fr = S.lang==='fr';
+  let msg = '';
+  try{ const j = JSON.parse(body); msg = (j && (j.message || (j.error && j.error.message))) || ''; }catch(e){}
+  if(status === 402){
+    return new Error(fr ? "Plus de credits IA sur ce projet : la forge de personnage ne peut pas generer d'image pour le moment. Recharge les credits Lovable (Settings > Plans & credits) puis relance, ou choisis un personnage existant dans la liste."
+      : "This project is out of AI credits, so the character forge cannot render an image right now. Top up Lovable credits (Settings > Plans & credits) and retry, or pick an existing character.");
+  }
+  if(status === 429){
+    return new Error(fr ? "Trop de demandes d'un coup. Attends une trentaine de secondes puis relance la forge."
+      : "Too many requests at once. Wait about 30 seconds and retry the forge.");
+  }
+  if(status === 403){
+    return new Error(fr ? "La generation d'image est bloquee par les reglages du projet (IA desactivee ou limite atteinte)."
+      : "Image generation is blocked by the project settings (AI disabled or limit reached).");
+  }
+  return new Error((fr?'Erreur ':'Error ') + status + (msg ? ' - ' + msg : ''));
+}
+
 async function ffGenerate(onFrame){
   const body = { image: FF.photo, prompt: ffPrompt() };
   const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:true}, body)) });
-  if(!res.ok || !res.body) throw new Error('HTTP ' + res.status + ' ' + (await res.text().catch(()=>'')));
+  if(!res.ok || !res.body) throw ffHttpError(res.status, await res.text().catch(()=>''));
   const reader = res.body.getReader();
   const dec = new TextDecoder();
   let buf = '', sawAny = false, sawFinal = false, streamError = '';
@@ -2735,7 +2758,7 @@ async function ffGenerate(onFrame){
   if(streamError) throw new Error(streamError);
   if(!sawAny){
     const rep = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:false}, body)) });
-    if(!rep.ok) throw new Error('HTTP ' + rep.status);
+    if(!rep.ok) throw ffHttpError(rep.status, await rep.text().catch(()=>''));
     const j = await rep.json();
     const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
     if(!b64) throw new Error('no image');
@@ -2771,6 +2794,8 @@ function screenFaceForge(){
           <div class="ff-chip ${FF.side==='hero'?'on':''}" data-v="hero">HERO</div>
           <div class="ff-chip ${FF.side==='villain'?'on':''}" data-v="villain">VILLAIN</div>
         </div>
+        <div class="ff-lab">${fr?'SEXE':'SEX'}</div>
+        <div class="ff-opt" id="ffSex">${Object.keys(FF_SEX).map(k=>`<div class="ff-chip ${FF.sex===k?'on':''}" data-v="${k}">${fr?FF_SEX[k].fr:FF_SEX[k].en}</div>`).join('')}</div>
         <div class="ff-lab">${fr?'ARCHETYPE':'ARCHETYPE'}</div>
         <div class="ff-opt" id="ffArch">${Object.keys(FF_ARCH).map(k=>`<div class="ff-chip ${FF.arch===k?'on':''}" data-v="${k}">${fr?FF_ARCH[k].fr:FF_ARCH[k].en}</div>`).join('')}</div>
         <div class="ff-lab">${fr?'COULEUR DU COSTUME':'SUIT COLOR'}</div>
@@ -2825,6 +2850,7 @@ function screenFaceForge(){
     });
   };
   chips('#ffSide', v=>{ FF.side=v; FF.color = v==='villain' ? '#ff2d55' : '#00e5ff'; });
+  chips('#ffSex', v=>{ FF.sex=v; });
   chips('#ffArch', v=>{ FF.arch=v; });
   chips('#ffCol', v=>{ FF.color=v; });
   chips('#ffMask', v=>{ FF.mask=v; });
@@ -2888,7 +2914,7 @@ function screenFaceForge(){
         FF.results.push(small); FF.sel = FF.results.length - 1;
       }
     }catch(e){
-      errEl.textContent = (fr?'Echec de la generation : ':'Generation failed: ') + (e && e.message ? e.message : e);
+      errEl.textContent = (e && e.message ? e.message : (fr?'Echec de la generation.':'Generation failed.'));
     }
     FF.busy = false; genBtn.disabled = false;
     paintStage();
@@ -2899,7 +2925,7 @@ function screenFaceForge(){
     const img = FF.results[FF.sel];
     const nm = fr?'Mon personnage':'My character';
     applyPreset({
-      id:'custom', charKey:null, side:FF.side, img,
+      id:'custom', charKey:null, side:FF.side, sex:FF.sex, img,
       nameFr:nm, nameEn:nm, heroFr:S.heroName || nm, heroEn:S.heroName || nm,
       morphology:a.morphology, path:a.path, powers:a.powers,
       align: FF.side==='villain' ? -30 : 30,
@@ -4609,6 +4635,7 @@ function introConversation(){
 }
 /* ============================ ROMANCE ============================ */
 function playerSex(){
+  if(S.playerSex === 'f' || S.playerSex === 'm') return S.playerSex;
   const c = CHARACTERS[S.playerCharKey];
   return (c && c.sex) ? c.sex : 'm';
 }
