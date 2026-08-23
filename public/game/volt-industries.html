@@ -1764,6 +1764,8 @@ function freshState(lang){
     usedChoicePhrases:{ bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }, usedTextIdx:{},
     portrait:null, playerCharKey:null,
     romance:null, romanceHistory:[], lastRomanceYear:null,
+    romanceFate: Math.random() < 0.30,
+    romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
     lastStars:1, savedToHistory:false,
   };
 }
