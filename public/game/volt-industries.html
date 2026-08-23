@@ -2781,6 +2781,136 @@ async function ffGenerate(onFrame){
   if(!sawFinal) throw new Error('stream ended without a final image');
 }
 
+
+/* ---------- Personnage perso : sauvegarde locale + forge sans IA ---------- */
+const FF_STORE = 'vi_custom_char';
+function ffSaveCustom(cfg){ try{ localStorage.setItem(FF_STORE, JSON.stringify(cfg)); }catch(e){} }
+function ffLoadCustom(){ try{ const r = localStorage.getItem(FF_STORE); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function ffClearCustom(){ try{ localStorage.removeItem(FF_STORE); }catch(e){} }
+function applyCustomCharacter(cfg){
+  const a = FF_ARCH[cfg.arch] || FF_ARCH.armure;
+  const fr = S.lang==='fr';
+  const nm = cfg.name || (fr?'Mon personnage':'My character');
+  applyPreset({
+    id:'custom', charKey:null, side:cfg.side, sex:cfg.sex, img:cfg.img,
+    nameFr:nm, nameEn:nm, heroFr:nm, heroEn:nm,
+    morphology:a.morphology, path:a.path, powers:a.powers,
+    align: cfg.side==='villain' ? -30 : 30,
+    stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
+    look:{ suitColor:cfg.color, secondaryColor:'#0f1420', aura:cfg.aura==='aucune'?'none':'electric', cape: !!cfg.cape, helmet:'none', glasses: cfg.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
+    descFr:fr?a.fr:'', descEn:a.en
+  });
+  S.playerSex = cfg.sex;
+}
+/* Forge locale : composition canvas 100% navigateur, aucun credit IA consomme. */
+function ffLocalForge(){
+  return new Promise((resolve, reject)=>{
+    if(!FF.photo) return reject(new Error('no photo'));
+    const img = new Image();
+    img.onerror = ()=>reject(new Error('bad photo'));
+    img.onload = ()=>{
+      const W = 720, H = 960;
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      /* Fond hangar sombre */
+      const bg = x.createRadialGradient(W*0.5, H*0.32, 40, W*0.5, H*0.5, H*0.8);
+      bg.addColorStop(0, '#1b2130'); bg.addColorStop(1, '#070a10');
+      x.fillStyle = bg; x.fillRect(0,0,W,H);
+      /* Photo cadree sur le visage, moitie haute */
+      const faceH = H*0.66;
+      const r = Math.max(W/img.width, faceH/img.height);
+      const dw = img.width*r, dh = img.height*r;
+      x.save();
+      x.beginPath(); x.rect(0,0,W,faceH); x.clip();
+      x.drawImage(img, (W-dw)/2, -dh*0.05, dw, dh);
+      /* Etalonnage cinema : contraste froid + teinte du costume */
+      x.globalCompositeOperation = 'soft-light';
+      x.fillStyle = FF.color; x.globalAlpha = 0.28; x.fillRect(0,0,W,faceH);
+      x.globalCompositeOperation = 'multiply'; x.globalAlpha = 0.22;
+      x.fillStyle = '#0a1020'; x.fillRect(0,0,W,faceH);
+      x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+      /* Fondu vers le buste */
+      const fade = x.createLinearGradient(0, faceH*0.68, 0, faceH);
+      fade.addColorStop(0,'rgba(7,10,16,0)'); fade.addColorStop(1,'rgba(7,10,16,1)');
+      x.fillStyle = fade; x.fillRect(0, faceH*0.68, W, faceH*0.32);
+      x.restore();
+      /* Masque */
+      if(FF.mask !== 'aucun'){
+        x.save(); x.globalAlpha = FF.mask==='domino' ? 0.72 : 0.6;
+        x.fillStyle = FF.color;
+        if(FF.mask==='domino'){
+          x.beginPath(); x.ellipse(W*0.5, faceH*0.40, W*0.30, faceH*0.085, 0, 0, Math.PI*2); x.fill();
+        } else {
+          x.beginPath(); x.moveTo(W*0.22, faceH*0.52); x.quadraticCurveTo(W*0.5, faceH*0.70, W*0.78, faceH*0.52);
+          x.quadraticCurveTo(W*0.5, faceH*0.60, W*0.22, faceH*0.52); x.fill();
+        }
+        x.restore();
+      }
+      /* Buste blinde */
+      const torso = x.createLinearGradient(0, faceH*0.85, 0, H);
+      torso.addColorStop(0, FF.color); torso.addColorStop(1, '#0d1119');
+      x.fillStyle = torso;
+      x.beginPath();
+      x.moveTo(W*0.06, H);
+      x.quadraticCurveTo(W*0.14, faceH*0.92, W*0.36, faceH*0.86);
+      x.lineTo(W*0.64, faceH*0.86);
+      x.quadraticCurveTo(W*0.86, faceH*0.92, W*0.94, H);
+      x.closePath(); x.fill();
+      /* Plaques + emblem */
+      x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 2;
+      for(let i=0;i<4;i++){
+        const yy = faceH*0.95 + i*(H-faceH*0.95)/5;
+        x.beginPath(); x.moveTo(W*0.20, yy); x.quadraticCurveTo(W*0.5, yy+18, W*0.80, yy); x.stroke();
+      }
+      x.save();
+      x.shadowColor = FF.color; x.shadowBlur = 40;
+      x.fillStyle = 'rgba(255,255,255,0.92)';
+      x.beginPath();
+      x.moveTo(W*0.5-26, H*0.86); x.lineTo(W*0.5+8, H*0.86); x.lineTo(W*0.5-4, H*0.905);
+      x.lineTo(W*0.5+24, H*0.905); x.lineTo(W*0.5-14, H*0.965); x.lineTo(W*0.5, H*0.915);
+      x.lineTo(W*0.5-24, H*0.915); x.closePath(); x.fill();
+      x.restore();
+      /* Cape */
+      if(FF.cape){
+        x.save(); x.globalAlpha = 0.55; x.fillStyle = FF.side==='villain' ? '#2a0710' : '#08131f';
+        x.beginPath(); x.moveTo(W*0.30, faceH*0.90); x.quadraticCurveTo(W*0.02, H*0.85, W*0.10, H); x.lineTo(W*0.30, H); x.closePath(); x.fill();
+        x.beginPath(); x.moveTo(W*0.70, faceH*0.90); x.quadraticCurveTo(W*0.98, H*0.85, W*0.90, H); x.lineTo(W*0.70, H); x.closePath(); x.fill();
+        x.restore();
+      }
+      /* Aura */
+      if(FF.aura !== 'aucune'){
+        x.save(); x.globalCompositeOperation = 'lighter';
+        const g = x.createRadialGradient(W*0.5, faceH*0.45, 30, W*0.5, faceH*0.5, W*0.75);
+        g.addColorStop(0, FF.aura==='fumee' ? 'rgba(180,170,160,0.16)' : 'rgba(255,255,255,0.10)');
+        g.addColorStop(0.5, FF.color + '33'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = g; x.fillRect(0,0,W,H);
+        if(FF.aura==='neon'){
+          x.strokeStyle = FF.color; x.lineWidth = 2; x.globalAlpha = 0.55;
+          for(let i=0;i<10;i++){
+            x.beginPath();
+            let px = W*(0.12+Math.random()*0.76), py = H*(0.12+Math.random()*0.6);
+            x.moveTo(px,py);
+            for(let j=0;j<4;j++){ px += (Math.random()-0.5)*70; py += (Math.random()-0.5)*70; x.lineTo(px,py); }
+            x.stroke();
+          }
+        }
+        x.restore();
+      }
+      /* Vignette + grain film */
+      const vg = x.createRadialGradient(W*0.5, H*0.45, H*0.25, W*0.5, H*0.5, H*0.78);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.72)');
+      x.fillStyle = vg; x.fillRect(0,0,W,H);
+      x.globalAlpha = 0.05;
+      for(let i=0;i<5200;i++){
+        x.fillStyle = Math.random()>0.5 ? '#ffffff' : '#000000';
+        x.fillRect(Math.random()*W, Math.random()*H, 1, 1);
+      }
+      x.globalAlpha = 1;
+      resolve(c.toDataURL('image/jpeg', 0.9));
+    };
+    img.src = FF.photo;
+  });
+}
 function screenFaceForge(){
   const fr = S.lang==='fr';
   const d = document.createElement('div');
