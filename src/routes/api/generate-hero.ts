@@ -1,11 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Generation du portrait de personnage.
- *
- * Source IA : cle Google AI Studio (GEMINI_API_KEY) appelee EN DIRECT.
- * Aucun credit Lovable n'est consomme par cette route.
- * Si la cle est absente, on renvoie une erreur explicite : pas de rendu de secours.
+ * Generation du portrait de personnage via Lovable AI Gateway.
+ * Modele image Gemini (shape chat : messages + modalities), image du joueur en entree.
  */
 export const Route = createFileRoute("/api/generate-hero")({
   server: {
@@ -14,57 +11,43 @@ export const Route = createFileRoute("/api/generate-hero")({
         const body = (await request.json()) as {
           image?: string; // data URL ou base64 brut
           prompt?: string;
-          key?: string; // cle fournie par le joueur (optionnel)
         };
 
         if (!body.image) return new Response("Missing image", { status: 400 });
         if (!body.prompt) return new Response("Missing prompt", { status: 400 });
 
-        const key = (body.key || process.env["GEMINI_API_KEY"] || "").trim();
+        const key = process.env["LOVABLE_API_KEY"];
         if (!key) {
           return new Response(
-            JSON.stringify({
-              error: "no_key",
-              message:
-                "Aucune cle IA configuree. Ajoute une cle Google AI Studio (gratuite) dans les reglages du projet, ou colle ta cle dans le jeu.",
-            }),
-            { status: 428, headers: { "Content-Type": "application/json" } },
+            JSON.stringify({ error: "no_key", message: "AI non configuree sur le projet." }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
 
-        // data URL -> { mimeType, data }
+        // Normalise en data URL (le content block image_url en a besoin).
         const raw = body.image;
-        let mimeType = "image/jpeg";
-        let data = raw;
-        const m = /^data:([^;]+);base64,(.*)$/s.exec(raw);
-        if (m) {
-          mimeType = m[1] ?? mimeType;
-          data = m[2] ?? data;
-        }
+        const dataUrl = /^data:/.test(raw) ? raw : `data:image/jpeg;base64,${raw}`;
 
-        const model = "gemini-2.5-flash-image";
-        const upstream = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": key,
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    { text: body.prompt },
-                    { inlineData: { mimeType, data } },
-                  ],
-                },
-              ],
-              generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
-            }),
+        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            model: "google/gemini-3-pro-image",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: body.prompt },
+                  { type: "image_url", image_url: { url: dataUrl } },
+                ],
+              },
+            ],
+            modalities: ["image", "text"],
+          }),
+        });
 
         const text = await upstream.text();
         if (!upstream.ok) {
@@ -76,21 +59,8 @@ export const Route = createFileRoute("/api/generate-hero")({
 
         let b64: string | undefined;
         try {
-          const json = JSON.parse(text) as {
-            candidates?: {
-              content?: {
-                parts?: { inlineData?: { data?: string }; inline_data?: { data?: string } }[];
-              };
-            }[];
-          };
-          const parts = json.candidates?.[0]?.content?.parts ?? [];
-          for (const p of parts) {
-            const d = p.inlineData?.data ?? p.inline_data?.data;
-            if (d) {
-              b64 = d;
-              break;
-            }
-          }
+          const json = JSON.parse(text) as { data?: { b64_json?: string }[] };
+          b64 = json.data?.[0]?.b64_json;
         } catch {
           /* handled below */
         }

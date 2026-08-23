@@ -2944,35 +2944,30 @@ async function ffDownscale(dataUrl, maxW, maxH, quality){
   });
 }
 
-/* ---------- Cle IA du joueur (Google AI Studio, gratuite) ---------- */
-const FF_KEY_STORE = 'vi_ai_key';
-function ffGetKey(){ try{ return localStorage.getItem(FF_KEY_STORE) || ''; }catch(e){ return ''; } }
-function ffSetKey(v){ try{ if(v) localStorage.setItem(FF_KEY_STORE, v); else localStorage.removeItem(FF_KEY_STORE); }catch(e){} }
+/* ---------- Generation IA (Lovable AI, cote serveur) ---------- */
+const FF_MAX_TRIES = 3;
 
 function ffHttpError(status, body){
   const fr = S.lang==='fr';
   let msg = '';
   try{ const j = JSON.parse(body); msg = (j && (j.message || (j.error && j.error.message))) || ''; }catch(e){}
-  if(status === 428){
-    return new Error(fr ? "Aucune cle IA configuree. Colle ta cle Google AI Studio (gratuite) dans le champ CLE IA ci-dessous, ou choisis un personnage existant."
-      : "No AI key configured. Paste your free Google AI Studio key in the AI KEY field below, or pick an existing character.");
-  }
-  if(status === 400 || status === 401 || status === 403){
-    return new Error(fr ? ("Cle IA refusee par Google" + (msg ? " - " + msg : "") + ". Verifie la cle et que le modele image est active sur ton compte.")
-      : ("AI key rejected by Google" + (msg ? " - " + msg : "") + ". Check the key and that image models are enabled on your account."));
-  }
   if(status === 429){
-    return new Error(fr ? "Quota gratuit Google atteint pour l'instant. Attends une minute puis relance la generation."
-      : "Google free quota hit for now. Wait a minute and retry the generation.");
+    return new Error(fr ? "Trop de generations d'un coup. Attends une dizaine de secondes puis relance."
+      : "Too many generations at once. Wait ten seconds and retry.");
   }
-  return new Error((fr?'Erreur ':'Error ') + status + (msg ? ' - ' + msg : ''));
+  if(status === 402 || status === 403){
+    return new Error(fr ? ("Generation IA indisponible" + (msg ? " - " + msg : "") + ". Choisis un personnage existant pour continuer.")
+      : ("AI generation unavailable" + (msg ? " - " + msg : "") + ". Pick an existing character to continue."));
+  }
+  if(status >= 500){
+    return new Error(fr ? "Le service IA a eu un raté. Relance la generation." : "The AI service glitched. Retry the generation.");
+  }
+  return new Error((fr?'Generation refusee ':'Generation refused ') + status + (msg ? ' - ' + msg : ''));
 }
 
-/* Generation IA du portrait : appel direct a la cle Google du joueur/projet.
-   Aucun credit Lovable n'est consomme. Pas de rendu de secours : en cas d'echec, erreur claire. */
+/* Portrait genere par l'IA du projet (Lovable AI). Pas de cle a fournir par le joueur. */
 async function ffGenerate(onFrame){
   const body = { image: FF.photo, prompt: ffPrompt() };
-  const k = ffGetKey(); if(k) body.key = k;
   const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const txt = await res.text().catch(()=>'');
   if(!res.ok) throw ffHttpError(res.status, txt);
@@ -3009,8 +3004,8 @@ function screenFaceForge(){
   d.style.setProperty('--ff-col', FF.color || col);
   d.innerHTML = `<span class="eyebrow">${fr?'CREATION':'CREATION'}</span>
     <h2>${fr?'Forge ton personnage':'Forge your character'}</h2>
-    <p class="lead">${fr?"1. Ta photo. 2. Ton camp et ton style. 3. Volt Industries genere un rendu photo-realiste avec ton visage. Tu peux relancer autant de fois que tu veux."
-      :"1. Your photo. 2. Faction and style. 3. Volt Industries renders a photoreal version of you. Regenerate as often as you like."}</p>
+    <p class="lead">${fr?"1. Ta photo. 2. Ton camp et ton style. 3. Volt Industries genere un rendu photo-realiste avec ton visage. Tu as 3 essais maximum : choisis bien."
+      :"1. Your photo. 2. Faction and style. 3. Volt Industries renders a photoreal version of you. You get 3 attempts max, so choose well."}</p>
     <div class="ff-grid">
       <div>
         <div class="ff-stage beam" id="ffStage"></div>
@@ -3021,7 +3016,6 @@ function screenFaceForge(){
         <input type="file" accept="image/*" id="ffFile" style="display:none;">
         <div class="ff-thumbs" id="ffThumbs"></div>
         <div class="ff-err" id="ffErr"></div>
-         <input id="ffKey" type="hidden" value="${ffGetKey()}">
       </div>
       <div>
         <div class="ff-lab">${fr?'CAMP':'FACTION'}</div>
@@ -3060,8 +3054,6 @@ function screenFaceForge(){
   const genBtn = d.querySelector('#ffGen');
   const useBtn = d.querySelector('#ffUse');
   const thumbs = d.querySelector('#ffThumbs');
-  const keyEl = d.querySelector('#ffKey');
-  if(keyEl) keyEl.oninput = ()=>{ ffSetKey(keyEl.value.trim()); };
   const fileInput = d.querySelector('#ffFile');
 
   const refreshTraits = ()=>{
@@ -3079,7 +3071,14 @@ function screenFaceForge(){
     thumbs.innerHTML = FF.results.map((r,i)=>`<img src="${r}" data-i="${i}" class="${FF.sel===i?'on':''}">`).join('');
     thumbs.querySelectorAll('img').forEach(im=>{ im.onclick=()=>{ FF.sel = +im.dataset.i; paintStage(); }; });
     useBtn.style.display = FF.sel >= 0 ? '' : 'none';
-    genBtn.textContent = FF.results.length ? (fr?'Relancer une variante':'Generate another take') : (fr?'Generer mon personnage':'Generate my character');
+    const left = FF_MAX_TRIES - FF.results.length;
+    if(left <= 0){
+      genBtn.disabled = true;
+      genBtn.textContent = fr?'Essais epuises (3/3)':'No attempts left (3/3)';
+    } else {
+      genBtn.disabled = false;
+      genBtn.textContent = (FF.results.length ? (fr?'Relancer une variante':'Generate another take') : (fr?'Generer mon personnage':'Generate my character')) + ' (' + left + '/' + FF_MAX_TRIES + ')';
+    }
   };
   const chips = (sel, apply)=>{
     d.querySelectorAll(sel + ' .ff-chip, ' + sel + ' .ff-sw').forEach(el=>{
@@ -3132,6 +3131,7 @@ function screenFaceForge(){
 
   genBtn.onclick = async ()=>{
     if(FF.busy) return;
+    if(FF.results.length >= FF_MAX_TRIES){ errEl.textContent = fr?"Tu as utilise tes 3 essais. Choisis l'un des rendus ci-dessous.":"You used your 3 attempts. Pick one of the takes below."; return; }
     if(!FF.photo){ errEl.textContent = fr?"Ajoute d'abord une photo de ton visage.":"Add a photo of your face first."; return; }
     ffStopCam();
     FF.busy = true; errEl.textContent = '';
@@ -3153,7 +3153,7 @@ function screenFaceForge(){
     }catch(e){
       errEl.textContent = (e && e.message ? e.message : (fr?'Echec de la generation.':'Generation failed.'));
     }
-    FF.busy = false; genBtn.disabled = false;
+    FF.busy = false;
     paintStage();
   };
 
