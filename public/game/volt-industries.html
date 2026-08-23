@@ -2737,7 +2737,7 @@ function romanceChoices(charKey, enemy, stage){
       L("T'investir a fond, quoi qu'en pensent les autres.", "Go all in, whatever the others think.",
         { popularity:enemy?-4:4, courage:3, align:pull, rel:{[charKey]:6}, rom:{advance:'crise', love:3, exposed:enemy} }),
       L("Utiliser la relation pour obtenir des informations.", "Use the relationship to get intel.",
-        { intelligence:6, align:-4*mySign===0?-4:-4, rel:{[charKey]:-3}, rom:{advance:'crise', love:-1, betray:true} }),
+        { intelligence:6, align:-4, rel:{[charKey]:-3}, rom:{advance:'crise', love:-1, betray:true} }),
       L("Prendre de la distance avant que ca coute trop cher.", "Pull away before it costs too much.",
         { intelligence:3, popularity:-2, rel:{[charKey]:-5}, rom:{end:'distance'} }),
     ];
