@@ -2593,8 +2593,46 @@ function battleFoeKey(mission){
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
   if(mission.pivotal || mission.breakthrough) return false;
-  return (mission.danger||0) >= 2 || Math.random() < 0.55;
+  const f = battleForm();
+  if(injuryActive()) return false;
+  if(f.lastPlayedYear!=null && (S.currentYear - f.lastPlayedYear) < 2) return false;
+  const d = mission.danger||0;
+  const p = d>=3 ? 0.55 : (d===2 ? 0.30 : 0.12);
+  if(Math.random() >= p) return false;
+  f.lastPlayedYear = S.currentYear;
+  return true;
 }
+function resolveBattleOffscreen(mission){
+  const foeKey = battleFoeKey(mission);
+  const foe = CHARACTERS[foeKey];
+  const foeName = S.lang==='fr'?foe.fr:foe.en;
+  const f = battleForm();
+  const inj = injuryActive();
+  const pl = computePowerLevel ? computePowerLevel() : 50;
+  let odds = 0.5 + (pl-50)/220 + f.momentum*0.04 - (inj?inj.sev*0.08:0) - (mission.danger||0)*0.05;
+  odds = clamp(odds, 0.15, 0.9);
+  const win = Math.random() < odds;
+  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
+  if(win){
+    f.streak = Math.max(0, f.streak) + 1;
+    f.momentum = Math.min(6, f.momentum + 1);
+    S.stats.courage = clamp(S.stats.courage + 1, 0, 100);
+    S.stats.popularity = clamp(S.stats.popularity + 1, 0, 100);
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Escarmouche remportee contre ${foeName} (rapport de terrain)`:`Skirmish won against ${foeName} (field report)`), location:null, type:'combat', outcome:'win' });
+  } else {
+    f.streak = 0;
+    f.momentum = Math.max(0, f.momentum - 1);
+    S.stats.courage = clamp(S.stats.courage - 2, 0, 100);
+    S.stats.popularity = clamp(S.stats.popularity - 1, 0, 100);
+    if(!inj && Math.random()<0.45){
+      const days = 3 + Math.floor(Math.random()*8);
+      f.injury = { sev:1, battlesLeft:1, label:(S.lang==='fr'?`${days} jours d'arret`:`${days} days off`) };
+    }
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Accrochage perdu contre ${foeName} (rapport de terrain)`:`Skirmish lost against ${foeName} (field report)`), location:null, type:'combat', outcome:'lose' });
+  }
+  return win;
+}
+
 function hpColor(pct){ return pct>55 ? 'var(--green)' : (pct>25 ? 'var(--gold)' : '#ff3b5c'); }
 function battleFrameInner(charObj){
   const name = S.lang==='fr'?charObj.fr:charObj.en;
