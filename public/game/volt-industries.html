@@ -4473,7 +4473,8 @@ function screenEnd(){
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${factionName(S.team.side,S.team.tier)}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
-    ${kpiHtml}${locBreak}${menteeDetail}
+    ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}
+    <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
     <h3>${t('relations')}</h3>
     <div class="relwrap">${otherCharKeys().map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
