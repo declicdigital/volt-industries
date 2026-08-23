@@ -2711,18 +2711,22 @@ function startBattle(mission, done){
     }).join('');
     movesEl.querySelectorAll('button').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
   }
-  function dmgOf(move, atkPower){
+  function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
-    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62));
+    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
     (win?foeFrame:meFrame).classList.add('ko');
     setLog(win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
                : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`));
+    const hpPct = clamp(st.myHP/st.myMax*100, 0, 100);
     setTimeout(()=>{
       ov.classList.add('btl-out');
-      setTimeout(()=>{ ov.remove(); done(win, foeKey); }, 450);
+      setTimeout(()=>{
+        ov.remove();
+        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey); });
+      }, 450);
     }, 1500);
   }
   function foeTurn(){
