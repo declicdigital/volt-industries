@@ -2304,7 +2304,7 @@ function sideAvatarPanel(){
       <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), computePowerLevel(), 'var(--green)')}</div>
       <div class="statbar">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
       <div class="align-track"><div class="align-dot" style="left:${clamp((S.align+100)/2,0,100)}%;"></div></div>
-      <div class="slabel" style="margin-top:6px; text-align:center;">${heroVillainScore()}<span style="color:var(--dim);">/100</span></div>
+      <div class="slabel" style="margin-top:6px; text-align:center;">${careerScore().total}<span style="color:var(--dim);">/100</span></div>
       ${S.team ? `<div style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
         <div style="width:28px;height:28px;">${factionEmblemSVG(S.team.side, S.team.tier, 28)}</div>
         <span style="font-size:11px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
