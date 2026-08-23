@@ -2432,13 +2432,6 @@ function pickMission(){
     const m = PIVOTAL_MISSIONS[idx];
     return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
   }
-  if(Math.random() < 0.052){
-    let bPool = BREAKTHROUGH_MISSIONS.filter((m,i)=>!S.usedBreakthroughIds.includes(i) && (!m.charKey || m.charKey!==S.playerCharKey));
-    if(bPool.length===0){ S.usedBreakthroughIds = []; bPool = BREAKTHROUGH_MISSIONS; }
-    const idx = BREAKTHROUGH_MISSIONS.indexOf(pick(bPool)); S.usedBreakthroughIds.push(idx);
-    const m = BREAKTHROUGH_MISSIONS[idx];
-    return Object.assign({}, m, { breakthrough:true, type:'social', danger:1, scope:Math.max(1,rank), location: { name: randLocationName(), type: Math.max(1,rank) } });
-  }
   if(Math.random() < 0.27){ return generateSignatureMission(rank); }
   if(Math.random() < 0.83){ return zoneOf(S.align)==='villain' ? generateVillainMission(rank) : generateProceduralMission(rank); }
   let reachable = MISSIONS.filter(m => (m.scope||1) <= rank);
