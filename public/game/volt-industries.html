@@ -2093,7 +2093,7 @@ function renderRankBadge(){
   const zone = zoneOf(S.align);
   const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
   const stars = computeStars();
-  const score = heroVillainScore();
+  const cs = careerScore(); const score = cs.total;
   const starColor = zone==='hero' ? '#ffd23f' : (zone==='villain' ? 'var(--red)' : '#b98bff');
   let starsHtml = ''; for(let i=1;i<=7;i++){ starsHtml += `<span style="color:${i<=stars?starColor:'rgba(255,255,255,.15)'}">&#9733;</span>`; }
   const factionHtml = S.team ? `<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
