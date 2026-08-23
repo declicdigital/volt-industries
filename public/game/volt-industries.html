@@ -1498,6 +1498,12 @@ const PRESETS = [
     flawFr:'Sans ses machines, elle n\'a aucune defense.', flawEn:'Without her machines she has no defense at all.',
     descFr:'Elle a fait tomber trois banques centrales depuis un sous-sol.', descEn:'She took down three central banks from a basement.' },
 ];
+/* Personnages jouables : uniquement la nouvelle generation. Les 20 premiers restent des PNJ
+   qui interviennent tout au long de la carriere (rencontres, alliances, rivalites). */
+const SELECTABLE_IDS = ['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','inferno','archange',
+  'baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur','zeroday'];
+const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
+const NPC_ONLY_KEYS = PRESETS.filter(p=>!SELECTABLE_IDS.includes(p.id)).map(p=>p.charKey);
 
 
 /* ============================ STATE ============================ */
