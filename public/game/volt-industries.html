@@ -3873,28 +3873,48 @@ function screenMission(){
 }
 function screenMentor(){
   const d = document.createElement('div'); const m = S.currentMission; const name = m.recruitName;
-  const text = (S.lang==='fr'?m.fr:m.en).replace('{name}', name);
+  const text = (S.lang==='fr'?m.fr:m.en).replace(/\{name\}/g, name);
+  const c = m.recruitKey ? CHARACTERS[m.recruitKey] : null;
+  const col = c ? convBeamColor(c.align) : 'var(--accent)';
+  const roleLabel = m.arc ? (S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT') : (S.lang==='fr'?'RECRUE':'RECRUIT');
+  const portrait = c ? `<div style="display:flex; align-items:center; gap:14px; margin:10px 0 4px;">
+      <div style="width:96px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
+      <div>
+        <div style="font-size:10px; letter-spacing:2px; color:${col}; font-weight:800;">${roleLabel}</div>
+        <div style="font-size:18px; font-weight:900;">${name}</div>
+      </div>
+    </div>` : '';
   d.innerHTML = `<div class="mission-year">${t('year')} ${S.currentYear} / ${S.missionsPlan.length}</div>
     <div class="mission-tag">${S.lang==='fr'?m.tagFr:m.tagEn}</div>
+    ${portrait}
     <h2 style="margin-top:6px;">${text}</h2><div id="choices"></div>`;
   const cbox = d.querySelector('#choices');
-  m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c.fr:c.en); btn.onclick=()=> applyMentorChoice(c, name); cbox.appendChild(btn); });
+  m.choices.forEach((c2)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c2.fr:c2.en); btn.onclick=()=> applyMentorChoice(c2, name); cbox.appendChild(btn); });
   return d;
 }
 function applyMentorChoice(choice, name){
   const eff = choice.eff || {};
+  const m = S.currentMission || {};
+  const key = m.recruitKey || null;
   S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
   S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
   S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
-  S.mentees.push({ name, outcome: choice.recruit });
+  if(key){
+    const bond = (choice.recruit==='hero'||choice.recruit==='villain') ? 4 : (choice.recruit==='died' ? -6 : 1);
+    S.rel[key] = clamp((S.rel[key]||0) + bond, -20, 20);
+  }
+  const existing = key ? (S.mentees||[]).find(x=>x.charKey===key) : null;
+  if(existing){ existing.outcome = choice.recruit; existing.beats = (existing.beats||1) + 1; }
+  else S.mentees.push({ name, charKey:key, outcome: choice.recruit, since:S.currentYear, beats:1 });
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   handleZoneCheckAndContinue();
 }
+
 function handleZoneCheckAndContinue(){
   const newZone = zoneOf(S.align);
   if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
