@@ -2604,12 +2604,51 @@ function pickUnused(bucket, len){
   used.push(i); S.usedFrag[bucket] = used;
   return i;
 }
+/* ---------- Sujets/tons de conversation : couche supplementaire de variete ---------- */
+const CONV_THEMES = {
+  mentorat: {
+    fr:["\"Laisse-moi te dire ce que personne ne t'apprendra en briefing.\"","\"J'ai commence comme toi. J'ai fait toutes les erreurs, dans l'ordre.\"","\"Ton probleme n'est pas la puissance. C'est le rythme.\"","\"Ecoute-moi deux minutes, ca t'evitera deux ans de galere.\"","\"On ne devient pas solide en gagnant. On devient solide en recommencant.\"","\"Tu improvises bien. Trop bien. Un jour ca te coutera cher.\"","\"Apprends a partir avant la fin. C'est la lecon la plus dure.\"","\"Note ce que tu ressens la, maintenant. Tu en auras besoin plus tard.\""],
+    en:["\"Let me tell you what no briefing will ever teach you.\"","\"I started where you are. I made every mistake, in order.\"","\"Your problem isn't power. It's pacing.\"","\"Give me two minutes, it'll save you two years of pain.\"","\"You don't get solid by winning. You get solid by starting over.\"","\"You improvise well. Too well. One day that bill comes due.\"","\"Learn to leave before the end. Hardest lesson there is.\"","\"Remember what you feel right now. You'll need it later.\""],
+  },
+  tentation: {
+    fr:["\"J'ai une proposition. Elle est sale, elle est simple, elle marche.\"","\"Imagine ne plus jamais demander l'autorisation a personne.\"","\"Tout le monde ici a deja accepte quelque chose. Toi aussi, bientot.\"","\"Un seul nom, un seul dossier, et tu deviens intouchable.\"","\"Ce n'est pas de la trahison. C'est une reorientation de carriere.\"","\"Le prix est fixe. C'est toi qui decides ce que tu vends.\"","\"Tu peux dire non. Mais tu y penseras chaque nuit.\"","\"Ceux qui refusent finissent par travailler pour ceux qui acceptent.\""],
+    en:["\"I have an offer. It's dirty, it's simple, it works.\"","\"Imagine never asking anyone's permission again.\"","\"Everyone here has already said yes to something. You will too.\"","\"One name, one file, and you become untouchable.\"","\"It isn't betrayal. It's a career adjustment.\"","\"The price is set. You decide what you're selling.\"","\"You can say no. But you'll think about it every night.\"","\"The ones who refuse end up working for the ones who accepted.\""],
+  },
+  doute: {
+    fr:["\"Je ne sais plus si ce qu'on fait sert encore a quelque chose.\"","\"Cette nuit-la, j'ai hesite. Je n'ai jamais ose l'ecrire dans le rapport.\"","\"Tu dors, toi ? Moi j'ai arrete d'essayer.\"","\"Et si on s'etait trompes depuis le debut ?\"","\"On sauve des gens et personne ne compte ceux qu'on perd.\"","\"J'ai relu mes anciens dossiers. Je ne me reconnais pas.\"","\"Parfois je me demande qui je protege vraiment.\"","\"Dis-moi que ca vaut le coup. Meme si tu n'en es pas sur.\""],
+    en:["\"I don't know anymore whether what we do still matters.\"","\"That night, I hesitated. I never dared put it in the report.\"","\"Do you sleep? I stopped trying.\"","\"What if we've been wrong from the start?\"","\"We save people and nobody counts the ones we lose.\"","\"I reread my old files. I don't recognize myself.\"","\"Sometimes I wonder who I'm actually protecting.\"","\"Tell me it's worth it. Even if you're not sure.\""],
+  },
+  rivalite: {
+    fr:["\"On va bientot devoir savoir lequel de nous deux compte vraiment.\"","\"Tes chiffres sont bons. Les miens sont meilleurs.\"","\"Tu prends ma place, et tu le sais parfaitement.\"","\"Je n'ai rien contre toi. J'ai juste l'intention de gagner.\"","\"Ce terrain etait le mien avant que tu arrives.\"","\"Un de nous deux va se planter. Je parie sur toi.\"","\"Continue comme ca, et on reglera ca autrement qu'en parlant.\"","\"Tu es doue. C'est precisement ce qui me derange.\""],
+    en:["\"Soon we'll have to find out which of us actually matters.\"","\"Your numbers are good. Mine are better.\"","\"You're taking my place, and you know it perfectly well.\"","\"Nothing personal. I just intend to win.\"","\"This ground was mine before you showed up.\"","\"One of us is going to crash. My money's on you.\"","\"Keep this up and we'll settle it without words.\"","\"You're good. That's exactly what bothers me.\""],
+  },
+  confidence: {
+    fr:["\"Je ne l'ai dit a personne. Vraiment personne.\"","\"Il y a une chose dans mon passe que je n'assume toujours pas.\"","\"Si je te confie ca, tu deviens responsable de moi aussi.\"","\"J'ai menti dans un rapport, une fois. Une seule.\"","\"Ma famille ne sait rien de ce que je fais reellement.\"","\"J'ai garde quelque chose qui n'aurait jamais du sortir des archives.\"","\"Tu es la seule personne a qui je peux dire ca sans finir en dossier.\"","\"Ce que j'ai vu la-bas, je ne l'ai pas raconte. Pas entierement.\""],
+    en:["\"I've told no one. Genuinely no one.\"","\"There's something in my past I still can't own.\"","\"If I trust you with this, you become responsible for me too.\"","\"I lied in a report once. Only once.\"","\"My family knows nothing about what I actually do.\"","\"I kept something that should never have left the archives.\"","\"You're the only person I can say this to without becoming a file.\"","\"What I saw out there, I didn't report. Not all of it.\""],
+  },
+  avertissement: {
+    fr:["\"Ne rentre pas chez toi ce soir. Crois-moi.\"","\"Quelqu'un dans ton entourage parle. Beaucoup.\"","\"Ton nom est apparu dans une liste que tu ne veux pas lire.\"","\"Le prochain contrat qu'on te proposera est un piege.\"","\"Ils preparent quelque chose pour toi. Pas pour ton equipe : pour toi.\"","\"Verifie tes communications. Elles ne sont plus a toi.\"","\"Je te previens une fois. Il n'y aura pas de deuxieme fois.\"","\"Ce que tu crois etre un allie porte deux badges.\""],
+    en:["\"Don't go home tonight. Trust me.\"","\"Someone close to you is talking. A lot.\"","\"Your name showed up on a list you don't want to read.\"","\"The next contract they offer you is a trap.\"","\"They're preparing something for you. Not your team: you.\"","\"Check your comms. They're not yours anymore.\"","\"I'm warning you once. There won't be a second time.\"","\"What you think is an ally carries two badges.\""],
+  },
+  alliance: {
+    fr:["\"Une operation, une seule, et on ne se doit plus rien.\"","\"Tu couvres mon flanc, je couvre le tien. Rien de plus.\"","\"Separement on perd. Ensemble on a une chance reelle.\"","\"Je te propose un pacte, pas une amitie.\"","\"J'ai les acces. Tu as la force. Le reste est un detail.\"","\"On signe maintenant, on discutera des conditions plus tard.\"","\"Personne ne doit savoir qu'on a travaille ensemble.\"","\"Une alliance temporaire dure exactement le temps qu'elle sert.\""],
+    en:["\"One operation, just one, and we're even.\"","\"You cover my flank, I cover yours. Nothing more.\"","\"Apart we lose. Together we have a real shot.\"","\"I'm offering a pact, not a friendship.\"","\"I have the access. You have the force. The rest is detail.\"","\"We sign now, we argue terms later.\"","\"No one can know we worked together.\"","\"A temporary alliance lasts exactly as long as it's useful.\""],
+  },
+  retrouvailles: {
+    fr:["\"Combien de temps, cette fois ? Trois ans ? Quatre ?\"","\"Tu as change. Pas en mieux, pas en pire. Juste change.\"","\"J'ai cru que tu etais mort. J'avais presque fait mon deuil.\"","\"La derniere fois qu'on s'est vus, on ne s'est pas quittes bien.\"","\"Tu te souviens de cette nuit-la ? Moi oui. Chaque detail.\"","\"On reprend ou on avait laisse, ou on fait comme si de rien n'etait ?\"","\"Je pensais ne plus jamais avoir cette conversation avec toi.\"","\"Le temps a passe, mais la question, elle, n'a pas bouge.\""],
+    en:["\"How long this time? Three years? Four?\"","\"You've changed. Not better, not worse. Just changed.\"","\"I thought you were dead. I'd nearly grieved you.\"","\"Last time we saw each other, we didn't part well.\"","\"You remember that night? I do. Every detail.\"","\"Do we pick up where we left off, or pretend nothing happened?\"","\"I never thought I'd have this conversation with you again.\"","\"Time passed, but the question hasn't moved an inch.\""],
+  },
+};
+const CONV_THEME_KEYS = Object.keys(CONV_THEMES);
 function generateConversation(charKey){
   const c = CHARACTERS[charKey]; if(!c) return null;
   const tone = CONV_LINES[c.align] ? c.align : 'neutral';
   const pack = CONV_LINES[tone];
   const oi = pickUnused('open_'+tone+'_'+charKey, pack.openFr.length);
   const mi = pickUnused('mid_'+tone, pack.midFr.length);
+  const themeKey = CONV_THEME_KEYS[pickUnused('theme_'+charKey, CONV_THEME_KEYS.length)];
+  const theme = CONV_THEMES[themeKey];
+  const ti = pickUnused('themeline_'+themeKey, theme.fr.length);
   const buckets = ['noble','pragmatic','ruthless'];
   const choices = shuffle(buckets).map(b=>{
     const pool = CONV_CHOICE_POOL[b];
@@ -2620,10 +2659,10 @@ function generateConversation(charKey){
     return { fr:base.fr, en:base.en, eff };
   });
   return {
-    id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+Date.now(),
-    charKey,
-    linesFr:[ convFill(pack.openFr[oi], c), convFill(pack.midFr[mi], c) ],
-    linesEn:[ convFill(pack.openEn[oi], c), convFill(pack.midEn[mi], c) ],
+    id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+themeKey+'_'+ti,
+    charKey, theme:themeKey,
+    linesFr:[ convFill(pack.openFr[oi], c), convFill(theme.fr[ti], c), convFill(pack.midFr[mi], c) ],
+    linesEn:[ convFill(pack.openEn[oi], c), convFill(theme.en[ti], c), convFill(pack.midEn[mi], c) ],
     choices,
   };
 }
