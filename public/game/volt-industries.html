@@ -2960,6 +2960,10 @@ function screenFaceForge(){
         <input type="file" accept="image/*" id="ffFile" style="display:none;">
         <div class="ff-thumbs" id="ffThumbs"></div>
         <div class="ff-err" id="ffErr"></div>
+        <div class="ff-lab" style="margin-top:12px;">${fr?'CLE IA (GOOGLE AI STUDIO, GRATUITE)':'AI KEY (GOOGLE AI STUDIO, FREE)'}</div>
+        <input id="ffKey" type="password" placeholder="AIza..." value="${ffGetKey()}"
+          style="width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.05); color:inherit; font-size:12px;">
+        <p style="margin:6px 0 0; font-size:11px; opacity:.65;">${fr?'Stockee uniquement dans ton navigateur. Aucun credit Lovable utilise. Cle gratuite sur aistudio.google.com/apikey':'Stored only in your browser. No Lovable credits used. Free key at aistudio.google.com/apikey'}</p>
       </div>
       <div>
         <div class="ff-lab">${fr?'CAMP':'FACTION'}</div>
