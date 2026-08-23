@@ -2296,6 +2296,26 @@ function computePowerLevel(){
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
   return clamp(base+statBonus+growth,1,100);
 }
+/* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
+const CHAR_TIER = {
+  /* Sommet absolu */
+  theg:10, siddartha:10, malachar:10,
+  /* Poids lourds cosmiques */
+  nihil:9, sepulcre:9, vaelor:9, ferrum:9, nyx:9, solen:9, kaerus:8,
+  /* Elite */
+  volt:8, obsidian:8, boomnpc:8, aegis:7, requiem:7, precheur:7,
+  /* Solides */
+  kidspider:6, vipera:6, mandate:6, fuchsia:6, umbra:6, courtier:5, zeroday:5, aurelia:5,
+  /* Specialistes humains */
+  marsh:4, lorelei:4, sable:3
+};
+function charTier(key){
+  if(!key) return 5;
+  if(CHAR_TIER[key]!==undefined) return CHAR_TIER[key];
+  const c = CHARACTERS[key];
+  if(!c) return 5;
+  return 4; /* recrues et personnages jouables : encore en construction */
+}
 /* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
 function playerStrength(){
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
