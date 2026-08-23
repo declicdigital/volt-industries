@@ -2807,7 +2807,7 @@ function romanceCandidates(enemy){
   const mySex = playerSex(); const wanted = mySex==='m' ? 'f' : 'm';
   const mySide = playerSideKey();
   const past = (S.romanceHistory||[]).map(r=>r.charKey);
-  return Object.keys(CHARACTERS).filter(k=>{
+  return NPC_KEYS.filter(k=>{
     const c = CHARACTERS[k];
     if(k===S.playerCharKey || past.includes(k)) return false;
     if(c.sex !== wanted) return false;
