@@ -2361,6 +2361,7 @@ function freshState(lang){
     romanceFate: Math.random() < 0.30,
     romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
     lastStars:1, savedToHistory:false,
+    startAge:24, extensions:0,
   };
 }
 let S = freshState('fr');
@@ -2371,7 +2372,30 @@ function computePowerLevel(){
   const base = 12 + S.powers.length*6;
   const statBonus = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/9);
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
-  return clamp(base+statBonus+growth,1,100);
+  return clamp(base+statBonus+growth+agingDelta(),1,100);
+}
+/* ---------- Vieillissement : certains gagnent en puissance avec l'age, d'autres declinent ---------- */
+function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1); }
+function agingProfile(){
+  const key = S.playerCharKey || S.heroName || 'x';
+  const tier = (typeof charTier==='function') ? 0 : 0;
+  let h = 0; for(let i=0;i<key.length;i++) h = (h*31 + key.charCodeAt(i)) % 9973;
+  const t2 = (typeof CHAR_TIER!=='undefined' && S.playerCharKey && CHAR_TIER[S.playerCharKey]) ? CHAR_TIER[S.playerCharKey] : 5;
+  if(t2 >= 9) return 'late';
+  const m = h % 3;
+  return m===0 ? 'late' : (m===1 ? 'early' : 'stable');
+}
+function agingDelta(){
+  const a = currentAge(), p = agingProfile();
+  if(p==='late') return clamp(Math.round((a-32)*0.8), -8, 16);
+  if(p==='early'){ return a <= 30 ? clamp(Math.round((a-24)*1.0), 0, 7) : clamp(-Math.round((a-30)*0.9), -18, 0); }
+  return clamp(Math.round((a-34)*0.2), -4, 5);
+}
+function agingLabel(){
+  const fr = S.lang==='fr', p = agingProfile(), d = agingDelta();
+  const name = p==='late' ? (fr?'maturite tardive':'late bloomer') : (p==='early' ? (fr?'prodige precoce':'early prodigy') : (fr?'constitution stable':'stable constitution'));
+  const sign = d>0 ? '+'+d : String(d);
+  return (fr?`Age ${currentAge()} - ${name} (${sign} puissance)`:`Age ${currentAge()} - ${name} (${sign} power)`);
 }
 /* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
 const CHAR_TIER = {
@@ -3434,8 +3458,9 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  /* 1 recrue mini, 3 maxi meme sur une tres longue carriere. */
-  S.mentorCap = Math.min(3, Math.max(1, Math.floor(S.years/8)));
+  /* Mentorat plus present : 2 recrues mini, jusqu'a 5 sur une tres longue carriere. */
+  S.mentorCap = Math.min(5, Math.max(2, Math.floor(S.years/6)));
+  S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
@@ -3516,17 +3541,17 @@ function recruitCandidates(){
   });
 }
 function shouldTriggerMentor(){
-  if(S.currentYear < 5) return false;
+  if(S.currentYear < 4) return false;
   if(S.mentorCount >= (S.mentorCap||1)) return false;
-  if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 3) return false;
+  if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 2) return false;
   if(!recruitCandidates().length) return false;
-  return Math.random() < 0.34;
+  return Math.random() < 0.46;
 }
+/* Entrainements et suivis : plusieurs etapes par recrue, tres regulierement. */
 function shouldTriggerRecruitArc(){
-  if(S.currentYear < 6) return false;
   if(!livingMentees().length) return false;
-  if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 2) return false;
-  return Math.random() < 0.30;
+  if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 1) return false;
+  return Math.random() < 0.55;
 }
 function startMentorScene(){
   const cands = recruitCandidates(); if(!cands.length) return false;
@@ -3543,8 +3568,11 @@ function startRecruitArc(){
   const live = livingMentees(); if(!live.length) return false;
   const mentee = pick(live); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
   const usedIds = S.usedArcIds || (S.usedArcIds=[]);
-  let pool = RECRUIT_ARCS.filter(m=>!usedIds.includes(m.id+':'+mentee.charKey));
-  if(!pool.length){ pool = RECRUIT_ARCS.slice(); }
+  const beats = mentee.beats||1;
+  /* Les premieres etapes sont des entrainements, les arcs narratifs viennent ensuite. */
+  const source = beats < 3 ? MENTOR_DRILLS.concat(RECRUIT_ARCS) : RECRUIT_ARCS.concat(MENTOR_DRILLS);
+  let pool = source.filter(m=>!usedIds.includes(m.id+':'+mentee.charKey));
+  if(!pool.length){ pool = source.slice(); }
   const m = pick(pool); S.usedArcIds.push(m.id+':'+mentee.charKey);
   S.lastArcYear = S.currentYear;
   S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:(S.lang==='fr'?c.fr:c.en), arc:true });
@@ -3576,7 +3604,9 @@ function checkTeamInvite(){
 }
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
-  const missionsThisYear = S.missionsPlan[S.currentYear-1];
+  /* Former une recrue ajoute une etape supplementaire dans l'annee. */
+  const mentorSteps = Math.min(2, livingMentees().length);
+  const missionsThisYear = S.missionsPlan[S.currentYear-1] + mentorSteps;
   if(S.currentMissionInYear >= missionsThisYear){
     pushYearHistoryIfDone();
     if(S.currentYear >= S.missionsPlan.length){ S.screen='end'; render(); return; }
@@ -4326,6 +4356,9 @@ function screenMentor(){
       <div>
         <div style="font-size:10px; letter-spacing:2px; color:${col}; font-weight:800;">${roleLabel}</div>
         <div style="font-size:18px; font-weight:900;">${name}</div>
+        ${(function(){ const mt = (S.mentees||[]).find(x=>x.charKey===m.recruitKey); if(!mt) return ''; const lvl = Math.min(100, (mt.xp||0)*7);
+          return `<div style="margin-top:6px; font-size:10px; letter-spacing:1px; color:var(--dim); font-weight:700;">${S.lang==='fr'?'PROGRESSION':'PROGRESS'} - ${S.lang==='fr'?'seance':'session'} ${(mt.beats||1)+1}</div>
+            <div class="barbg" style="width:150px;"><div class="barfill" style="width:${lvl}%; background:${col};"></div></div>`; })()}
       </div>
     </div>` : '';
   d.innerHTML = `<div class="mission-year">${t('year')} ${S.currentYear} / ${S.missionsPlan.length}</div>
@@ -4351,8 +4384,8 @@ function applyMentorChoice(choice, name){
     S.rel[key] = clamp((S.rel[key]||0) + bond, -20, 20);
   }
   const existing = key ? (S.mentees||[]).find(x=>x.charKey===key) : null;
-  if(existing){ existing.outcome = choice.recruit; existing.beats = (existing.beats||1) + 1; }
-  else S.mentees.push({ name, charKey:key, outcome: choice.recruit, since:S.currentYear, beats:1 });
+  if(existing){ existing.outcome = choice.recruit; existing.beats = (existing.beats||1) + 1; existing.xp = (existing.xp||0) + (choice.xp||2); }
+  else S.mentees.push({ name, charKey:key, outcome: choice.recruit, since:S.currentYear, beats:1, xp:(choice.xp||2) });
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
