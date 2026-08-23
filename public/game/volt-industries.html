@@ -257,27 +257,56 @@
   @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
 
-  /* --- Ecran VERSUS --- */
-  .vs-overlay{ position:fixed; inset:0; z-index:320; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:14px; overflow:hidden; animation: cineIn .25s ease; }
-  .vs-overlay.vs-out{ animation: cineOut .45s ease forwards; }
-  .vs-overlay .vs-flash{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, var(--accent-soft), transparent 70%); animation: cinePulse 1.2s ease-in-out infinite; }
-  .vs-scope{ position:relative; z-index:2; font-size:11px; letter-spacing:6px; font-weight:800; color:var(--accent); text-shadow:0 0 16px var(--accent); }
-  .vs-row{ position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:min(4vw,34px); width:100%; padding:0 12px; }
-  .vs-side{ display:flex; align-items:center; gap:10px; flex:1; }
-  .vs-side.left{ justify-content:flex-end; }
-  .vs-side.right{ justify-content:flex-start; }
-  .vs-slot{ display:flex; flex-direction:column; align-items:center; gap:8px; max-width:150px; }
-  .vs-slot .conv-portrait{ width:min(30vw,140px); height:min(30vw,140px); margin:0; }
-  .vs-slot .conv-portrait.player svg, .vs-slot .conv-portrait.player .portrait-avatar{ width:100%; height:100%; }
-  .vs-slot .conv-portrait.player .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
-  .vs-name{ font-size:11.5px; font-weight:900; letter-spacing:.5px; text-align:center; text-shadow:0 0 12px currentColor; }
-  .vs-mid{ font-size:clamp(30px,8vw,72px); font-weight:900; color:#fff; letter-spacing:2px;
-    text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
+  /* --- Combat tactique (style Pokemon) --- */
+  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
+  .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
+  .btl-arena{ position:relative; flex:1 1 auto; display:flex; align-items:stretch; gap:10px; padding:12px 12px 6px; min-height:0; }
+  .btl-fighter{ flex:1 1 0; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .btl-frame{ position:relative; flex:1 1 auto; min-height:0; border-radius:16px; overflow:hidden;
+    border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 30px -6px var(--cp-color, var(--accent)), inset 0 0 50px -14px var(--cp-color, var(--accent));
+    background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--cp-color) 28%, transparent), rgba(0,0,0,.62) 72%); }
+  .btl-frame img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .btl-frame .portrait-avatar, .btl-frame svg{ width:100%; height:100%; }
+  .btl-frame .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .btl-frame .cp-glyph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:96px; font-weight:900; color:#fff; opacity:.8; }
+  .btl-fighter.me .btl-frame{ animation: slideFromLeft .7s cubic-bezier(.2,.8,.3,1); }
+  .btl-fighter.foe .btl-frame{ animation: slideFromRight .7s cubic-bezier(.2,.8,.3,1); }
+  @keyframes slideFromLeft{ from{ opacity:0; transform:translateX(-14%) scale(.94);} to{ opacity:1; transform:none;} }
+  @keyframes slideFromRight{ from{ opacity:0; transform:translateX(14%) scale(.94);} to{ opacity:1; transform:none;} }
+  .btl-frame.hit{ animation: btlHit .38s ease; }
+  @keyframes btlHit{ 0%{ filter:brightness(1);} 25%{ filter:brightness(2.4) saturate(.4); transform:translateX(-6px);} 55%{ transform:translateX(5px);} 100%{ filter:brightness(1); transform:none;} }
+  .btl-frame.ko{ filter:grayscale(1) brightness(.5); transition:filter .6s ease; }
+  .btl-dmg{ position:absolute; left:50%; top:38%; transform:translateX(-50%); font-size:30px; font-weight:900; color:#fff;
+    text-shadow:0 0 18px var(--cp-color), 0 0 40px #000; animation: dmgFloat 1s ease forwards; pointer-events:none; z-index:4; }
+  @keyframes dmgFloat{ 0%{ opacity:0; transform:translate(-50%,10px) scale(.7);} 25%{ opacity:1; transform:translate(-50%,-4px) scale(1.15);} 100%{ opacity:0; transform:translate(-50%,-42px) scale(1);} }
+  .btl-meta{ display:flex; flex-direction:column; gap:5px; }
+  .btl-name{ font-size:12px; font-weight:900; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 12px currentColor; }
+  .btl-hpbar{ height:11px; border-radius:8px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; }
+  .btl-hpfill{ height:100%; width:100%; border-radius:8px; transition:width .45s ease, background .45s ease; }
+  .btl-hpnum{ font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .btl-vs{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:5; font-size:clamp(30px,8vw,68px); font-weight:900; color:#fff;
+    letter-spacing:2px; text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
+  .btl-vs.gone{ animation: cineOut .35s ease forwards; }
+  .btl-log{ min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
+  .btl-moves{ display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
+  .btl-move{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer;
+    color:var(--ink); font:inherit; transition:border-color .15s, transform .15s, background .15s; }
+  .btl-move:hover:not(:disabled){ border-color:var(--accent); background:var(--accent-soft); transform:translateY(-1px); }
+  .btl-move:disabled{ opacity:.45; cursor:default; }
+  .btl-move b{ display:block; font-size:13px; font-weight:900; letter-spacing:.3px; }
+  .btl-move span{ display:block; font-size:10.5px; color:var(--muted); margin-top:2px; }
+  .btl-overlay.intro .btl-moves, .btl-overlay.intro .btl-log, .btl-overlay.intro .btl-meta{ opacity:0; }
+  .btl-moves, .btl-log, .btl-meta{ transition:opacity .4s ease; }
   @media (max-width:560px){
-    .vs-row{ gap:10px; }
-    .vs-slot{ max-width:96px; }
-    .vs-slot .conv-portrait{ width:26vw; height:26vw; }
+    .btl-arena{ gap:6px; padding:8px 8px 4px; }
+    .btl-frame .cp-glyph{ font-size:54px; }
+    .btl-name{ font-size:10.5px; }
+    .btl-log{ font-size:13px; min-height:40px; padding:4px 10px 6px; }
+    .btl-moves{ gap:6px; padding:0 8px 10px; }
+    .btl-move{ padding:8px 9px; }
+    .btl-move b{ font-size:11.5px; }
+    .btl-move span{ display:none; }
   }
 </style>
 </head>
