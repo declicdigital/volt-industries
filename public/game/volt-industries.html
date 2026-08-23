@@ -3390,7 +3390,7 @@ function recruitCandidates(){
   const taken = menteeKeys();
   const side = recruitSideKey();
   const leaders = ['theg','siddartha'];
-  return NPC_ONLY_KEYS.filter(k=>{
+  return ROOKIE_KEYS.filter(k=>{
     if(k===S.playerCharKey || taken.includes(k) || leaders.includes(k)) return false;
     if(S.romance && S.romance.active && S.romance.charKey===k) return false;
     return CHARACTERS[k] && CHARACTERS[k].align===side;
