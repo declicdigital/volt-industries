@@ -2005,14 +2005,19 @@ function screenYearBreak(){
 function maybeTriggerConversation(){
   if(S.dead || S.activeConversation) return;
   if(!(S.screen==='mission' || S.screen==='mentor')) return;
-  if(Math.random() < 0.22){
+  if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
+  const gap = S.currentYear - S.lastConvYear;
+  const forced = gap >= 2;
+  if(forced || Math.random() < 0.5){
     let pool = CONVERSATIONS.filter(c=>!S.usedConvIds.includes(c.id));
     if(pool.length===0){ pool = CONVERSATIONS; S.usedConvIds=[]; }
     const conv = pool[Math.floor(Math.random()*pool.length)];
     S.usedConvIds.push(conv.id); S.activeConversation = conv; S.convLineIndex = 0;
+    S.lastConvYear = S.currentYear;
     renderConversationOverlay();
   }
 }
+function convBeamColor(align){ return align==='villain' ? '#ff2d55' : (align==='hero' ? '#00e5ff' : '#c084fc'); }
 function characterPortraitHTML(charObj, animate){
   const col = charColor(charObj.align);
   const entranceClass = animate ? (charObj.align==='villain' ? 'glitch-in' : 'materialize-in') : '';
@@ -2030,14 +2035,21 @@ function renderConversationOverlay(){
   const lines = S.lang==='fr'?conv.linesFr:conv.linesEn;
   const isLast = S.convLineIndex >= lines.length-1;
   const col = charColor(charObj.align);
+  const beam = convBeamColor(charObj.align);
   const isFirstReveal = S.convLineIndex===0;
   const el = document.createElement('div'); el.id='convOverlay'; el.className='conv-overlay';
   el.innerHTML = `<div class="conv-backdrop"></div><div class="conv-card">
-    ${characterPortraitHTML(charObj, isFirstReveal)}
-    <div class="conv-charname" style="justify-content:center;"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
-    <div class="conv-line">${lines[S.convLineIndex]}</div>
-    ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
+    <div class="conv-stage" style="--cp-color:${beam};">
+      ${characterPortraitHTML(charObj, isFirstReveal)}
+      <div class="conv-beam"></div>
+    </div>
+    <div class="conv-body">
+      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
+      <div class="conv-line">${lines[S.convLineIndex]}</div>
+      ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
+    </div>
   </div>`;
+
   document.body.appendChild(el);
   if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
   else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; }); }
