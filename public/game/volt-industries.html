@@ -3409,8 +3409,8 @@ function maybeTriggerConversation(){
   if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
   if(maybeTriggerRomance()) return;
   const gap = S.currentYear - S.lastConvYear;
-  const forced = gap >= 2;
-  if(forced || Math.random() < 0.88){
+  const forced = gap >= 6;
+  if(forced || Math.random() < 0.30){
     const keys = otherCharKeys();
     if(!keys.length) return;
     let conv = null;
