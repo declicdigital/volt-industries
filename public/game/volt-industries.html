@@ -128,6 +128,13 @@
   .preset-badge{ position:absolute; top:10px; left:10px; z-index:2; font-size:9.5px; font-weight:900; letter-spacing:1.4px;
     padding:4px 8px; border-radius:999px; color:#0a0d14; background:var(--pc-color); box-shadow:0 0 14px var(--pc-color); }
   .preset-mini{ width:100%; display:flex; justify-content:center; }
+  .portrait-avatar{ width:100%; height:100%; min-height:230px; border-radius:12px; overflow:hidden; position:relative; }
+  .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
+  .pgal .pitem{ position:relative; border:2px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; height:126px; background:rgba(255,255,255,.03); transition:.15s; }
+  .pgal .pitem img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .pgal .pitem.sel{ border-color:var(--accent); box-shadow:0 0 20px -6px var(--accent); }
+  .pgal .pitem.none{ display:flex; align-items:center; justify-content:center; text-align:center; font-size:10.5px; font-weight:800; color:var(--dim); padding:6px; }
 
   .scratch-card{ border:1.5px dashed var(--accent); border-radius:16px; padding:22px; text-align:center; cursor:pointer; background: var(--accent-soft); margin-bottom:18px; }
   .scratch-card .pname{ font-weight:900; font-size:16px; }
@@ -300,6 +307,7 @@ const T = {
     nameLabel:"Quel est ton nom civil ?", heroNameLabel:"Choisis ton nom de code",
     namePh:"Ex: Alex Moreau", heroPh:"Ex: Eclipse, Fulgur, Cendre...",
     next:"Continuer", back:"Retour",
+    portraitTitle:"Visage & silhouette", portraitLead:"Choisis l'apparence reelle de ton personnage. Le portrait choisi devient TON personnage : il ne pourra plus croiser ta route dans le jeu.", portraitNone:"Avatar holographique (dessine)",
     lookTitle:"Apparence & equipement", lookLead:"Un panel enorme de choix : morphologie, armure, accessoires... Compose un heros unique. Chaque element se voit sur ton avatar holographique a gauche.",
     morphology:"Morphologie",
     helmet:"Casque", helmetNone:"Aucun", helmetFull:"Integral", helmetVisor:"Visiere holographique",
@@ -350,6 +358,7 @@ const T = {
     nameLabel:"What's your civilian name?", heroNameLabel:"Choose your codename",
     namePh:"e.g. Alex Moreau", heroPh:"e.g. Eclipse, Fulgur, Ash...",
     next:"Continue", back:"Back",
+    portraitTitle:"Face & build", portraitLead:"Pick your character's real look. The portrait you choose becomes YOUR character: it will never show up as an NPC.", portraitNone:"Holographic avatar (drawn)",
     lookTitle:"Look & gear", lookLead:"A huge range of choices: morphology, armor, accessories... Build a truly unique hero. Every element shows live on your holographic avatar to the left.",
     morphology:"Morphology",
     helmet:"Helmet", helmetNone:"None", helmetFull:"Full", helmetVisor:"Holographic visor",
@@ -486,6 +495,8 @@ const CHARACTERS = {
 };
 
 
+
+const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKey: Object.keys(CHARACTERS).find(c=>CHARACTERS[c].img===CHAR_IMG[k]) || null }));
 
 /* ============================ FACTIONS (7 tiers per side) ============================ */
 const FACTIONS = {
@@ -1650,6 +1661,7 @@ function screenName(){
 function screenLook(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">02</span><h2>${t('lookTitle')}</h2><p class="lead">${t('lookLead')}</p>
+    <h3>${t('portraitTitle')}</h3><p class="lead" style="font-size:12.5px;">${t('portraitLead')}</p><div class="pgal" id="pgal"></div>
     <h3>${t('morphology')}</h3><div class="optgrid" id="morphOpt"></div>
     <h3>${t('helmet')}</h3><div class="optgrid" id="helmetOpt"></div>
     <h3>${t('cape')}</h3><div class="optgrid" id="capeOpt"></div>
@@ -1666,6 +1678,18 @@ function screenLook(){
     </div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="next">${t('next')} -></button></div>`;
   function refreshAvatar(){ renderRankBadge(); const box=document.getElementById('avatarBox'); if(box) box.innerHTML = avatarVisual(); }
+  function renderGallery(){
+    const g = d.querySelector('#pgal');
+    g.innerHTML = `<div class="pitem none ${S.portrait?'':'sel'}" data-key="">${t('portraitNone')}</div>` +
+      PORTRAITS.map(pr=>`<div class="pitem ${S.portrait===pr.url?'sel':''}" data-key="${pr.key}"><img src="${pr.url}" alt="" loading="lazy"></div>`).join('');
+    g.querySelectorAll('.pitem').forEach(el=>{ el.onclick=()=>{
+      const k = el.dataset.key;
+      if(!k){ S.portrait=null; S.playerCharKey=null; }
+      else { const pr = PORTRAITS.find(x=>x.key===k); S.portrait=pr.url; S.playerCharKey=pr.charKey; }
+      renderGallery(); refreshAvatar();
+    }; });
+  }
+  renderGallery();
   function opts(containerId, options, onPick){
     const c = d.querySelector('#'+containerId);
     c.innerHTML = options.map(o=>`<div class="opt ${o.sel?'selected':''} ${o.disabled?'disabled':''}" data-key="${o.key}"><div class="oname">${o.label}</div>${o.desc?`<div class="odesc">${o.desc}</div>`:''}</div>`).join('');
