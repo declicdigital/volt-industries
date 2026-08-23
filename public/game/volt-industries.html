@@ -2116,7 +2116,7 @@ function freshState(lang){
     stats:{ courage:50, intelligence:50, popularity:50 }, align:0, initialAlignMagnitude:0, reputationFloor:0, lastZone:'neutral',
     rel:{ volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 },
     currentYear:1, currentMissionInYear:0, totalMissionsDone:0, usedIds:[], usedPivotalIds:[], usedBreakthroughIds:[], usedIntrigueIds:[], orientationCount:0, lastOrientationYear:null, currentMission:null, log:[],
-    team:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
+    team:null, usedMentorIds:[], usedArcIds:[], lastMentorYear:null, lastArcYear:null, invitedTierHero:0, invitedTierVillain:0, pendingReturnScreen:null,
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
   battleForm:{ momentum:0, streak:0, injury:null },
   battlePlan:{ target:0, played:0 },
@@ -3114,7 +3114,8 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  S.mentorCap = S.years>=14 ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
+  S.mentorCap = Math.max(1, Math.floor(S.years/5));
+  S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
@@ -3179,7 +3180,55 @@ function pickMission(){
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
   return Object.assign({}, m, { location: { name: randLocationName(), type: m.scope||1 } });
 }
-function shouldTriggerMentor(){ if(S.mode!=='long') return false; if(S.currentYear < 10) return false; if(S.mentorCount >= S.mentorCap) return false; return Math.random() < 0.22; }
+/* ---------- Recrues : ce sont les figures historiques de Volt Industries / PERDITION ---------- */
+function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
+function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
+function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
+function recruitCandidates(){
+  const taken = menteeKeys();
+  const side = recruitSideKey();
+  const leaders = ['theg','siddartha'];
+  return NPC_ONLY_KEYS.filter(k=>{
+    if(k===S.playerCharKey || taken.includes(k) || leaders.includes(k)) return false;
+    if(S.romance && S.romance.active && S.romance.charKey===k) return false;
+    return CHARACTERS[k] && CHARACTERS[k].align===side;
+  });
+}
+function shouldTriggerMentor(){
+  if(S.currentYear < 5) return false;
+  if(S.mentorCount >= (S.mentorCap||1)) return false;
+  if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 3) return false;
+  if(!recruitCandidates().length) return false;
+  return Math.random() < 0.34;
+}
+function shouldTriggerRecruitArc(){
+  if(S.currentYear < 6) return false;
+  if(!livingMentees().length) return false;
+  if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 2) return false;
+  return Math.random() < 0.30;
+}
+function startMentorScene(){
+  const cands = recruitCandidates(); if(!cands.length) return false;
+  const key = pick(cands); const c = CHARACTERS[key];
+  const usedIds = S.usedMentorIds || (S.usedMentorIds=[]);
+  let pool = MENTOR_MISSIONS.filter(m=>!usedIds.includes(m.id));
+  if(!pool.length){ S.usedMentorIds = []; pool = MENTOR_MISSIONS.slice(); }
+  const m = pick(pool); S.usedMentorIds.push(m.id);
+  S.mentorCount += 1; S.lastMentorYear = S.currentYear;
+  S.currentMission = Object.assign({}, m, { recruitKey:key, recruitName:(S.lang==='fr'?c.fr:c.en), arc:false });
+  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+}
+function startRecruitArc(){
+  const live = livingMentees(); if(!live.length) return false;
+  const mentee = pick(live); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
+  const usedIds = S.usedArcIds || (S.usedArcIds=[]);
+  let pool = RECRUIT_ARCS.filter(m=>!usedIds.includes(m.id+':'+mentee.charKey));
+  if(!pool.length){ pool = RECRUIT_ARCS.slice(); }
+  const m = pick(pool); S.usedArcIds.push(m.id+':'+mentee.charKey);
+  S.lastArcYear = S.currentYear;
+  S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:(S.lang==='fr'?c.fr:c.en), arc:true });
+  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+}
 function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 2) return false;
@@ -3202,10 +3251,8 @@ function nextMission(){
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
-  if(shouldTriggerMentor()){
-    S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
-    S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
-  }
+  if(shouldTriggerMentor() && startMentorScene()) return;
+  if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   S.pendingBattleWin = null;
   S.currentMission = pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
@@ -3605,7 +3652,9 @@ function buildBattleSquads(foeKey){
   const keys = otherCharKeys().filter(k=>k!==foeKey);
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
-  const allyPool = shuffle(keys.filter(k=>CHARACTERS[k].align===mySide));
+  let allyPool = shuffle(keys.filter(k=>CHARACTERS[k].align===mySide));
+  const mine = menteeKeys().filter(k=>allyPool.includes(k));
+  if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
   const n = 3 + Math.floor(Math.random()*4); // 3 a 6 visages a tes cotes
   const allies = allyPool.slice(0, n);
@@ -3827,28 +3876,48 @@ function screenMission(){
 }
 function screenMentor(){
   const d = document.createElement('div'); const m = S.currentMission; const name = m.recruitName;
-  const text = (S.lang==='fr'?m.fr:m.en).replace('{name}', name);
+  const text = (S.lang==='fr'?m.fr:m.en).replace(/\{name\}/g, name);
+  const c = m.recruitKey ? CHARACTERS[m.recruitKey] : null;
+  const col = c ? convBeamColor(c.align) : 'var(--accent)';
+  const roleLabel = m.arc ? (S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT') : (S.lang==='fr'?'RECRUE':'RECRUIT');
+  const portrait = c ? `<div style="display:flex; align-items:center; gap:14px; margin:10px 0 4px;">
+      <div style="width:96px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
+      <div>
+        <div style="font-size:10px; letter-spacing:2px; color:${col}; font-weight:800;">${roleLabel}</div>
+        <div style="font-size:18px; font-weight:900;">${name}</div>
+      </div>
+    </div>` : '';
   d.innerHTML = `<div class="mission-year">${t('year')} ${S.currentYear} / ${S.missionsPlan.length}</div>
     <div class="mission-tag">${S.lang==='fr'?m.tagFr:m.tagEn}</div>
+    ${portrait}
     <h2 style="margin-top:6px;">${text}</h2><div id="choices"></div>`;
   const cbox = d.querySelector('#choices');
-  m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c.fr:c.en); btn.onclick=()=> applyMentorChoice(c, name); cbox.appendChild(btn); });
+  m.choices.forEach((c2)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.textContent = (S.lang==='fr'?c2.fr:c2.en); btn.onclick=()=> applyMentorChoice(c2, name); cbox.appendChild(btn); });
   return d;
 }
 function applyMentorChoice(choice, name){
   const eff = choice.eff || {};
+  const m = S.currentMission || {};
+  const key = m.recruitKey || null;
   S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
   S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
   S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
-  S.mentees.push({ name, outcome: choice.recruit });
+  if(key){
+    const bond = (choice.recruit==='hero'||choice.recruit==='villain') ? 4 : (choice.recruit==='died' ? -6 : 1);
+    S.rel[key] = clamp((S.rel[key]||0) + bond, -20, 20);
+  }
+  const existing = key ? (S.mentees||[]).find(x=>x.charKey===key) : null;
+  if(existing){ existing.outcome = choice.recruit; existing.beats = (existing.beats||1) + 1; }
+  else S.mentees.push({ name, charKey:key, outcome: choice.recruit, since:S.currentYear, beats:1 });
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   handleZoneCheckAndContinue();
 }
+
 function handleZoneCheckAndContinue(){
   const newZone = zoneOf(S.align);
   if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
@@ -4201,6 +4270,10 @@ function pickUnused(bucket, len){
 }
 /* ---------- Sujets/tons de conversation : couche supplementaire de variete ---------- */
 const CONV_THEMES = {
+  recrue: {
+    fr:["\"Tu m'as forme(e). Je fais encore les choses comme toi, sans m'en rendre compte.\"","\"J'ai repris ta garde, ta facon d'entrer dans une piece. Ca marche.\"","\"On m'a propose ton poste. J'ai dit que je te demanderais d'abord.\"","\"Le premier jour, tu m'as dit de ne jamais courir vers le bruit. Je cours quand meme.\"","\"Mes propres recrues me parlent de toi comme d'une legende. C'est bizarre.\"","\"J'ai fait une erreur. Je viens te le dire avant que tu le lises dans un rapport.\"","\"Un jour je te depasserai. Ce jour-la, ne le prends pas mal.\"","\"Tu m'as appris a tenir. Tu m'as jamais appris a m'arreter.\"","\"Ils veulent me monter contre toi. Je voulais que tu le saches de ma bouche.\"","\"Je porte tes couleurs sur le terrain. J'espere que je les porte bien.\""],
+    en:["\"You trained me. I still do things your way without noticing.\"","\"I took your stance, your way of entering a room. It works.\"","\"They offered me your post. I said I'd ask you first.\"","\"Day one you told me never to run toward the noise. I still run.\"","\"My own recruits talk about you like a legend. It's strange.\"","\"I made a mistake. I'm telling you before you read it in a report.\"","\"One day I'll surpass you. Don't take it badly when I do.\"","\"You taught me how to hold. You never taught me how to stop.\"","\"They're trying to turn me against you. I wanted you to hear it from me.\"","\"I wear your colors in the field. I hope I wear them well.\""],
+  },
   mentorat: {
     fr:["\"Laisse-moi te dire ce que personne ne t'apprendra en briefing.\"","\"J'ai commence comme toi. J'ai fait toutes les erreurs, dans l'ordre.\"","\"Ton probleme n'est pas la puissance. C'est le rythme.\"","\"Ecoute-moi deux minutes, ca t'evitera deux ans de galere.\"","\"On ne devient pas solide en gagnant. On devient solide en recommencant.\"","\"Tu improvises bien. Trop bien. Un jour ca te coutera cher.\"","\"Apprends a partir avant la fin. C'est la lecon la plus dure.\"","\"Note ce que tu ressens la, maintenant. Tu en auras besoin plus tard.\""],
     en:["\"Let me tell you what no briefing will ever teach you.\"","\"I started where you are. I made every mistake, in order.\"","\"Your problem isn't power. It's pacing.\"","\"Give me two minutes, it'll save you two years of pain.\"","\"You don't get solid by winning. You get solid by starting over.\"","\"You improvise well. Too well. One day that bill comes due.\"","\"Learn to leave before the end. Hardest lesson there is.\"","\"Remember what you feel right now. You'll need it later.\""],
@@ -4297,7 +4370,9 @@ function generateConversation(charKey){
    se voir demander son camp toutes les cinq minutes. */
 function pickConvTheme(charKey){
   const orientationThemes = ['tentation'];
-  let keys = CONV_THEME_KEYS.filter(k=>!orientationThemes.includes(k));
+  let keys = CONV_THEME_KEYS.filter(k=>!orientationThemes.includes(k) && k!=='recrue');
+  /* Une ancienne recrue parle d'abord de ce que tu lui as transmis */
+  if(charKey && menteeKeys().includes(charKey) && Math.random() < 0.55) return 'recrue';
   if(orientationBudgetLeft() && Math.random() < 0.12){
     S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
     return 'tentation';
@@ -4317,6 +4392,9 @@ function generateGroupConversation(){
   let cast = shuffle(same.slice()).slice(0, count);
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
   if(cast.length < 3) cast = shuffle(base.slice()).slice(0,3);
+  /* Tes eleves apparaissent dans les discussions de groupe */
+  const mk = menteeKeys().filter(k=>keys.includes(k) && !cast.includes(k));
+  if(mk.length){ cast[cast.length-1] = pick(mk); }
   const linesFr = [], linesEn = [], lineSpeakers = [];
   const total = cast.length + 1 + Math.floor(Math.random()*2); // 4 a 6 repliques
   for(let i=0;i<total;i++){
@@ -4824,6 +4902,11 @@ function maybeTriggerConversation(){
     }
     /* ~45% des echanges sont des discussions de groupe (3-5 personnages qui se repondent) */
     if(!conv && Math.random() < 0.45){ conv = generateGroupConversation(); }
+    /* 35% des echanges solo se font avec une recrue que tu as formee */
+    if(!conv){
+      const mine = menteeKeys().filter(k=>keys.includes(k));
+      if(mine.length && Math.random() < 0.35) conv = generateConversation(pick(mine));
+    }
     if(!conv){
       const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
       const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
