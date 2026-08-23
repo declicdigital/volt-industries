@@ -2454,65 +2454,230 @@ function showBreakthroughCinematic(){
   setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
   return dur;
 }
-/* ---------- Ecran VERSUS pour les combats a fort enjeu ---------- */
-function versusParticipants(mission){
-  const keys = [];
-  const add = k => { if(k && CHARACTERS[k] && k!==S.playerCharKey && !keys.includes(k)) keys.push(k); };
-  add(mission.charKey);
-  (mission.choices||[]).forEach(c=>{ if(c && c.eff && c.eff.rel) Object.keys(c.eff.rel).forEach(add); });
-  return keys;
+/* ================= COMBAT TACTIQUE (style Pokemon) ================= */
+const MOVES_BY_POWER = {
+  armure:[{fr:'Charge propulsee',en:'Thruster charge',p:26,acc:.92},{fr:'Impact repulseur',en:'Repulsor impact',p:32,acc:.8}],
+  rayons:[{fr:'Salve energetique',en:'Energy volley',p:24,acc:.95},{fr:'Rayon perforant',en:'Piercing beam',p:34,acc:.75}],
+  ia:[{fr:'Analyse tactique',en:'Tactical read',p:18,acc:1},{fr:'Frappe calculee',en:'Calculated strike',p:30,acc:.85}],
+  drones:[{fr:'Nuee de drones',en:'Drone swarm',p:22,acc:.95},{fr:'Bombardement autonome',en:'Autonomous strafe',p:33,acc:.72}],
+  bouclier_energie:[{fr:'Contre-champ',en:'Field counter',p:20,acc:.95},{fr:'Onde de choc',en:'Shield shockwave',p:29,acc:.82}],
+  nanotech:[{fr:'Essaim corrosif',en:'Corrosive swarm',p:23,acc:.9},{fr:'Reconstruction',en:'Reconstruction',p:12,acc:1,heal:16}],
+  elementaire:[{fr:'Foudre canalisee',en:'Channelled lightning',p:31,acc:.82},{fr:'Muraille de glace',en:'Ice wall',p:19,acc:.96}],
+  illusions:[{fr:'Leurre miroir',en:'Mirror decoy',p:21,acc:.95},{fr:'Cauchemar induit',en:'Induced nightmare',p:30,acc:.78}],
+  portails:[{fr:'Frappe par portail',en:'Portal strike',p:27,acc:.9},{fr:'Renvoi dimensionnel',en:'Dimensional return',p:33,acc:.74}],
+  invocation:[{fr:'Entite gardienne',en:'Guardian entity',p:25,acc:.88},{fr:'Horde invoquee',en:'Summoned horde',p:35,acc:.7}],
+  metamorphose:[{fr:'Forme de fauve',en:'Beast form',p:28,acc:.88},{fr:'Mimetisme',en:'Mimicry',p:14,acc:1,heal:14}],
+  controle_temporel:[{fr:'Stase locale',en:'Local stasis',p:20,acc:.97},{fr:'Boucle de coups',en:'Strike loop',p:34,acc:.76}],
+  force:[{fr:'Uppercut sismique',en:'Seismic uppercut',p:33,acc:.8},{fr:'Prise de titan',en:'Titan grip',p:25,acc:.92}],
+  regen:[{fr:'Second souffle',en:'Second wind',p:10,acc:1,heal:20},{fr:'Assaut increvable',en:'Relentless assault',p:24,acc:.9}],
+  vitesse:[{fr:'Rafale de coups',en:'Blitz combo',p:22,acc:.97},{fr:'Frappe supersonique',en:'Supersonic strike',p:32,acc:.78}],
+  invulnerabilite:[{fr:'Contre blinde',en:'Armored counter',p:23,acc:.94},{fr:'Charge inarretable',en:'Unstoppable charge',p:30,acc:.83}],
+  saut:[{fr:'Ecrasement aerien',en:'Aerial slam',p:29,acc:.85},{fr:'Bond esquive',en:'Evasive leap',p:16,acc:1,heal:10}],
+  sens_aiguises:[{fr:'Lecture des failles',en:'Weak-point read',p:21,acc:1},{fr:'Riposte anticipee',en:'Preempted riposte',p:29,acc:.86}],
+  telepathie:[{fr:'Intrusion mentale',en:'Mind intrusion',p:26,acc:.9},{fr:'Surcharge psychique',en:'Psychic overload',p:34,acc:.74}],
+  telekinesie:[{fr:'Projection de debris',en:'Debris hurl',p:27,acc:.88},{fr:'Etreinte kinetique',en:'Kinetic crush',p:33,acc:.76}],
+  projection:[{fr:'Frappe astrale',en:'Astral strike',p:25,acc:.9},{fr:'Retrait spectral',en:'Spectral retreat',p:12,acc:1,heal:15}],
+  illusion_mentale:[{fr:'Faux souvenir',en:'False memory',p:22,acc:.94},{fr:'Terreur imposee',en:'Imposed terror',p:31,acc:.78}],
+  controle_emotionnel:[{fr:'Vague de doute',en:'Wave of doubt',p:23,acc:.93},{fr:'Rage retournee',en:'Turned rage',p:31,acc:.79}],
+  precognition:[{fr:'Coup d\'avance',en:'One step ahead',p:24,acc:1},{fr:'Esquive prophetique',en:'Prophetic dodge',p:13,acc:1,heal:13}],
+};
+const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
+const FOE_MOVES = {
+  theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut final',en:'Finishing uppercut',p:38,acc:.68}],
+  volt:[{fr:'Repulseur',en:'Repulsor',p:27,acc:.9},{fr:'Drone de soutien',en:'Support drone',p:20,acc:.95},{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1,heal:15},{fr:'Surcharge du reacteur',en:'Reactor overload',p:36,acc:.7}],
+  vaelor:[{fr:'Lame runique',en:'Runic blade',p:30,acc:.85},{fr:'Cri de guerre',en:'War cry',p:18,acc:1},{fr:'Tempete du nord',en:'Northern storm',p:34,acc:.74},{fr:'Souffle de veteran',en:'Veteran breath',p:10,acc:1,heal:14}],
+  marsh:[{fr:'Serum instable',en:'Unstable serum',p:25,acc:.88},{fr:'Analyse des failles',en:'Weakness analysis',p:19,acc:1},{fr:'Injection gamma',en:'Gamma injection',p:33,acc:.72},{fr:'Protocole de soin',en:'Healing protocol',p:8,acc:1,heal:18}],
+  nyx:[{fr:'Frappe de l\'ombre',en:'Shadow strike',p:26,acc:.93},{fr:'Fumigene',en:'Smoke screen',p:14,acc:1,heal:12},{fr:'Lames jumelles',en:'Twin blades',p:30,acc:.82},{fr:'Coup dans le dos',en:'Backstab',p:36,acc:.68}],
+  aegis:[{fr:'Mur de bouclier',en:'Shield wall',p:16,acc:1,heal:14},{fr:'Ricochet',en:'Ricochet',p:27,acc:.9},{fr:'Charge du sentinelle',en:'Sentinel charge',p:31,acc:.8},{fr:'Verdict d\'acier',en:'Steel verdict',p:37,acc:.67}],
+  ferrum:[{fr:'Poing de fer',en:'Iron fist',p:29,acc:.87},{fr:'Blindage renforce',en:'Reinforced plating',p:12,acc:1,heal:15},{fr:'Canon a rail',en:'Railgun',p:35,acc:.71},{fr:'Ecrasement metallique',en:'Metal slam',p:25,acc:.93}],
+  solen:[{fr:'Combo eclair',en:'Lightning combo',p:24,acc:.96},{fr:'Feinte de rue',en:'Street feint',p:19,acc:1},{fr:'Percee determinee',en:'Determined breach',p:31,acc:.8},{fr:'Dernier round',en:'Final round',p:36,acc:.68}],
+  sable:[{fr:'Vent de sable',en:'Sandstorm',p:23,acc:.94},{fr:'Danse evasive',en:'Evasive dance',p:13,acc:1,heal:13},{fr:'Fouet de poussiere',en:'Dust whip',p:29,acc:.85},{fr:'Enterrement',en:'Burial',p:35,acc:.7}],
+  siddartha:[{fr:'Verbe du prophete',en:'Prophet\'s word',p:28,acc:.92},{fr:'Emprise mentale',en:'Mind hold',p:33,acc:.78},{fr:'Cercle de disciples',en:'Circle of disciples',p:16,acc:1,heal:18},{fr:'Sentence eternelle',en:'Eternal sentence',p:40,acc:.63}],
+  malachar:[{fr:'Lame sans-dieu',en:'Godless blade',p:34,acc:.8},{fr:'Malediction',en:'Curse',p:26,acc:.9},{fr:'Vol de vie',en:'Life drain',p:22,acc:.9,heal:14},{fr:'Extinction',en:'Extinction',p:41,acc:.6}],
+  mandate:[{fr:'Decret d\'acier',en:'Steel decree',p:29,acc:.88},{fr:'Barrage de garde',en:'Guard barrage',p:24,acc:.94},{fr:'Loi martiale',en:'Martial law',p:35,acc:.72},{fr:'Reforme forcee',en:'Forced reform',p:14,acc:1,heal:15}],
+  obsidian:[{fr:'Eclat obsidien',en:'Obsidian shard',p:27,acc:.9},{fr:'Carapace noire',en:'Black carapace',p:12,acc:1,heal:16},{fr:'Taillade sombre',en:'Dark slash',p:32,acc:.8},{fr:'Fracture',en:'Fracture',p:38,acc:.66}],
+  kaerus:[{fr:'Fauche du vide',en:'Void scythe',p:31,acc:.83},{fr:'Silence',en:'Silence',p:21,acc:.97},{fr:'Effondrement',en:'Collapse',p:37,acc:.68},{fr:'Absorption',en:'Absorption',p:18,acc:.9,heal:13}],
+  aurelia:[{fr:'Regard dore',en:'Golden gaze',p:26,acc:.92},{fr:'Couronne brulante',en:'Burning crown',p:33,acc:.76},{fr:'Grace impose',en:'Imposed grace',p:14,acc:1,heal:17},{fr:'Sceptre d\'or',en:'Golden scepter',p:29,acc:.86}],
+  vipera:[{fr:'Venin paralysant',en:'Paralytic venom',p:25,acc:.94},{fr:'Morsure eclair',en:'Flash bite',p:30,acc:.84},{fr:'Mue',en:'Molt',p:12,acc:1,heal:15},{fr:'Etreinte mortelle',en:'Deadly coil',p:37,acc:.67}],
+  sepulcre:[{fr:'Chaines funebres',en:'Funeral chains',p:29,acc:.87},{fr:'Requiem',en:'Requiem',p:34,acc:.74},{fr:'Terre gelee',en:'Frozen earth',p:23,acc:.95},{fr:'Tombeau',en:'Tomb',p:40,acc:.62}],
+  nihil:[{fr:'Negation',en:'Negation',p:28,acc:.9},{fr:'Neant rampant',en:'Creeping void',p:33,acc:.77},{fr:'Rien ne subsiste',en:'Nothing remains',p:41,acc:.6},{fr:'Vide restaurateur',en:'Restoring void',p:16,acc:1,heal:16}],
+  fuchsia:[{fr:'Rire toxique',en:'Toxic laughter',p:26,acc:.92},{fr:'Bombe farceuse',en:'Prank bomb',p:32,acc:.78},{fr:'Cabriole',en:'Cartwheel',p:13,acc:1,heal:13},{fr:'Grand final',en:'Grand finale',p:39,acc:.64}],
+  lorelei:[{fr:'Chant trompeur',en:'Deceiving song',p:24,acc:.95},{fr:'Pacte truque',en:'Rigged pact',p:30,acc:.82},{fr:'Volte-face',en:'About-face',p:15,acc:1,heal:14},{fr:'Prix du silence',en:'Price of silence',p:36,acc:.68}],
+};
+function foeMovesFor(key){
+  if(FOE_MOVES[key]) return FOE_MOVES[key];
+  const c = CHARACTERS[key];
+  return c && c.align==='villain'
+    ? [{fr:'Assaut brutal',en:'Brutal assault',p:29,acc:.86},{fr:'Coup bas',en:'Cheap shot',p:24,acc:.95},{fr:'Cri de haine',en:'Cry of hate',p:33,acc:.75},{fr:'Reprise cruelle',en:'Cruel recovery',p:12,acc:1,heal:14}]
+    : [{fr:'Frappe loyale',en:'Loyal strike',p:27,acc:.9},{fr:'Garde serree',en:'Tight guard',p:14,acc:1,heal:14},{fr:'Combo precis',en:'Precise combo',p:24,acc:.96},{fr:'Coup decisif',en:'Decisive blow',p:35,acc:.7}];
 }
-function shouldShowVersus(mission){
+function playerMoves(){
+  const list = [];
+  (S.powers||[]).forEach(id=>{ const m = MOVES_BY_POWER[id]; if(m) list.push(m[0], m[1]); });
+  BASIC_MOVES.forEach(m=>list.push(m));
+  const out = [];
+  list.forEach(m=>{ if(out.length<4 && !out.some(x=>x.fr===m.fr)) out.push(m); });
+  while(out.length<4) out.push(BASIC_MOVES[out.length%2]);
+  return out.slice(0,4);
+}
+/* Adversaire : 90% camp adverse, 10% querelle interne */
+function pickOpponentKey(){
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  const pool = otherCharKeys();
+  const cross = pool.filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
+  const same = pool.filter(k=>CHARACTERS[k].align===mySide);
+  if(Math.random() < 0.9){ if(cross.length) return pick(cross); }
+  if(same.length) return pick(same);
+  return cross.length ? pick(cross) : pick(pool);
+}
+function battleFoeKey(mission){
+  if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey) return mission.charKey;
+  return pickOpponentKey();
+}
+function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
-  if(!((mission.danger||0)>=3 || (mission.scope||1)>=5)) return false;
-  return versusParticipants(mission).length > 0;
+  if(mission.pivotal || mission.breakthrough) return false;
+  return (mission.danger||0) >= 2 || Math.random() < 0.55;
 }
-function versusPortraitHTML(charObj){
-  const col = convBeamColor(charObj.align);
+function hpColor(pct){ return pct>55 ? 'var(--green)' : (pct>25 ? 'var(--gold)' : '#ff3b5c'); }
+function battleFrameInner(charObj){
   const name = S.lang==='fr'?charObj.fr:charObj.en;
   const initial = name.replace(/^(Le |La |Dr |L')/,'').charAt(0).toUpperCase();
-  const inner = charObj.img ? `<img src="${charObj.img}" alt="${name}">` : `<span class="cp-glyph">${initial}</span>`;
-  const anim = charObj.align==='villain' ? 'glitch-in' : 'materialize-in';
-  return `<div class="vs-slot"><div class="conv-portrait ${anim}" style="--cp-color:${col};">${inner}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${col};">${name}</div></div>`;
+  return charObj.img ? `<img src="${charObj.img}" alt="${name}">` : `<span class="cp-glyph">${initial}</span>`;
 }
-function showVersusScreen(mission){
-  const parts = versusParticipants(mission);
+function startBattle(mission, done){
+  const foeKey = battleFoeKey(mission);
+  const foe = CHARACTERS[foeKey];
+  const foeName = S.lang==='fr'?foe.fr:foe.en;
+  const myName = S.heroName || (S.lang==='fr'?'Toi':'You');
   const playerZone = zoneOf(S.align);
-  const playerCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
-  const foes = [], allies = [];
-  parts.forEach((k,i)=>{
-    const c = CHARACTERS[k];
-    const sameSide = (playerZone==='villain' && c.align==='villain') || (playerZone!=='villain' && c.align==='hero');
-    if(sameSide && i>0 && foes.length) allies.push(k); else foes.push(k);
-  });
-  const overlay = document.createElement('div'); overlay.className='vs-overlay';
-  overlay.innerHTML = `<div class="vs-flash"></div>
-    <div class="vs-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
-    <div class="vs-row">
-      <div class="vs-side left">
-        <div class="vs-slot"><div class="conv-portrait player materialize-in" style="--cp-color:${playerCol};">${avatarVisual()}<div class="cp-sweep"></div></div><div class="vs-name" style="color:${playerCol};">${S.heroName||'???'}</div></div>
-        ${allies.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}
+  const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
+  const foeCol = convBeamColor(foe.align);
+  const pl = computePowerLevel();
+  const st = {
+    myHP:100, myMax:100,
+    foeHP: 90 + (mission.danger||0)*6 + Math.round((mission.scope||1)*2),
+    busy:true
+  };
+  st.foeMax = st.foeHP;
+  const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
+  const ov = document.createElement('div');
+  ov.className = 'btl-overlay intro';
+  ov.innerHTML = `
+    <div class="btl-arena">
+      <div class="btl-fighter me">
+        <div class="btl-frame" id="btlMeFrame" style="--cp-color:${myCol};">${avatarVisual()}</div>
+        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
+          <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
+          <div class="btl-hpnum" id="btlMeNum">${st.myHP} / ${st.myMax}</div></div>
       </div>
-      <div class="vs-mid">VS</div>
-      <div class="vs-side right">${foes.map(k=>versusPortraitHTML(CHARACTERS[k])).join('')}</div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const dur = 2100;
-  setTimeout(()=>{ overlay.classList.add('vs-out'); setTimeout(()=>overlay.remove(), 450); }, dur);
-  return dur;
+      <div class="btl-vs" id="btlVS">VS</div>
+      <div class="btl-fighter foe">
+        <div class="btl-frame" id="btlFoeFrame" style="--cp-color:${foeCol};">${battleFrameInner(foe)}</div>
+        <div class="btl-meta"><div class="btl-name" style="color:${foeCol};">${foeName}</div>
+          <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
+          <div class="btl-hpnum" id="btlFoeNum">${st.foeHP} / ${st.foeMax}</div></div>
+      </div>
+    </div>
+    <div class="btl-log" id="btlLog"></div>
+    <div class="btl-moves" id="btlMoves"></div>`;
+  document.body.appendChild(ov);
+  const meFrame = ov.querySelector('#btlMeFrame'), foeFrame = ov.querySelector('#btlFoeFrame');
+  const logEl = ov.querySelector('#btlLog'), movesEl = ov.querySelector('#btlMoves');
+  const setLog = txt => { logEl.textContent = txt; };
+  function refreshBars(){
+    const mp = clamp(st.myHP/st.myMax*100,0,100), fp = clamp(st.foeHP/st.foeMax*100,0,100);
+    const mb = ov.querySelector('#btlMeHP'), fb = ov.querySelector('#btlFoeHP');
+    mb.style.width = mp+'%'; mb.style.background = hpColor(mp);
+    fb.style.width = fp+'%'; fb.style.background = hpColor(fp);
+    ov.querySelector('#btlMeNum').textContent = Math.max(0,Math.round(st.myHP))+' / '+st.myMax;
+    ov.querySelector('#btlFoeNum').textContent = Math.max(0,Math.round(st.foeHP))+' / '+st.foeMax;
+  }
+  function floatDmg(frame, val, col){
+    const el = document.createElement('div'); el.className='btl-dmg'; el.style.setProperty('--cp-color', col);
+    el.textContent = (val>0? '-' : '+') + Math.abs(val);
+    frame.appendChild(el); setTimeout(()=>el.remove(), 1000);
+  }
+  function hit(frame){ frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
+  function setMovesEnabled(on){
+    movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on);
+  }
+  function renderMoves(){
+    movesEl.innerHTML = myMoves.map((m,i)=>{
+      const label = S.lang==='fr'?m.fr:m.en;
+      const sub = m.heal ? (S.lang==='fr'?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
+                         : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
+      return `<button class="btl-move" data-i="${i}"><b>${label}</b><span>${sub}</span></button>`;
+    }).join('');
+    movesEl.querySelectorAll('button').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
+  }
+  function dmgOf(move, atkPower){
+    const scale = 0.75 + atkPower/220;
+    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62));
+  }
+  function finish(win){
+    st.busy = true; setMovesEnabled(false);
+    (win?foeFrame:meFrame).classList.add('ko');
+    setLog(win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
+               : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`));
+    setTimeout(()=>{
+      ov.classList.add('btl-out');
+      setTimeout(()=>{ ov.remove(); done(win, foeKey); }, 450);
+    }, 1500);
+  }
+  function foeTurn(){
+    const m = pick(foeMoves);
+    const label = S.lang==='fr'?m.fr:m.en;
+    if(Math.random() > m.acc){
+      setLog(S.lang==='fr'?`${foeName} tente ${label}... et te manque.`:`${foeName} tries ${label}... and misses.`);
+      setTimeout(()=>{ st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.'); }, 900);
+      return;
+    }
+    const d = dmgOf(m, 55 + (mission.danger||0)*10);
+    st.myHP = Math.max(0, st.myHP - d);
+    if(m.heal){ st.foeHP = Math.min(st.foeMax, st.foeHP + m.heal); floatDmg(foeFrame, -m.heal, foeCol); }
+    hit(meFrame); floatDmg(meFrame, d, foeCol); refreshBars();
+    setLog(S.lang==='fr'?`${foeName} utilise ${label} : ${d} degats.`:`${foeName} uses ${label}: ${d} damage.`);
+    setTimeout(()=>{
+      if(st.myHP<=0){ finish(false); return; }
+      st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+    }, 950);
+  }
+  function playerTurn(i){
+    if(st.busy) return;
+    st.busy = true; setMovesEnabled(false);
+    const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
+    if(Math.random() > m.acc){
+      setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
+      setTimeout(foeTurn, 900); return;
+    }
+    const d = dmgOf(m, pl + S.stats.courage*0.35);
+    st.foeHP = Math.max(0, st.foeHP - d);
+    if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
+    hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
+    setLog(S.lang==='fr'?`${label} touche ${foeName} : ${d} degats.`:`${label} hits ${foeName}: ${d} damage.`);
+    setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 950);
+  }
+  renderMoves(); refreshBars(); setMovesEnabled(false);
+  setTimeout(()=>{
+    const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
+    ov.classList.remove('intro');
+    setLog(S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`);
+    st.busy = false; setMovesEnabled(true);
+  }, 1500);
 }
 function afterMissionRender(mission){
-  if(mission && mission.pivotal){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
+  if(mission && mission.pivotal){
+    if(Math.random() < 0.3){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
+    maybeTriggerConversation(); return;
+  }
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
-  const epicness = missionEpicness(mission);
-  if(shouldShowVersus(mission)){
-    const vsDur = showVersusScreen(mission);
-    setTimeout(()=>{
-      const dur = epicness!=='none' ? showCombatCinematic(mission, epicness) : 0;
-      setTimeout(()=>maybeTriggerConversation(), dur+150);
-    }, vsDur+450);
+  if(shouldBattle(mission)){
+    S.pendingBattleWin = null;
+    startBattle(mission, (win)=>{ S.pendingBattleWin = win; maybeTriggerConversation(); });
     return;
   }
+  const epicness = missionEpicness(mission);
   if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
   else { maybeTriggerConversation(); }
 }
