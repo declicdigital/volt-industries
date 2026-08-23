@@ -117,6 +117,12 @@
   .relcard .rn{ font-weight:800; font-size:13px; margin-bottom:6px;}
   .team-hero-banner{ border-radius:18px; padding:22px; margin-top:18px; text-align:center; background: radial-gradient(ellipse at 50% 0%, var(--accent-soft), transparent 70%); border:1.5px solid var(--accent); }
   .team-hero-banner .tname{ font-size:22px; font-weight:900; letter-spacing:2px; color:var(--accent); text-shadow:0 0 20px var(--accent);}
+  .dl-box{ margin-top:26px; border:1.5px solid var(--accent); border-radius:18px; padding:22px; text-align:center;
+    background: radial-gradient(ellipse at 50% 0%, var(--accent-soft), transparent 72%); }
+  .dl-box .dl-title{ font-size:13px; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:var(--accent); }
+  .dl-box .dl-sub{ color:var(--muted); font-size:13.5px; margin:8px 0 16px; }
+  .dl-actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
   .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:14px; }
   .kpi{ border:1px solid var(--line); border-radius:14px; padding:16px; background:rgba(255,255,255,.02); text-align:center;}
   .kpi .kval{ font-size:24px; font-weight:900; color:var(--accent); } .kpi .klabel{ font-size:10.5px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-top:4px;}
@@ -735,14 +741,49 @@ function factionEmblemSVG(side, tier, size){
     case 'void': icon = `<circle cx="50" cy="48" r="12" fill="#050008"/><circle cx="50" cy="48" r="12" fill="none" stroke="#fff" stroke-width="1.6" opacity="0.6"/><circle cx="34" cy="34" r="1.6" fill="#fff"/><circle cx="68" cy="38" r="1.2" fill="#fff"/><circle cx="66" cy="60" r="1.8" fill="#fff"/><circle cx="36" cy="62" r="1.3" fill="#fff"/>`; break;
     default: icon = `<circle cx="50" cy="48" r="12" fill="#fff"/>`;
   }
-  return `<svg width="${size}" height="${size}" viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="${uid}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient>
-    <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <path d="M50,6 L86,18 L86,54 C86,80 68,93 50,100 C32,93 14,80 14,54 L14,18 Z" fill="url(#${uid}g)" stroke="${dark}" stroke-width="2" filter="url(#${uid}f)"/>
-    <path d="M50,12 L80,22 L80,54 C80,76 65,87 50,93 C35,87 20,76 20,54 L20,22 Z" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.35"/>
-    ${icon}
-    <text x="50" y="102" font-size="8" font-weight="800" fill="${dark}" text-anchor="middle" font-family="Arial">${tier}</text>
+  /* Fanion : plaque gravee, rayons, chevrons de rang, chiffre romain grave dans le fer. */
+  const roman = ['','I','II','III','IV','V','VI','VII'][tier] || String(tier);
+  const rays = Array.from({length:24}, (_,i)=>{
+    const a = (i/24)*Math.PI*2;
+    const r1 = 15, r2 = 40;
+    return `<line x1="${(50+Math.cos(a)*r1).toFixed(1)}" y1="${(46+Math.sin(a)*r1).toFixed(1)}" x2="${(50+Math.cos(a)*r2).toFixed(1)}" y2="${(46+Math.sin(a)*r2).toFixed(1)}" stroke="#ffffff" stroke-width="${i%2?0.4:0.8}" opacity="${i%2?0.10:0.18}"/>`;
+  }).join('');
+  const shield = 'M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${(S.lang==='fr'?fac.fr:fac.en)}">
+    <defs>
+      <linearGradient id="${uid}g" x1="0.1" y1="0" x2="0.9" y2="1">
+        <stop offset="0%" stop-color="${c1}"/><stop offset="48%" stop-color="${c2}"/><stop offset="100%" stop-color="${dark}"/>
+      </linearGradient>
+      <linearGradient id="${uid}sheen" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.42"/><stop offset="42%" stop-color="#ffffff" stop-opacity="0.06"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="${uid}core" cx="0.5" cy="0.42" r="0.62">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="42%" stop-color="${c1}" stop-opacity="0.55"/><stop offset="100%" stop-color="${dark}" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="${uid}glow" x="-45%" y="-45%" width="190%" height="190%">
+        <feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <clipPath id="${uid}clip"><path d="${shield}"/></clipPath>
+    </defs>
+    <g filter="url(#${uid}glow)">
+      <path d="${shield}" fill="${dark}"/>
+      <path d="${shield}" fill="url(#${uid}g)" opacity="0.96"/>
+    </g>
+    <g clip-path="url(#${uid}clip)">
+      <circle cx="50" cy="46" r="42" fill="url(#${uid}core)"/>
+      ${rays}
+      <path d="M12,64 L88,44 L88,52 L12,72 Z" fill="#000000" opacity="0.12"/>
+      <path d="${shield}" fill="url(#${uid}sheen)"/>
+    </g>
+    <path d="${shield}" fill="none" stroke="${dark}" stroke-width="2.6" opacity="0.85"/>
+    <path d="M50,9.5 L83,20 L83,52 C83,76 66,89 50,96 C34,89 17,76 17,52 L17,20 Z" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.42"/>
+    <path d="M50,13.5 L79.5,23 L79.5,52 C79.5,73.5 64,85.5 50,92 C36,85.5 20.5,73.5 20.5,52 L20.5,23 Z" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.2"/>
+    <g opacity="0.98">${icon}</g>
+    <path d="M31,80.5 L69,80.5 L64.5,90 L35.5,90 Z" fill="${dark}" opacity="0.92"/>
+    <path d="M31,80.5 L69,80.5 L64.5,90 L35.5,90 Z" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.35"/>
+    <text x="50" y="87.6" font-size="7.4" font-weight="800" letter-spacing="1.4" fill="#ffffff" fill-opacity="0.9" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">${roman}</text>
   </svg>`;
+
 }
 function factionName(side, tier){ const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
 
@@ -1982,6 +2023,30 @@ function computePowerLevel(){
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
   return clamp(base+statBonus+growth,1,100);
 }
+/* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
+function playerStrength(){
+  const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
+  const f = (S.battleForm && S.battleForm) || { momentum:0 };
+  const inj = (typeof injuryActive === 'function') ? injuryActive() : null;
+  let s = computePowerLevel()*0.8 + statAvg*0.35;
+  s += (f.momentum||0)*2.5 + (S.skills||[]).length*2.5;
+  if(inj) s -= inj.sev*6;
+  if(S.team) s += 2 + (S.team.tier||1);
+  return Math.round(clamp(s, 10, 110));
+}
+function foeStrength(foeKey, mission){
+  const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
+  const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
+  const danger = (mission && mission.danger) || 1;
+  const scope = (mission && mission.scope) || 1;
+  return Math.round(34 + danger*8 + scope*1.6 + (tier-24)*1.6);
+}
+function winOdds(foeKey, mission){
+  const diff = playerStrength() - foeStrength(foeKey, mission);
+  const p = 1/(1+Math.exp(-diff/9));
+  return clamp(p, 0.08, 0.93);
+}
+
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
 function heroVillainScore(){ return Math.round(clamp(Math.abs(S.align),0,100)); }
 /* ---------- Note de carriere : composite coherent avec le bilan ---------- */
@@ -2582,43 +2647,58 @@ function formatDuration(totalSec){
 function estimateCareerTime(years, mode){
   return formatDuration(estimateCareerMissions(years, mode) * 20);
 }
+function careerScaleLabel(years){
+  const fr = S.lang==='fr';
+  if(years<=8) return fr?'Passage eclair':'Flash run';
+  if(years<=14) return fr?'Carriere ramassee':'Compact career';
+  if(years<=24) return fr?'Carriere installee':'Established career';
+  if(years<=36) return fr?'Carriere de reference':'Landmark career';
+  return fr?'Legende sur toute une vie':'Lifelong legend';
+}
 function screenMode(){
   const d = document.createElement('div');
-  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2><p class="lead">${t('modeLead')}</p>
-    <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
-    <div id="yearsBox" style="margin-top:20px; display:none;">
-      <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
-      <input type="range" min="10" max="50" value="${Math.min(50,S.years)}" id="yearsRange">
-      <div id="estBox" style="margin-top:14px;"></div>
+  const fr = S.lang==='fr';
+  if(!S.years || S.years<5) S.years = 10;
+  d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2>
+    <p class="lead">${fr?"Choisis la duree de ta carriere. Plus elle est longue, plus les enjeux montent : missions cosmiques, bascules de camp, formation de recrues, risque de mort.":"Pick how long your career runs. The longer it goes, the higher the stakes: cosmic missions, side switches, training recruits, risk of death."}</p>
+    <div id="yearsBox" style="margin-top:22px;">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-weight:800;">${t('yearsLabel')}:</span>
+        <span id="yearsVal" style="font-size:34px;font-weight:900;color:var(--accent);text-shadow:0 0 20px var(--accent);line-height:1;">${S.years}</span>
+        <span id="scaleVal" style="color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12px;">${careerScaleLabel(S.years)}</span>
+      </div>
+      <input type="range" min="5" max="50" step="1" value="${clamp(S.years,5,50)}" id="yearsRange" style="width:100%;">
+      <div style="display:flex;justify-content:space-between;color:var(--dim);font-size:11px;letter-spacing:1px;margin-top:4px;"><span>5</span><span>50</span></div>
+      <div id="estBox" style="margin-top:16px;"></div>
     </div>
-    <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
-  function estHtml(mode){
-    const years = mode==='short' ? 10 : S.years;
-    const total = estimateCareerMissions(years, mode);
+    <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next">${t('beginCareer')} -></button></div>`;
+  function estHtml(){
+    const total = estimateCareerMissions(S.years);
     const dur = formatDuration(total * 20);
-    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} ${S.lang==='fr'?'missions':'missions'})</span></div>`;
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} missions)</span></div>`;
   }
-  function refresh(){
-    d.querySelector('#modeOpt').innerHTML = `<div class="opt ${S.mode==='short'?'selected':''}" data-m="short"><div class="oname">${t('modeShort')}</div><div class="odesc">${t('modeShortDesc')}</div>${estHtml('short')}</div>
-      <div class="opt ${S.mode==='long'?'selected':''}" data-m="long"><div class="oname">${t('modeLong')}</div><div class="odesc">${t('modeLongDesc')}</div>${estHtml('long')}</div>`;
-    d.querySelectorAll('#modeOpt .opt').forEach(el=>{ el.onclick=()=>{ S.mode = el.dataset.m; d.querySelector('#yearsBox').style.display = S.mode==='long' ? 'block' : 'none'; refresh(); d.querySelector('#next').disabled=false; }; });
-    const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long');
-  }
-  refresh();
-  d.querySelector('#yearsRange').oninput=(e)=>{ S.years = parseInt(e.target.value); d.querySelector('#yearsVal').textContent = S.years; const eb = d.querySelector('#estBox'); if(eb) eb.innerHTML = estHtml('long'); };
+  d.querySelector('#estBox').innerHTML = estHtml();
+  d.querySelector('#yearsRange').oninput=(e)=>{
+    S.years = parseInt(e.target.value);
+    d.querySelector('#yearsVal').textContent = S.years;
+    d.querySelector('#scaleVal').textContent = careerScaleLabel(S.years);
+    d.querySelector('#estBox').innerHTML = estHtml();
+  };
   d.querySelector('#back').onclick=()=>{ S.screen = 'startside'; render(); };
-  d.querySelector('#next').onclick=()=>{ if(!S.mode) return; buildCareerPlan(); S.screen='summary'; render(); };
+  d.querySelector('#next').onclick=()=>{ buildCareerPlan(); S.screen='summary'; render(); };
   return d;
 }
 function buildCareerPlan(){
   S.missionsPlan = [];
-  if(S.mode==='short'){ S.years = 10; for(let y=0;y<10;y++) S.missionsPlan.push(3); }
-  else { S.years = Math.min(50, S.years); for(let y=0;y<S.years;y++) S.missionsPlan.push(3); }
+  S.years = clamp(S.years||10, 5, 50);
+  S.mode = S.years <= 12 ? 'short' : 'long';
+  for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
-  S.mentorCap = S.mode==='long' ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
+  S.mentorCap = S.years>=14 ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
+
 function findPowerById(id){
   for(const k in POWERS){ const f = POWERS[k].find(x=>x.id===id); if(f) return f; }
   return null;
@@ -2631,7 +2711,7 @@ function screenSummary(){
     <p class="lead" style="margin-top:0;">${t('morphology')}: <b>${S.lang==='fr'?morphObj.fr:morphObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
-    <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
+    <p class="lead">${S.lang==='fr' ? `Format: ${careerScaleLabel(S.years)} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${careerScaleLabel(S.years)} - ${S.years} years, ${totalMissions} missions.`}</p>
     <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 20)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
@@ -2984,8 +3064,9 @@ function resolveBattleOffscreen(mission){
   const f = battleForm();
   const inj = injuryActive();
   const pl = computePowerLevel ? computePowerLevel() : 50;
-  let odds = 0.48 + (pl-50)/240 + f.momentum*0.03 - Math.max(0,f.streak)*0.05 - (inj?inj.sev*0.09:0) - (mission.danger||0)*0.05;
-  odds = clamp(odds, 0.15, 0.82);
+  let odds = winOdds(foeKey, mission) + f.momentum*0.02 - Math.max(0,f.streak)*0.015;
+  odds = clamp(odds, 0.06, 0.94);
+
 
   const win = Math.random() < odds;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
@@ -3115,12 +3196,14 @@ function startBattle(mission, done){
   const pl = computePowerLevel();
   const form = battleForm();
   const inj = injuryActive();
-  const myMaxHP = Math.max(45, 96 + form.momentum*4 - (inj?inj.sev*10:0));
-  const dmgMult = (1 + form.momentum*0.05) * (inj ? (1 - inj.sev*0.12) : 1);
-  // L'adversaire se met a ton niveau : plus tu enchaines les victoires, plus il frappe fort.
-  const foeTier = (mission.danger||0)*7 + Math.round((mission.scope||1)*3) + Math.max(0, form.streak)*7 + Math.round(pl*0.35);
-  const foePower = 52 + (mission.danger||0)*9 + Math.max(0, form.streak)*6 + Math.round(pl*0.3);
-  const foeDmgMult = 1 + Math.max(0, form.streak)*0.07 + (Math.random()*0.2 - 0.05);
+  const ps = playerStrength(), fs = foeStrength(foeKey, mission);
+  const myMaxHP = Math.round(Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0)));
+  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
+  // L'adversaire est calibre sur son propre calibre (mouvements, danger, envergure), pas sur ta serie de victoires.
+  const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
+  const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
+  const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
+
   const st = {
     myHP: myMaxHP, myMax: myMaxHP,
     foeHP: 96 + foeTier,
@@ -3243,7 +3326,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.25, dmgMult * allyBonus);
+    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
@@ -3262,7 +3345,7 @@ function startBattle(mission, done){
       delay = 1400;
     }
     // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
-    const foeFirst = Math.random() < (0.28 + Math.min(0.22, Math.max(0, form.streak)*0.06));
+    const foeFirst = Math.random() < clamp(0.30 + (fs-ps)*0.012, 0.1, 0.6);
     setTimeout(()=>{
       if(foeFirst){
         setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
@@ -4485,17 +4568,225 @@ function screenEnd(){
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}
     <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
-    <h3>${t('relations')}</h3>
-    <div class="relwrap">${otherCharKeys().map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
-      const col = charColor(c.align);
-      return `<div class="relcard"><div class="rn">${S.lang==='fr'?c.fr:c.en}</div><div class="barbg"><div class="barfill" style="width:${pct}%; background:${col};"></div></div></div>`; }).join('')}</div>
+
+
     <h3>${t('yearByYearTitle')}</h3><div style="margin-top:6px;">${yearsHtml}</div>
     <h3>${t('logTitle')}</h3>
     <div style="margin-top:10px; max-height:280px; overflow:auto;">${S.log.map(e=>`<div class="log-entry ${e.villain?'villain':''}">${t('year')} ${e.year} - ${S.lang==='fr'?e.textFr:e.textEn}</div>`).join('')}</div>
+    <div class="dl-box">
+      <div class="dl-title">${isFr?'Emporte ton dossier':'Take your file'}</div>
+      <p class="dl-sub">${isFr?'Une carte de carriere signee Volt Industries, prete a partager.':'A Volt Industries career card, ready to share.'}</p>
+      <div class="dl-actions">
+        <button class="btn cyan" id="dlPng">${isFr?'Telecharger en PNG':'Download PNG'}</button>
+        <button class="btn ghost" id="dlJpg">${isFr?'Telecharger en JPG':'Download JPG'}</button>
+      </div>
+    </div>
     <div class="actions"><button class="btn cyan" id="restart">${t('restart')}</button></div>`;
+  const recapData = { cs, kpis:[
+      { v:(S.dead ? S.deathInfo.year : S.missionsPlan.length), l:t('yearsServed') },
+      { v:S.totalMissionsDone, l:t('missionsTotal') },
+      { v:locArr.length, l:locLabel },
+      { v:S.combat.won, l:t('fightsWon') },
+      { v:S.combat.lost, l:t('fightsLost') },
+      { v:(fights? winPct+'%':'-'), l:isFr?'Taux de victoire':'Win rate' },
+      { v:computePowerLevel(), l:t('power') },
+      { v:S.skills.length, l:isFr?'Techniques rares':'Rare techniques' },
+      { v:S.turningPoints.length, l:isFr?'Basculements':'Side switches' },
+    ], verdicts, alignLabel, faction:(S.team?factionName(S.team.side,S.team.tier):null), gradeCol };
+  d.querySelector('#dlPng').onclick=()=>downloadRecapCard('png', recapData);
+  d.querySelector('#dlJpg').onclick=()=>downloadRecapCard('jpg', recapData);
   d.querySelector('#restart').onclick=()=>{ const lang = S.lang; S = freshState(lang); const badge=document.getElementById('rankBadgeFixed'); if(badge) badge.remove(); removeConvOverlay(); render(); };
   return d;
 }
+/* ---------- Carte de carriere telechargeable (PNG / JPG) ---------- */
+function cssVal(name, fallback){
+  const v = getComputedStyle(document.body).getPropertyValue(name).trim();
+  return v || fallback;
+}
+function loadImg(src){
+  return new Promise(res=>{ if(!src) return res(null); const im = new Image(); im.crossOrigin='anonymous'; im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
+}
+async function downloadRecapCard(fmt, data){
+  const isFr = S.lang==='fr';
+  const W = 1080, H = 1980;
+  const accent = cssVal('--accent', '#00e5ff');
+  const accentDark = cssVal('--accent-dark', '#0077aa');
+  const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x = cv.getContext('2d');
+  // Fond profond + halo
+  x.fillStyle = '#05070e'; x.fillRect(0,0,W,H);
+  const g1 = x.createRadialGradient(W*0.5, -160, 60, W*0.5, 420, 1100);
+  g1.addColorStop(0, hexA(accent, 0.30)); g1.addColorStop(0.55, hexA(accentDark, 0.10)); g1.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g1; x.fillRect(0,0,W,H);
+  // Grille technique
+  x.strokeStyle = hexA(accent, 0.07); x.lineWidth = 1;
+  for(let i=60;i<W;i+=60){ x.beginPath(); x.moveTo(i,0); x.lineTo(i,H); x.stroke(); }
+  for(let j=60;j<H;j+=60){ x.beginPath(); x.moveTo(0,j); x.lineTo(W,j); x.stroke(); }
+  // Cadre
+  x.strokeStyle = hexA(accent, 0.55); x.lineWidth = 3; roundRect(x, 34, 34, W-68, H-68, 26); x.stroke();
+  x.strokeStyle = hexA(accent, 0.16); x.lineWidth = 1.5; roundRect(x, 50, 50, W-100, H-100, 20); x.stroke();
+  // Logo wordmark
+  x.save();
+  x.shadowColor = accent; x.shadowBlur = 26;
+  x.fillStyle = accent;
+  x.font = 'italic 900 92px Arial, Helvetica, sans-serif';
+  x.fillText('VOLT', 82, 176);
+  x.shadowBlur = 10;
+  x.font = 'italic 700 30px Arial, Helvetica, sans-serif';
+  x.fillText(spaced('INDUSTRIES', 7), 88, 220);
+  x.restore();
+  x.strokeStyle = hexA(accent, 0.85); x.lineWidth = 4;
+  x.beginPath(); x.moveTo(82, 240); x.lineTo(W-82, 240); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,0.42)'; x.font = '600 18px Arial'; 
+  x.fillText(spaced(isFr?'BILAN DE CARRIERE':'CAREER REPORT', 4), 84, 282);
+  // Portrait + identite
+  const im = await loadImg(S.portrait);
+  const py = 320, pS = 250;
+  if(im){
+    x.save(); roundRect(x, 82, py, pS, pS, 20); x.clip();
+    const r = Math.max(pS/im.width, pS/im.height);
+    x.drawImage(im, 82 + (pS - im.width*r)/2, py + (pS - im.height*r)/2, im.width*r, im.height*r);
+    x.restore();
+    x.save(); x.shadowColor = accent; x.shadowBlur = 22; x.strokeStyle = accent; x.lineWidth = 3;
+    roundRect(x, 82, py, pS, pS, 20); x.stroke(); x.restore();
+  } else {
+    x.fillStyle = hexA(accent, 0.12); roundRect(x, 82, py, pS, pS, 20); x.fill();
+    x.fillStyle = accent; x.font = 'italic 900 120px Arial'; x.textAlign='center';
+    x.fillText((S.heroName||'V').charAt(0).toUpperCase(), 82+pS/2, py+pS/2+42); x.textAlign='left';
+  }
+  x.fillStyle = '#ffffff'; x.font = '900 62px Arial';
+  wrapText(x, (S.heroName||'').toUpperCase(), 366, py+72, W-448, 66, 2);
+  x.fillStyle = hexA(accent, 0.95); x.font = '700 24px Arial';
+  x.fillText(spaced(data.alignLabel.toUpperCase(), 3), 366, py+150);
+  if(data.faction){ x.fillStyle = 'rgba(255,255,255,0.55)'; x.font = '600 22px Arial'; x.fillText(data.faction, 366, py+190); }
+  x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '500 20px Arial';
+  x.fillText(`${S.missionsPlan.length} ${isFr?'annees de service':'years of service'}`, 366, py+230);
+  // Note globale
+  const gy = 640;
+  x.save();
+  x.strokeStyle = hexA(data.gradeCol, 0.7); x.lineWidth = 2; roundRect(x, 82, gy, W-164, 190, 20); x.stroke();
+  const gg = x.createLinearGradient(82, gy, W-82, gy+190);
+  gg.addColorStop(0, hexA(data.gradeCol, 0.14)); gg.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = gg; roundRect(x, 82, gy, W-164, 190, 20); x.fill();
+  x.shadowColor = data.gradeCol; x.shadowBlur = 30; x.fillStyle = data.gradeCol;
+  x.font = '900 108px Arial';
+  const totalW = x.measureText(String(data.cs.total)).width;
+  x.fillText(String(data.cs.total), 122, gy+130);
+  x.shadowBlur = 0; x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '700 34px Arial';
+  x.fillText('/100', 122 + totalW + 18, gy+124);
+  x.textAlign = 'right'; x.fillStyle = data.gradeCol; x.font = '900 44px Arial';
+  x.fillText(data.cs.grade, W-122, gy+80);
+  x.fillStyle = 'rgba(255,255,255,0.75)'; x.font = '600 22px Arial';
+  wrapTextRight(x, data.cs.gradeLabel, W-122, gy+120, 420, 30);
+  x.textAlign = 'left'; x.restore();
+  // Barres de notation
+  let by = gy + 232;
+  x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '600 18px Arial';
+  x.fillText(spaced(isFr?'DETAIL DE LA NOTE':'RATING BREAKDOWN', 4), 84, by);
+  by += 26;
+  data.cs.parts.forEach(p=>{
+    const neg = p.max===0;
+    const pct = neg ? clamp(Math.abs(p.value)*8,0,100) : clamp(p.value/p.max*100,0,100);
+    const col = neg ? '#ff3b5c' : data.gradeCol;
+    x.fillStyle = 'rgba(255,255,255,0.82)'; x.font = '600 22px Arial';
+    x.fillText(p.label, 84, by+22);
+    x.textAlign='right'; x.fillStyle = col; x.font='700 20px Arial';
+    x.fillText(neg ? String(Math.round(p.value)) : `${Math.round(p.value)}/${p.max}`, W-84, by+22); x.textAlign='left';
+    x.fillStyle = 'rgba(255,255,255,0.08)'; roundRect(x, 84, by+34, W-168, 10, 5); x.fill();
+    x.fillStyle = col; roundRect(x, 84, by+34, Math.max(6,(W-168)*pct/100), 10, 5); x.fill();
+    by += 62;
+  });
+  // KPI grid 3x3
+  by += 10;
+  x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '600 18px Arial';
+  x.fillText(spaced(isFr?'CHIFFRES CLES':'KEY FIGURES', 4), 84, by);
+  by += 20;
+  const cellW = (W-168-24)/3, cellH = 108;
+  data.kpis.slice(0,9).forEach((k,i)=>{
+    const cx = 84 + (i%3)*(cellW+12), cy = by + Math.floor(i/3)*(cellH+12);
+    x.fillStyle = 'rgba(255,255,255,0.035)'; roundRect(x, cx, cy, cellW, cellH, 14); x.fill();
+    x.strokeStyle = hexA(accent, 0.18); x.lineWidth = 1.5; roundRect(x, cx, cy, cellW, cellH, 14); x.stroke();
+    x.textAlign='center';
+    x.fillStyle = accent; x.font = '900 42px Arial'; x.fillText(String(k.v), cx+cellW/2, cy+58);
+    x.fillStyle = 'rgba(255,255,255,0.45)'; x.font = '600 15px Arial';
+    wrapCenter(x, k.l.toUpperCase(), cx+cellW/2, cy+84, cellW-20, 18);
+    x.textAlign='left';
+  });
+  by += 3*(cellH+12) + 18;
+  // Verdicts
+  x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '600 18px Arial';
+  x.fillText(spaced(isFr?'ARCHIVES':'ARCHIVES', 4), 84, by);
+  by += 30;
+  x.fillStyle = 'rgba(255,255,255,0.72)'; x.font = '400 21px Arial';
+  data.verdicts.slice(0,4).forEach(v=>{
+    x.fillStyle = accent; x.fillRect(84, by-14, 4, 20);
+    x.fillStyle = 'rgba(255,255,255,0.72)';
+    by = wrapText(x, v, 102, by, W-200, 28, 3) + 10;
+  });
+  // Pied
+  x.strokeStyle = hexA(accent, 0.4); x.lineWidth = 2;
+  x.beginPath(); x.moveTo(84, H-118); x.lineTo(W-84, H-118); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,0.35)'; x.font = '600 17px Arial';
+  x.fillText(spaced('VOLT INDUSTRIES', 3), 84, H-84);
+  x.textAlign='right';
+  x.fillText(new Date().toLocaleDateString(isFr?'fr-FR':'en-GB'), W-84, H-84);
+  x.textAlign='left';
+  const mime = fmt==='jpg' ? 'image/jpeg' : 'image/png';
+  const url = cv.toDataURL(mime, 0.94);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `volt-industries-${(S.heroName||'carriere').toLowerCase().replace(/[^a-z0-9]+/g,'-')}.${fmt}`;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function hexA(col, a){
+  const c = (col||'').trim();
+  if(c.startsWith('#')){
+    const h = c.length===4 ? '#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3] : c;
+    const r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  if(c.startsWith('rgb')) return c.replace(/rgba?\(([^)]+)\)/, (m,inner)=>{ const p = inner.split(',').slice(0,3).map(s=>s.trim()); return `rgba(${p.join(',')},${a})`; });
+  return `rgba(0,229,255,${a})`;
+}
+function spaced(str, px){ return str.split('').join(String.fromCharCode(8202).repeat(Math.max(1,Math.round(px/2)))); }
+function roundRect(x, px, py, w, h, r){
+  x.beginPath();
+  x.moveTo(px+r, py); x.lineTo(px+w-r, py); x.quadraticCurveTo(px+w, py, px+w, py+r);
+  x.lineTo(px+w, py+h-r); x.quadraticCurveTo(px+w, py+h, px+w-r, py+h);
+  x.lineTo(px+r, py+h); x.quadraticCurveTo(px, py+h, px, py+h-r);
+  x.lineTo(px, py+r); x.quadraticCurveTo(px, py, px+r, py); x.closePath();
+}
+function wrapText(x, text, px, py, maxW, lh, maxLines){
+  const words = String(text).split(' '); let line = '', y = py, lines = 0;
+  for(let i=0;i<words.length;i++){
+    const test = line ? line+' '+words[i] : words[i];
+    if(x.measureText(test).width > maxW && line){
+      x.fillText(line, px, y); y += lh; lines++; line = words[i];
+      if(maxLines && lines >= maxLines){ line = ''; break; }
+    } else line = test;
+  }
+  if(line) { x.fillText(line, px, y); y += lh; }
+  return y;
+}
+function wrapTextRight(x, text, px, py, maxW, lh){
+  const words = String(text).split(' '); let line = '', y = py;
+  words.forEach(w=>{
+    const test = line ? line+' '+w : w;
+    if(x.measureText(test).width > maxW && line){ x.fillText(line, px, y); y += lh; line = w; }
+    else line = test;
+  });
+  if(line) x.fillText(line, px, y);
+}
+function wrapCenter(x, text, cx, cy, maxW, lh){
+  const words = String(text).split(' '); let line = '', y = cy;
+  words.forEach(w=>{
+    const test = line ? line+' '+w : w;
+    if(x.measureText(test).width > maxW && line){ x.fillText(line, cx, y); y += lh; line = w; }
+    else line = test;
+  });
+  if(line) x.fillText(line, cx, y);
+}
+
 
 function initParticles(){
   const layer = document.createElement('div'); layer.className='particle-layer';
