@@ -1898,7 +1898,7 @@ const PRESETS = [
     perkFr:'Charisme naturel : negocie, calme les foules, gagne les proces d\'opinion.', perkEn:'Natural charisma: negotiates, calms crowds, wins public opinion.',
     flawFr:'Peu de puissance offensive : depend beaucoup de ses allies.', flawEn:'Little offensive power: depends heavily on allies.',
     descFr:'Porte-parole telepathe. Sa vraie arme, c\'est la parole.', descEn:'Telepathic spokesperson. His real weapon is his voice.' },
-  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Valkyr', nameEn:'Valkyr', heroFr:'Valkyr', heroEn:'Valkyr', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
+  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Audition', nameEn:'Audition', heroFr:'Audition', heroEn:'Audition', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'spear', suitColor:'#d8a63c', secondaryColor:'#2b2f38', symbol:'' },
     align:20, stats:{courage:16, intelligence:2, popularity:8},
     perkFr:'Frappe mystique devastatrice, tres suivie par les foules.', perkEn:'Devastating mystic strikes, crowds follow her.',
@@ -2093,17 +2093,30 @@ const PRESETS = [
     perkFr:'Reine de la mort : ses armes apparaissent de nulle part, duels imperdables.', perkEn:'Death queen: her weapons appear from nowhere, unlosable duels.',
     flawFr:'Orgueil royal : elle sous-estime les heros les plus jeunes.', flawEn:'Royal pride: she underestimates the youngest heroes.',
     descFr:'Deesse en armure obsidienne, bois noirs et flammes vertes.', descEn:'Goddess in obsidian armor with black antlers and green flames.' },
+  { id:'kidspider', charKey:'kidspider', side:'hero', img:CHAR_IMG.char41, nameFr:'Kid-Spider', nameEn:'Kid-Spider', heroFr:'Kid-Spider', heroEn:'Kid-Spider', morphology:'elance', path:'physique', powers:['vitesse','saut'],
+    look:{ helmet:'full', cape:false, glasses:'visor', gloves:'light', boots:'light', aura:'none', weapon:'none', suitColor:'#d2263c', secondaryColor:'#123a8c', symbol:'' },
+    align:26, stats:{courage:11, intelligence:9, popularity:13},
+    perkFr:'Reflexes arachneens : esquive et contre-attaque quasi automatiques.', perkEn:'Arachnid reflexes: near-automatic dodge and counter.',
+    flawFr:'Trop jeune : la presse et les mentors le sous-estiment.', flawEn:'Too young: press and mentors underestimate him.',
+    descFr:'Gamin du quartier devenu acrobate masque, toujours en mouvement.', descEn:'A neighborhood kid turned masked acrobat, always moving.' },
+  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Doctor Boom', nameEn:'Doctor Boom', heroFr:'Doctor Boom', heroEn:'Doctor Boom', morphology:'colosse', path:'tech', powers:['technologie','elementaire'],
+    look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#2f6b4a', secondaryColor:'#8c8f96', symbol:'' },
+    align:-30, stats:{courage:13, intelligence:18, popularity:3},
+    perkFr:'Genie souverain : ses machines de siege brisent les defenses.', perkEn:'Sovereign genius: his siege machines break defenses.',
+    flawFr:'Arrogance imperiale : refuse toute retraite, meme perdue.', flawEn:'Imperial arrogance: never retreats, even when lost.',
+    descFr:'Monarque masque en armure verte, ingenieur de la conquete.', descEn:'Masked monarch in green armor, engineer of conquest.' },
 ];
 
-/* Personnages jouables : uniquement la nouvelle generation. Les 20 premiers restent des PNJ
-   qui interviennent tout au long de la carriere (rencontres, alliances, rivalites). */
-const SELECTABLE_IDS = ['nightlark','titanwolf','bastion','tempest','glitch',
-  'baronvex','warlock','pyra','zeroday','rustjaw'];
+/* Personnages jouables : les 20 personnages qui vivent dans le jeu (hors chefs de camp
+   The G et Siddartha, qui restent les voix d'accueil). */
+const SELECTABLE_IDS = ['volt','vaelor','aegis','ferrum','marsh','nyx','solen','valkyr','sable','kidspider',
+  'malachar','kaerus','aurelia','vipera','sepulcre','obsidian','nihil','mandate','fuchsia','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
-/* Les seuls personnages qui interviennent pendant la carriere : les 20 d'origine (char1..char20). */
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).filter(Boolean));
+/* Les personnages qui interviennent pendant la carriere : les 20 d'origine + Kid-Spider et Doctor Boom. */
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
+
 
 
 /* ============================ STATE ============================ */
@@ -2604,6 +2617,34 @@ function screenProfileChoice(){
     </div>
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
   d.querySelector('#ffOpen').onclick = ()=>{ S.screen='faceforge'; render(); };
+  /* Personnage perso deja forge : on le garde d'une partie a l'autre */
+  const saved = ffLoadCustom();
+  if(saved && saved.img){
+    const box = document.createElement('div');
+    box.className = 'ff-card';
+    box.style.borderColor = saved.side==='villain' ? 'var(--red)' : 'var(--cyan)';
+    box.innerHTML = `<div style="display:flex; gap:14px; align-items:center;">
+      <img src="${saved.img}" alt="perso" style="width:74px; height:74px; object-fit:cover; border-radius:12px; border:1px solid ${saved.side==='villain'?'#ff2d55':'#00e5ff'};">
+      <div style="flex:1; min-width:0;">
+        <h4 style="margin:0 0 4px;">${S.lang==='fr'?'&#9851; REPRENDRE MON PERSONNAGE':'&#9851; REUSE MY CHARACTER'}</h4>
+        <p style="margin:0;">${(saved.name || (S.lang==='fr'?'Ton personnage forge':'Your forged character'))} &middot; ${saved.side==='villain'?'VILLAIN':'HERO'} &middot; ${(FF_SEX[saved.sex]||FF_SEX.m)[S.lang==='fr'?'fr':'en']}</p>
+      </div></div>
+    <div class="ff-opt" style="margin-top:12px;">
+      <div class="ff-chip" data-sx="m">${S.lang==='fr'?'Homme':'Male'}</div>
+      <div class="ff-chip" data-sx="f">${S.lang==='fr'?'Femme':'Female'}</div>
+      <div class="ff-chip" data-del="1">${S.lang==='fr'?'Supprimer':'Delete'}</div>
+    </div>`;
+    box.querySelectorAll('.ff-chip').forEach(ch=>{
+      ch.onclick = (ev)=>{
+        ev.stopPropagation();
+        if(ch.dataset.del){ ffClearCustom(); render(); return; }
+        saved.sex = ch.dataset.sx; ffSaveCustom(saved); render();
+      };
+      if(ch.dataset.sx === saved.sex) ch.classList.add('on');
+    });
+    box.onclick = ()=>{ applyCustomCharacter(saved); S.heroName = saved.name || ''; S.screen='name'; render(); };
+    d.insertBefore(box, d.querySelector('#presetGrid'));
+  }
   const grid = d.querySelector('#presetGrid');
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
@@ -2768,6 +2809,136 @@ async function ffGenerate(onFrame){
   if(!sawFinal) throw new Error('stream ended without a final image');
 }
 
+
+/* ---------- Personnage perso : sauvegarde locale + forge sans IA ---------- */
+const FF_STORE = 'vi_custom_char';
+function ffSaveCustom(cfg){ try{ localStorage.setItem(FF_STORE, JSON.stringify(cfg)); }catch(e){} }
+function ffLoadCustom(){ try{ const r = localStorage.getItem(FF_STORE); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function ffClearCustom(){ try{ localStorage.removeItem(FF_STORE); }catch(e){} }
+function applyCustomCharacter(cfg){
+  const a = FF_ARCH[cfg.arch] || FF_ARCH.armure;
+  const fr = S.lang==='fr';
+  const nm = cfg.name || (fr?'Mon personnage':'My character');
+  applyPreset({
+    id:'custom', charKey:null, side:cfg.side, sex:cfg.sex, img:cfg.img,
+    nameFr:nm, nameEn:nm, heroFr:nm, heroEn:nm,
+    morphology:a.morphology, path:a.path, powers:a.powers,
+    align: cfg.side==='villain' ? -30 : 30,
+    stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
+    look:{ suitColor:cfg.color, secondaryColor:'#0f1420', aura:cfg.aura==='aucune'?'none':'electric', cape: !!cfg.cape, helmet:'none', glasses: cfg.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
+    descFr:fr?a.fr:'', descEn:a.en
+  });
+  S.playerSex = cfg.sex;
+}
+/* Forge locale : composition canvas 100% navigateur, aucun credit IA consomme. */
+function ffLocalForge(){
+  return new Promise((resolve, reject)=>{
+    if(!FF.photo) return reject(new Error('no photo'));
+    const img = new Image();
+    img.onerror = ()=>reject(new Error('bad photo'));
+    img.onload = ()=>{
+      const W = 720, H = 960;
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      /* Fond hangar sombre */
+      const bg = x.createRadialGradient(W*0.5, H*0.32, 40, W*0.5, H*0.5, H*0.8);
+      bg.addColorStop(0, '#1b2130'); bg.addColorStop(1, '#070a10');
+      x.fillStyle = bg; x.fillRect(0,0,W,H);
+      /* Photo cadree sur le visage, moitie haute */
+      const faceH = H*0.66;
+      const r = Math.max(W/img.width, faceH/img.height);
+      const dw = img.width*r, dh = img.height*r;
+      x.save();
+      x.beginPath(); x.rect(0,0,W,faceH); x.clip();
+      x.drawImage(img, (W-dw)/2, -dh*0.05, dw, dh);
+      /* Etalonnage cinema : contraste froid + teinte du costume */
+      x.globalCompositeOperation = 'soft-light';
+      x.fillStyle = FF.color; x.globalAlpha = 0.28; x.fillRect(0,0,W,faceH);
+      x.globalCompositeOperation = 'multiply'; x.globalAlpha = 0.22;
+      x.fillStyle = '#0a1020'; x.fillRect(0,0,W,faceH);
+      x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+      /* Fondu vers le buste */
+      const fade = x.createLinearGradient(0, faceH*0.68, 0, faceH);
+      fade.addColorStop(0,'rgba(7,10,16,0)'); fade.addColorStop(1,'rgba(7,10,16,1)');
+      x.fillStyle = fade; x.fillRect(0, faceH*0.68, W, faceH*0.32);
+      x.restore();
+      /* Masque */
+      if(FF.mask !== 'aucun'){
+        x.save(); x.globalAlpha = FF.mask==='domino' ? 0.72 : 0.6;
+        x.fillStyle = FF.color;
+        if(FF.mask==='domino'){
+          x.beginPath(); x.ellipse(W*0.5, faceH*0.40, W*0.30, faceH*0.085, 0, 0, Math.PI*2); x.fill();
+        } else {
+          x.beginPath(); x.moveTo(W*0.22, faceH*0.52); x.quadraticCurveTo(W*0.5, faceH*0.70, W*0.78, faceH*0.52);
+          x.quadraticCurveTo(W*0.5, faceH*0.60, W*0.22, faceH*0.52); x.fill();
+        }
+        x.restore();
+      }
+      /* Buste blinde */
+      const torso = x.createLinearGradient(0, faceH*0.85, 0, H);
+      torso.addColorStop(0, FF.color); torso.addColorStop(1, '#0d1119');
+      x.fillStyle = torso;
+      x.beginPath();
+      x.moveTo(W*0.06, H);
+      x.quadraticCurveTo(W*0.14, faceH*0.92, W*0.36, faceH*0.86);
+      x.lineTo(W*0.64, faceH*0.86);
+      x.quadraticCurveTo(W*0.86, faceH*0.92, W*0.94, H);
+      x.closePath(); x.fill();
+      /* Plaques + emblem */
+      x.strokeStyle = 'rgba(255,255,255,0.22)'; x.lineWidth = 2;
+      for(let i=0;i<4;i++){
+        const yy = faceH*0.95 + i*(H-faceH*0.95)/5;
+        x.beginPath(); x.moveTo(W*0.20, yy); x.quadraticCurveTo(W*0.5, yy+18, W*0.80, yy); x.stroke();
+      }
+      x.save();
+      x.shadowColor = FF.color; x.shadowBlur = 40;
+      x.fillStyle = 'rgba(255,255,255,0.92)';
+      x.beginPath();
+      x.moveTo(W*0.5-26, H*0.86); x.lineTo(W*0.5+8, H*0.86); x.lineTo(W*0.5-4, H*0.905);
+      x.lineTo(W*0.5+24, H*0.905); x.lineTo(W*0.5-14, H*0.965); x.lineTo(W*0.5, H*0.915);
+      x.lineTo(W*0.5-24, H*0.915); x.closePath(); x.fill();
+      x.restore();
+      /* Cape */
+      if(FF.cape){
+        x.save(); x.globalAlpha = 0.55; x.fillStyle = FF.side==='villain' ? '#2a0710' : '#08131f';
+        x.beginPath(); x.moveTo(W*0.30, faceH*0.90); x.quadraticCurveTo(W*0.02, H*0.85, W*0.10, H); x.lineTo(W*0.30, H); x.closePath(); x.fill();
+        x.beginPath(); x.moveTo(W*0.70, faceH*0.90); x.quadraticCurveTo(W*0.98, H*0.85, W*0.90, H); x.lineTo(W*0.70, H); x.closePath(); x.fill();
+        x.restore();
+      }
+      /* Aura */
+      if(FF.aura !== 'aucune'){
+        x.save(); x.globalCompositeOperation = 'lighter';
+        const g = x.createRadialGradient(W*0.5, faceH*0.45, 30, W*0.5, faceH*0.5, W*0.75);
+        g.addColorStop(0, FF.aura==='fumee' ? 'rgba(180,170,160,0.16)' : 'rgba(255,255,255,0.10)');
+        g.addColorStop(0.5, FF.color + '33'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = g; x.fillRect(0,0,W,H);
+        if(FF.aura==='neon'){
+          x.strokeStyle = FF.color; x.lineWidth = 2; x.globalAlpha = 0.55;
+          for(let i=0;i<10;i++){
+            x.beginPath();
+            let px = W*(0.12+Math.random()*0.76), py = H*(0.12+Math.random()*0.6);
+            x.moveTo(px,py);
+            for(let j=0;j<4;j++){ px += (Math.random()-0.5)*70; py += (Math.random()-0.5)*70; x.lineTo(px,py); }
+            x.stroke();
+          }
+        }
+        x.restore();
+      }
+      /* Vignette + grain film */
+      const vg = x.createRadialGradient(W*0.5, H*0.45, H*0.25, W*0.5, H*0.5, H*0.78);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.72)');
+      x.fillStyle = vg; x.fillRect(0,0,W,H);
+      x.globalAlpha = 0.05;
+      for(let i=0;i<5200;i++){
+        x.fillStyle = Math.random()>0.5 ? '#ffffff' : '#000000';
+        x.fillRect(Math.random()*W, Math.random()*H, 1, 1);
+      }
+      x.globalAlpha = 1;
+      resolve(c.toDataURL('image/jpeg', 0.9));
+    };
+    img.src = FF.photo;
+  });
+}
 function screenFaceForge(){
   const fr = S.lang==='fr';
   const d = document.createElement('div');
@@ -2816,7 +2987,8 @@ function screenFaceForge(){
     </div>
     <div class="actions">
       <button class="btn ghost" id="ffBack">&lt;- ${t('back')}</button>
-      <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage':'Generate my character'}</button>
+      <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage (IA)':'Generate my character (AI)'}</button>
+      <button class="btn ghost" id="ffLocal">${fr?'Forge instantanee (sans IA)':'Instant forge (no AI)'}</button>
       <button class="btn cyan" id="ffUse" style="display:none;">${fr?'Utiliser ce personnage ->':'Use this character ->'}</button>
     </div>`;
 
@@ -2915,28 +3087,38 @@ function screenFaceForge(){
       }
     }catch(e){
       errEl.textContent = (e && e.message ? e.message : (fr?'Echec de la generation.':'Generation failed.'));
+      /* Plus de credits / IA bloquee : on bascule sur la forge locale gratuite */
+      try{
+        const out = await ffLocalForge();
+        FF.results.push(out); FF.sel = FF.results.length - 1;
+        errEl.textContent += fr?" Personnage forge en local (sans IA) a la place."
+          :" Character forged locally (no AI) instead.";
+      }catch(e2){}
     }
     FF.busy = false; genBtn.disabled = false;
     paintStage();
   };
 
+  d.querySelector('#ffLocal').onclick = async ()=>{
+    if(FF.busy) return;
+    if(!FF.photo){ errEl.textContent = fr?"Ajoute d'abord une photo de ton visage.":"Add a photo of your face first."; return; }
+    ffStopCam(); errEl.textContent = '';
+    try{
+      const out = await ffLocalForge();
+      FF.results.push(out); FF.sel = FF.results.length - 1;
+    }catch(e){ errEl.textContent = fr?'La forge locale a echoue. Reimporte une photo.':'Local forge failed. Re-import a photo.'; }
+    paintStage();
+  };
+
   useBtn.onclick = ()=>{
-    const a = FF_ARCH[FF.arch];
-    const img = FF.results[FF.sel];
-    const nm = fr?'Mon personnage':'My character';
-    applyPreset({
-      id:'custom', charKey:null, side:FF.side, sex:FF.sex, img,
-      nameFr:nm, nameEn:nm, heroFr:S.heroName || nm, heroEn:S.heroName || nm,
-      morphology:a.morphology, path:a.path, powers:a.powers,
-      align: FF.side==='villain' ? -30 : 30,
-      stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
-      look:{ suitColor:FF.color, secondaryColor:'#0f1420', aura:FF.aura==='aucune'?'none':'electric', cape: !!FF.cape, helmet: FF.mask==='aucun'?'none':'none', glasses: FF.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
-      descFr:fr?FF_ARCH[FF.arch].fr:'', descEn:FF_ARCH[FF.arch].en
-    });
+    const cfg = { img: FF.results[FF.sel], side:FF.side, sex:FF.sex, arch:FF.arch, color:FF.color, cape:!!FF.cape, mask:FF.mask, aura:FF.aura, name:'' };
+    ffSaveCustom(cfg);
+    applyCustomCharacter(cfg);
     S.heroName = '';
     ffStopCam();
     S.screen = 'name'; render();
   };
+
 
   d.querySelector('#ffBack').onclick = ()=>{ ffStopCam(); S.screen='profileChoice'; render(); };
 
@@ -2954,6 +3136,8 @@ function screenName(){
     S.civilName = d.querySelector('#civilName').value.trim() || S.civilName;
     S.heroName = d.querySelector('#heroName').value.trim() || S.heroName;
     if(!S.heroName){ d.querySelector('#heroName').style.borderColor='var(--red)'; return; }
+    /* On memorise le nom du personnage perso pour les parties suivantes */
+    if(S.presetId==='custom'){ const cc = ffLoadCustom(); if(cc){ cc.name = S.heroName; ffSaveCustom(cc); } }
     S.screen = S.usingPreset ? 'startside' : 'look'; render();
   };
   return d;
@@ -4365,7 +4549,366 @@ const CONV_THEMES = {
     en:["\"There's one path out of fourteen million. One.\"","\"Someone has to stay down there to close the breach. Guess who.\"","\"A soul for a stone. The price isn't negotiable.\"","\"If I don't come back, tell the team it was my call.\"","\"We lose this battle to win the next one. Accept it.\"","\"I ran the numbers ten thousand times. You don't survive in most.\"","\"The whole world or one person. Real heroes still hesitate.\"","\"Don't save me. Save the protocol.\"","\"All I can promise you is that it will have counted.\"","\"That door only closes from the inside. Always.\"","\"We don't trade lives. We choose which ones to carry.\"","\"If this goes bad, burn it all, my file included.\""],
   },
 };
+/* ---------- Reponses liees au theme : chaque choix repond vraiment a la derniere replique ---------- */
+const CONV_THEME_REPLIES = {
+  recrue:{
+    noble:[
+      {fr:"\"Tu ne me dois rien. Ce que tu fais bien, c'est toi qui l'as construit.\"", en:"\"You owe me nothing. What you do well, you built.\"", eff:{align:5, rel:5}},
+      {fr:"\"Viens me voir avant chaque erreur, pas apres. Je serai la.\"", en:"\"Come to me before the mistakes, not after. I'll be there.\"", eff:{align:4, rel:6}},
+      {fr:"\"Prends le poste. Tu es pret, et je te couvrirai.\"", en:"\"Take the post. You're ready, and I'll back you.\"", eff:{align:5, rel:4, popularity:1}},
+      {fr:"\"Depasse-moi vite. C'est exactement pour ca que je t'ai forme(e).\"", en:"\"Surpass me fast. That's exactly why I trained you.\"", eff:{align:6, rel:5}},
+    ],
+    pragmatic:[
+      {fr:"\"Garde ma garde, mais change ma fin de geste : la mienne est trop lente.\"", en:"\"Keep my stance, fix my follow-through: mine is too slow.\"", eff:{intelligence:2, rel:2}},
+      {fr:"\"Ecris ton erreur dans le rapport. On la transformera en procedure.\"", en:"\"Put the mistake in the report. We'll turn it into procedure.\"", eff:{intelligence:3, rel:1}},
+      {fr:"\"Accepte le poste, mais garde-moi une ligne directe.\"", en:"\"Take the post, but keep me a direct line.\"", eff:{intelligence:2, rel:3}},
+      {fr:"\"On s'entraine ensemble une fois par mois. Ca reglera le reste.\"", en:"\"We train together once a month. That fixes the rest.\"", eff:{courage:2, rel:3}},
+    ],
+    ruthless:[
+      {fr:"\"Alors cesse de m'imiter. Un double ne survit jamais a l'original.\"", en:"\"Then stop imitating me. A copy never outlives the original.\"", eff:{align:-5, rel:-3, courage:2}},
+      {fr:"\"Ils veulent te monter contre moi ? Laisse-les. Puis donne-moi leurs noms.\"", en:"\"They want to turn you? Let them. Then give me their names.\"", eff:{align:-6, intelligence:2}},
+      {fr:"\"Le poste est a moi tant que je respire. Retire ta candidature.\"", en:"\"The post is mine while I breathe. Withdraw your name.\"", eff:{align:-6, rel:-5, popularity:1}},
+      {fr:"\"Tu me depasseras le jour ou je te laisserai le faire. Pas avant.\"", en:"\"You'll surpass me the day I allow it. Not before.\"", eff:{align:-5, rel:-4}},
+    ],
+  },
+  mentorat:{
+    noble:[
+      {fr:"\"Je t'ecoute. Dis-moi ce que j'aurais du voir.\"", en:"\"I'm listening. Tell me what I should have seen.\"", eff:{align:4, intelligence:3, rel:4}},
+      {fr:"\"Alors apprends-moi le rythme. Je recommencerai autant qu'il faudra.\"", en:"\"Then teach me the pacing. I'll start over as often as needed.\"", eff:{align:3, intelligence:3, rel:3}},
+      {fr:"\"Merci de me dire ca avant que ca me coute quelqu'un.\"", en:"\"Thank you for telling me before it costs me someone.\"", eff:{align:5, rel:4}},
+      {fr:"\"Je note tout. Un jour je le transmettrai a mon tour.\"", en:"\"I'm writing it all down. One day I'll pass it on.\"", eff:{align:4, intelligence:2, rel:3}},
+    ],
+    pragmatic:[
+      {fr:"\"Deux minutes, d'accord. Mais donne-moi du concret, pas des maximes.\"", en:"\"Two minutes, fine. Give me specifics, not maxims.\"", eff:{intelligence:4}},
+      {fr:"\"Mon improvisation gagne des combats. On corrigera le reste apres.\"", en:"\"My improvising wins fights. We'll fix the rest later.\"", eff:{courage:3, intelligence:-1}},
+      {fr:"\"Montre-moi plutot que de m'expliquer. On monte sur le tapis.\"", en:"\"Show me instead of explaining. Let's hit the mat.\"", eff:{courage:3, rel:2}},
+      {fr:"\"Je prends la lecon, je laisse la morale.\"", en:"\"I'll take the lesson, leave the sermon.\"", eff:{intelligence:3, rel:-1}},
+    ],
+    ruthless:[
+      {fr:"\"Tes erreurs sont les tiennes. Je n'ai pas l'intention de les repeter.\"", en:"\"Your mistakes are yours. I don't intend to repeat them.\"", eff:{align:-4, rel:-3, courage:2}},
+      {fr:"\"Partir avant la fin ? C'est comme ca qu'on finit remplace.\"", en:"\"Leave before the end? That's how you end up replaced.\"", eff:{align:-5, courage:3}},
+      {fr:"\"Garde tes conseils pour ceux qui ont encore besoin d'un mentor.\"", en:"\"Save your advice for those who still need a mentor.\"", eff:{align:-6, rel:-5, popularity:1}},
+      {fr:"\"Tu as fait les erreurs. Moi je ferai les resultats.\"", en:"\"You made the mistakes. I'll make the results.\"", eff:{align:-4, rel:-2, popularity:2}},
+    ],
+  },
+  tentation:{
+    noble:[
+      {fr:"\"C'est non. Et ce sera non chaque nuit ou tu reposeras la question.\"", en:"\"It's no. And it'll be no every night you ask again.\"", eff:{align:8, rel:-3, courage:2}},
+      {fr:"\"Je prefere demander l'autorisation que perdre le droit de me regarder.\"", en:"\"I'd rather ask permission than lose the right to face myself.\"", eff:{align:7, rel:-2}},
+      {fr:"\"Je ne vends aucun nom. Meme pas le mien.\"", en:"\"I sell no names. Not even my own.\"", eff:{align:8, rel:-4}},
+      {fr:"\"Je transmets ton offre au conseil, mot pour mot.\"", en:"\"I'm handing your offer to the council, word for word.\"", eff:{align:6, rel:-6, popularity:2}},
+    ],
+    pragmatic:[
+      {fr:"\"Detaille l'offre par ecrit. Je ne negocie pas sur des sous-entendus.\"", en:"\"Put the offer in writing. I don't negotiate on hints.\"", eff:{intelligence:4, rel:1}},
+      {fr:"\"Je n'accepte pas. Mais je garde la ligne ouverte.\"", en:"\"I'm not accepting. But I'm keeping the line open.\"", eff:{align:-2, intelligence:3, rel:2}},
+      {fr:"\"Un dossier, pas un nom. Et personne ne tombe.\"", en:"\"A file, not a name. And nobody falls.\"", eff:{align:-3, intelligence:3, rel:2}},
+      {fr:"\"Je veux d'abord savoir qui paie vraiment.\"", en:"\"First I want to know who's really paying.\"", eff:{intelligence:4, rel:1}},
+    ],
+    ruthless:[
+      {fr:"\"J'accepte. Mais le prix double, et c'est moi qui le fixe.\"", en:"\"I accept. But the price doubles, and I set it.\"", eff:{align:-8, popularity:2, rel:5}},
+      {fr:"\"Donne-moi le nom. Je m'occupe du reste ce soir.\"", en:"\"Give me the name. I'll handle the rest tonight.\"", eff:{align:-9, courage:2, rel:4}},
+      {fr:"\"Reorientation de carriere, donc. J'aime ce vocabulaire.\"", en:"\"A career adjustment, then. I like that vocabulary.\"", eff:{align:-7, rel:5}},
+      {fr:"\"Je signe, et le premier qui parle de ca disparait.\"", en:"\"I sign, and the first one who talks about it disappears.\"", eff:{align:-10, popularity:-2, rel:4}},
+    ],
+  },
+  doute:{
+    noble:[
+      {fr:"\"Ca sert. J'ai vu les visages de ceux qu'on a ramenes.\"", en:"\"It matters. I've seen the faces of the ones we brought back.\"", eff:{align:5, rel:6}},
+      {fr:"\"Ton hesitation cette nuit-la, elle prouve que tu es encore humain(e).\"", en:"\"Your hesitation that night proves you're still human.\"", eff:{align:6, rel:5}},
+      {fr:"\"Compte-les avec moi. On leur doit au moins leurs noms.\"", en:"\"Let's count them together. We owe them their names.\"", eff:{align:6, rel:4}},
+      {fr:"\"Prends une semaine. Je couvre ton secteur, sans rapport.\"", en:"\"Take a week. I'll cover your sector, off the record.\"", eff:{align:5, rel:6, popularity:-1}},
+    ],
+    pragmatic:[
+      {fr:"\"Alors change de poste, pas de convictions.\"", en:"\"Then change your post, not your convictions.\"", eff:{intelligence:3, rel:2}},
+      {fr:"\"On relit tes dossiers ensemble et on tranche sur des faits.\"", en:"\"We reread your files together and decide on facts.\"", eff:{intelligence:4, rel:2}},
+      {fr:"\"Je ne te mentirai pas : parfois ca ne sert a rien. Souvent si.\"", en:"\"I won't lie: sometimes it's useless. Often it isn't.\"", eff:{intelligence:2, rel:3}},
+      {fr:"\"Dors. On reparle de metaphysique quand tu auras dormi.\"", en:"\"Sleep. We'll do metaphysics once you've slept.\"", eff:{intelligence:2, rel:2}},
+    ],
+    ruthless:[
+      {fr:"\"Si tu doutes a voix haute, tu deviens un risque. Tais-toi.\"", en:"\"Doubt out loud and you become a risk. Keep quiet.\"", eff:{align:-6, rel:-5}},
+      {fr:"\"On ne compte pas les pertes, on compte les territoires.\"", en:"\"We don't count losses, we count territory.\"", eff:{align:-7, courage:2}},
+      {fr:"\"Ta conscience est un luxe. Facture-la a quelqu'un d'autre.\"", en:"\"Your conscience is a luxury. Bill it to someone else.\"", eff:{align:-6, rel:-4}},
+      {fr:"\"Utilise ce vide. Les gens creux frappent plus fort.\"", en:"\"Use that emptiness. Hollow people hit harder.\"", eff:{align:-5, courage:3, rel:2}},
+    ],
+  },
+  rivalite:{
+    noble:[
+      {fr:"\"Alors gagne proprement. Je ne veux pas d'une victoire volee.\"", en:"\"Then win clean. I don't want a stolen victory.\"", eff:{align:6, rel:3, courage:2}},
+      {fr:"\"Ta place, je ne la veux pas. Le terrain, on le partage.\"", en:"\"I don't want your post. The ground we share.\"", eff:{align:6, rel:5}},
+      {fr:"\"Si l'un de nous se plante, l'autre le rattrape. Marche ?\"", en:"\"If one of us crashes, the other catches him. Deal?\"", eff:{align:5, rel:6}},
+      {fr:"\"Tes chiffres m'inspirent. Apprends-moi ce que tu fais mieux.\"", en:"\"Your numbers inspire me. Teach me what you do better.\"", eff:{align:4, intelligence:3, rel:4}},
+    ],
+    pragmatic:[
+      {fr:"\"Comparons les rapports plutot que les egos.\"", en:"\"Let's compare reports instead of egos.\"", eff:{intelligence:4, rel:1}},
+      {fr:"\"Divisons le secteur : toi le nord, moi le sud.\"", en:"\"Split the sector: you north, me south.\"", eff:{intelligence:3, rel:3}},
+      {fr:"\"Une seule operation en commun. Ensuite on recompte.\"", en:"\"One joint op. Then we recount.\"", eff:{intelligence:3, courage:2}},
+      {fr:"\"Tu paries sur mon echec ? Mise gros, tant qu'a faire.\"", en:"\"Betting on my crash? Bet big, then.\"", eff:{courage:3, popularity:2, rel:-1}},
+    ],
+    ruthless:[
+      {fr:"\"Regle-le maintenant, alors. Ici, sans temoins.\"", en:"\"Settle it now, then. Here, no witnesses.\"", eff:{align:-7, courage:4, rel:-6}},
+      {fr:"\"Ce terrain etait le tien. C'est deja au passe.\"", en:"\"This ground was yours. Already past tense.\"", eff:{align:-6, rel:-6, popularity:2}},
+      {fr:"\"Je vais truquer tes chiffres avant la prochaine revue.\"", en:"\"I'll doctor your numbers before the next review.\"", eff:{align:-8, intelligence:3, rel:-5}},
+      {fr:"\"Continue de parler. Ca me laisse le temps de te contourner.\"", en:"\"Keep talking. It gives me time to flank you.\"", eff:{align:-5, intelligence:3, rel:-3}},
+    ],
+  },
+  confidence:{
+    noble:[
+      {fr:"\"Ca reste entre nous. Toujours.\"", en:"\"This stays between us. Always.\"", eff:{align:6, rel:7}},
+      {fr:"\"Je prends cette responsabilite. Tu n'es plus seul(e) avec ca.\"", en:"\"I'll take that responsibility. You're not alone with it.\"", eff:{align:6, rel:6}},
+      {fr:"\"Un mensonge dans un rapport ne fait pas de toi un traitre.\"", en:"\"One lie in a report doesn't make you a traitor.\"", eff:{align:4, rel:6}},
+      {fr:"\"Raconte-moi le reste. Meme la partie que tu n'as pas dite.\"", en:"\"Tell me the rest. Even the part you left out.\"", eff:{align:5, intelligence:2, rel:5}},
+    ],
+    pragmatic:[
+      {fr:"\"Rends l'objet aux archives et je te couvre sur la date.\"", en:"\"Return the item to the archives and I'll cover the date.\"", eff:{intelligence:4, rel:3}},
+      {fr:"\"Je garde ca. Mais si ca explose, on l'annonce ensemble.\"", en:"\"I'll hold it. But if it blows, we announce it together.\"", eff:{intelligence:3, rel:4}},
+      {fr:"\"Dis-le a ta famille avant qu'un autre le fasse a ta place.\"", en:"\"Tell your family before someone else does it for you.\"", eff:{intelligence:3, rel:3}},
+      {fr:"\"Ecris-le, scelle-le, confie-le a un tiers. C'est ton assurance.\"", en:"\"Write it, seal it, give it to a third party. That's your insurance.\"", eff:{intelligence:5, rel:2}},
+    ],
+    ruthless:[
+      {fr:"\"Merci. Ce secret vient de devenir ma monnaie d'echange.\"", en:"\"Thank you. That secret just became my currency.\"", eff:{align:-9, intelligence:3, rel:-6}},
+      {fr:"\"Tu m'as donne une laisse. Ne t'etonne pas si je tire dessus.\"", en:"\"You handed me a leash. Don't be shocked when I pull.\"", eff:{align:-8, rel:-5}},
+      {fr:"\"Garde l'objet vole. On le revendra ensemble.\"", en:"\"Keep the stolen item. We'll sell it together.\"", eff:{align:-7, rel:4, popularity:-1}},
+      {fr:"\"Ton mensonge m'interesse. Le suivant sera pour moi.\"", en:"\"Your lie interests me. The next one will be for me.\"", eff:{align:-7, intelligence:2, rel:-2}},
+    ],
+  },
+  avertissement:{
+    noble:[
+      {fr:"\"Merci. Je previens tout de suite ceux qui sont vises avec moi.\"", en:"\"Thank you. I'm warning everyone else on that list now.\"", eff:{align:6, rel:4, popularity:1}},
+      {fr:"\"Je rentre quand meme, mais j'evacue mes voisins d'abord.\"", en:"\"I'm going home anyway, but I'll evacuate my neighbors first.\"", eff:{align:6, courage:3, rel:2}},
+      {fr:"\"Donne-moi le nom de la taupe. Je lui parlerai, pas plus.\"", en:"\"Give me the mole's name. I'll talk to them, nothing more.\"", eff:{align:5, rel:3}},
+      {fr:"\"Tu prends un risque enorme en me disant ca. Je m'en souviendrai.\"", en:"\"You're taking a huge risk telling me. I won't forget.\"", eff:{align:4, rel:7}},
+    ],
+    pragmatic:[
+      {fr:"\"Je change de comms et de refuge cette nuit.\"", en:"\"New comms and a new safehouse tonight.\"", eff:{intelligence:4, courage:1}},
+      {fr:"\"Je signe le contrat piege, mais avec ma propre equipe autour.\"", en:"\"I'll sign the trap contract, with my own team around it.\"", eff:{intelligence:4, courage:3, rel:1}},
+      {fr:"\"Preuves d'abord. Ensuite je bouge.\"", en:"\"Evidence first. Then I move.\"", eff:{intelligence:4, rel:-1}},
+      {fr:"\"On laisse la taupe en place et on lui donne de fausses infos.\"", en:"\"We leave the mole in place and feed them false intel.\"", eff:{intelligence:5, align:-2, rel:2}},
+    ],
+    ruthless:[
+      {fr:"\"Je rentre, et celui qui m'attend ne repartira pas.\"", en:"\"I'm going home, and whoever waits won't leave.\"", eff:{align:-8, courage:4}},
+      {fr:"\"Sors la liste. Je vais la remonter dans l'ordre.\"", en:"\"Get me the list. I'll work up it in order.\"", eff:{align:-9, intelligence:2}},
+      {fr:"\"La taupe meurt d'un accident credible. Occupe-t'en.\"", en:"\"The mole dies in a credible accident. Handle it.\"", eff:{align:-10, rel:-3}},
+      {fr:"\"Un seul avertissement ? Alors je frappe le premier.\"", en:"\"One warning only? Then I strike first.\"", eff:{align:-7, courage:4, rel:1}},
+    ],
+  },
+  alliance:{
+    noble:[
+      {fr:"\"D'accord, mais on protege les civils avant nos interets.\"", en:"\"Agreed, but civilians come before our interests.\"", eff:{align:6, rel:4}},
+      {fr:"\"Je couvre ton flanc. Et si tu tombes, je reviens te chercher.\"", en:"\"I'll cover your flank. If you fall, I come back for you.\"", eff:{align:6, courage:3, rel:6}},
+      {fr:"\"Pas de pacte secret. On l'annonce, ou rien.\"", en:"\"No secret pact. We announce it, or nothing.\"", eff:{align:7, rel:-2, popularity:3}},
+      {fr:"\"Une amitie, ca se merite. Commence par cette operation.\"", en:"\"Friendship is earned. Start with this operation.\"", eff:{align:4, rel:5}},
+    ],
+    pragmatic:[
+      {fr:"\"Conditions d'abord, signature ensuite. Toujours dans cet ordre.\"", en:"\"Terms first, signature second. Always in that order.\"", eff:{intelligence:5, rel:1}},
+      {fr:"\"Tes acces, ma force : et une clause de sortie pour chacun.\"", en:"\"Your access, my force: and an exit clause for each of us.\"", eff:{intelligence:4, rel:3}},
+      {fr:"\"Une operation, une seule. Puis on redevient etrangers.\"", en:"\"One operation only. Then we're strangers again.\"", eff:{intelligence:3, rel:2}},
+      {fr:"\"Personne ne saura. J'ai deja une couverture pour nous deux.\"", en:"\"No one will know. I already have cover for both of us.\"", eff:{intelligence:4, align:-2, rel:3}},
+    ],
+    ruthless:[
+      {fr:"\"Je signe, et je te trahirai a la seconde ou ca me servira.\"", en:"\"I'll sign, and I'll betray you the second it serves me.\"", eff:{align:-8, rel:-4, intelligence:2}},
+      {fr:"\"L'alliance existera. Mais c'est moi qui la dirige.\"", en:"\"The alliance can exist. I run it.\"", eff:{align:-6, popularity:2, rel:2}},
+      {fr:"\"Tes acces m'interessent. Toi, beaucoup moins.\"", en:"\"Your access interests me. You, far less.\"", eff:{align:-7, rel:-6, intelligence:3}},
+      {fr:"\"On signe, et le premier temoin genant, tu t'en occupes.\"", en:"\"We sign, and the first inconvenient witness is yours to handle.\"", eff:{align:-9, rel:3}},
+    ],
+  },
+  retrouvailles:{
+    noble:[
+      {fr:"\"On reprend ou on avait laisse. Et cette fois je reste.\"", en:"\"We pick up where we left off. This time I stay.\"", eff:{align:5, rel:7}},
+      {fr:"\"J'aurais du t'ecrire. Je te le dois, et je m'en excuse.\"", en:"\"I should have written. I owe you that, and I'm sorry.\"", eff:{align:6, rel:6}},
+      {fr:"\"Cette nuit-la, j'y pense encore. Parlons-en enfin.\"", en:"\"That night, I still think about it. Let's finally talk.\"", eff:{align:4, rel:6}},
+      {fr:"\"Tu m'as manque. C'est tout ce que j'ai a dire de vrai.\"", en:"\"I missed you. That's the only true thing I have.\"", eff:{align:5, rel:7, courage:1}},
+    ],
+    pragmatic:[
+      {fr:"\"Quatre ans. On fait le point, puis on verra.\"", en:"\"Four years. Let's take stock, then we'll see.\"", eff:{intelligence:3, rel:2}},
+      {fr:"\"Je ne suis plus le/la meme. Toi non plus. Repartons de la.\"", en:"\"I'm not the same. Neither are you. Let's start from that.\"", eff:{intelligence:3, rel:3}},
+      {fr:"\"Faisons comme si de rien n'etait. C'est plus simple pour tous les deux.\"", en:"\"Let's act like nothing happened. Simpler for both of us.\"", eff:{rel:1, popularity:1}},
+      {fr:"\"La question n'a pas bouge, mais moi si. Repose-la autrement.\"", en:"\"The question hasn't moved, but I have. Ask it differently.\"", eff:{intelligence:4, rel:2}},
+    ],
+    ruthless:[
+      {fr:"\"On s'est mal quittes. On va se quitter pire.\"", en:"\"We parted badly. We'll part worse.\"", eff:{align:-7, rel:-7}},
+      {fr:"\"Tu aurais du finir ton deuil. Ca t'aurait evite ce soir.\"", en:"\"You should have finished grieving. It would have spared you tonight.\"", eff:{align:-8, rel:-6, courage:2}},
+      {fr:"\"Le passe est un levier. Et je viens de le trouver.\"", en:"\"The past is a lever. I just found it.\"", eff:{align:-6, intelligence:3, rel:-4}},
+      {fr:"\"J'ai change, oui. En pire, et ca m'a beaucoup servi.\"", en:"\"I've changed, yes. For the worse, and it served me well.\"", eff:{align:-6, popularity:2, rel:-2}},
+    ],
+  },
+  multivers:{
+    noble:[
+      {fr:"\"On ne sacrifie aucune branche du multivers pour sauver la notre.\"", en:"\"We sacrifice no branch of the multiverse to save ours.\"", eff:{align:7, rel:3}},
+      {fr:"\"Si une variante de moi souffre la-bas, on va la chercher.\"", en:"\"If a variant of me suffers there, we go get them.\"", eff:{align:6, courage:3, rel:4}},
+      {fr:"\"On previent la Timeline Sacree, meme si ca nous coute le dossier.\"", en:"\"We warn the Sacred Timeline, even if it costs us the case.\"", eff:{align:6, popularity:-1, rel:2}},
+      {fr:"\"Une incursion n'excuse pas un massacre preventif.\"", en:"\"An incursion doesn't excuse a preemptive massacre.\"", eff:{align:8, rel:2}},
+    ],
+    pragmatic:[
+      {fr:"\"Cartographie d'abord. On ne franchit rien a l'aveugle.\"", en:"\"Map it first. We cross nothing blind.\"", eff:{intelligence:5, rel:1}},
+      {fr:"\"Scelle la breche, on etudiera les debris apres.\"", en:"\"Seal the breach, we'll study the debris later.\"", eff:{intelligence:4, courage:2}},
+      {fr:"\"Une variante n'est pas un allie. C'est une donnee.\"", en:"\"A variant isn't an ally. It's a data point.\"", eff:{intelligence:4, align:-2}},
+      {fr:"\"Deux equipes, deux realites, un seul point de rendez-vous.\"", en:"\"Two teams, two realities, one rendezvous point.\"", eff:{intelligence:4, rel:2}},
+    ],
+    ruthless:[
+      {fr:"\"Effondre la branche. Une realite de moins, un rival de moins.\"", en:"\"Collapse the branch. One reality less, one rival less.\"", eff:{align:-10, courage:3}},
+      {fr:"\"Ma variante a ce que je veux. Je vais aller le prendre.\"", en:"\"My variant has what I want. I'm going to take it.\"", eff:{align:-8, intelligence:3, rel:-2}},
+      {fr:"\"La Timeline Sacree n'a rien a savoir de nos breches.\"", en:"\"The Sacred Timeline doesn't need to know about our breaches.\"", eff:{align:-7, intelligence:2, rel:2}},
+      {fr:"\"Une incursion, c'est une opportunite de conquete. Rien d'autre.\"", en:"\"An incursion is a conquest opportunity. Nothing else.\"", eff:{align:-9, popularity:1}},
+    ],
+  },
+  artefacts:{
+    noble:[
+      {fr:"\"L'artefact retourne au coffre. Personne ne devrait porter ca.\"", en:"\"The artifact goes back in the vault. No one should carry that.\"", eff:{align:7, rel:2}},
+      {fr:"\"On l'etudie, mais sous controle et avec temoins.\"", en:"\"We study it, under supervision and with witnesses.\"", eff:{align:5, intelligence:3, rel:2}},
+      {fr:"\"Detruis-le. Aucun pouvoir ne vaut cette tentation.\"", en:"\"Destroy it. No power is worth that temptation.\"", eff:{align:8, courage:2, rel:1}},
+      {fr:"\"Si quelqu'un doit le porter, que ce soit moi. Pas un civil.\"", en:"\"If someone must carry it, let it be me. Not a civilian.\"", eff:{align:6, courage:4, rel:3}},
+    ],
+    pragmatic:[
+      {fr:"\"Analyse spectrale complete avant qu'on y touche.\"", en:"\"Full spectral analysis before anyone touches it.\"", eff:{intelligence:5}},
+      {fr:"\"On le garde inactif, comme monnaie d'echange dissuasive.\"", en:"\"Keep it inert, as a deterrent bargaining chip.\"", eff:{intelligence:4, align:-2, rel:2}},
+      {fr:"\"Copie le mecanisme, rends l'original.\"", en:"\"Copy the mechanism, return the original.\"", eff:{intelligence:5, rel:1}},
+      {fr:"\"Un porteur, un protocole, un delai. Pas d'exception.\"", en:"\"One bearer, one protocol, one deadline. No exception.\"", eff:{intelligence:4, courage:2}},
+    ],
+    ruthless:[
+      {fr:"\"Je le prends. Et je ne demande l'avis de personne.\"", en:"\"I'm taking it. I'm asking no one.\"", eff:{align:-8, courage:3, popularity:1}},
+      {fr:"\"Vends-le au plus offrant, puis vole-le a l'acheteur.\"", en:"\"Sell it to the highest bidder, then steal it back.\"", eff:{align:-9, intelligence:4, rel:2}},
+      {fr:"\"Teste-le sur un volontaire. Pas sur moi.\"", en:"\"Test it on a volunteer. Not on me.\"", eff:{align:-10, rel:-4}},
+      {fr:"\"Cet artefact fera de moi la seule variable qui compte.\"", en:"\"This artifact will make me the only variable that counts.\"", eff:{align:-7, popularity:2}},
+    ],
+  },
+  accords:{
+    noble:[
+      {fr:"\"Je signe les accords. La transparence nous protege tous.\"", en:"\"I'll sign the accords. Transparency protects everyone.\"", eff:{align:6, popularity:3, rel:2}},
+      {fr:"\"Je signe, mais j'exige un recours pour les civils leses.\"", en:"\"I'll sign, but I demand recourse for harmed civilians.\"", eff:{align:7, intelligence:2, rel:2}},
+      {fr:"\"Je refuse en public et j'en assume les consequences.\"", en:"\"I refuse publicly and I'll take the consequences.\"", eff:{align:5, courage:4, popularity:-2}},
+      {fr:"\"Aucun registre ne doit servir a traquer des enfants doues.\"", en:"\"No registry should be used to hunt gifted kids.\"", eff:{align:8, rel:3}},
+    ],
+    pragmatic:[
+      {fr:"\"Je veux lire les annexes avant de parler de morale.\"", en:"\"I want to read the annexes before we discuss morality.\"", eff:{intelligence:5}},
+      {fr:"\"Signature conditionnelle, revision tous les deux ans.\"", en:"\"Conditional signature, review every two years.\"", eff:{intelligence:4, rel:2}},
+      {fr:"\"On negocie une clause d'urgence, sinon rien.\"", en:"\"We negotiate an emergency clause, or nothing.\"", eff:{intelligence:4, courage:2}},
+      {fr:"\"Je signe pour le budget, pas pour la doctrine.\"", en:"\"I sign for the budget, not the doctrine.\"", eff:{intelligence:3, align:-2, popularity:2}},
+    ],
+    ruthless:[
+      {fr:"\"Je signe, puis je vide le texte de l'interieur.\"", en:"\"I'll sign, then hollow the text out from inside.\"", eff:{align:-7, intelligence:4, rel:2}},
+      {fr:"\"Les accords sont une laisse. Je choisis qui la tient.\"", en:"\"The accords are a leash. I choose who holds it.\"", eff:{align:-8, popularity:2}},
+      {fr:"\"Fais fuiter le registre. La panique fera le travail.\"", en:"\"Leak the registry. Panic will do the work.\"", eff:{align:-9, rel:-3}},
+      {fr:"\"Aucune signature. Qu'ils viennent me chercher.\"", en:"\"No signature. Let them come for me.\"", eff:{align:-6, courage:4, popularity:1}},
+    ],
+  },
+  cosmique:{
+    noble:[
+      {fr:"\"Si une entite exige un tribut, elle me trouvera devant elle.\"", en:"\"If an entity demands tribute, it'll find me standing there.\"", eff:{align:7, courage:4, rel:3}},
+      {fr:"\"On evacue la planete avant de parler strategie.\"", en:"\"We evacuate the planet before talking strategy.\"", eff:{align:7, rel:2}},
+      {fr:"\"L'echelle ne change rien : on protege chaque vie qu'on peut.\"", en:"\"Scale changes nothing: we protect every life we can.\"", eff:{align:8, popularity:2}},
+      {fr:"\"J'irai parler a cette chose. Seul(e), s'il le faut.\"", en:"\"I'll go talk to that thing. Alone if I must.\"", eff:{align:5, courage:5, rel:2}},
+    ],
+    pragmatic:[
+      {fr:"\"Calcule la trajectoire. On a peut-etre une fenetre.\"", en:"\"Run the trajectory. We may have a window.\"", eff:{intelligence:5, courage:1}},
+      {fr:"\"On negocie un delai. Le temps est notre seule ressource.\"", en:"\"We negotiate a delay. Time is our only resource.\"", eff:{intelligence:4, rel:2}},
+      {fr:"\"Priorite aux infrastructures : sans elles, aucun survivant ne tient.\"", en:"\"Infrastructure first: without it, no survivor lasts.\"", eff:{intelligence:4, align:-1}},
+      {fr:"\"Un plan A, un plan B, et un plan pour quand les deux echouent.\"", en:"\"A plan A, a plan B, and a plan for when both fail.\"", eff:{intelligence:5, courage:2}},
+    ],
+    ruthless:[
+      {fr:"\"Qu'il vienne. On negociera ma place a ses cotes.\"", en:"\"Let it come. We'll negotiate my seat beside it.\"", eff:{align:-9, popularity:1, rel:3}},
+      {fr:"\"On donne un continent, on garde le reste. Simple arithmetique.\"", en:"\"Give up a continent, keep the rest. Simple arithmetic.\"", eff:{align:-10, intelligence:3}},
+      {fr:"\"Cette entite a une faiblesse. Je la vendrai, pas je l'utiliserai.\"", en:"\"That entity has a weakness. I'll sell it, not use it.\"", eff:{align:-7, intelligence:4, rel:1}},
+      {fr:"\"L'apocalypse est un marche. Je serai du bon cote du comptoir.\"", en:"\"Apocalypse is a market. I'll be on the right side of the counter.\"", eff:{align:-8, popularity:2}},
+    ],
+  },
+  equipe:{
+    noble:[
+      {fr:"\"Personne ne reste sur le terrain. On part ensemble ou pas du tout.\"", en:"\"Nobody stays behind. We leave together or not at all.\"", eff:{align:7, rel:6}},
+      {fr:"\"Je cede le commandement a qui sera le plus lucide ce jour-la.\"", en:"\"I'll hand command to whoever is clearest that day.\"", eff:{align:6, intelligence:2, rel:4}},
+      {fr:"\"On se dit tout en debrief, meme ce qui fache.\"", en:"\"We say everything in debrief, even the ugly parts.\"", eff:{align:5, rel:5}},
+      {fr:"\"Les honneurs pour l'equipe, les blames pour moi.\"", en:"\"Credit to the team, blame to me.\"", eff:{align:7, popularity:-1, rel:6}},
+    ],
+    pragmatic:[
+      {fr:"\"Roles clairs, canaux clairs. Le reste, c'est du bruit.\"", en:"\"Clear roles, clear channels. The rest is noise.\"", eff:{intelligence:4, rel:2}},
+      {fr:"\"Je veux un remplacant designe pour chaque poste.\"", en:"\"I want a designated backup for every post.\"", eff:{intelligence:5, rel:1}},
+      {fr:"\"On repete la manoeuvre jusqu'a ce qu'elle soit ennuyeuse.\"", en:"\"We drill it until it's boring.\"", eff:{intelligence:3, courage:3}},
+      {fr:"\"Chacun garde un secret operationnel. Ca nous protege.\"", en:"\"Everyone keeps one operational secret. It protects us.\"", eff:{intelligence:4, align:-2, rel:1}},
+    ],
+    ruthless:[
+      {fr:"\"L'equipe existe pour absorber les coups a ma place.\"", en:"\"The team exists to absorb the hits for me.\"", eff:{align:-9, rel:-6}},
+      {fr:"\"Le plus faible saute au prochain echec. Qu'il le sache.\"", en:"\"The weakest is cut after the next failure. Let them know.\"", eff:{align:-8, courage:2, rel:-5}},
+      {fr:"\"Je commande. Le vote, c'est pour ceux qui doutent.\"", en:"\"I command. Voting is for people who doubt.\"", eff:{align:-6, popularity:2, rel:-3}},
+      {fr:"\"Divise-les un peu. Une equipe unie finit par negocier.\"", en:"\"Divide them slightly. A united team eventually negotiates.\"", eff:{align:-7, intelligence:3, rel:-4}},
+    ],
+  },
+  identite:{
+    noble:[
+      {fr:"\"Je retire le masque. Ceux que je protege ont le droit de savoir.\"", en:"\"I'm taking the mask off. The people I protect deserve to know.\"", eff:{align:6, popularity:4, rel:3}},
+      {fr:"\"Mon nom civil reste le mien. Il n'appartient a aucun camp.\"", en:"\"My civilian name stays mine. It belongs to no faction.\"", eff:{align:5, rel:3}},
+      {fr:"\"Je protege mon identite pour proteger les miens, pas pour mentir.\"", en:"\"I protect my identity to protect my family, not to lie.\"", eff:{align:5, rel:4}},
+      {fr:"\"Le masque n'est pas moi. Ce que je fais dessous, si.\"", en:"\"The mask isn't me. What I do beneath it is.\"", eff:{align:6, rel:4}},
+    ],
+    pragmatic:[
+      {fr:"\"Une identite publique, une operationnelle. Cloisonnement strict.\"", en:"\"One public identity, one operational. Strict separation.\"", eff:{intelligence:5, rel:1}},
+      {fr:"\"Je revelerai mon visage quand ce sera un avantage tactique.\"", en:"\"I'll show my face when it's a tactical advantage.\"", eff:{intelligence:4, align:-2, popularity:2}},
+      {fr:"\"Change mes papiers tous les deux ans. C'est de l'hygiene.\"", en:"\"New papers every two years. It's hygiene.\"", eff:{intelligence:4}},
+      {fr:"\"Le symbole compte plus que l'homme. Entretenons le symbole.\"", en:"\"The symbol matters more than the man. Maintain the symbol.\"", eff:{intelligence:3, popularity:3}},
+    ],
+    ruthless:[
+      {fr:"\"Mon visage est une arme. Je l'utiliserai pour terrifier.\"", en:"\"My face is a weapon. I'll use it to terrify.\"", eff:{align:-7, courage:3, popularity:2}},
+      {fr:"\"Je porterai le nom d'un autre. Il paiera pour mes actes.\"", en:"\"I'll wear someone else's name. He'll pay for my acts.\"", eff:{align:-10, intelligence:3, rel:-3}},
+      {fr:"\"Celui qui connait mon vrai nom devient un probleme.\"", en:"\"Anyone who knows my real name becomes a problem.\"", eff:{align:-9, rel:-6}},
+      {fr:"\"L'homme derriere le masque est mort. Il reste le masque.\"", en:"\"The man behind the mask is dead. Only the mask remains.\"", eff:{align:-7, courage:3}},
+    ],
+  },
+  technologie:{
+    noble:[
+      {fr:"\"On publie le code. Une IA de defense secrete finit toujours mal.\"", en:"\"We publish the code. A secret defense AI always ends badly.\"", eff:{align:7, intelligence:2, popularity:2}},
+      {fr:"\"Aucun prototype ne sort sans garde-fou humain.\"", en:"\"No prototype ships without a human failsafe.\"", eff:{align:6, intelligence:3}},
+      {fr:"\"On rembourse les degats causes par nos machines. Tous.\"", en:"\"We pay for the damage our machines cause. All of it.\"", eff:{align:7, popularity:2, rel:2}},
+      {fr:"\"Cette technologie appartient aux gens, pas a un conseil.\"", en:"\"This tech belongs to people, not to a board.\"", eff:{align:6, rel:3}},
+    ],
+    pragmatic:[
+      {fr:"\"Un prototype, un test, un rapport. Puis on decide.\"", en:"\"One prototype, one test, one report. Then we decide.\"", eff:{intelligence:5}},
+      {fr:"\"Bride l'IA a 60 pour cent et garde la cle physique.\"", en:"\"Cap the AI at 60 percent and keep the physical key.\"", eff:{intelligence:5, courage:1}},
+      {fr:"\"On depose le brevet avant que quelqu'un d'autre le fasse.\"", en:"\"We file the patent before someone else does.\"", eff:{intelligence:4, popularity:2}},
+      {fr:"\"Deux equipes independantes, meme cahier des charges.\"", en:"\"Two independent teams, same spec.\"", eff:{intelligence:4, rel:1}},
+    ],
+    ruthless:[
+      {fr:"\"Lache l'IA sans bride. On verra bien qui survit.\"", en:"\"Unleash the AI uncapped. We'll see who survives.\"", eff:{align:-10, intelligence:2}},
+      {fr:"\"Vends le prototype aux deux camps. Deux fois.\"", en:"\"Sell the prototype to both sides. Twice.\"", eff:{align:-8, intelligence:4, popularity:1}},
+      {fr:"\"Teste-le sur une zone habitee. Les donnees seront meilleures.\"", en:"\"Test it in an inhabited zone. Better data.\"", eff:{align:-10, rel:-5}},
+      {fr:"\"Le code reste a moi. Celui qui le copie disparait.\"", en:"\"The code stays mine. Whoever copies it disappears.\"", eff:{align:-8, rel:-3}},
+    ],
+  },
+  sacrifice:{
+    noble:[
+      {fr:"\"S'il faut quelqu'un dans la breche, ce sera moi.\"", en:"\"If someone has to stand in the breach, it's me.\"", eff:{align:8, courage:5, rel:4}},
+      {fr:"\"On ne sacrifie personne tant qu'il reste une option.\"", en:"\"We sacrifice no one while an option remains.\"", eff:{align:7, intelligence:2, rel:4}},
+      {fr:"\"Si tu tombes, ton nom sera dit chaque annee. Je m'y engage.\"", en:"\"If you fall, your name gets spoken every year. I promise.\"", eff:{align:6, rel:6}},
+      {fr:"\"Laisse-moi prendre ta place. Tu as une famille, pas moi.\"", en:"\"Let me take your place. You have a family, I don't.\"", eff:{align:8, courage:4, rel:6}},
+    ],
+    pragmatic:[
+      {fr:"\"Un sacrifice sans plan de repli, c'est du gachis.\"", en:"\"A sacrifice with no fallback is just waste.\"", eff:{intelligence:5, courage:1}},
+      {fr:"\"Tirage au sort, et le survivant termine la mission.\"", en:"\"Draw lots, and the survivor finishes the mission.\"", eff:{intelligence:3, align:-2, courage:2}},
+      {fr:"\"Trente secondes. Si aucune idee ne sort, on tranche.\"", en:"\"Thirty seconds. If no idea comes, we decide.\"", eff:{intelligence:4, courage:2}},
+      {fr:"\"On choisit celui dont la perte coute le moins au terrain.\"", en:"\"We pick whoever's loss costs the field least.\"", eff:{intelligence:4, align:-3, rel:-2}},
+    ],
+    ruthless:[
+      {fr:"\"Ce sera toi. Tu le sais depuis le debut de cette conversation.\"", en:"\"It'll be you. You've known since this conversation started.\"", eff:{align:-10, rel:-7, courage:2}},
+      {fr:"\"Les martyrs sont utiles. Choisis-en un photogenique.\"", en:"\"Martyrs are useful. Pick a photogenic one.\"", eff:{align:-9, popularity:3, rel:-4}},
+      {fr:"\"Je ne meurs pour rien. Surtout pas pour une idee.\"", en:"\"I die for nothing. Least of all an idea.\"", eff:{align:-7, courage:-1, rel:-2}},
+      {fr:"\"Envoie les recrues devant. C'est a ca qu'elles servent.\"", en:"\"Send the recruits in first. That's what they're for.\"", eff:{align:-10, rel:-6}},
+    ],
+  },
+};
 const CONV_THEME_KEYS = Object.keys(CONV_THEMES);
+/* Choix cohérents : on répond TOUJOURS a la derniere replique, qui est la ligne de theme. */
+function themeChoices(themeKey, charKey, charAlign, relScale){
+  const tp = CONV_THEME_REPLIES[themeKey];
+  return shuffle(['noble','pragmatic','ruthless']).map(b=>{
+    const pool = (tp && tp[b] && tp[b].length) ? tp[b] : CONV_CHOICE_POOL[b];
+    const key = (tp && tp[b] && tp[b].length) ? 'thr_'+themeKey+'_'+b : 'ch_'+b;
+    const base = pool[pickUnused(key, pool.length)];
+    const eff = { align:base.eff.align||0, courage:base.eff.courage||0, intelligence:base.eff.intelligence||0, popularity:base.eff.popularity||0 };
+    if(base.eff.rel && charKey){
+      let r = base.eff.rel;
+      if(charAlign==='villain') r = -r * (b==='ruthless'?-1:1);
+      eff.rel = { [charKey]: Math.round(r * (relScale||1)) };
+    }
+    return { fr:base.fr, en:base.en, eff, bucket:b };
+  });
+}
 function generateConversation(charKey){
   const c = CHARACTERS[charKey]; if(!c) return null;
   const tone = CONV_LINES[c.align] ? c.align : 'neutral';
@@ -4375,23 +4918,17 @@ function generateConversation(charKey){
   const themeKey = pickConvTheme(charKey);
   const theme = CONV_THEMES[themeKey];
   const ti = pickUnused('themeline_'+themeKey, theme.fr.length);
-  const buckets = ['noble','pragmatic','ruthless'];
-  const choices = shuffle(buckets).map(b=>{
-    const pool = CONV_CHOICE_POOL[b];
-    const ci = pickUnused('ch_'+b, pool.length);
-    const base = pool[ci];
-    const eff = { align:base.eff.align||0, courage:base.eff.courage||0, intelligence:base.eff.intelligence||0, popularity:base.eff.popularity||0 };
-    if(base.eff.rel){ let r = base.eff.rel; if(c.align==='villain') r = -r * (b==='ruthless'?-1:1); eff.rel = { [charKey]: Math.round(r) }; }
-    return { fr:base.fr, en:base.en, eff };
-  });
+  const choices = themeChoices(themeKey, charKey, c.align, 1);
   return {
     id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+themeKey+'_'+ti,
     charKey, theme:themeKey,
-    linesFr:[ convFill(pack.openFr[oi], c), convFill(theme.fr[ti], c), convFill(pack.midFr[mi], c) ],
-    linesEn:[ convFill(pack.openEn[oi], c), convFill(theme.en[ti], c), convFill(pack.midEn[mi], c) ],
+    /* La ligne de theme arrive en dernier : les reponses proposees y repondent directement. */
+    linesFr:[ convFill(pack.openFr[oi], c), convFill(pack.midFr[mi], c), convFill(theme.fr[ti], c) ],
+    linesEn:[ convFill(pack.openEn[oi], c), convFill(pack.midEn[mi], c), convFill(theme.en[ti], c) ],
     choices,
   };
 }
+
 /* Les themes d'orientation (tentation, allegeance) restent rares : le joueur ne doit pas
    se voir demander son camp toutes les cinq minutes. */
 function pickConvTheme(charKey){
@@ -4421,6 +4958,10 @@ function generateGroupConversation(){
   /* Tes eleves apparaissent dans les discussions de groupe */
   const mk = menteeKeys().filter(k=>keys.includes(k) && !cast.includes(k));
   if(mk.length){ cast[cast.length-1] = pick(mk); }
+  /* Un seul sujet pour toute la tablee : chacun ajoute sa replique sur CE sujet,
+     et les reponses proposees repondent au sujet. */
+  const themeKey = pickConvTheme(cast[0]);
+  const theme = CONV_THEMES[themeKey];
   const linesFr = [], linesEn = [], lineSpeakers = [];
   const total = cast.length + 1 + Math.floor(Math.random()*2); // 4 a 6 repliques
   for(let i=0;i<total;i++){
@@ -4431,36 +4972,30 @@ function generateGroupConversation(){
     if(i===0){
       const oi = pickUnused('open_'+tone+'_'+key, pack.openFr.length);
       linesFr.push(convFill(pack.openFr[oi], c)); linesEn.push(convFill(pack.openEn[oi], c));
-    } else if(i === total-1){
-      const mi = pickUnused('mid_'+tone, pack.midFr.length);
-      linesFr.push(convFill(pack.midFr[mi], c)); linesEn.push(convFill(pack.midEn[mi], c));
     } else {
-      const tk = pickConvTheme(key); const th = CONV_THEMES[tk];
-      const ti = pickUnused('themeline_'+tk, th.fr.length);
-      linesFr.push(convFill(th.fr[ti], c)); linesEn.push(convFill(th.en[ti], c));
+      const ti = pickUnused('themeline_'+themeKey, theme.fr.length);
+      linesFr.push(convFill(theme.fr[ti], c)); linesEn.push(convFill(theme.en[ti], c));
     }
     lineSpeakers.push(si);
   }
-  const buckets = shuffle(['noble','pragmatic','ruthless']);
-  const choices = buckets.map(b=>{
-    const pool = CONV_CHOICE_POOL[b];
-    const ci = pickUnused('ch_'+b, pool.length);
-    const bs = pool[ci];
-    const eff = { align:bs.eff.align||0, courage:bs.eff.courage||0, intelligence:bs.eff.intelligence||0, popularity:bs.eff.popularity||0 };
-    if(bs.eff.rel){
-      eff.rel = {};
-      cast.forEach(k=>{
-        let r = bs.eff.rel;
-        if(CHARACTERS[k].align==='villain') r = -r * (b==='ruthless'?-1:1);
-        eff.rel[k] = Math.round(r*0.7);
-      });
-    }
-    return { fr:bs.fr, en:bs.en, eff };
+  const choices = themeChoices(themeKey, null, null, 1).map(ch=>{
+    const eff = Object.assign({}, ch.eff);
+
+    /* Relations : la tablee entiere reagit, un peu moins fort qu'en tete-a-tete */
+    const relBase = ch.eff.align ? Math.round(ch.eff.align*0.5) : 2;
+    eff.rel = {};
+    cast.forEach(k=>{
+      let r = relBase;
+      if(CHARACTERS[k].align==='villain') r = -r;
+      eff.rel[k] = Math.round(r*0.7);
+    });
+    return { fr:ch.fr, en:ch.en, eff };
   });
   return {
     id:'grp_'+cast.join('_')+'_'+S.currentYear+'_'+Math.floor(Math.random()*10000),
-    charKey: cast[0], group:true, speakers:cast, lineSpeakers, linesFr, linesEn, choices,
+    charKey: cast[0], group:true, theme:themeKey, speakers:cast, lineSpeakers, linesFr, linesEn, choices,
   };
+
 }
 
 /* ---------- Accueil : The G (heros) ou Siddartha (villain) ---------- */
