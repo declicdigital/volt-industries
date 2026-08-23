@@ -2341,8 +2341,7 @@ function screenStartSide(){
   return d;
 }
 function estimateCareerMissions(years, mode){
-  if(mode==='short') return 30;
-  return Math.round(years * 6.5);
+  return Math.max(1, years) * 3;
 }
 function formatDuration(totalSec){
   const min = Math.max(1, Math.round(totalSec/60));
@@ -2360,7 +2359,7 @@ function screenMode(){
     <div class="optgrid" id="modeOpt" style="margin-top:20px;"></div>
     <div id="yearsBox" style="margin-top:20px; display:none;">
       <div style="font-weight:800;margin-bottom:8px;">${t('yearsLabel')}: <span id="yearsVal">${S.years}</span></div>
-      <input type="range" min="10" max="80" value="${S.years}" id="yearsRange">
+      <input type="range" min="10" max="50" value="${Math.min(50,S.years)}" id="yearsRange">
       <div id="estBox" style="margin-top:14px;"></div>
     </div>
     <div class="actions"><button class="btn ghost" id="back"><- ${t('back')}</button><button class="btn cyan" id="next" ${S.mode?'':'disabled'}>${t('beginCareer')} -></button></div>`;
@@ -2385,7 +2384,7 @@ function screenMode(){
 function buildCareerPlan(){
   S.missionsPlan = [];
   if(S.mode==='short'){ S.years = 10; for(let y=0;y<10;y++) S.missionsPlan.push(3); }
-  else { for(let y=0;y<S.years;y++) S.missionsPlan.push(3 + Math.floor(Math.random()*8)); }
+  else { S.years = Math.min(50, S.years); for(let y=0;y<S.years;y++) S.missionsPlan.push(3); }
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.mentorCap = S.mode==='long' ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
