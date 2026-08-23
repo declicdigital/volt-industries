@@ -3002,6 +3002,8 @@ function screenFaceForge(){
   const genBtn = d.querySelector('#ffGen');
   const useBtn = d.querySelector('#ffUse');
   const thumbs = d.querySelector('#ffThumbs');
+  const keyEl = d.querySelector('#ffKey');
+  if(keyEl) keyEl.oninput = ()=>{ ffSetKey(keyEl.value.trim()); };
   const fileInput = d.querySelector('#ffFile');
 
   const refreshTraits = ()=>{
