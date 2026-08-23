@@ -2934,22 +2934,14 @@ function screenFaceForge(){
   };
 
   useBtn.onclick = ()=>{
-    const a = FF_ARCH[FF.arch];
-    const img = FF.results[FF.sel];
-    const nm = fr?'Mon personnage':'My character';
-    applyPreset({
-      id:'custom', charKey:null, side:FF.side, sex:FF.sex, img,
-      nameFr:nm, nameEn:nm, heroFr:S.heroName || nm, heroEn:S.heroName || nm,
-      morphology:a.morphology, path:a.path, powers:a.powers,
-      align: FF.side==='villain' ? -30 : 30,
-      stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
-      look:{ suitColor:FF.color, secondaryColor:'#0f1420', aura:FF.aura==='aucune'?'none':'electric', cape: !!FF.cape, helmet: FF.mask==='aucun'?'none':'none', glasses: FF.mask==='domino'?'visor':'none', gloves:'armored', boots:'armored', weapon:'none', symbol:'' },
-      descFr:fr?FF_ARCH[FF.arch].fr:'', descEn:FF_ARCH[FF.arch].en
-    });
+    const cfg = { img: FF.results[FF.sel], side:FF.side, sex:FF.sex, arch:FF.arch, color:FF.color, cape:!!FF.cape, mask:FF.mask, aura:FF.aura, name:'' };
+    ffSaveCustom(cfg);
+    applyCustomCharacter(cfg);
     S.heroName = '';
     ffStopCam();
     S.screen = 'name'; render();
   };
+
 
   d.querySelector('#ffBack').onclick = ()=>{ ffStopCam(); S.screen='profileChoice'; render(); };
 
