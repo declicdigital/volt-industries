@@ -460,7 +460,7 @@ const T = {
     modeTitle:"Ta carriere", modeLead:"Deux formats de partie sont possibles.",
     modeShort:"Carriere courte", modeShortDesc:"10 annees fixes, 3 missions par an, 3 choix par mission.",
     modeLong:"Carriere longue", modeLongDesc:"Jusqu'a 80 annees, 3 a 10 missions par an. Le niveau des missions proposees suit ton rang - de simples affaires de quartier jusqu'aux crises cosmiques. Formation de recrues, bascules multiples entre lumiere et ombre, risque de mort, discussions marquantes avec d'autres figures, bilan complet a la fin.",
-    yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere", estTime:"Temps estime", estMission:"~45 s par mission (choix, combats, discussions)",
+    yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere", estTime:"Temps estime", estMission:"~20 s par mission (choix, combats, discussions)",
     summaryTitle:"Ton dossier VOLT INDUSTRIES", year:"Annee", mission:"Mission",
     alignHero:"Heros", alignVillain:"Fleau", alignNeutral:"Equilibre",
     courage:"Courage", intelligence:"Intelligence", popularity:"Popularite", power:"Puissance",
@@ -511,7 +511,7 @@ const T = {
     modeTitle:"Your career", modeLead:"Two game formats are available.",
     modeShort:"Short career", modeShortDesc:"Fixed 10 years, 3 missions per year, 3 choices per mission.",
     modeLong:"Long career", modeLongDesc:"Up to 80 years, 3 to 10 missions per year. Mission scale follows your rank - from small neighborhood affairs up to cosmic crises. Train recruits, shift repeatedly between light and darkness, risk death, have meaningful talks with other figures, get a full report at the end.",
-    yearsLabel:"Number of years", beginCareer:"Start career", estTime:"Estimated time", estMission:"~45 s per mission (choices, battles, talks)",
+    yearsLabel:"Number of years", beginCareer:"Start career", estTime:"Estimated time", estMission:"~20 s per mission (choices, battles, talks)",
     summaryTitle:"Your VOLT INDUSTRIES file", year:"Year", mission:"Mission",
     alignHero:"Hero", alignVillain:"Menace", alignNeutral:"Balance",
     courage:"Courage", intelligence:"Intelligence", popularity:"Popularity", power:"Power",
@@ -2350,7 +2350,7 @@ function formatDuration(totalSec){
   return '~' + h + ' h ' + m + ' min';
 }
 function estimateCareerTime(years, mode){
-  return formatDuration(estimateCareerMissions(years, mode) * 45);
+  return formatDuration(estimateCareerMissions(years, mode) * 20);
 }
 function screenMode(){
   const d = document.createElement('div');
@@ -2365,7 +2365,7 @@ function screenMode(){
   function estHtml(mode){
     const years = mode==='short' ? 10 : S.years;
     const total = estimateCareerMissions(years, mode);
-    const dur = formatDuration(total * 45);
+    const dur = formatDuration(total * 20);
     return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent);font-weight:700;flex-wrap:wrap;"><span style="font-size:16px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${dur}</span> <span style="color:var(--muted);font-weight:400;">(${total} ${S.lang==='fr'?'missions':'missions'})</span></div>`;
   }
   function refresh(){
@@ -2402,7 +2402,7 @@ function screenSummary(){
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
     <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
-    <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 45)}</span></div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 20)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
   d.querySelector('#go').onclick=()=>{ nextMission(); };
@@ -2593,8 +2593,46 @@ function battleFoeKey(mission){
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
   if(mission.pivotal || mission.breakthrough) return false;
-  return (mission.danger||0) >= 2 || Math.random() < 0.55;
+  const f = battleForm();
+  if(injuryActive()) return false;
+  if(f.lastPlayedYear!=null && (S.currentYear - f.lastPlayedYear) < 2) return false;
+  const d = mission.danger||0;
+  const p = d>=3 ? 0.55 : (d===2 ? 0.30 : 0.12);
+  if(Math.random() >= p) return false;
+  f.lastPlayedYear = S.currentYear;
+  return true;
 }
+function resolveBattleOffscreen(mission){
+  const foeKey = battleFoeKey(mission);
+  const foe = CHARACTERS[foeKey];
+  const foeName = S.lang==='fr'?foe.fr:foe.en;
+  const f = battleForm();
+  const inj = injuryActive();
+  const pl = computePowerLevel ? computePowerLevel() : 50;
+  let odds = 0.5 + (pl-50)/220 + f.momentum*0.04 - (inj?inj.sev*0.08:0) - (mission.danger||0)*0.05;
+  odds = clamp(odds, 0.15, 0.9);
+  const win = Math.random() < odds;
+  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
+  if(win){
+    f.streak = Math.max(0, f.streak) + 1;
+    f.momentum = Math.min(6, f.momentum + 1);
+    S.stats.courage = clamp(S.stats.courage + 1, 0, 100);
+    S.stats.popularity = clamp(S.stats.popularity + 1, 0, 100);
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Escarmouche remportee contre ${foeName} (rapport de terrain)`:`Skirmish won against ${foeName} (field report)`), location:null, type:'combat', outcome:'win' });
+  } else {
+    f.streak = 0;
+    f.momentum = Math.max(0, f.momentum - 1);
+    S.stats.courage = clamp(S.stats.courage - 2, 0, 100);
+    S.stats.popularity = clamp(S.stats.popularity - 1, 0, 100);
+    if(!inj && Math.random()<0.45){
+      const days = 3 + Math.floor(Math.random()*8);
+      f.injury = { sev:1, battlesLeft:1, label:(S.lang==='fr'?`${days} jours d'arret`:`${days} days off`) };
+    }
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Accrochage perdu contre ${foeName} (rapport de terrain)`:`Skirmish lost against ${foeName} (field report)`), location:null, type:'combat', outcome:'lose' });
+  }
+  return win;
+}
+
 function hpColor(pct){ return pct>55 ? 'var(--green)' : (pct>25 ? 'var(--gold)' : '#ff3b5c'); }
 function battleFrameInner(charObj){
   const name = S.lang==='fr'?charObj.fr:charObj.en;
@@ -2807,7 +2845,9 @@ function afterMissionRender(mission){
     startBattle(mission, (win)=>{ S.pendingBattleWin = win; maybeTriggerConversation(); });
     return;
   }
+  if(mission && mission.type==='combat'){ S.pendingBattleWin = resolveBattleOffscreen(mission); }
   const epicness = missionEpicness(mission);
+
   if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
   else { maybeTriggerConversation(); }
 }
