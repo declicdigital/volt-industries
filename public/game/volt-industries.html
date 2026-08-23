@@ -1422,7 +1422,96 @@ const MENTOR_MISSIONS = [
       { fr:"Ignorer les signes avant-coureurs, trop pris par autre chose.", en:"Ignore the warning signs, too caught up in other things.", eff:{align:-4}, recruit:'villain' },
       { fr:"La confronter durement, au risque de la braquer.", en:"Confront her harshly, risking pushing her away.", eff:{align:1}, recruit:'neutral' },
     ]},
+  { id:'mentor_premiere_sortie', tagFr:'Formation', tagEn:'Training', fr:"{name} rejoint ton programme et reclame sa premiere sortie sur le terrain, tout de suite.", en:"{name} joins your program and demands a first field deployment, right now.",
+    choices:[
+      { fr:"L'emmener en soutien, poste d'observation seulement.", en:"Take them along as support, observation post only.", eff:{align:3, intelligence:2}, recruit:'hero' },
+      { fr:"Le/la lacher en premiere ligne pour voir ce qu'il/elle vaut.", en:"Drop them on the front line to see what they're worth.", eff:{align:-2, courage:3}, recruit:'villain' },
+      { fr:"Refuser : six mois de simulateur avant le reel.", en:"Refuse: six months of simulator before the real thing.", eff:{intelligence:4, popularity:-1}, recruit:'neutral' },
+    ]},
+  { id:'mentor_protocole', tagFr:'Formation', tagEn:'Training', fr:"{name} improvise pendant un exercice et desamorce la crise hors protocole. Le rapport doit etre signe.", en:"{name} improvises during a drill and defuses the crisis off-protocol. The report needs your signature.",
+    choices:[
+      { fr:"Couvrir l'initiative et l'inscrire comme doctrine.", en:"Back the initiative and log it as doctrine.", eff:{align:3, popularity:3, rel:{volt:2}}, recruit:'hero' },
+      { fr:"Sanctionner pour l'exemple, meme si ca a marche.", en:"Sanction for the example, even though it worked.", eff:{align:-1, intelligence:2}, recruit:'neutral' },
+      { fr:"Reecrire le rapport a ton nom.", en:"Rewrite the report under your own name.", eff:{align:-5, popularity:4}, recruit:'villain' },
+    ]},
+  { id:'mentor_lignee', tagFr:'Formation', tagEn:'Training', fr:"{name} te demande de lui transmettre ta technique de signature, celle que personne d'autre ne maitrise.", en:"{name} asks you to pass down your signature technique, the one nobody else masters.",
+    choices:[
+      { fr:"Tout transmettre, sans rien garder pour toi.", en:"Pass everything down, keeping nothing back.", eff:{align:5, intelligence:3, popularity:2}, recruit:'hero' },
+      { fr:"N'enseigner que la moitie : garder ton avantage.", en:"Teach only half: keep your edge.", eff:{align:-3, intelligence:3}, recruit:'neutral' },
+      { fr:"Lui apprendre la version instable, plus destructrice.", en:"Teach the unstable version, far more destructive.", eff:{align:-5, courage:3}, recruit:'villain' },
+    ]},
+  { id:'mentor_bavure', tagFr:'Formation', tagEn:'Training', fr:"Sur sa troisieme mission, {name} blesse un civil. Les images circulent deja.", en:"On their third mission, {name} injures a civilian. The footage is already circulating.",
+    choices:[
+      { fr:"Assumer publiquement a sa place et l'encadrer davantage.", en:"Take public responsibility instead of them and tighten the coaching.", eff:{align:6, popularity:-3}, recruit:'hero' },
+      { fr:"Laisser la recrue affronter seule les consequences.", en:"Let the recruit face the consequences alone.", eff:{align:-2, intelligence:2}, recruit:'neutral' },
+      { fr:"Faire disparaitre les images par tous les moyens.", en:"Make the footage disappear by any means.", eff:{align:-6, intelligence:4}, recruit:'villain' },
+    ]},
+  { id:'mentor_peur', tagFr:'Formation', tagEn:'Training', fr:"{name} se bloque au moment d'entrer dans la breche. La peur, brute, devant tout le monde.", en:"{name} freezes at the mouth of the breach. Raw fear, in front of everyone.",
+    choices:[
+      { fr:"Entrer avec lui/elle, main sur l'epaule, sans un mot de reproche.", en:"Walk in together, hand on the shoulder, not a word of blame.", eff:{align:5, courage:3}, recruit:'hero' },
+      { fr:"Le/la pousser physiquement a l'interieur.", en:"Physically push them inside.", eff:{align:-4, courage:2}, recruit:'died' },
+      { fr:"Le/la renvoyer a l'arriere pour cette fois.", en:"Send them to the rear for this one.", eff:{popularity:-1, intelligence:1}, recruit:'neutral' },
+    ]},
+  { id:'mentor_ambition', tagFr:'Formation', tagEn:'Training', fr:"{name} progresse plus vite que prevu et parle deja de fonder sa propre unite.", en:"{name} is progressing faster than expected and already talks about founding their own unit.",
+    choices:[
+      { fr:"L'encourager et lui ouvrir tes contacts.", en:"Encourage them and open up your contacts.", eff:{align:4, popularity:3}, recruit:'hero' },
+      { fr:"Freiner l'ascension : trop tot, trop vite.", en:"Slow the rise: too early, too fast.", eff:{align:-2, intelligence:2}, recruit:'neutral' },
+      { fr:"En faire ton executant plutot que ton egal.", en:"Make them your enforcer rather than your equal.", eff:{align:-5, popularity:2}, recruit:'villain' },
+    ]},
+  { id:'mentor_serment', tagFr:'Formation', tagEn:'Training', fr:"Ceremonie de serment : {name} doit choisir devant les archives de Volt Industries a quoi il/elle jure fidelite.", en:"Oath ceremony: before the Volt Industries archives, {name} must choose what to swear loyalty to.",
+    choices:[
+      { fr:"Au serment integral : les gens d'abord, toujours.", en:"The full oath: people first, always.", eff:{align:6, popularity:2}, recruit:'hero' },
+      { fr:"A toi personnellement, et a personne d'autre.", en:"To you personally, and to nobody else.", eff:{align:-4, courage:2, popularity:2}, recruit:'villain' },
+      { fr:"A rien : la fidelite se prouve sur le terrain.", en:"To nothing: loyalty is proven in the field.", eff:{intelligence:3}, recruit:'neutral' },
+    ]},
 ];
+
+/* ---------- Arcs de recrues : la suite de l'histoire, une fois formees ---------- */
+const RECRUIT_ARCS = [
+  { id:'arc_debut', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"{name} mene sa premiere operation en solo. Il/elle t'appelle en pleine action pour valider un choix.", en:"{name} leads a first solo operation and calls you mid-action to validate a call.",
+    choices:[
+      { fr:"Lui laisser trancher : c'est son terrain maintenant.", en:"Let them decide: it's their field now.", eff:{align:3, intelligence:2}, recruit:'hero' },
+      { fr:"Prendre le commandement a distance.", en:"Take remote command.", eff:{align:-1, intelligence:3, popularity:1}, recruit:'neutral' },
+      { fr:"Exiger qu'il/elle sacrifie l'objectif secondaire, civils inclus.", en:"Demand they sacrifice the secondary objective, civilians included.", eff:{align:-6, courage:2}, recruit:'villain' },
+    ]},
+  { id:'arc_depasse', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"{name} te bat en duel d'entrainement, devant toute l'unite. Le silence est total.", en:"{name} beats you in a training duel, in front of the whole unit. Total silence.",
+    choices:[
+      { fr:"Applaudir : ton eleve est devenu meilleur que toi.", en:"Applaud: your student has outgrown you.", eff:{align:5, popularity:3, courage:2}, recruit:'hero' },
+      { fr:"Demander une revanche immediate, sans regle.", en:"Demand an immediate rematch, no rules.", eff:{align:-3, courage:4}, recruit:'neutral' },
+      { fr:"L'humilier pour rappeler la hierarchie.", en:"Humiliate them to reassert the hierarchy.", eff:{align:-6, popularity:-2}, recruit:'villain' },
+    ]},
+  { id:'arc_debauche', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"Le camp adverse propose a {name} un contrat que tu ne peux pas egaler.", en:"The opposing camp offers {name} a contract you cannot match.",
+    choices:[
+      { fr:"Le/la laisser libre, sans rancune ni menace.", en:"Let them go free, no grudge, no threat.", eff:{align:4, popularity:-2}, recruit:'neutral' },
+      { fr:"Tout donner pour le/la garder : titre, moyens, terrain.", en:"Give everything to keep them: title, budget, territory.", eff:{align:2, popularity:3, intelligence:-1}, recruit:'hero' },
+      { fr:"Le/la faire discrediter avant qu'il/elle signe.", en:"Have them discredited before they sign.", eff:{align:-7, intelligence:4}, recruit:'villain' },
+    ]},
+  { id:'arc_trahison', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"Une fuite majeure porte la signature de {name}. Ton eleve t'a vendu.", en:"A major leak carries {name}'s signature. Your student sold you out.",
+    choices:[
+      { fr:"Ecouter ses raisons avant de juger.", en:"Hear their reasons before judging.", eff:{align:3, intelligence:3}, recruit:'neutral' },
+      { fr:"Le/la couvrir malgre tout : tu l'as forme(e).", en:"Cover for them anyway: you trained them.", eff:{align:4, popularity:-3}, recruit:'hero' },
+      { fr:"Faire un exemple definitif.", en:"Make a permanent example.", eff:{align:-9, courage:3}, recruit:'villain' },
+    ]},
+  { id:'arc_urgence', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"{name} est bloque(e) sous des decombres, avec deux minutes d'air. Un convoi civil est attaque au meme moment.", en:"{name} is pinned under rubble with two minutes of air. A civilian convoy is attacked at the same moment.",
+    choices:[
+      { fr:"Aller chercher ton eleve, quoi qu'il en coute.", en:"Go get your student, whatever the cost.", eff:{align:-1, courage:5, rel:{}}, recruit:'hero' },
+      { fr:"Sauver le convoi et envoyer une equipe pour lui/elle.", en:"Save the convoy and send a team for them.", eff:{align:5, intelligence:2}, recruit:'neutral' },
+      { fr:"Choisir la cible la plus rentable en image.", en:"Pick whichever target plays best on camera.", eff:{align:-6, popularity:4}, recruit:'died' },
+    ]},
+  { id:'arc_releve', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"{name} forme desormais ses propres recrues et te demande de valider sa methode : la tienne, en plus dure.", en:"{name} now trains their own recruits and asks you to sign off on their method: yours, but harsher.",
+    choices:[
+      { fr:"Corriger la methode et adoucir ce qui doit l'etre.", en:"Correct the method and soften what needs softening.", eff:{align:5, intelligence:3}, recruit:'hero' },
+      { fr:"Valider sans lire : tu lui fais confiance.", en:"Sign without reading: you trust them.", eff:{popularity:2}, recruit:'neutral' },
+      { fr:"L'encourager a durcir encore : la douleur forme.", en:"Push them to harden it further: pain forges.", eff:{align:-6, courage:3}, recruit:'villain' },
+    ]},
+  { id:'arc_heritage', tagFr:'Ancienne recrue', tagEn:'Former recruit', fr:"La presse designe {name} comme ton heritier/heritiere officiel(le). On te demande de confirmer en direct.", en:"The press names {name} your official heir. You're asked to confirm live on air.",
+    choices:[
+      { fr:"Confirmer et lui ceder le devant de la scene.", en:"Confirm and hand over the spotlight.", eff:{align:4, popularity:2}, recruit:'hero' },
+      { fr:"Rester evasif : ta carriere n'est pas finie.", en:"Stay vague: your career isn't over.", eff:{intelligence:2, popularity:1}, recruit:'neutral' },
+      { fr:"Nier tout lien et reprendre la lumiere.", en:"Deny any link and take the spotlight back.", eff:{align:-5, popularity:5}, recruit:'villain' },
+    ]},
+];
+
 
 /* ---------- Intrigues : scenarios sans combat (enquetes, politique, presse, secrets, vie privee) ---------- */
 const INTRIGUE_MISSIONS = [
