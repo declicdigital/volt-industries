@@ -2507,7 +2507,13 @@ function applyPreset(p){
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
+    <div class="ff-card" id="ffOpen">
+      <h4>${S.lang==='fr'?'&#9889; CREER MON PROPRE PERSONNAGE AVEC MON VISAGE':'&#9889; CREATE YOUR OWN CHARACTER FROM YOUR FACE'}</h4>
+      <p>${S.lang==='fr'?"Prends une photo avec ta camera ou importe une image : Volt Industries fabrique un super-heros (ou un villain) photo-realiste avec ton visage, puis tu personnalises son costume, son aura et ses pouvoirs."
+        :"Take a selfie or upload a photo: Volt Industries forges a photoreal hero (or villain) with your own face, then you customize suit, aura and powers."}</p>
+    </div>
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
+  d.querySelector('#ffOpen').onclick = ()=>{ S.screen='faceforge'; render(); };
   const grid = d.querySelector('#presetGrid');
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
@@ -2526,6 +2532,300 @@ function screenProfileChoice(){
   }).join('');
 
   grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
+  return d;
+}
+
+/* ================= FACE FORGE : creation du perso a partir d'une photo ================= */
+const FF_ARCH = {
+  armure:{ fr:'Armure high-tech', en:'High-tech armor', morphology:'armure', path:'tech', powers:['armure','rayons'],
+    stats:{courage:6,intelligence:12,popularity:6},
+    perkFr:'Blindage Volt : degats recus reduits', perkEn:'Volt plating: reduced incoming damage',
+    flawFr:'Maintenance lourde : recuperation plus lente', flawEn:'Heavy maintenance: slower recovery',
+    promptFr:'sleek powered exo-armor with segmented plating, glowing energy reactor on the chest, articulated pauldrons' },
+  colosse:{ fr:'Colosse', en:'Juggernaut', morphology:'colosse', path:'physique', powers:['force','regen'],
+    stats:{courage:14,intelligence:2,popularity:6},
+    perkFr:'Puissance brute : coups physiques majores', perkEn:'Raw power: boosted physical strikes',
+    flawFr:'Peu discret : infiltrations difficiles', flawEn:'Not subtle: infiltration is hard',
+    promptFr:'massive reinforced battle harness over heavy muscular build, torn cape, scarred armor bracers' },
+  agile:{ fr:'Acrobate urbain', en:'Urban acrobat', morphology:'elance', path:'physique', powers:['vitesse','saut'],
+    stats:{courage:9,intelligence:7,popularity:10},
+    perkFr:'Reflexes surhumains : esquive accrue', perkEn:'Superhuman reflexes: better dodging',
+    flawFr:'Corps fragile : blessures plus graves', flawEn:'Fragile frame: worse injuries',
+    promptFr:'skin-tight reinforced kevlar-weave suit with webbed panel lines, wrist gauntlets, athletic silhouette' },
+  mystique:{ fr:'Mystique', en:'Mystic', morphology:'humain', path:'mystique', powers:['elementaire','projection'],
+    stats:{courage:8,intelligence:11,popularity:5},
+    perkFr:'Arcanes : sorts devastateurs', perkEn:'Arcana: devastating spells',
+    flawFr:'Cout mystique : energie instable', flawEn:'Mystic cost: unstable energy',
+    promptFr:'layered ritual robes and levitating cloak, glowing arcane sigils spinning around the hands, amulet' },
+  psy:{ fr:'Psionique', en:'Psionic', morphology:'elance', path:'psychique', powers:['telepathie','telekinesie'],
+    stats:{courage:5,intelligence:14,popularity:7},
+    perkFr:'Esprit-forteresse : controle mental', perkEn:'Fortress mind: mental control',
+    flawFr:'Surcharge : migraines apres combat', flawEn:'Overload: post-fight migraines',
+    promptFr:'minimalist smart-fiber bodysuit with luminous neural circuitry, floating psionic halo of light around the temples' },
+  ombre:{ fr:'Operateur furtif', en:'Stealth operator', morphology:'elance', path:'tech', powers:['vitesse','illusions'],
+    stats:{courage:10,intelligence:9,popularity:3},
+    perkFr:'Ombre : premier coup souvent gagnant', perkEn:'Shadow: often strikes first',
+    flawFr:'Solitaire : moins de soutien allie', flawEn:'Loner: less ally support',
+    promptFr:'matte black tactical stealth suit with harness, holstered gear, hooded half-mask and glowing visor line' }
+};
+const FF_MASK = { aucun:{fr:'Visage decouvert',en:'No mask',p:'face fully uncovered and clearly visible'},
+  demi:{fr:'Demi-masque',en:'Half mask',p:'half mask covering only the lower jaw, eyes and upper face fully visible'},
+  domino:{fr:'Loup / domino',en:'Domino mask',p:'thin domino eye mask, the rest of the face fully visible'} };
+const FF_AURA = { neon:{fr:'Aura neon',en:'Neon aura',p:'crackling neon energy arcs around the body'},
+  fumee:{fr:'Fumee',en:'Smoke',p:'swirling smoke and embers around the body'},
+  aucune:{fr:'Aucune',en:'None',p:'no supernatural effects, grounded realism'} };
+const FF = { photo:null, results:[], sel:-1, side:'hero', arch:'armure', color:'#00e5ff', cape:true, mask:'demi', aura:'neon', busy:false, err:'', camStream:null };
+const FF_COLORS = ['#00e5ff','#ff2d55','#7c5cff','#ffd166','#22c55e','#ff7a1a','#e5e7eb','#ff4fd8'];
+
+function ffStopCam(){ if(FF.camStream){ FF.camStream.getTracks().forEach(t=>t.stop()); FF.camStream=null; } }
+
+function ffPrompt(){
+  const a = FF_ARCH[FF.arch];
+  const side = FF.side==='villain'
+    ? 'a menacing supervillain, intimidating and darkly charismatic'
+    : 'a heroic superhero, confident and inspiring';
+  return [
+    'Ultra photorealistic cinematic movie still, shot on 85mm lens, shallow depth of field, dramatic volumetric rim lighting, high dynamic range, film grain, 8k detail.',
+    'Full upper-body portrait (head to waist) of ' + side + ' standing in a dark futuristic laboratory hangar.',
+    'CRITICAL: keep the EXACT face, facial features, skin tone, age, hair and identity of the person in the reference photo. Do not beautify, do not change ethnicity or gender, do not replace the face. It must be immediately recognizable as the same real human being.',
+    'Costume: ' + a.promptFr + '. Primary suit color ' + FF.color + ' with dark charcoal and metallic accents.',
+    FF.cape ? 'Wearing a long dramatic cape catching the wind.' : 'No cape.',
+    FF_MASK[FF.mask].p + '.',
+    FF_AURA[FF.aura].p + '.',
+    'Real practical costume made of real materials, live-action blockbuster production design, no cartoon, no 3d render, no illustration, no anime, no video game look, no text, no logo, no watermark.'
+  ].join(' ');
+}
+
+async function ffDownscale(dataUrl, maxW, maxH, quality){
+  return new Promise((res)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const r = Math.min(maxW/img.width, maxH/img.height, 1);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width*r); c.height = Math.round(img.height*r);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg', quality||0.85));
+    };
+    img.onerror = ()=>res(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function ffGenerate(onFrame){
+  const body = { image: FF.photo, prompt: ffPrompt() };
+  const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:true}, body)) });
+  if(!res.ok || !res.body) throw new Error('HTTP ' + res.status + ' ' + (await res.text().catch(()=>'')));
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', sawAny = false, sawFinal = false, streamError = '';
+  const handle = (evName, dataStr)=>{
+    let payload = null; try{ payload = JSON.parse(dataStr); }catch(e){ return; }
+    if(evName === 'error' || (payload && payload.type === 'error')){
+      sawAny = true; streamError = (payload && payload.error && payload.error.message) || 'generation failed'; return;
+    }
+    if(!payload || !payload.b64_json) return;
+    const isFinal = /completed$/.test(evName || '') || /completed$/.test(payload.type || '');
+    sawAny = true; if(isFinal) sawFinal = true;
+    onFrame('data:image/png;base64,' + payload.b64_json, isFinal);
+  };
+  while(true){
+    const r = await reader.read();
+    if(r.done) break;
+    buf += dec.decode(r.value, {stream:true});
+    let idx;
+    while((idx = buf.indexOf('\n\n')) >= 0){
+      const raw = buf.slice(0, idx); buf = buf.slice(idx+2);
+      let ev = '', data = '';
+      raw.split('\n').forEach(line=>{
+        if(line.indexOf('event:')===0) ev = line.slice(6).trim();
+        else if(line.indexOf('data:')===0) data += line.slice(5).trim();
+      });
+      if(data && data !== '[DONE]') handle(ev, data);
+    }
+  }
+  if(streamError) throw new Error(streamError);
+  if(!sawAny){
+    const rep = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:false}, body)) });
+    if(!rep.ok) throw new Error('HTTP ' + rep.status);
+    const j = await rep.json();
+    const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
+    if(!b64) throw new Error('no image');
+    onFrame('data:image/png;base64,' + b64, true);
+    return;
+  }
+  if(!sawFinal) throw new Error('stream ended without a final image');
+}
+
+function screenFaceForge(){
+  const fr = S.lang==='fr';
+  const d = document.createElement('div');
+  const col = FF.side==='villain' ? '#ff2d55' : '#00e5ff';
+  d.style.setProperty('--ff-col', FF.color || col);
+  d.innerHTML = `<span class="eyebrow">${fr?'CREATION':'CREATION'}</span>
+    <h2>${fr?'Forge ton personnage':'Forge your character'}</h2>
+    <p class="lead">${fr?"1. Ta photo. 2. Ton camp et ton style. 3. Volt Industries genere un rendu photo-realiste avec ton visage. Tu peux relancer autant de fois que tu veux."
+      :"1. Your photo. 2. Faction and style. 3. Volt Industries renders a photoreal version of you. Regenerate as often as you like."}</p>
+    <div class="ff-grid">
+      <div>
+        <div class="ff-stage beam" id="ffStage"></div>
+        <div class="ff-opt" style="margin-top:10px;">
+          <button class="btn ghost" id="ffUpload" style="font-size:12px; padding:9px 14px;">${fr?'Importer une photo':'Upload a photo'}</button>
+          <button class="btn ghost" id="ffCam" style="font-size:12px; padding:9px 14px;">${fr?'Prendre une photo':'Take a photo'}</button>
+        </div>
+        <input type="file" accept="image/*" id="ffFile" style="display:none;">
+        <div class="ff-thumbs" id="ffThumbs"></div>
+        <div class="ff-err" id="ffErr"></div>
+      </div>
+      <div>
+        <div class="ff-lab">${fr?'CAMP':'FACTION'}</div>
+        <div class="ff-opt" id="ffSide">
+          <div class="ff-chip ${FF.side==='hero'?'on':''}" data-v="hero">HERO</div>
+          <div class="ff-chip ${FF.side==='villain'?'on':''}" data-v="villain">VILLAIN</div>
+        </div>
+        <div class="ff-lab">${fr?'ARCHETYPE':'ARCHETYPE'}</div>
+        <div class="ff-opt" id="ffArch">${Object.keys(FF_ARCH).map(k=>`<div class="ff-chip ${FF.arch===k?'on':''}" data-v="${k}">${fr?FF_ARCH[k].fr:FF_ARCH[k].en}</div>`).join('')}</div>
+        <div class="ff-lab">${fr?'COULEUR DU COSTUME':'SUIT COLOR'}</div>
+        <div class="ff-opt" id="ffCol">${FF_COLORS.map(c=>`<div class="ff-sw ${FF.color===c?'on':''}" data-v="${c}" style="background:${c}; color:${c};"></div>`).join('')}</div>
+        <div class="ff-lab">${fr?'MASQUE':'MASK'}</div>
+        <div class="ff-opt" id="ffMask">${Object.keys(FF_MASK).map(k=>`<div class="ff-chip ${FF.mask===k?'on':''}" data-v="${k}">${fr?FF_MASK[k].fr:FF_MASK[k].en}</div>`).join('')}</div>
+        <div class="ff-lab">${fr?'AURA':'AURA'}</div>
+        <div class="ff-opt" id="ffAura">${Object.keys(FF_AURA).map(k=>`<div class="ff-chip ${FF.aura===k?'on':''}" data-v="${k}">${fr?FF_AURA[k].fr:FF_AURA[k].en}</div>`).join('')}</div>
+        <div class="ff-lab">${fr?'CAPE':'CAPE'}</div>
+        <div class="ff-opt" id="ffCape">
+          <div class="ff-chip ${FF.cape?'on':''}" data-v="1">${fr?'Avec cape':'With cape'}</div>
+          <div class="ff-chip ${!FF.cape?'on':''}" data-v="0">${fr?'Sans cape':'No cape'}</div>
+        </div>
+        <div class="pstats" id="ffStats" style="margin-top:16px;"></div>
+        <div class="ptrait good" id="ffPerk"></div>
+        <div class="ptrait bad" id="ffFlaw"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="ffBack">&lt;- ${t('back')}</button>
+      <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage':'Generate my character'}</button>
+      <button class="btn cyan" id="ffUse" style="display:none;">${fr?'Utiliser ce personnage ->':'Use this character ->'}</button>
+    </div>`;
+
+  const stage = d.querySelector('#ffStage');
+  const errEl = d.querySelector('#ffErr');
+  const genBtn = d.querySelector('#ffGen');
+  const useBtn = d.querySelector('#ffUse');
+  const thumbs = d.querySelector('#ffThumbs');
+  const fileInput = d.querySelector('#ffFile');
+
+  const refreshTraits = ()=>{
+    const a = FF_ARCH[FF.arch];
+    const sign = (v)=>(v>0?'+':'')+v;
+    d.querySelector('#ffStats').innerHTML = `CRG ${sign(a.stats.courage)} &middot; INT ${sign(a.stats.intelligence)} &middot; POP ${sign(a.stats.popularity)}`;
+    d.querySelector('#ffPerk').textContent = '+ ' + (fr?a.perkFr:a.perkEn);
+    d.querySelector('#ffFlaw').textContent = '- ' + (fr?a.flawFr:a.flawEn);
+  };
+  const paintStage = ()=>{
+    const shown = FF.sel >= 0 ? FF.results[FF.sel] : FF.photo;
+    stage.classList.remove('loading');
+    stage.innerHTML = shown ? `<img src="${shown}" alt="portrait">`
+      : `<div class="ff-empty">${fr?'Aucune photo pour le moment.<br>Importe une image ou utilise ta camera.':'No photo yet.<br>Upload an image or use your camera.'}</div>`;
+    thumbs.innerHTML = FF.results.map((r,i)=>`<img src="${r}" data-i="${i}" class="${FF.sel===i?'on':''}">`).join('');
+    thumbs.querySelectorAll('img').forEach(im=>{ im.onclick=()=>{ FF.sel = +im.dataset.i; paintStage(); }; });
+    useBtn.style.display = FF.sel >= 0 ? '' : 'none';
+    genBtn.textContent = FF.results.length ? (fr?'Relancer une variante':'Generate another take') : (fr?'Generer mon personnage':'Generate my character');
+  };
+  const chips = (sel, apply)=>{
+    d.querySelectorAll(sel + ' .ff-chip, ' + sel + ' .ff-sw').forEach(el=>{
+      el.onclick = ()=>{ apply(el.dataset.v); ffStopCam(); render(); };
+    });
+  };
+  chips('#ffSide', v=>{ FF.side=v; FF.color = v==='villain' ? '#ff2d55' : '#00e5ff'; });
+  chips('#ffArch', v=>{ FF.arch=v; });
+  chips('#ffCol', v=>{ FF.color=v; });
+  chips('#ffMask', v=>{ FF.mask=v; });
+  chips('#ffAura', v=>{ FF.aura=v; });
+  chips('#ffCape', v=>{ FF.cape = v==='1'; });
+
+  d.querySelector('#ffUpload').onclick = ()=> fileInput.click();
+  fileInput.onchange = async ()=>{
+    const f = fileInput.files && fileInput.files[0];
+    if(!f) return;
+    errEl.textContent = '';
+    const raw = await new Promise(r=>{ const fr2 = new FileReader(); fr2.onload=()=>r(fr2.result); fr2.readAsDataURL(f); });
+    FF.photo = await ffDownscale(raw, 1024, 1024, 0.9);
+    FF.sel = -1; paintStage();
+  };
+
+  d.querySelector('#ffCam').onclick = async ()=>{
+    errEl.textContent = '';
+    try{
+      ffStopCam();
+      FF.camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:{ideal:1280}, height:{ideal:1280} }, audio:false });
+      stage.innerHTML = '';
+      const v = document.createElement('video'); v.autoplay = true; v.playsInline = true; v.muted = true;
+      v.srcObject = FF.camStream; stage.appendChild(v);
+      const shot = document.createElement('button'); shot.className = 'btn cyan'; shot.style.cssText='position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:12px; padding:9px 16px; z-index:3;';
+      shot.textContent = fr?'Capturer':'Capture';
+      shot.onclick = async ()=>{
+        const c = document.createElement('canvas');
+        const w = v.videoWidth || 720, h = v.videoHeight || 960;
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(v, 0, 0, w, h);
+        ffStopCam();
+        FF.photo = await ffDownscale(c.toDataURL('image/jpeg', 0.92), 1024, 1024, 0.9);
+        FF.sel = -1; paintStage();
+      };
+      stage.appendChild(shot);
+    }catch(e){
+      errEl.textContent = fr ? "Camera indisponible (autorisation refusee ou appareil non supporte). Importe une photo a la place."
+        : "Camera unavailable (permission denied or unsupported). Upload a photo instead.";
+    }
+  };
+
+  genBtn.onclick = async ()=>{
+    if(FF.busy) return;
+    if(!FF.photo){ errEl.textContent = fr?"Ajoute d'abord une photo de ton visage.":"Add a photo of your face first."; return; }
+    ffStopCam();
+    FF.busy = true; errEl.textContent = '';
+    genBtn.disabled = true;
+    const label = fr?'FORGE EN COURS... (30 a 60 s)':'FORGING... (30-60 s)';
+    stage.classList.add('loading');
+    stage.innerHTML = `<img src="${FF.photo}" alt="base"><div class="ff-progress">${label}</div>`;
+    try{
+      let last = null;
+      await ffGenerate((url, isFinal)=>{
+        last = url;
+        stage.innerHTML = `<img src="${url}" alt="portrait">` + (isFinal?'':`<div class="ff-progress">${label}</div>`);
+        if(isFinal) stage.classList.remove('loading'); else stage.classList.add('loading');
+      });
+      if(last){
+        const small = await ffDownscale(last, 720, 960, 0.88);
+        FF.results.push(small); FF.sel = FF.results.length - 1;
+      }
+    }catch(e){
+      errEl.textContent = (fr?'Echec de la generation : ':'Generation failed: ') + (e && e.message ? e.message : e);
+    }
+    FF.busy = false; genBtn.disabled = false;
+    paintStage();
+  };
+
+  useBtn.onclick = ()=>{
+    const a = FF_ARCH[FF.arch];
+    const img = FF.results[FF.sel];
+    const nm = fr?'Mon personnage':'My character';
+    applyPreset({
+      id:'custom', charKey:null, side:FF.side, img,
+      nameFr:nm, nameEn:nm, heroFr:S.heroName || nm, heroEn:S.heroName || nm,
+      morphology:a.morphology, path:a.path, powers:a.powers,
+      align: FF.side==='villain' ? -30 : 30,
+      stats:a.stats, perkFr:a.perkFr, perkEn:a.perkEn, flawFr:a.flawFr, flawEn:a.flawEn,
+      look:{ suitColor:FF.color, aura:FF.aura==='aucune'?'aucune':'neon', cape: FF.cape?'longue':'aucune' },
+      descFr:fr?FF_ARCH[FF.arch].fr:'', descEn:FF_ARCH[FF.arch].en
+    });
+    S.heroName = '';
+    ffStopCam();
+    S.screen = 'name'; render();
+  };
+
+  d.querySelector('#ffBack').onclick = ()=>{ ffStopCam(); S.screen='profileChoice'; render(); };
+
+  refreshTraits(); paintStage();
   return d;
 }
 function screenName(){
