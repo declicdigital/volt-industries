@@ -3114,7 +3114,8 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  S.mentorCap = S.years>=14 ? Math.max(0, Math.floor((S.years-8)/6)) : 0;
+  S.mentorCap = Math.max(1, Math.floor(S.years/5));
+  S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
 }
@@ -3179,7 +3180,54 @@ function pickMission(){
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
   return Object.assign({}, m, { location: { name: randLocationName(), type: m.scope||1 } });
 }
-function shouldTriggerMentor(){ if(S.mode!=='long') return false; if(S.currentYear < 10) return false; if(S.mentorCount >= S.mentorCap) return false; return Math.random() < 0.22; }
+/* ---------- Recrues : ce sont les figures historiques de Volt Industries / PERDITION ---------- */
+function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
+function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
+function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
+function recruitCandidates(){
+  const taken = menteeKeys();
+  const side = recruitSideKey();
+  return NPC_ONLY_KEYS.filter(k=>{
+    if(k===S.playerCharKey || taken.includes(k)) return false;
+    if(S.romance && S.romance.active && S.romance.charKey===k) return false;
+    return CHARACTERS[k] && CHARACTERS[k].align===side;
+  });
+}
+function shouldTriggerMentor(){
+  if(S.currentYear < 5) return false;
+  if(S.mentorCount >= (S.mentorCap||1)) return false;
+  if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 3) return false;
+  if(!recruitCandidates().length) return false;
+  return Math.random() < 0.34;
+}
+function shouldTriggerRecruitArc(){
+  if(S.currentYear < 6) return false;
+  if(!livingMentees().length) return false;
+  if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 2) return false;
+  return Math.random() < 0.30;
+}
+function startMentorScene(){
+  const cands = recruitCandidates(); if(!cands.length) return false;
+  const key = pick(cands); const c = CHARACTERS[key];
+  const usedIds = S.usedMentorIds || (S.usedMentorIds=[]);
+  let pool = MENTOR_MISSIONS.filter(m=>!usedIds.includes(m.id));
+  if(!pool.length){ S.usedMentorIds = []; pool = MENTOR_MISSIONS.slice(); }
+  const m = pick(pool); S.usedMentorIds.push(m.id);
+  S.mentorCount += 1; S.lastMentorYear = S.currentYear;
+  S.currentMission = Object.assign({}, m, { recruitKey:key, recruitName:(S.lang==='fr'?c.fr:c.en), arc:false });
+  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+}
+function startRecruitArc(){
+  const live = livingMentees(); if(!live.length) return false;
+  const mentee = pick(live); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
+  const usedIds = S.usedArcIds || (S.usedArcIds=[]);
+  let pool = RECRUIT_ARCS.filter(m=>!usedIds.includes(m.id+':'+mentee.charKey));
+  if(!pool.length){ pool = RECRUIT_ARCS.slice(); }
+  const m = pick(pool); S.usedArcIds.push(m.id+':'+mentee.charKey);
+  S.lastArcYear = S.currentYear;
+  S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:(S.lang==='fr'?c.fr:c.en), arc:true });
+  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+}
 function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 2) return false;
@@ -3202,10 +3250,8 @@ function nextMission(){
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
-  if(shouldTriggerMentor()){
-    S.mentorCount += 1; const pool = shuffle(MENTOR_MISSIONS); const m = pool[0]; const name = randRecruitName();
-    S.currentMission = Object.assign({}, m, { recruitName:name }); S.screen='mentor'; render(); maybeTriggerConversation(); return;
-  }
+  if(shouldTriggerMentor() && startMentorScene()) return;
+  if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   S.pendingBattleWin = null;
   S.currentMission = pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
