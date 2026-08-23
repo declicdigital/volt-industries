@@ -2959,7 +2959,8 @@ function screenFaceForge(){
     </div>
     <div class="actions">
       <button class="btn ghost" id="ffBack">&lt;- ${t('back')}</button>
-      <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage':'Generate my character'}</button>
+      <button class="btn ${FF.side==='villain'?'red':'cyan'}" id="ffGen">${fr?'Generer mon personnage (IA)':'Generate my character (AI)'}</button>
+      <button class="btn ghost" id="ffLocal">${fr?'Forge instantanee (sans IA)':'Instant forge (no AI)'}</button>
       <button class="btn cyan" id="ffUse" style="display:none;">${fr?'Utiliser ce personnage ->':'Use this character ->'}</button>
     </div>`;
 
@@ -3058,8 +3059,26 @@ function screenFaceForge(){
       }
     }catch(e){
       errEl.textContent = (e && e.message ? e.message : (fr?'Echec de la generation.':'Generation failed.'));
+      /* Plus de credits / IA bloquee : on bascule sur la forge locale gratuite */
+      try{
+        const out = await ffLocalForge();
+        FF.results.push(out); FF.sel = FF.results.length - 1;
+        errEl.textContent += fr?" Personnage forge en local (sans IA) a la place."
+          :" Character forged locally (no AI) instead.";
+      }catch(e2){}
     }
     FF.busy = false; genBtn.disabled = false;
+    paintStage();
+  };
+
+  d.querySelector('#ffLocal').onclick = async ()=>{
+    if(FF.busy) return;
+    if(!FF.photo){ errEl.textContent = fr?"Ajoute d'abord une photo de ton visage.":"Add a photo of your face first."; return; }
+    ffStopCam(); errEl.textContent = '';
+    try{
+      const out = await ffLocalForge();
+      FF.results.push(out); FF.sel = FF.results.length - 1;
+    }catch(e){ errEl.textContent = fr?'La forge locale a echoue. Reimporte une photo.':'Local forge failed. Re-import a photo.'; }
     paintStage();
   };
 
