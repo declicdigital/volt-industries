@@ -45,6 +45,10 @@
   .rank-badge .rlabel{ font-size:9.5px; font-weight:800; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-top:2px;}
   .rank-badge .stars{ margin-top:4px; font-size:15px; letter-spacing:2px; }
   .rank-badge .score-line{ margin-top:3px; font-size:13px; font-weight:900; }
+  .rank-badge .rlove{ margin-top:6px; display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    font-size:10.5px; font-weight:800; letter-spacing:.6px; }
+  .rank-badge .rlove .hb{ font-size:13px; animation:heartBeat 1.4s ease-in-out infinite; }
+  @keyframes heartBeat{ 0%,100%{ transform:scale(1); } 45%{ transform:scale(1.28); } }
   .game-shell{ display:flex; gap:26px; align-items:flex-start; }
   .side-avatar{ position:sticky; top:20px; width:300px; flex-shrink:0; }
   .main-col{ flex:1; min-width:0; }
