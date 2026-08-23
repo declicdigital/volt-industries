@@ -2332,7 +2332,7 @@ function foeStrength(foeKey, mission){
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
   const danger = (mission && mission.danger) || 1;
   const scope = (mission && mission.scope) || 1;
-  return Math.round(34 + danger*8 + scope*1.6 + (tier-24)*1.6);
+  return Math.round(30 + danger*7 + scope*1.6 + (tier-24)*1.4 + (charTier(foeKey)-5)*6);
 }
 function winOdds(foeKey, mission){
   const diff = playerStrength() - foeStrength(foeKey, mission);
