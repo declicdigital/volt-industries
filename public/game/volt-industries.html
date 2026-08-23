@@ -4453,7 +4453,7 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${S.turningPoints.length}</div><div class="klabel">${isFr?'Basculements':'Side switches'}</div></div>
     <div class="kpi"><div class="kval">${computePowerLevel()}</div><div class="klabel">${t('power')}</div></div>
     <div class="kpi"><div class="kval">${statAvg}</div><div class="klabel">${isFr?'Moyenne des stats':'Average stats'}</div></div>
-    <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?'Histoires d\\'amour':'Romances'}</div></div></div>
+    <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?"Histoires d'amour":'Romances'}</div></div></div>
     <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>` : '';
   const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
