@@ -118,11 +118,17 @@
   .death-banner{ border:1.5px solid var(--red); background:rgba(255,59,92,.08); border-radius:18px; padding:22px; text-align:center; margin-bottom:22px;}
   .death-banner .dtitle{ font-size:20px; font-weight:900; letter-spacing:2px; color:var(--red); }
   .turn-item{ font-size:13.5px; color:#c3cee2; padding:8px 0; border-bottom:1px dashed var(--line); }
-  .preset-card{ border:1.5px solid var(--line); border-radius:16px; padding:14px; background:rgba(255,255,255,.02); cursor:pointer; transition:.15s; text-align:center; }
-  .preset-card:hover{ border-color:var(--accent); transform:translateY(-3px); }
-  .preset-card .pname{ font-weight:900; font-size:14px; margin-top:8px; }
-  .preset-card .pdesc{ font-size:11.5px; color:var(--dim); margin-top:4px; line-height:1.4;}
+  .preset-card{ border:1.5px solid var(--line); border-radius:16px; padding:0 0 14px; background:rgba(255,255,255,.02); cursor:pointer; transition:.15s; text-align:center; overflow:hidden; }
+  .preset-card:hover{ border-color:var(--pc-color, var(--accent)); transform:translateY(-3px); box-shadow:0 0 26px -8px var(--pc-color, var(--accent)); }
+  .preset-card .pname{ font-weight:900; font-size:14px; margin-top:10px; padding:0 12px; }
+  .preset-card .pdesc{ font-size:11.5px; color:var(--dim); margin-top:4px; line-height:1.4; padding:0 12px; }
+  .preset-photo{ position:relative; height:230px; overflow:hidden; background:radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--pc-color) 22%, transparent), rgba(0,0,0,.55)); }
+  .preset-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 14%; }
+  .preset-photo::after{ content:''; position:absolute; inset:0; box-shadow: inset 0 0 55px -12px var(--pc-color), inset 0 -40px 40px -30px rgba(0,0,0,.9); }
+  .preset-badge{ position:absolute; top:10px; left:10px; z-index:2; font-size:9.5px; font-weight:900; letter-spacing:1.4px;
+    padding:4px 8px; border-radius:999px; color:#0a0d14; background:var(--pc-color); box-shadow:0 0 14px var(--pc-color); }
   .preset-mini{ width:100%; display:flex; justify-content:center; }
+
   .scratch-card{ border:1.5px dashed var(--accent); border-radius:16px; padding:22px; text-align:center; cursor:pointer; background: var(--accent-soft); margin-bottom:18px; }
   .scratch-card .pname{ font-weight:900; font-size:16px; }
   .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
