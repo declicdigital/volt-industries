@@ -3037,13 +3037,21 @@ function maybeTriggerConversation(){
   if(maybeTriggerRomance()) return;
   const gap = S.currentYear - S.lastConvYear;
   const forced = gap >= 2;
-  if(forced || Math.random() < 0.5){
+  if(forced || Math.random() < 0.88){
     const keys = otherCharKeys();
     if(!keys.length) return;
-    const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
-    const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
-    const charKey = pool[Math.floor(Math.random()*pool.length)];
-    const conv = generateConversation(charKey);
+    let conv = null;
+    /* conversations signature : rares (12%), jamais deux fois la meme */
+    if(Math.random() < 0.12){
+      const sigPool = CONVERSATIONS.filter(cv=>!S.usedConvIds.includes(cv.id) && keys.includes(cv.charKey));
+      if(sigPool.length){ const sig = pick(sigPool); S.usedConvIds.push(sig.id); conv = sig; }
+    }
+    if(!conv){
+      const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
+      const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
+      const charKey = pool[Math.floor(Math.random()*pool.length)];
+      conv = generateConversation(charKey);
+    }
     if(!conv) return;
     S.activeConversation = conv; S.convLineIndex = 0;
     S.lastConvYear = S.currentYear;
