@@ -4467,7 +4467,12 @@ function screenEnd(){
   d.innerHTML = `
     ${S.dead ? `<div class="death-banner"><div class="dtitle">${t('inMemoriam')}</div><p class="lead" style="margin:8px auto 0;">${S.heroName} - ${t('diedAt')} ${t('year').toLowerCase()} ${S.deathInfo.year}. ${t('causeLabel')}: ${S.deathInfo.cause}.</p></div>` : ''}
     <span class="eyebrow">${t('endTitle')}</span><h1>${S.heroName}</h1>
-    <p class="lead" style="font-size:17px;">${S.lang==='fr'?endingFr:endingEn}</p>
+    <p class="lead" style="font-size:17px;">${S.lang==='fr'?endingFr:endingEn} ${(function(){
+      if(cs.total>=82) return isFr?`Les archives de Volt Industries classent cette carriere parmi les references.`:`Volt Industries' archives file this career among the references.`;
+      if(cs.total>=56) return isFr?`Les archives retiennent une carriere respectee, sans etre inoubliable.`:`The archives keep a respected career, though not an unforgettable one.`;
+      if(cs.total>=40) return isFr?`Les archives soulignent surtout les occasions manquees.`:`The archives mostly underline the missed opportunities.`;
+      return isFr?`Les archives, elles, retiennent surtout une longue serie de revers.`:`The archives, however, mostly remember a long run of setbacks.`;
+    })()}</p>
     ${S.team ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84)}</div>
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${factionName(S.team.side,S.team.tier)}</div></div>` : ''}
