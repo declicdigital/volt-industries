@@ -2402,6 +2402,7 @@ function screenSummary(){
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
     <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 45)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
   d.querySelector('#go').onclick=()=>{ nextMission(); };
