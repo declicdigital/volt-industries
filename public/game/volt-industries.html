@@ -2617,6 +2617,34 @@ function screenProfileChoice(){
     </div>
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
   d.querySelector('#ffOpen').onclick = ()=>{ S.screen='faceforge'; render(); };
+  /* Personnage perso deja forge : on le garde d'une partie a l'autre */
+  const saved = ffLoadCustom();
+  if(saved && saved.img){
+    const box = document.createElement('div');
+    box.className = 'ff-card';
+    box.style.borderColor = saved.side==='villain' ? 'var(--red)' : 'var(--cyan)';
+    box.innerHTML = `<div style="display:flex; gap:14px; align-items:center;">
+      <img src="${saved.img}" alt="perso" style="width:74px; height:74px; object-fit:cover; border-radius:12px; border:1px solid ${saved.side==='villain'?'#ff2d55':'#00e5ff'};">
+      <div style="flex:1; min-width:0;">
+        <h4 style="margin:0 0 4px;">${S.lang==='fr'?'&#9851; REPRENDRE MON PERSONNAGE':'&#9851; REUSE MY CHARACTER'}</h4>
+        <p style="margin:0;">${(saved.name || (S.lang==='fr'?'Ton personnage forge':'Your forged character'))} &middot; ${saved.side==='villain'?'VILLAIN':'HERO'} &middot; ${(FF_SEX[saved.sex]||FF_SEX.m)[S.lang==='fr'?'fr':'en']}</p>
+      </div></div>
+    <div class="ff-opt" style="margin-top:12px;">
+      <div class="ff-chip" data-sx="m">${S.lang==='fr'?'Homme':'Male'}</div>
+      <div class="ff-chip" data-sx="f">${S.lang==='fr'?'Femme':'Female'}</div>
+      <div class="ff-chip" data-del="1">${S.lang==='fr'?'Supprimer':'Delete'}</div>
+    </div>`;
+    box.querySelectorAll('.ff-chip').forEach(ch=>{
+      ch.onclick = (ev)=>{
+        ev.stopPropagation();
+        if(ch.dataset.del){ ffClearCustom(); render(); return; }
+        saved.sex = ch.dataset.sx; ffSaveCustom(saved); render();
+      };
+      if(ch.dataset.sx === saved.sex) ch.classList.add('on');
+    });
+    box.onclick = ()=>{ applyCustomCharacter(saved); S.heroName = saved.name || ''; S.screen='name'; render(); };
+    d.insertBefore(box, d.querySelector('#presetGrid'));
+  }
   const grid = d.querySelector('#presetGrid');
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
