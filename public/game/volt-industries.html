@@ -4621,7 +4621,11 @@ function introConversation(){
   const isVillain = (S.startSide==='villain') || (S.align < 0);
   const side = isVillain ? 'villain' : 'hero';
   const pack = INTRO_PACK[side];
-  const key = isVillain ? 'siddartha' : 'theg';
+  let key = isVillain ? 'siddartha' : 'theg';
+  if(key === S.playerCharKey){
+    const alt = NPC_KEYS.filter(k=>k!==S.playerCharKey && CHARACTERS[k].align === (isVillain?'villain':'hero'));
+    if(alt.length) key = alt[Math.floor(Math.random()*alt.length)];
+  }
   const fill = (s)=> String(s).split('{NAME}').join(S.heroName);
   const oi = Math.floor(Math.random()*pack.openFr.length);
   const mi = Math.floor(Math.random()*pack.midFr.length);
