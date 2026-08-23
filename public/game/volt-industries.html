@@ -252,6 +252,29 @@
   @keyframes cineZoomBig{ 0%{ opacity:0; transform:scale(1.6);} 60%{ opacity:1; transform:scale(.95);} 100%{ transform:scale(1);} }
   @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
+
+  /* --- Ecran VERSUS --- */
+  .vs-overlay{ position:fixed; inset:0; z-index:320; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; overflow:hidden; animation: cineIn .25s ease; }
+  .vs-overlay.vs-out{ animation: cineOut .45s ease forwards; }
+  .vs-overlay .vs-flash{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, var(--accent-soft), transparent 70%); animation: cinePulse 1.2s ease-in-out infinite; }
+  .vs-scope{ position:relative; z-index:2; font-size:11px; letter-spacing:6px; font-weight:800; color:var(--accent); text-shadow:0 0 16px var(--accent); }
+  .vs-row{ position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:min(4vw,34px); width:100%; padding:0 12px; }
+  .vs-side{ display:flex; align-items:center; gap:10px; flex:1; }
+  .vs-side.left{ justify-content:flex-end; }
+  .vs-side.right{ justify-content:flex-start; }
+  .vs-slot{ display:flex; flex-direction:column; align-items:center; gap:8px; max-width:150px; }
+  .vs-slot .conv-portrait{ width:min(30vw,140px); height:min(30vw,140px); margin:0; }
+  .vs-slot .conv-portrait.player svg, .vs-slot .conv-portrait.player .portrait-avatar{ width:100%; height:100%; }
+  .vs-slot .conv-portrait.player .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .vs-name{ font-size:11.5px; font-weight:900; letter-spacing:.5px; text-align:center; text-shadow:0 0 12px currentColor; }
+  .vs-mid{ font-size:clamp(30px,8vw,72px); font-weight:900; color:#fff; letter-spacing:2px;
+    text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
+  @media (max-width:560px){
+    .vs-row{ gap:10px; }
+    .vs-slot{ max-width:96px; }
+    .vs-slot .conv-portrait{ width:26vw; height:26vw; }
+  }
 </style>
 </head>
 <body>
@@ -929,10 +952,10 @@ function generateProceduralMission(rank){
   const type = pick(['combat','combat','rescue','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
-  const threat = pick(THREATS);
-  const stakes = pick(STAKES);
+  const threat = pickNoRepeat('threats', THREATS);
+  const stakes = pickNoRepeat('stakes', STAKES);
   const locName = randLocationName();
-  const pattern = pick(MISSION_SENTENCE_PATTERNS);
+  const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
@@ -942,7 +965,7 @@ function generateProceduralMission(rank){
     fr += ` ${c.fr} t'alerte personnellement de la situation.`;
     en += ` ${c.en} personally alerts you to the situation.`;
   }
-  const boldP = pick(CHOICE_PHRASES.bold), cleverP = pick(CHOICE_PHRASES.clever), selfishP = pick(CHOICE_PHRASES.selfish);
+  const boldP = pickNoRepeat('bold', CHOICE_PHRASES.bold), cleverP = pickNoRepeat('clever', CHOICE_PHRASES.clever), selfishP = pickNoRepeat('selfish', CHOICE_PHRASES.selfish);
   const fillT = (s, T) => s.replace('{t}', T);
   const choices = [
     { fr: fillT(boldP.fr, threat.fr), en: fillT(boldP.en, threat.en),
@@ -1039,10 +1062,10 @@ function generateVillainMission(rank){
   const type = pick(['combat','combat','rescue','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
-  const threat = pick(THREATS);
-  const stakes = pick(STAKES);
+  const threat = pickNoRepeat('threats', THREATS);
+  const stakes = pickNoRepeat('stakes', STAKES);
   const locName = randLocationName();
-  const pattern = pick(MISSION_SENTENCE_PATTERNS_VILLAIN);
+  const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? pick(otherCharKeys()) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
@@ -1052,7 +1075,7 @@ function generateVillainMission(rank){
     fr += ` ${c.fr} observe tes agissements de pres.`;
     en += ` ${c.en} is watching your actions closely.`;
   }
-  const ruthP = pick(CHOICE_PHRASES_VILLAIN.ruthless), calcP = pick(CHOICE_PHRASES_VILLAIN.calculating), hesP = pick(CHOICE_PHRASES_VILLAIN.hesitation);
+  const ruthP = pickNoRepeat('ruthless', CHOICE_PHRASES_VILLAIN.ruthless), calcP = pickNoRepeat('calculating', CHOICE_PHRASES_VILLAIN.calculating), hesP = pickNoRepeat('hesitation', CHOICE_PHRASES_VILLAIN.hesitation);
   const fillT = (s, T) => s.replace('{t}', T);
   const choices = [
     { fr: fillT(ruthP.fr, threat.fr), en: fillT(ruthP.en, threat.en),
@@ -1098,8 +1121,8 @@ const SIGNATURE_ROLE_TEMPLATES = [
 function generateSignatureMission(rank){
   const charKey = pick(otherCharKeys());
   const c = CHARACTERS[charKey];
-  const roleT = pick(SIGNATURE_ROLE_TEMPLATES);
-  const threat = pick(THREATS), stakes = pick(STAKES), locName = randLocationName();
+  const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
+  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
   const type = pick(['combat','combat','rescue','social']);
   const scope = pickScopeForRank(rank);
   const danger = dangerForScope(scope, type);
