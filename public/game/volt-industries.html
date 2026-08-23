@@ -4373,6 +4373,23 @@ function screenInvite(){
     const label = S.lang==='fr' ? `Tu as rejoint ${fname}.` : `You joined ${fname}.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero }); nextMission(); };
   d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
+  if(!JV.muted){
+    const zone = zoneOf(S.align);
+    const fits = (zone==='hero' && isHero) || (zone==='villain' && !isHero);
+    const txt = zone==='neutral'
+      ? jvL('Ta ligne n\'est pas encore fixee : signer ici la fige. Si tu veux garder le choix ouvert, refuse.',
+            'Your line isn\'t fixed yet: signing here locks it. If you want to keep options open, decline.')
+      : (fits ? jvL('Accepte : '+fname+' va exactement dans le sens de ce que tu es devenu. Refuser te coute des appuis.',
+                    'Accept: '+fname+' matches exactly what you have become. Declining costs you support.')
+              : jvL('Refuse : '+fname+' te tire a l\'oppose de ta ligne actuelle. Ce virage te couterait ta credibilite.',
+                    'Decline: '+fname+' pulls you against your current line. That turn would cost your credibility.'));
+    const tip = jvTipEl(txt);
+    const act = d.querySelector('.actions');
+    d.insertBefore(tip, act);
+    const rec = fits || zone==='neutral' ? null : null;
+    const target = zone==='neutral' ? d.querySelector('#decline') : (fits ? d.querySelector('#accept') : d.querySelector('#decline'));
+    if(target){ target.style.boxShadow = '0 0 26px -12px ' + jvColor(); target.style.borderColor = jvColor(); }
+  }
   return d;
 }
 /* Bilan d'annee : construit a partir de ce qui s'est reellement passe cette annee. */
