@@ -407,14 +407,30 @@ const MORPHOLOGIES = [
 const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none','standard','thruster','armored'];
 const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
 
-const CHARACTERS = {
-  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', img:null}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', img:null},
-  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', img:null}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', img:null},
-  malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', img:null}, mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', img:null},
-  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', img:null}, obsidian:{fr:"Obsidian",en:"Obsidian",align:'villain', img:null},
+const CHAR_IMG = {
+  char1:"/__l5e/assets-v1/cf2378dd-c610-4926-931c-b9c686868de5/char1.png",
+  char2:"/__l5e/assets-v1/ac6e7356-9e29-41bf-9a0b-d6845d9668e0/char2.png",
+  char3:"/__l5e/assets-v1/c85bed7f-dbc2-4c27-9705-2feada839811/char3.png",
+  char4:"/__l5e/assets-v1/c73ce399-db3d-48cc-b783-e8c798646ca3/char4.png",
+  char5:"/__l5e/assets-v1/a1110626-8508-441e-9aa9-12bfe8c01fc1/char5.png",
+  char6:"/__l5e/assets-v1/a5a1f131-fbd0-468e-858f-427b91401a02/char6.png",
+  char7:"/__l5e/assets-v1/1e7a2066-6dec-4835-86f0-8231cacba1e4/char7.png",
+  char8:"/__l5e/assets-v1/c582e6fa-37e3-4ab1-993f-78ff7809d4b7/char8.png",
+  char9:"/__l5e/assets-v1/861f3863-5d02-4954-96bf-f2d6e866593a/char9.png",
+  char10:"/__l5e/assets-v1/5bae346d-58b4-4f57-ad5d-07e08d962e5c/char10.png",
 };
-/* To use real portraits: set e.g. CHARACTERS.volt.img = "data:image/png;base64,...." (or a relative path)
-   once the PNGs are provided - the conversation overlay will automatically use them instead of the placeholder glyph. */
+const CHARACTERS = {
+  theg:{fr:"The G",en:"The G",align:'hero', img:CHAR_IMG.char10},
+  volt:{fr:"Cassius Volt",en:"Cassius Volt",align:'hero', img:CHAR_IMG.char1}, vaelor:{fr:"Vaelor Skoll",en:"Vaelor Skoll",align:'hero', img:CHAR_IMG.char5},
+  marsh:{fr:"Dr Elena Marsh",en:"Dr. Elena Marsh",align:'hero', img:CHAR_IMG.char7}, nyx:{fr:"Nyx",en:"Nyx",align:'hero', img:CHAR_IMG.char6},
+  aegis:{fr:"Aegis",en:"Aegis",align:'hero', img:CHAR_IMG.char3},
+  ferrum:{fr:"Ferrum",en:"Ferrum",align:'hero', img:CHAR_IMG.char4},
+  solen:{fr:"Kilian Solen",en:"Kilian Solen",align:'hero', img:CHAR_IMG.char9},
+  sable:{fr:"Sable",en:"Sable",align:'hero', img:CHAR_IMG.char2},
+  malachar:{fr:"Malachar le Sans-Dieu",en:"Malachar the Godless",align:'villain', img:null}, mandate:{fr:"Le Mandat",en:"The Mandate",align:'villain', img:null},
+  lorelei:{fr:"Lorelei",en:"Lorelei",align:'neutral', img:CHAR_IMG.char8}, obsidian:{fr:"Obsidian",en:"Obsidian",align:'villain', img:null},
+};
+
 
 /* ============================ FACTIONS (7 tiers per side) ============================ */
 const FACTIONS = {
