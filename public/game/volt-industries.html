@@ -3136,6 +3136,8 @@ function screenName(){
     S.civilName = d.querySelector('#civilName').value.trim() || S.civilName;
     S.heroName = d.querySelector('#heroName').value.trim() || S.heroName;
     if(!S.heroName){ d.querySelector('#heroName').style.borderColor='var(--red)'; return; }
+    /* On memorise le nom du personnage perso pour les parties suivantes */
+    if(S.presetId==='custom'){ const cc = ffLoadCustom(); if(cc){ cc.name = S.heroName; ffSaveCustom(cc); } }
     S.screen = S.usingPreset ? 'startside' : 'look'; render();
   };
   return d;
