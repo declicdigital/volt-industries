@@ -130,6 +130,9 @@
   .preset-mini{ width:100%; display:flex; justify-content:center; }
   .portrait-avatar{ width:100%; height:100%; min-height:200px; aspect-ratio:3/4; border-radius:12px; overflow:hidden; position:relative; }
   .portrait-avatar img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .pstats{ margin-top:8px; font-size:10.5px; font-weight:900; letter-spacing:1px; color:var(--pc-color); }
+  .ptrait{ margin-top:6px; font-size:11.5px; line-height:1.45; color:var(--muted); }
+  .ptrait.good{ color:#7ef0c0; } .ptrait.bad{ color:#ff9aa8; }
   .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
   .pgal{ grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); }
   .pgal .pitem{ position:relative; border:2px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; height:126px; background:rgba(255,255,255,.03); transition:.15s; }
@@ -319,7 +322,7 @@ const T = {
     brand:"VOLT INDUSTRIES", welcomeEyebrow:"Programme d'entrainement experimental", welcomeTitle:"Bienvenue chez VOLT INDUSTRIES",
     welcomeLead:"Un laboratoire d'elite forme la prochaine generation d'etres exceptionnels. Ton chemin s'ecrira choix apres choix, annee apres annee, jusqu'a 50 ans de carriere. Rien n'est scripte deux fois de la meme facon.",
     start:"Commencer",
-    profileChoiceTitle:"Comment veux-tu commencer ?", profileChoiceLead:"Cree ton heros de A a Z, ou incarne l'un des 10 profils deja prets : 5 gentils et 5 mechants.",
+    profileChoiceTitle:"Choisis ton personnage", profileChoiceLead:"20 personnages jouables : 10 HEROS et 10 VILLAINS. Chacun a ses avantages et ses inconvenients qui compteront toute la carriere. Tu pourras le renommer juste apres.",
     scratchTitle:"Creer mon heros de A a Z", scratchDesc:"Choisis chaque detail toi-meme : morphologie, equipement, pouvoirs...",
     usePreset:"Choisir ce profil",
     nameLabel:"Quel est ton nom civil ?", heroNameLabel:"Choisis ton nom de code",
@@ -370,7 +373,7 @@ const T = {
     brand:"VOLT INDUSTRIES", welcomeEyebrow:"Experimental training program", welcomeTitle:"Welcome to VOLT INDUSTRIES",
     welcomeLead:"An elite lab is training the next generation of extraordinary beings. Your path will be written choice by choice, year by year, across up to 50 years of career. Nothing plays out the same way twice.",
     start:"Begin",
-    profileChoiceTitle:"How do you want to start?", profileChoiceLead:"Build your hero from scratch, or play one of 10 ready-made profiles: 5 heroes and 5 villains.",
+    profileChoiceTitle:"Choose your character", profileChoiceLead:"20 playable characters: 10 HEROES and 10 VILLAINS. Each has strengths and weaknesses that shape the whole career. You can rename them right after.",
     scratchTitle:"Build my hero from scratch", scratchDesc:"Choose every detail yourself: morphology, gear, powers...",
     usePreset:"Choose this profile",
     nameLabel:"What's your civilian name?", heroNameLabel:"Choose your codename",
@@ -1225,38 +1228,128 @@ const DEATH_CAUSES = {
 
 /* ============================ PRESETS ============================ */
 const PRESETS = [
-  /* ---------- 5 GENTILS ---------- */
+  /* ---------- 10 HEROES ---------- */
+  { id:'theg', charKey:'theg', side:'hero', img:CHAR_IMG.char10, nameFr:'The G', nameEn:'The G', heroFr:'The G', heroEn:'The G', morphology:'colosse', path:'physique', powers:['force','regen'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#101623', secondaryColor:'#ffd23c', symbol:'G' },
+    align:40, stats:{courage:16, intelligence:4, popularity:14},
+    perkFr:'Icone absolue : popularite et courage d\'entree, les alliances se signent vite.', perkEn:'Absolute icon: high courage and fame from day one, alliances come easy.',
+    flawFr:'Tout le monde l\'attend au tournant : la moindre faute coute double en reputation.', flawEn:'Everyone watches him: every mistake costs double reputation.',
+    descFr:'Le heros de reference de Volt Industries. Le monde entier connait son nom.', descEn:'Volt Industries\' flagship hero. The whole world knows his name.' },
+  { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Cassius Volt', nameEn:'Cassius Volt', heroFr:'Volt', heroEn:'Volt', morphology:'humain', path:'tech', powers:['ia','rayons'],
+    look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#0f2a4a', secondaryColor:'#39d0ff', symbol:'V' },
+    align:28, stats:{courage:2, intelligence:20, popularity:10},
+    perkFr:'Moyens illimites : intelligence tres haute, budgets et technologies sans limite.', perkEn:'Unlimited means: very high intelligence, endless budget and tech.',
+    flawFr:'Courage moyen sur le terrain et suspicion permanente sur ses interets.', flawEn:'Average field courage and constant suspicion about his interests.',
+    descFr:'Industriel milliardaire, cerveau derriere la moitie des armures du monde.', descEn:'Billionaire industrialist, mind behind half the world\'s armors.' },
+  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Vaelor Skoll', nameEn:'Vaelor Skoll', heroFr:'Vaelor', heroEn:'Vaelor', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#2b3242', secondaryColor:'#c94b2c', symbol:'' },
+    align:30, stats:{courage:18, intelligence:6, popularity:2},
+    perkFr:'Veteran de guerre : encaisse les missions les plus dures sans reculer.', perkEn:'War veteran: takes the hardest missions without flinching.',
+    flawFr:'Peu populaire, mauvaise image mediatique, alliances difficiles.', flawEn:'Unpopular, poor media image, alliances are hard to build.',
+    descFr:'Soldat mystique revenu de trop de fronts. Il se bat, il ne parle pas.', descEn:'Mystic soldier back from too many fronts. He fights, he does not talk.' },
   { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Aegis', nameEn:'Aegis', heroFr:'Aegis', heroEn:'Aegis', morphology:'armure', path:'tech', powers:['armure','rayons'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'shield', suitColor:'#e8eef7', secondaryColor:'#1a6cff', symbol:'AGS' },
-    align:35, descFr:"Exosquelette de premiere ligne. Il encaisse pour que personne d'autre ne tombe.", descEn:'Front-line exosuit. He takes the hits so nobody else falls.' },
+    align:35, stats:{courage:14, intelligence:10, popularity:4},
+    perkFr:'Exosquelette defensif : tres resistant, protege les civils et les allies.', perkEn:'Defensive exosuit: very resilient, shields civilians and allies.',
+    flawFr:'Lourd et lent : peu efficace sur les missions d\'infiltration ou de vitesse.', flawEn:'Heavy and slow: weak on stealth or speed missions.',
+    descFr:'Exosquelette de premiere ligne. Il encaisse pour que personne d\'autre ne tombe.', descEn:'Front-line exosuit. He takes the hits so nobody else falls.' },
   { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Ferrum', nameEn:'Ferrum', heroFr:'Ferrum', heroEn:'Ferrum', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3a3f47', secondaryColor:'#c8763c', symbol:'' },
-    align:25, descFr:'Ancien docker devenu montagne humaine. Force brute, endurance sans fin.', descEn:'Former dockworker turned human mountain. Raw strength, endless stamina.' },
+    align:25, stats:{courage:20, intelligence:-6, popularity:2},
+    perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
+    flawFr:'Intelligence faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low intelligence: easily manipulated, fails strategic missions.',
+    descFr:'Ancien docker devenu montagne humaine.', descEn:'Former dockworker turned human mountain.' },
   { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Elena Marsh', nameEn:'Elena Marsh', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'tech', powers:['ia','vitesse'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#123c78', secondaryColor:'#ffc63f', symbol:'MRD' },
-    align:30, descFr:'Officier de terrain assistee par IA. Elle lit un champ de bataille comme un plan.', descEn:'AI-assisted field officer. She reads a battlefield like a blueprint.' },
+    align:30, stats:{courage:6, intelligence:18, popularity:8},
+    perkFr:'Assistee par IA : lit le terrain, resout les crises complexes.', perkEn:'AI-assisted: reads the field, solves complex crises.',
+    flawFr:'Fragile physiquement : les affrontements bruts la mettent en danger.', flawEn:'Physically fragile: raw brawls put her in danger.',
+    descFr:'Officier de terrain assistee par IA.', descEn:'AI-assisted field officer.' },
+  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Nyx', nameEn:'Nyx', heroFr:'Nyx', heroEn:'Nyx', morphology:'elance', path:'psychique', powers:['illusions','vitesse'],
+    look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1b1b26', secondaryColor:'#8a7bff', symbol:'' },
+    align:14, stats:{courage:10, intelligence:14, popularity:-4},
+    perkFr:'Reine de l\'ombre : infiltration, informations, coups impossibles a tracer.', perkEn:'Queen of shadows: infiltration, intel, untraceable strikes.',
+    flawFr:'Reputation trouble : le public se mefie, l\'alignement glisse facilement.', flawEn:'Murky reputation: the public distrusts her, alignment slips easily.',
+    descFr:'Espionne devenue heroine par accident. Elle joue sur toutes les lignes.', descEn:'Spy turned hero by accident. She plays every line.' },
+  { id:'solen', charKey:'solen', side:'hero', img:CHAR_IMG.char9, nameFr:'Kilian Solen', nameEn:'Kilian Solen', heroFr:'Solen', heroEn:'Solen', morphology:'humain', path:'psychique', powers:['telepathie','projection'],
+    look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'standard', aura:'none', weapon:'none', suitColor:'#25405c', secondaryColor:'#ffe9b0', symbol:'' },
+    align:22, stats:{courage:4, intelligence:12, popularity:16},
+    perkFr:'Charisme naturel : negocie, calme les foules, gagne les proces d\'opinion.', perkEn:'Natural charisma: negotiates, calms crowds, wins public opinion.',
+    flawFr:'Peu de puissance offensive : depend beaucoup de ses allies.', flawEn:'Little offensive power: depends heavily on allies.',
+    descFr:'Porte-parole telepathe. Sa vraie arme, c\'est la parole.', descEn:'Telepathic spokesperson. His real weapon is his voice.' },
   { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Valkyr', nameEn:'Valkyr', heroFr:'Valkyr', heroEn:'Valkyr', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'spear', suitColor:'#d8a63c', secondaryColor:'#2b2f38', symbol:'' },
-    align:20, descFr:'Heritiere d\'un marteau de siege. Frappe droit, parle peu, ne recule jamais.', descEn:'Heir to a siege hammer. Strikes straight, speaks little, never retreats.' },
+    align:20, stats:{courage:16, intelligence:2, popularity:8},
+    perkFr:'Frappe mystique devastatrice, tres suivie par les foules.', perkEn:'Devastating mystic strikes, crowds follow her.',
+    flawFr:'Orgueil : refuse les ordres, provoque des conflits avec ses allies.', flawEn:'Pride: refuses orders, creates conflicts with allies.',
+    descFr:'Heritiere d\'un marteau de siege. Frappe droit, ne recule jamais.', descEn:'Heir to a siege hammer. Strikes straight, never retreats.' },
   { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Sable', nameEn:'Sable', heroFr:'Sable', heroEn:'Sable', morphology:'elance', path:'psychique', powers:['telepathie','vitesse'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#4b2a7a', secondaryColor:'#1a1a22', symbol:'' },
-    align:12, descFr:'Infiltratrice masquee. Elle travaille dans l\'ombre mais choisit toujours son camp.', descEn:'Masked infiltrator. Works in the dark but always picks a side.' },
-  /* ---------- 5 MECHANTS ---------- */
-  { id:'obsidian', charKey:'obsidian', side:'villain', img:CHAR_IMG.char17, nameFr:'Obsidian', nameEn:'Obsidian', heroFr:'Obsidian', heroEn:'Obsidian', morphology:'armure', path:'tech', powers:['armure','rayons'],
-    look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'dark', weapon:'none', suitColor:'#101014', secondaryColor:'#ff2d3f', symbol:'OBS' },
-    align:-40, descFr:'Machine de guerre autonome. Aucune emotion, aucune negociation.', descEn:'Autonomous war machine. No emotion, no negotiation.' },
+    align:12, stats:{courage:12, intelligence:12, popularity:-2},
+    perkFr:'Polyvalente : bonne sur presque toutes les missions, jamais prise au piege.', perkEn:'Versatile: solid on almost any mission, never cornered.',
+    flawFr:'Passe masquee : difficile de construire une legende publique.', flawEn:'Masked past: hard to build a public legend.',
+    descFr:'Infiltratrice masquee. Elle travaille dans l\'ombre mais choisit son camp.', descEn:'Masked infiltrator. Works in the dark but picks a side.' },
+  /* ---------- 10 VILLAINS ---------- */
+  { id:'siddartha', charKey:'siddartha', side:'villain', img:CHAR_IMG.char11, nameFr:'Siddartha', nameEn:'Siddartha', heroFr:'Siddartha', heroEn:'Siddartha', morphology:'humain', path:'mystique', powers:['telekinesie','illusions'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'none', boots:'none', aura:'dark', weapon:'none', suitColor:'#1a1024', secondaryColor:'#c03cff', symbol:'S' },
+    align:-45, stats:{courage:14, intelligence:20, popularity:6},
+    perkFr:'Le grand adversaire : puissance mystique et esprit superieur, tres peu d\'echecs.', perkEn:'The great adversary: mystic power and superior mind, very few failures.',
+    flawFr:'Cible numero un : les heros s\'allient contre lui, aucune redemption facile.', flawEn:'Target number one: heroes unite against him, redemption is nearly impossible.',
+    descFr:'L\'antagoniste central. Il pense en siecles, pas en missions.', descEn:'The central antagonist. He thinks in centuries, not missions.' },
   { id:'malachar', charKey:'malachar', side:'villain', img:CHAR_IMG.char12, nameFr:'Malachar', nameEn:'Malachar', heroFr:'Malachar', heroEn:'Malachar', morphology:'colosse', path:'mystique', powers:['elementaire','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#221830', secondaryColor:'#a13cff', symbol:'' },
-    align:-50, descFr:'Colosse de roche et d\'energie. Ce qu\'il traverse ne se reconstruit pas.', descEn:'Colossus of rock and energy. What he crosses is never rebuilt.' },
+    align:-50, stats:{courage:20, intelligence:0, popularity:-6},
+    perkFr:'Destruction pure : quasi invincible en combat frontal.', perkEn:'Pure destruction: nearly unbeatable in a frontal fight.',
+    flawFr:'Aucune finesse : impossible de negocier, popularite au plus bas.', flawEn:'No finesse: cannot negotiate, popularity at rock bottom.',
+    descFr:'Colosse de roche et d\'energie. Ce qu\'il traverse ne se reconstruit pas.', descEn:'Colossus of rock and energy. What he crosses is never rebuilt.' },
+  { id:'kaerus', charKey:'kaerus', side:'villain', img:CHAR_IMG.char13, nameFr:'Kaerus', nameEn:'Kaerus', heroFr:'Kaerus', heroEn:'Kaerus', morphology:'armure', path:'tech', powers:['armure','ia'],
+    look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#14181f', secondaryColor:'#ff8a1f', symbol:'K' },
+    align:-30, stats:{courage:8, intelligence:18, popularity:0},
+    perkFr:'Ingenieur du chaos : plans imparables, technologie volee de pointe.', perkEn:'Engineer of chaos: unstoppable plans, stolen cutting-edge tech.',
+    flawFr:'Physiquement vulnerable hors de son armure.', flawEn:'Physically vulnerable outside his armor.',
+    descFr:'Genie renegat qui vend la guerre au plus offrant.', descEn:'Renegade genius selling war to the highest bidder.' },
   { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Aurelia', nameEn:'Aurelia', heroFr:'Aurelia', heroEn:'Aurelia', morphology:'elance', path:'psychique', powers:['telekinesie','projection'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#c8a13c', secondaryColor:'#16161c', symbol:'' },
-    align:-25, descFr:'Financiere devenue arme. Pour elle, le pouvoir est une monnaie qui s\'achete.', descEn:'Financier turned weapon. To her, power is a currency you buy.' },
+    align:-25, stats:{courage:4, intelligence:14, popularity:14},
+    perkFr:'Fortune et influence : achete les medias, les proces et les silences.', perkEn:'Wealth and influence: buys media, trials and silence.',
+    flawFr:'Courage faible : fuit les combats et perd ses alliances sous pression.', flawEn:'Low courage: flees fights and loses alliances under pressure.',
+    descFr:'Financiere devenue arme. Le pouvoir est une monnaie qui s\'achete.', descEn:'Financier turned weapon. Power is a currency you buy.' },
   { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Vipera', nameEn:'Vipera', heroFr:'Vipera', heroEn:'Vipera', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'claws', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1c2b24', secondaryColor:'#7ad14f', symbol:'' },
-    align:-35, descFr:'Chassee puis exhibee, elle a appris a mordre avant qu\'on la touche.', descEn:'Hunted then paraded, she learned to bite before being touched.' },
+    align:-35, stats:{courage:12, intelligence:10, popularity:2},
+    perkFr:'Venin et illusions : elimine ses cibles avant qu\'elles ne la voient.', perkEn:'Venom and illusions: removes targets before they see her.',
+    flawFr:'Instable : ses choix impulsifs font decrocher son alignement.', flawEn:'Unstable: impulsive choices swing her alignment.',
+    descFr:'Chassee puis exhibee, elle a appris a mordre en premier.', descEn:'Hunted then paraded, she learned to bite first.' },
+  { id:'sepulcre', charKey:'sepulcre', side:'villain', img:CHAR_IMG.char16, nameFr:'Le Sepulcre', nameEn:'The Sepulchre', heroFr:'Le Sepulcre', heroEn:'The Sepulchre', morphology:'colosse', path:'mystique', powers:['regen','elementaire'],
+    look:{ helmet:'full', cape:true, glasses:'none', gloves:'claws', boots:'armored', aura:'dark', weapon:'scythe', suitColor:'#0d0d12', secondaryColor:'#5ae0c0', symbol:'' },
+    align:-40, stats:{courage:18, intelligence:6, popularity:-8},
+    perkFr:'Increvable : revient de blessures qui tueraient n\'importe qui.', perkEn:'Unkillable: returns from wounds that would kill anyone.',
+    flawFr:'Terreur pure : la population le hait, aucune couverture legale.', flawEn:'Pure terror: the public hates him, no legal cover.',
+    descFr:'Rumeur devenue chair. On raconte qu\'il a deja ete enterre deux fois.', descEn:'A rumor made flesh. They say he has been buried twice already.' },
+  { id:'obsidian', charKey:'obsidian', side:'villain', img:CHAR_IMG.char17, nameFr:'Obsidian', nameEn:'Obsidian', heroFr:'Obsidian', heroEn:'Obsidian', morphology:'armure', path:'tech', powers:['armure','rayons'],
+    look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'dark', weapon:'none', suitColor:'#101014', secondaryColor:'#ff2d3f', symbol:'OBS' },
+    align:-40, stats:{courage:16, intelligence:12, popularity:-4},
+    perkFr:'Machine de guerre : blindage et puissance de feu superieurs.', perkEn:'War machine: superior armor and firepower.',
+    flawFr:'Aucune emotion : impossible de creer des liens, relations toujours froides.', flawEn:'No emotion: cannot bond, relationships stay cold.',
+    descFr:'Machine de guerre autonome. Aucune negociation.', descEn:'Autonomous war machine. No negotiation.' },
+  { id:'nihil', charKey:'nihil', side:'villain', img:CHAR_IMG.char18, nameFr:'Nihil', nameEn:'Nihil', heroFr:'Nihil', heroEn:'Nihil', morphology:'elance', path:'psychique', powers:['projection','telekinesie'],
+    look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'none', aura:'dark', weapon:'none', suitColor:'#0b0b10', secondaryColor:'#9aa0ff', symbol:'' },
+    align:-38, stats:{courage:10, intelligence:16, popularity:-2},
+    perkFr:'Pouvoirs psychiques immenses : plie les volontes et les batailles.', perkEn:'Immense psychic power: bends wills and battles.',
+    flawFr:'Corps fragile et esprit ronge : les echecs le detruisent vite.', flawEn:'Fragile body, eroded mind: failures break him fast.',
+    descFr:'Il veut moins gouverner le monde que le vider.', descEn:'He wants less to rule the world than to empty it.' },
+  { id:'mandate', charKey:'mandate', side:'villain', img:CHAR_IMG.char19, nameFr:'Le Mandat', nameEn:'The Mandate', heroFr:'Le Mandat', heroEn:'The Mandate', morphology:'humain', path:'tech', powers:['ia','rayons'],
+    look:{ helmet:'none', cape:false, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#20242c', secondaryColor:'#d8dde6', symbol:'M' },
+    align:-22, stats:{courage:2, intelligence:16, popularity:16},
+    perkFr:'Autorite officielle : la loi, les budgets et les medias jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
+    flawFr:'Aucun talent de combat : sans son appareil, il ne vaut rien.', flawEn:'No combat skill: without his apparatus, he is nothing.',
+    descFr:'Le visage propre du controle. Il signe les ordres, jamais les crimes.', descEn:'The clean face of control. He signs orders, never crimes.' },
   { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Lord Fuchsia', nameEn:'Lord Fuchsia', heroFr:'Lord Fuchsia', heroEn:'Lord Fuchsia', morphology:'humain', path:'psychique', powers:['telepathie','illusions'],
     look:{ helmet:'none', cape:true, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#e0409a', secondaryColor:'#f5d7e8', symbol:'' },
-    align:-20, descFr:'Mondain toxique. Il detruit des reputations entieres en une soiree.', descEn:'Toxic socialite. He ruins entire reputations in one evening.' },
+    align:-20, stats:{courage:0, intelligence:10, popularity:20},
+    perkFr:'Mondain redoutable : popularite enorme, il detruit par la rumeur.', perkEn:'Formidable socialite: huge fame, he destroys through rumor.',
+    flawFr:'Lache au combat : chaque affrontement direct peut finir sa carriere.', flawEn:'Coward in a fight: every direct clash could end his career.',
+    descFr:'Mondain toxique. Il ruine des reputations entieres en une soiree.', descEn:'Toxic socialite. He ruins entire reputations in one evening.' },
 ];
 
 
@@ -1641,21 +1734,35 @@ function applyPreset(p){
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
   S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
+  S.presetId = p.id;
+  const st = p.stats || {};
+  S.stats = {
+    courage: Math.max(5, Math.min(95, 50 + (st.courage||0))),
+    intelligence: Math.max(5, Math.min(95, 50 + (st.intelligence||0))),
+    popularity: Math.max(5, Math.min(95, 50 + (st.popularity||0)))
+  };
+  S.presetPerk = S.lang==='fr'?p.perkFr:p.perkEn;
+  S.presetFlaw = S.lang==='fr'?p.flawFr:p.flawEn;
 }
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
-    <div class="scratch-card" id="scratchCard"><div class="pname">${t('scratchTitle')}</div><div class="pdesc">${t('scratchDesc')}</div></div>
     <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
-  d.querySelector('#scratchCard').onclick = ()=>{ S.usingPreset=false; S.portrait=null; S.playerCharKey=null; S.screen='name'; render(); };
   const grid = d.querySelector('#presetGrid');
+  const statLine = (s)=>{
+    const sign = (v)=> (v>0?'+':'')+v;
+    return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
+  };
   grid.innerHTML = PRESETS.map(p=>{
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
-    const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HERO':'HERO');
+    const badge = p.side==='villain' ? 'VILLAIN' : 'HERO';
     const nm = S.lang==='fr'?p.nameFr:p.nameEn;
     return `<div class="preset-card ${p.side}" data-id="${p.id}" style="--pc-color:${col};">
       <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span></div>
-      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div></div>`;
+      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
+      ${statLine(p.stats||{})}
+      <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
+      <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div></div>`;
   }).join('');
 
   grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
