@@ -4527,10 +4527,8 @@ function screenEnd(){
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}
     <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
-    <h3>${t('relations')}</h3>
-    <div class="relwrap">${otherCharKeys().map(k=>{ const c = CHARACTERS[k]; const v = S.rel[k]||0; const pct = clamp((v+20)/40*100,0,100);
-      const col = charColor(c.align);
-      return `<div class="relcard"><div class="rn">${S.lang==='fr'?c.fr:c.en}</div><div class="barbg"><div class="barfill" style="width:${pct}%; background:${col};"></div></div></div>`; }).join('')}</div>
+
+
     <h3>${t('yearByYearTitle')}</h3><div style="margin-top:6px;">${yearsHtml}</div>
     <h3>${t('logTitle')}</h3>
     <div style="margin-top:10px; max-height:280px; overflow:auto;">${S.log.map(e=>`<div class="log-entry ${e.villain?'villain':''}">${t('year')} ${e.year} - ${S.lang==='fr'?e.textFr:e.textEn}</div>`).join('')}</div>
