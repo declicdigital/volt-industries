@@ -863,6 +863,16 @@ const STAKES = [
   {fr:"l'avenir economique de la ville", en:"the city's economic future"},
   {fr:"une infrastructure critique", en:"critical infrastructure"},
   {fr:"la vie d'un enfant pris au piege", en:"the life of a trapped child"},
+  {fr:"l'integrite de la ligne temporelle sacree", en:"the integrity of the sacred timeline"},
+  {fr:"un artefact cosmique capable de reecrire la realite", en:"a cosmic artifact able to rewrite reality"},
+  {fr:"la moitie de la population d'un continent", en:"half a continent's population"},
+  {fr:"les sceaux d'un sanctuaire millenaire", en:"the seals of a thousand-year-old sanctum"},
+  {fr:"le secret de l'identite civile de ton equipe", en:"your team's secret civilian identities"},
+  {fr:"les accords qui encadrent les surhumains", en:"the accords governing enhanced individuals"},
+  {fr:"la barriere entre deux univers voisins", en:"the barrier between two neighboring universes"},
+  {fr:"un reacteur ARC de derniere generation", en:"a next-generation arc reactor"},
+  {fr:"le dernier echantillon du serum d'amelioration", en:"the last sample of the enhancement serum"},
+  {fr:"l'existence meme de ta variante dans une autre realite", en:"the very existence of your variant in another reality"},
 ];
 const MISSION_SENTENCE_PATTERNS = [
   { fr:(T,S_,L)=>`${cap(T)} eclate a ${L} et menace ${S_}. Chaque seconde compte.`,
@@ -873,6 +883,18 @@ const MISSION_SENTENCE_PATTERNS = [
     en:(T,S_,L)=>`Reports are flooding in: ${T} strikes ${L}, with ${S_} at stake.` },
   { fr:(T,S_,L)=>`Volt Industries te signale ${T} a ${L}. ${cap(S_)} pourrait etre perdu si personne n'intervient.`,
     en:(T,S_,L)=>`Volt Industries flags ${T} in ${L}. ${cap(S_)} could be lost if no one intervenes.` },
+  { fr:(T,S_,L)=>`Code rouge au centre de commandement : ${T} a ${L}. Protocole d'intervention niveau 7, ${S_} en premiere ligne.`,
+    en:(T,S_,L)=>`Code red at command: ${T} in ${L}. Level 7 response protocol, ${S_} on the line.` },
+  { fr:(T,S_,L)=>`Les capteurs orbitaux confirment ${T} au-dessus de ${L}. Signature energetique inconnue, ${S_} directement expose.`,
+    en:(T,S_,L)=>`Orbital sensors confirm ${T} above ${L}. Unknown energy signature, ${S_} directly exposed.` },
+  { fr:(T,S_,L)=>`L'agence de surveillance des anomalies classe ${T} a ${L} en menace de classe Omega. En jeu : ${S_}.`,
+    en:(T,S_,L)=>`The anomaly watch agency rates ${T} in ${L} an Omega-class threat. At stake: ${S_}.` },
+  { fr:(T,S_,L)=>`Un flash energetique deforme le ciel de ${L} : ${T}. Les analystes parlent deja d'incident de niveau extinction pour ${S_}.`,
+    en:(T,S_,L)=>`An energy flash warps the sky over ${L}: ${T}. Analysts are already calling it an extinction-level event for ${S_}.` },
+  { fr:(T,S_,L)=>`Ta comm crache un ordre de deploiement immediat : ${T} a ${L}. Objectif prioritaire : ${S_}.`,
+    en:(T,S_,L)=>`Your comm spits an immediate deployment order: ${T} in ${L}. Priority objective: ${S_}.` },
+  { fr:(T,S_,L)=>`Le mur de retro-ingenierie affiche ${T} a ${L} en boucle. Si la breche s'elargit, ${S_} disparait avec elle.`,
+    en:(T,S_,L)=>`The analysis wall loops ${T} in ${L}. If the breach widens, ${S_} goes with it.` },
 ];
 /* Fragments combinables : chaque categorie depasse 150 formulations distinctes. */
 function expandPhrases(cores, tails){
