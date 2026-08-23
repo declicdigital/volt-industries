@@ -2129,7 +2129,7 @@ function screenSummary(){
   d.innerHTML = `<span class="eyebrow">${t('summaryTitle')}</span><h2>${S.heroName}</h2>
     <p class="lead" style="margin-top:0;">${t('morphology')}: <b>${S.lang==='fr'?morphObj.fr:morphObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
-    <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=POWERS[S.path].find(x=>x.id===id); return S.lang==='fr'?p.fr:p.en; }).join(', ')}</b></p>
+    <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
     <p class="lead">${S.lang==='fr' ? `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${S.mode==='short'?t('modeShort'):t('modeLong')} - ${S.years} years, ${totalMissions} missions.`}</p>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
