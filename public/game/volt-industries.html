@@ -1900,7 +1900,7 @@ function screenProfileChoice(){
     const sign = (v)=> (v>0?'+':'')+v;
     return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
   };
-  grid.innerHTML = PRESETS.map(p=>{
+  grid.innerHTML = SELECTABLE_PRESETS.map(p=>{
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
     const badge = p.side==='villain' ? 'VILLAIN' : 'HERO';
     const nm = S.lang==='fr'?p.nameFr:p.nameEn;
