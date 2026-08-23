@@ -2660,6 +2660,7 @@ function startBattle(mission, done){
     busy:true
   };
   st.foeMax = st.foeHP;
+  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro';
@@ -2755,7 +2756,7 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
       setTimeout(foeTurn, 900); return;
     }
-    const d = dmgOf(m, pl + S.stats.courage*0.35);
+    const d = dmgOf(m, pl + S.stats.courage*0.35, dmgMult);
     st.foeHP = Math.max(0, st.foeHP - d);
     if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
     hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
@@ -2766,7 +2767,8 @@ function startBattle(mission, done){
   setTimeout(()=>{
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
-    setLog(S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`);
+    const fl = formLabel();
+    setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
     st.busy = false; setMovesEnabled(true);
   }, 1500);
 }
