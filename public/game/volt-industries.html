@@ -1498,6 +1498,12 @@ const PRESETS = [
     flawFr:'Sans ses machines, elle n\'a aucune defense.', flawEn:'Without her machines she has no defense at all.',
     descFr:'Elle a fait tomber trois banques centrales depuis un sous-sol.', descEn:'She took down three central banks from a basement.' },
 ];
+/* Personnages jouables : uniquement la nouvelle generation. Les 20 premiers restent des PNJ
+   qui interviennent tout au long de la carriere (rencontres, alliances, rivalites). */
+const SELECTABLE_IDS = ['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','inferno','archange',
+  'baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur','zeroday'];
+const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
+const NPC_ONLY_KEYS = PRESETS.filter(p=>!SELECTABLE_IDS.includes(p.id)).map(p=>p.charKey);
 
 
 /* ============================ STATE ============================ */
@@ -1513,7 +1519,7 @@ function freshState(lang){
     combat:{won:0,lost:0}, locations:[], mentees:[], mentorCount:0, mentorCap:0, deathBudgetPerMission:0.003,
     turningPoints:[], yearsHistory:[], currentYearEntries:[],
     dead:false, deathInfo:null,
-    activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null,
+    activeConversation:null, convLineIndex:0, usedConvIds:[], lastConvYear:null, usedFrag:{}, introConvDone:false,
     portrait:null, playerCharKey:null,
     lastStars:1, savedToHistory:false,
   };
@@ -1900,7 +1906,7 @@ function screenProfileChoice(){
     const sign = (v)=> (v>0?'+':'')+v;
     return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
   };
-  grid.innerHTML = PRESETS.map(p=>{
+  grid.innerHTML = SELECTABLE_PRESETS.map(p=>{
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
     const badge = p.side==='villain' ? 'VILLAIN' : 'HERO';
     const nm = S.lang==='fr'?p.nameFr:p.nameEn;
@@ -1912,7 +1918,7 @@ function screenProfileChoice(){
       <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div></div>`;
   }).join('');
 
-  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
+  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
   return d;
 }
 function screenName(){
@@ -2313,19 +2319,334 @@ function screenYearBreak(){
   return d;
 }
 
+/* ---------- Generateur de dialogues (aucune redite) ---------- */
+const CONV_LINES = {
+  hero: {
+    openFr:[
+      "{char} te retrouve sur le tarmac de Volt Industries, encore en tenue de mission. \"On a evite le pire cette nuit, {hero}. De justesse.\"",
+      "{char} coupe la radio et se tourne vers toi. \"Annee {year}. Tu sais combien de dossiers portent deja ton nom ?\"",
+      "{char} t'attend dans le hangar, bras croises. \"J'ai lu ton rapport. Il manque la moitie de ce qui s'est vraiment passe.\"",
+      "{char} pose deux cafes froids sur la table. \"Assieds-toi. On ne parle jamais assez entre deux catastrophes.\"",
+      "{char} t'intercepte avant la conference de presse. \"Ils vont te demander des comptes sur les degats. Prepare-toi.\"",
+      "{char} regarde la ville depuis la passerelle. \"Ils dorment tranquilles la-dessous. Ils ignorent ce que ca coute.\"",
+      "{char} t'arrete d'un geste. \"Il y a une famille qui te doit la vie et qui n'osera jamais te le dire.\"",
+      "{char} deplie une carte tactique devant toi. \"On a une fenetre courte, et pas assez de monde pour la tenir.\"",
+      "{char} enleve son casque, le visage marque. \"Je commence a compter ceux qu'on n'a pas sauves. Mauvaise habitude.\"",
+      "{char} te croise dans l'ascenseur et bloque les portes. \"Deux minutes. Apres, je te laisse tranquille.\"",
+      "{char} t'appelle depuis l'infirmerie. \"Trois blesses. Aucun mort. Ce soir, c'est une victoire.\"",
+      "{char} t'observe pendant l'entrainement. \"Tu frappes comme quelqu'un qui a quelque chose a prouver.\"",
+    ],
+    midFr:[
+      "\"Je ne te demande pas d'etre parfait. Je te demande de rester quelqu'un.\"",
+      "\"La difference entre nous et eux tient a une decision par jour. Une seule.\"",
+      "\"Tu peux gagner chaque combat et perdre exactement ce qui comptait.\"",
+      "\"On n'a pas droit a l'erreur, et pourtant on en fera. Alors choisis lesquelles.\"",
+      "\"Le public t'aime aujourd'hui. Ne construis rien sur cet amour-la.\"",
+      "\"Si tu as besoin d'un relais un jour, appelle-moi avant que ce soit trop tard.\"",
+      "\"Ce metier use plus vite l'ame que le corps. Surveille les deux.\"",
+      "\"Je prefere un allie qui doute a un heros qui ne se pose plus de question.\"",
+      "\"On finit tous par croiser une ligne. La question, c'est de quel cote tu t'arretes.\"",
+      "\"Les gens ne retiendront pas tes victoires. Ils retiendront ce que tu as refuse de faire.\"",
+      "\"Ne te bats pas pour l'image. L'image te lachera au premier scandale.\"",
+      "\"Tu comptes pour cette maison. Ne l'oublie pas quand ca ira mal.\"",
+    ],
+    openEn:[
+      "{char} finds you on the Volt Industries tarmac, still in mission gear. \"We dodged the worst tonight, {hero}. Barely.\"",
+      "{char} kills the radio and turns to you. \"Year {year}. Do you know how many files already carry your name?\"",
+      "{char} waits in the hangar, arms crossed. \"I read your report. Half of what really happened is missing.\"",
+      "{char} sets two cold coffees on the table. \"Sit. We never talk enough between disasters.\"",
+      "{char} stops you before the press conference. \"They'll come after you about the damage. Get ready.\"",
+      "{char} looks over the city from the walkway. \"They sleep quietly down there. They have no idea what it costs.\"",
+      "{char} raises a hand. \"There's a family that owes you their lives and will never dare say it.\"",
+      "{char} unfolds a tactical map. \"Short window, and not enough people to hold it.\"",
+      "{char} takes off the helmet, face worn. \"I'm starting to count the ones we didn't save. Bad habit.\"",
+      "{char} catches you in the elevator and blocks the doors. \"Two minutes. Then I leave you alone.\"",
+      "{char} calls you from the infirmary. \"Three wounded. No dead. Tonight that's a win.\"",
+      "{char} watches you train. \"You hit like someone with something to prove.\"",
+    ],
+    midEn:[
+      "\"I'm not asking you to be perfect. I'm asking you to stay someone.\"",
+      "\"The difference between us and them is one decision a day. Just one.\"",
+      "\"You can win every fight and lose exactly what mattered.\"",
+      "\"We can't afford mistakes, and we'll make them anyway. So choose which ones.\"",
+      "\"The public loves you today. Don't build anything on that love.\"",
+      "\"If you ever need backup, call me before it's too late.\"",
+      "\"This job wears the soul faster than the body. Watch both.\"",
+      "\"I'd rather have an ally who doubts than a hero who stopped asking questions.\"",
+      "\"We all cross a line eventually. The question is which side you stop on.\"",
+      "\"People won't remember your wins. They'll remember what you refused to do.\"",
+      "\"Don't fight for the image. The image drops you at the first scandal.\"",
+      "\"You matter to this house. Remember that when it goes bad.\"",
+    ],
+  },
+  villain: {
+    openFr:[
+      "{char} t'attend dans le noir, parfaitement calme. \"Tu as fait beaucoup de bruit cette annee, {hero}. J'aime le bruit.\"",
+      "{char} fait tourner un verre entre ses doigts. \"Assieds-toi. Ce n'est pas une menace, c'est une invitation.\"",
+      "{char} apparait sur tous les ecrans de la piece. \"Ne cherche pas la sortie, elle est de mon cote.\"",
+      "{char} pose un dossier sur la table. \"Ton nom civil, tes comptes, tes proches. Tout tient sur douze pages.\"",
+      "{char} sourit sans chaleur. \"Annee {year}. Tu tiens encore debout. C'est presque decevant.\"",
+      "{char} te bloque le passage dans le parking. \"On va parler affaires. Vite, avant que tes amis s'inquietent.\"",
+      "{char} regarde les ruines de ta derniere mission. \"Joli travail. C'est presque signe de ma main.\"",
+      "{char} joue avec un detonateur inactif. \"Detends-toi. Si je voulais ta mort, on ne discuterait pas.\"",
+      "{char} t'observe comme un investissement. \"Tout le monde a un prix. Le tien n'est simplement pas encore ecrit.\"",
+      "{char} te tend un telephone allume. \"Ecoute. Tu reconnais cette voix, non ?\"",
+      "{char} t'accueille dans une salle vide. \"Je voulais voir de pres ce que Volt Industries fabrique cette annee.\"",
+      "{char} rit doucement. \"Tu te crois different d'eux. C'est mignon, vraiment.\"",
+    ],
+    midFr:[
+      "\"Le monde ne recompense pas les justes. Il recompense ceux qui ne clignent pas.\"",
+      "\"Un jour tu comprendras que la morale, c'est un budget comme un autre.\"",
+      "\"Je peux faire de toi une legende, ou un fait divers. Les deux me coutent pareil.\"",
+      "\"Tes chefs t'utilisent. Moi, au moins, je te le dis en face.\"",
+      "\"On se ressemble plus que tu ne veux l'admettre. Ca me suffit.\"",
+      "\"Refuse aujourd'hui. Je reviendrai quand tu auras vraiment besoin de moi.\"",
+      "\"Chaque personne que tu proteges est une prise sur toi. Tu le sais deja.\"",
+      "\"Tu veux etre aime. C'est la faiblesse la plus previsible du secteur.\"",
+      "\"Il n'y a pas de camp. Il y a ceux qui decident et ceux qui encaissent.\"",
+      "\"Je n'ai pas besoin de te battre. J'ai juste besoin que tu sois fatigue.\"",
+      "\"Rien de ce que tu construis ne survivra a la prochaine decennie. Rien.\"",
+      "\"Dis non si tu veux. J'aime les negociations longues.\"",
+    ],
+    openEn:[
+      "{char} waits in the dark, perfectly calm. \"You made a lot of noise this year, {hero}. I like noise.\"",
+      "{char} turns a glass between two fingers. \"Sit. That's not a threat, it's an invitation.\"",
+      "{char} appears on every screen in the room. \"Don't look for the exit, it's on my side.\"",
+      "{char} drops a file on the table. \"Your civilian name, your accounts, your family. Twelve pages total.\"",
+      "{char} smiles without warmth. \"Year {year}. Still standing. Almost disappointing.\"",
+      "{char} blocks your way in the parking garage. \"Let's talk business. Fast, before your friends worry.\"",
+      "{char} studies the ruins of your last mission. \"Nice work. Looks almost like my signature.\"",
+      "{char} toys with an inactive detonator. \"Relax. If I wanted you dead we wouldn't be talking.\"",
+      "{char} looks at you like an investment. \"Everyone has a price. Yours just isn't written yet.\"",
+      "{char} hands you a live phone. \"Listen. You recognize that voice, don't you?\"",
+      "{char} welcomes you into an empty hall. \"I wanted a close look at what Volt Industries is building this year.\"",
+      "{char} laughs quietly. \"You think you're different from them. That's cute, truly.\"",
+    ],
+    midEn:[
+      "\"The world doesn't reward the righteous. It rewards those who don't blink.\"",
+      "\"One day you'll see that morality is just another budget line.\"",
+      "\"I can make you a legend, or a news item. Both cost me the same.\"",
+      "\"Your bosses use you. At least I say it to your face.\"",
+      "\"We're more alike than you'll admit. That's enough for me.\"",
+      "\"Refuse today. I'll come back when you actually need me.\"",
+      "\"Every person you protect is a handle on you. You already know that.\"",
+      "\"You want to be loved. Most predictable weakness in the business.\"",
+      "\"There are no sides. There are those who decide and those who absorb it.\"",
+      "\"I don't need to beat you. I just need you tired.\"",
+      "\"Nothing you build survives the next decade. Nothing.\"",
+      "\"Say no if you like. I enjoy long negotiations.\"",
+    ],
+  },
+  neutral: {
+    openFr:[
+      "{char} s'assoit en face de toi sans prevenir. \"Tu paies le cafe, j'ai des informations.\"",
+      "{char} te croise entre deux etages. \"Question honnete : tu fais ca pour qui, exactement ?\"",
+      "{char} range ses affaires lentement. \"Ton dossier circule. Deux camps s'y interessent.\"",
+      "{char} te montre une photo floue. \"Tu connais cette personne ? Reflechis avant de repondre.\"",
+      "{char} hausse les epaules. \"Annee {year}. Rien n'a change, sauf les noms sur les contrats.\"",
+      "{char} te suit sur quelques metres. \"Je ne prends pas parti. Je prends des notes.\"",
+      "{char} fume a la fenetre. \"Ce que tu as fait la-bas, c'etait ni bien ni mal. C'etait efficace.\"",
+      "{char} t'offre un badge d'acces. \"Ne me demande pas d'ou il vient.\"",
+      "{char} t'attend, dossier ferme. \"Je peux t'aider. Ca ne sera pas gratuit, evidemment.\"",
+      "{char} lit ton rapport, amuse. \"Tu ecris comme quelqu'un qui cache une decision.\"",
+      "{char} te fait signe de baisser la voix. \"On nous ecoute. On nous ecoute toujours.\"",
+      "{char} te tend la main. \"Trve temporaire ? Ca m'arrange autant que toi.\"",
+    ],
+    midFr:[
+      "\"Je survis parce que je ne choisis jamais trop tot.\"",
+      "\"Tu veux mon avis ? Les deux camps te mentent, avec des sourires differents.\"",
+      "\"Ce que tu decideras la, quelqu'un le lira dans un rapport demain.\"",
+      "\"Je te dois rien. Mais je prefere te devoir quelque chose qu'a eux.\"",
+      "\"Il n'y a pas de bonne reponse. Il y a des consequences plus ou moins lentes.\"",
+      "\"Note bien : dans dix ans, personne ne se souviendra du contexte.\"",
+      "\"Tu es utile. C'est plus dangereux qu'etre puissant.\"",
+      "\"J'ai vu passer beaucoup de gens comme toi. Presque aucun n'est reste entier.\"",
+      "\"Fais ce que tu veux, mais fais-le en connaissance de cause.\"",
+      "\"Le silence se vend cher en ce moment. Le tien aussi.\"",
+      "\"On se recroisera. C'est une petite industrie, au fond.\"",
+      "\"Ne me remercie pas. Rends-moi service quand j'appellerai.\"",
+    ],
+    openEn:[
+      "{char} sits across from you unannounced. \"You buy the coffee, I've got information.\"",
+      "{char} catches you between floors. \"Honest question: who are you doing this for, exactly?\"",
+      "{char} packs up slowly. \"Your file is circulating. Two camps are interested.\"",
+      "{char} shows you a blurry photo. \"Know this person? Think before you answer.\"",
+      "{char} shrugs. \"Year {year}. Nothing changed, except the names on the contracts.\"",
+      "{char} walks with you a few steps. \"I don't take sides. I take notes.\"",
+      "{char} smokes by the window. \"What you did out there was neither good nor bad. It was effective.\"",
+      "{char} offers you an access badge. \"Don't ask where it came from.\"",
+      "{char} waits, folder closed. \"I can help you. It won't be free, obviously.\"",
+      "{char} reads your report, amused. \"You write like someone hiding a decision.\"",
+      "{char} signals you to lower your voice. \"We're being listened to. We always are.\"",
+      "{char} extends a hand. \"Temporary truce? It suits me as much as you.\"",
+    ],
+    midEn:[
+      "\"I survive because I never pick a side too early.\"",
+      "\"Want my opinion? Both camps lie to you, with different smiles.\"",
+      "\"Whatever you decide here, someone reads it in a report tomorrow.\"",
+      "\"I owe you nothing. But I'd rather owe you than them.\"",
+      "\"There's no right answer. Just consequences at different speeds.\"",
+      "\"Note this: in ten years nobody remembers the context.\"",
+      "\"You're useful. That's more dangerous than being powerful.\"",
+      "\"I've seen a lot of people like you. Almost none stayed whole.\"",
+      "\"Do what you want, just do it knowing the price.\"",
+      "\"Silence sells high these days. Yours too.\"",
+      "\"We'll meet again. It's a small industry, really.\"",
+      "\"Don't thank me. Return the favor when I call.\"",
+    ],
+  },
+};
+const CONV_CHOICE_POOL = {
+  noble:[
+    { fr:"Repondre avec une franchise totale, quitte a t'exposer.", en:"Answer with complete honesty, even if it exposes you.", eff:{align:6, rel:4} },
+    { fr:"Proposer ton aide sans rien demander en retour.", en:"Offer your help without asking anything back.", eff:{align:7, rel:5, popularity:1} },
+    { fr:"Assumer publiquement les degats de ta derniere mission.", en:"Publicly own the damage from your last mission.", eff:{align:6, popularity:-2, rel:3} },
+    { fr:"Refuser toute compromission, calmement.", en:"Refuse any compromise, calmly.", eff:{align:8, rel:-2, courage:2} },
+    { fr:"Reconnaitre ta peur au lieu de jouer les durs.", en:"Admit your fear instead of acting tough.", eff:{align:5, rel:5, courage:-1} },
+    { fr:"Donner ta parole et t'y tenir, quoi qu'il en coute.", en:"Give your word and hold to it, whatever the cost.", eff:{align:7, rel:4} },
+    { fr:"Faire passer les civils avant ta reputation.", en:"Put civilians before your reputation.", eff:{align:8, popularity:-1, rel:3} },
+    { fr:"Demander pardon pour une decision passee.", en:"Apologize for a past decision.", eff:{align:5, rel:6} },
+    { fr:"Defendre un allie que tout le monde lache.", en:"Defend an ally everyone else is dropping.", eff:{align:6, courage:3, rel:4, popularity:-1} },
+    { fr:"Signaler l'affaire aux autorites, meme si ca te ralentit.", en:"Report the matter to the authorities, even if it slows you down.", eff:{align:7, rel:-1} },
+    { fr:"Ecouter jusqu'au bout sans rien negocier.", en:"Listen all the way through without negotiating anything.", eff:{align:4, rel:5} },
+    { fr:"Offrir une seconde chance a quelqu'un qui ne la merite pas.", en:"Offer a second chance to someone who doesn't deserve it.", eff:{align:6, rel:6, intelligence:-1} },
+    { fr:"Refuser l'argent propose et l'expliquer sans agressivite.", en:"Turn down the money offered and explain without hostility.", eff:{align:7, rel:2} },
+    { fr:"Prendre le risque a la place de ton equipe.", en:"Take the risk instead of your team.", eff:{align:6, courage:4, rel:5} },
+  ],
+  pragmatic:[
+    { fr:"Poser des questions precises avant de t'engager.", en:"Ask precise questions before committing.", eff:{intelligence:4, rel:1} },
+    { fr:"Gagner du temps sans fermer la porte.", en:"Buy time without closing the door.", eff:{intelligence:3, rel:2} },
+    { fr:"Demander des garanties ecrites.", en:"Ask for written guarantees.", eff:{intelligence:4, rel:-1} },
+    { fr:"Proposer un echange equitable de renseignements.", en:"Propose a fair exchange of intel.", eff:{intelligence:4, rel:3} },
+    { fr:"Rester neutre et observer ce qu'il/elle veut vraiment.", en:"Stay neutral and watch what they actually want.", eff:{intelligence:5} },
+    { fr:"Rediriger la discussion vers un terrain que tu maitrises.", en:"Redirect the conversation onto ground you control.", eff:{intelligence:3, popularity:2} },
+    { fr:"Accepter en surface, verifier ensuite chaque detail.", en:"Agree on the surface, verify every detail afterwards.", eff:{intelligence:5, rel:2, align:-1} },
+    { fr:"Repondre par une blague pour desamorcer.", en:"Deflect with a joke.", eff:{popularity:3, rel:2} },
+    { fr:"Enregistrer discretement la conversation.", en:"Quietly record the conversation.", eff:{intelligence:4, align:-2} },
+    { fr:"Renvoyer la decision a ta hierarchie.", en:"Push the decision up to your chain of command.", eff:{intelligence:2, rel:-2, align:1} },
+    { fr:"Negocier un delai contre une faveur mineure.", en:"Trade a delay for a minor favor.", eff:{intelligence:3, rel:3} },
+    { fr:"Changer de sujet et sonder ses faiblesses.", en:"Change the subject and probe for weaknesses.", eff:{intelligence:4, rel:-1} },
+    { fr:"Faire jouer les medias en ta faveur.", en:"Work the media in your favor.", eff:{popularity:5, align:-1, rel:-1} },
+    { fr:"Ne rien promettre et partir le premier.", en:"Promise nothing and leave first.", eff:{intelligence:2, courage:1, rel:-2} },
+  ],
+  ruthless:[
+    { fr:"Menacer ouvertement de repondre par la force.", en:"Openly threaten to answer with force.", eff:{align:-6, courage:4, rel:-5} },
+    { fr:"Utiliser ce que tu sais sur sa vie privee.", en:"Use what you know about their private life.", eff:{align:-8, intelligence:2, rel:-6} },
+    { fr:"Accepter le marche en secret.", en:"Take the deal in secret.", eff:{align:-9, rel:7} },
+    { fr:"Humilier publiquement ton interlocuteur.", en:"Publicly humiliate them.", eff:{align:-7, popularity:3, rel:-7} },
+    { fr:"Sacrifier une source pour securiser ta position.", en:"Burn a source to secure your position.", eff:{align:-8, intelligence:3, rel:-3} },
+    { fr:"Faire porter la faute a quelqu'un d'autre.", en:"Pin the blame on someone else.", eff:{align:-9, popularity:2, rel:-4} },
+    { fr:"Exiger une part sur l'operation.", en:"Demand a cut of the operation.", eff:{align:-6, rel:4} },
+    { fr:"Frapper le premier, parler apres.", en:"Strike first, talk later.", eff:{align:-7, courage:5, rel:-6} },
+    { fr:"Trahir la confiance qu'on vient de te donner.", en:"Betray the trust just given to you.", eff:{align:-10, rel:-8, intelligence:2} },
+    { fr:"Reclamer une allegeance totale en echange de ton aide.", en:"Demand total allegiance in exchange for your help.", eff:{align:-6, popularity:2, rel:3} },
+    { fr:"Repondre par le mepris et couper court.", en:"Answer with contempt and cut it short.", eff:{align:-4, rel:-5, courage:2} },
+    { fr:"Detourner les ressources de l'operation a ton profit.", en:"Divert the operation's resources for yourself.", eff:{align:-8, intelligence:3, rel:-2} },
+    { fr:"Laisser entendre que ses proches sont exposes.", en:"Imply their loved ones are exposed.", eff:{align:-10, rel:-7, courage:3} },
+    { fr:"Vendre l'information au plus offrant.", en:"Sell the information to the highest bidder.", eff:{align:-8, popularity:1, rel:-3} },
+  ],
+};
+function convFill(str, charObj){
+  return str.replace(/\{char\}/g, S.lang==='fr'?charObj.fr:charObj.en)
+            .replace(/\{hero\}/g, S.heroName || (S.lang==='fr'?'toi':'you'))
+            .replace(/\{year\}/g, String(S.currentYear));
+}
+function pickUnused(bucket, len){
+  if(!S.usedFrag) S.usedFrag = {};
+  let used = S.usedFrag[bucket] || [];
+  if(used.length >= len) used = [];
+  let i; let guard = 0;
+  do { i = Math.floor(Math.random()*len); guard++; } while(used.includes(i) && guard < 200);
+  used.push(i); S.usedFrag[bucket] = used;
+  return i;
+}
+function generateConversation(charKey){
+  const c = CHARACTERS[charKey]; if(!c) return null;
+  const tone = CONV_LINES[c.align] ? c.align : 'neutral';
+  const pack = CONV_LINES[tone];
+  const oi = pickUnused('open_'+tone+'_'+charKey, pack.openFr.length);
+  const mi = pickUnused('mid_'+tone, pack.midFr.length);
+  const buckets = ['noble','pragmatic','ruthless'];
+  const choices = shuffle(buckets).map(b=>{
+    const pool = CONV_CHOICE_POOL[b];
+    const ci = pickUnused('ch_'+b, pool.length);
+    const base = pool[ci];
+    const eff = { align:base.eff.align||0, courage:base.eff.courage||0, intelligence:base.eff.intelligence||0, popularity:base.eff.popularity||0 };
+    if(base.eff.rel){ let r = base.eff.rel; if(c.align==='villain') r = -r * (b==='ruthless'?-1:1); eff.rel = { [charKey]: Math.round(r) }; }
+    return { fr:base.fr, en:base.en, eff };
+  });
+  return {
+    id:'gen_'+charKey+'_'+oi+'_'+mi+'_'+Date.now(),
+    charKey,
+    linesFr:[ convFill(pack.openFr[oi], c), convFill(pack.midFr[mi], c) ],
+    linesEn:[ convFill(pack.openEn[oi], c), convFill(pack.midEn[mi], c) ],
+    choices,
+  };
+}
+/* ---------- Accueil : The G (heros) ou Siddartha (villain) ---------- */
+function introConversation(){
+  const isVillain = (S.startSide==='villain') || (S.align < 0);
+  if(isVillain){
+    const c = CHARACTERS.siddartha;
+    return { id:'intro_siddartha', charKey:'siddartha',
+      linesFr:[
+        `Les lumieres tombent. Siddartha t'attend au bout du couloir de Volt Industries. \"Bienvenue, ${S.heroName}. Ne fais pas semblant d'etre surpris : c'est moi qui ai valide ton nom.\"`,
+        "\"Ici, personne ne te protegera et personne ne te jugera. Tu prends, ou on te prend. C'est le seul reglement interieur.\"",
+        "\"Tu vas signer beaucoup de choses dans les annees qui viennent. Souviens-toi juste de qui t'a ouvert la porte.\""
+      ],
+      linesEn:[
+        `The lights drop. Siddartha waits at the end of the Volt Industries corridor. "Welcome, ${S.heroName}. Don't act surprised: I approved your name myself."`,
+        "\"Here nobody protects you and nobody judges you. You take, or you get taken. That's the entire staff handbook.\"",
+        "\"You'll sign a lot of things in the coming years. Just remember who opened the door.\""
+      ],
+      choices:[
+        { fr:"S'incliner et promettre des resultats rapides.", en:"Bow and promise fast results.", eff:{align:-6, rel:{siddartha:6}} },
+        { fr:"Le remercier froidement, sans rien promettre.", en:"Thank him coldly, promising nothing.", eff:{intelligence:3, rel:{siddartha:1}} },
+        { fr:"Lui dire que tu prendras sa place un jour.", en:"Tell him you'll take his seat one day.", eff:{align:-3, courage:5, rel:{siddartha:-4}} },
+      ]};
+  }
+  const c = CHARACTERS.theg;
+  return { id:'intro_theg', charKey:'theg',
+    linesFr:[
+      `The G t'accueille dans le grand hall, main tendue, sourire franc. \"Bienvenue chez Volt Industries, ${S.heroName}. On avait besoin de quelqu'un comme toi.\"`,
+      "\"Ici on ne te demandera jamais d'etre le plus fort. On te demandera d'etre la quand ca compte.\"",
+      "\"Ma porte reste ouverte, meme a trois heures du matin. Surtout a trois heures du matin.\""
+    ],
+    linesEn:[
+      `The G greets you in the main hall, hand out, honest smile. "Welcome to Volt Industries, ${S.heroName}. We needed someone like you."`,
+      "\"Nobody here will ask you to be the strongest. We'll ask you to be there when it counts.\"",
+      "\"My door stays open, even at three in the morning. Especially at three in the morning.\""
+    ],
+    choices:[
+      { fr:"Serrer sa main et t'engager sincerement.", en:"Shake his hand and commit sincerely.", eff:{align:6, rel:{theg:6}} },
+      { fr:"Le remercier, mais preciser que tu travailles seul.", en:"Thank him, but make clear you work alone.", eff:{courage:3, rel:{theg:-1}} },
+      { fr:"Lui demander directement quelles sont les vraies regles.", en:"Ask him straight what the real rules are.", eff:{intelligence:4, rel:{theg:3}} },
+    ]};
+}
 /* ---------- Conversation overlay ---------- */
 function maybeTriggerConversation(){
   if(S.dead || S.activeConversation) return;
   if(!(S.screen==='mission' || S.screen==='mentor')) return;
+  if(!S.introConvDone){
+    S.introConvDone = true;
+    const intro = introConversation();
+    if(intro && CHARACTERS[intro.charKey] && intro.charKey !== S.playerCharKey){
+      S.activeConversation = intro; S.convLineIndex = 0; S.lastConvYear = S.currentYear;
+      renderConversationOverlay(); return;
+    }
+  }
   if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
   const gap = S.currentYear - S.lastConvYear;
   const forced = gap >= 2;
   if(forced || Math.random() < 0.5){
-    let pool = CONVERSATIONS.filter(c=>c.charKey!==S.playerCharKey && !S.usedConvIds.includes(c.id));
-    if(pool.length===0){ pool = CONVERSATIONS.filter(c=>c.charKey!==S.playerCharKey); S.usedConvIds=[]; }
-    if(pool.length===0) return;
-    const conv = pool[Math.floor(Math.random()*pool.length)];
-    S.usedConvIds.push(conv.id); S.activeConversation = conv; S.convLineIndex = 0;
+    const keys = otherCharKeys();
+    if(!keys.length) return;
+    const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
+    const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
+    const charKey = pool[Math.floor(Math.random()*pool.length)];
+    const conv = generateConversation(charKey);
+    if(!conv) return;
+    S.activeConversation = conv; S.convLineIndex = 0;
     S.lastConvYear = S.currentYear;
     renderConversationOverlay();
   }
