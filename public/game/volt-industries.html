@@ -2883,70 +2883,43 @@ async function ffDownscale(dataUrl, maxW, maxH, quality){
   });
 }
 
+/* ---------- Cle IA du joueur (Google AI Studio, gratuite) ---------- */
+const FF_KEY_STORE = 'vi_ai_key';
+function ffGetKey(){ try{ return localStorage.getItem(FF_KEY_STORE) || ''; }catch(e){ return ''; } }
+function ffSetKey(v){ try{ if(v) localStorage.setItem(FF_KEY_STORE, v); else localStorage.removeItem(FF_KEY_STORE); }catch(e){} }
+
 function ffHttpError(status, body){
   const fr = S.lang==='fr';
   let msg = '';
   try{ const j = JSON.parse(body); msg = (j && (j.message || (j.error && j.error.message))) || ''; }catch(e){}
-  if(status === 402){
-    return new Error(fr ? "Plus de credits IA sur ce projet : la forge de personnage ne peut pas generer d'image pour le moment. Recharge les credits Lovable (Settings > Plans & credits) puis relance, ou choisis un personnage existant dans la liste."
-      : "This project is out of AI credits, so the character forge cannot render an image right now. Top up Lovable credits (Settings > Plans & credits) and retry, or pick an existing character.");
+  if(status === 428){
+    return new Error(fr ? "Aucune cle IA configuree. Colle ta cle Google AI Studio (gratuite) dans le champ CLE IA ci-dessous, ou choisis un personnage existant."
+      : "No AI key configured. Paste your free Google AI Studio key in the AI KEY field below, or pick an existing character.");
+  }
+  if(status === 400 || status === 401 || status === 403){
+    return new Error(fr ? ("Cle IA refusee par Google" + (msg ? " - " + msg : "") + ". Verifie la cle et que le modele image est active sur ton compte.")
+      : ("AI key rejected by Google" + (msg ? " - " + msg : "") + ". Check the key and that image models are enabled on your account."));
   }
   if(status === 429){
-    return new Error(fr ? "Trop de demandes d'un coup. Attends une trentaine de secondes puis relance la forge."
-      : "Too many requests at once. Wait about 30 seconds and retry the forge.");
-  }
-  if(status === 403){
-    return new Error(fr ? "La generation d'image est bloquee par les reglages du projet (IA desactivee ou limite atteinte)."
-      : "Image generation is blocked by the project settings (AI disabled or limit reached).");
+    return new Error(fr ? "Quota gratuit Google atteint pour l'instant. Attends une minute puis relance la generation."
+      : "Google free quota hit for now. Wait a minute and retry the generation.");
   }
   return new Error((fr?'Erreur ':'Error ') + status + (msg ? ' - ' + msg : ''));
 }
 
+/* Generation IA du portrait : appel direct a la cle Google du joueur/projet.
+   Aucun credit Lovable n'est consomme. Pas de rendu de secours : en cas d'echec, erreur claire. */
 async function ffGenerate(onFrame){
   const body = { image: FF.photo, prompt: ffPrompt() };
-  const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:true}, body)) });
-  if(!res.ok || !res.body) throw ffHttpError(res.status, await res.text().catch(()=>''));
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '', sawAny = false, sawFinal = false, streamError = '';
-  const handle = (evName, dataStr)=>{
-    let payload = null; try{ payload = JSON.parse(dataStr); }catch(e){ return; }
-    if(evName === 'error' || (payload && payload.type === 'error')){
-      sawAny = true; streamError = (payload && payload.error && payload.error.message) || 'generation failed'; return;
-    }
-    if(!payload || !payload.b64_json) return;
-    const isFinal = /completed$/.test(evName || '') || /completed$/.test(payload.type || '');
-    sawAny = true; if(isFinal) sawFinal = true;
-    onFrame('data:image/png;base64,' + payload.b64_json, isFinal);
-  };
-  while(true){
-    const r = await reader.read();
-    if(r.done) break;
-    buf += dec.decode(r.value, {stream:true});
-    let idx;
-    while((idx = buf.indexOf('\n\n')) >= 0){
-      const raw = buf.slice(0, idx); buf = buf.slice(idx+2);
-      let ev = '', data = '';
-      raw.split('\n').forEach(line=>{
-        if(line.indexOf('event:')===0) ev = line.slice(6).trim();
-        else if(line.indexOf('data:')===0) data += line.slice(5).trim();
-      });
-      if(data && data !== '[DONE]') handle(ev, data);
-    }
-  }
-  if(streamError) throw new Error(streamError);
-  if(!sawAny){
-    const rep = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({stream:false}, body)) });
-    if(!rep.ok) throw ffHttpError(rep.status, await rep.text().catch(()=>''));
-    const j = await rep.json();
-    const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
-    if(!b64) throw new Error('no image');
-    onFrame('data:image/png;base64,' + b64, true);
-    return;
-  }
-  if(!sawFinal) throw new Error('stream ended without a final image');
+  const k = ffGetKey(); if(k) body.key = k;
+  const res = await fetch('/api/generate-hero', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const txt = await res.text().catch(()=>'');
+  if(!res.ok) throw ffHttpError(res.status, txt);
+  let j = null; try{ j = JSON.parse(txt); }catch(e){}
+  const b64 = j && j.data && j.data[0] && j.data[0].b64_json;
+  if(!b64) throw new Error(S.lang==='fr' ? "L'IA n'a renvoye aucune image. Relance la generation." : "The AI returned no image. Retry the generation.");
+  onFrame('data:image/png;base64,' + b64, true);
 }
-
 
 /* ---------- Personnage perso : sauvegarde locale + forge sans IA ---------- */
 const FF_STORE = 'vi_custom_char';
