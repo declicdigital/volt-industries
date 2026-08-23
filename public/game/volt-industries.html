@@ -4150,6 +4150,7 @@ function applyChoice(choice){
   if(eff.flip){ alignDelta = (S.align >= 0 ? -1 : 1) * eff.magnitude; }
   else if(eff.reinforce){ alignDelta = (S.align >= 0 ? 1 : -1) * eff.magnitude; }
   else if(eff.balance){ alignDelta = S.align > 0 ? -Math.min(eff.magnitude, S.align) : (S.align < 0 ? Math.min(eff.magnitude, -S.align) : 0); }
+  if(!isChaosEvent){ alignDelta = softenAlign(alignDelta); }
   const newAlign = clamp(S.align + alignDelta, -100, 100);
   if(isChaosEvent){
     S.align = newAlign;
