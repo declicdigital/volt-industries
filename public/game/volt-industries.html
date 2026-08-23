@@ -4613,7 +4613,7 @@ function loadImg(src){
 }
 async function downloadRecapCard(fmt, data){
   const isFr = S.lang==='fr';
-  const W = 1080, H = 2120;
+  const W = 1080, H = 1980;
   const accent = cssVal('--accent', '#00e5ff');
   const accentDark = cssVal('--accent-dark', '#0077aa');
   const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
@@ -4674,9 +4674,11 @@ async function downloadRecapCard(fmt, data){
   gg.addColorStop(0, hexA(data.gradeCol, 0.14)); gg.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = gg; roundRect(x, 82, gy, W-164, 190, 20); x.fill();
   x.shadowColor = data.gradeCol; x.shadowBlur = 30; x.fillStyle = data.gradeCol;
-  x.font = '900 108px Arial'; x.fillText(String(data.cs.total), 122, gy+130);
+  x.font = '900 108px Arial';
+  const totalW = x.measureText(String(data.cs.total)).width;
+  x.fillText(String(data.cs.total), 122, gy+130);
   x.shadowBlur = 0; x.fillStyle = 'rgba(255,255,255,0.4)'; x.font = '700 34px Arial';
-  x.fillText('/100', 122 + x.measureText(String(data.cs.total)).width + 18, gy+130);
+  x.fillText('/100', 122 + totalW + 18, gy+124);
   x.textAlign = 'right'; x.fillStyle = data.gradeCol; x.font = '900 44px Arial';
   x.fillText(data.cs.grade, W-122, gy+80);
   x.fillStyle = 'rgba(255,255,255,0.75)'; x.font = '600 22px Arial';
@@ -4724,7 +4726,7 @@ async function downloadRecapCard(fmt, data){
   data.verdicts.slice(0,4).forEach(v=>{
     x.fillStyle = accent; x.fillRect(84, by-14, 4, 20);
     x.fillStyle = 'rgba(255,255,255,0.72)';
-    by = wrapText(x, v, 102, by, W-200, 28, 3) + 16;
+    by = wrapText(x, v, 102, by, W-200, 28, 3) + 10;
   });
   // Pied
   x.strokeStyle = hexA(accent, 0.4); x.lineWidth = 2;
@@ -4768,8 +4770,7 @@ function wrapText(x, text, px, py, maxW, lh, maxLines){
       if(maxLines && lines >= maxLines){ line = ''; break; }
     } else line = test;
   }
-  if(line) { x.fillText(line, px, y); }
-  else y -= lh;
+  if(line) { x.fillText(line, px, y); y += lh; }
   return y;
 }
 function wrapTextRight(x, text, px, py, maxW, lh){
