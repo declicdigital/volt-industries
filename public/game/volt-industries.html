@@ -3527,8 +3527,14 @@ function maybeTriggerRomance(){
     S.activeConversation = conv; S.convLineIndex = 0; S.lastConvYear = S.currentYear;
     renderConversationOverlay(); return true;
   }
-  if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < 2) return false;
-  if(Math.random() > 0.55) return false;
+  // toutes les carrieres n'ont pas d'histoire d'amour : ~30% en ont une
+  if(!S.romanceFate) return false;
+  const past = (S.romanceHistory||[]).length;
+  if(past >= (S.romanceMax||1)) return false;
+  // apres une rupture, il faut du temps avant de refaire sa vie
+  const gap = past ? 3 : 1;
+  if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < gap) return false;
+  if(Math.random() > 0.45) return false;
   const enemy = Math.random() < 0.20;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
