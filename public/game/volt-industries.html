@@ -2417,7 +2417,7 @@ function missionEpicness(mission){
 }
 function showCombatCinematic(mission, epicness){
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + epicness;
-  const bigLabel = S.lang==='fr' ? (epicness==='epic'?'AFFRONTEMENT MAJEUR':'COMBAT') : (epicness==='epic'?'MAJOR SHOWDOWN':'COMBAT');
+  const bigLabel = S.lang==='fr' ? 'COMBAT' : 'COMBAT';
   if(mission.charKey){ overlay.style.setProperty('--accent', charColor(CHARACTERS[mission.charKey].align)); }
   overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-content">
       <div class="cine-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
