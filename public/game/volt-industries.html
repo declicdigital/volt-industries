@@ -2765,17 +2765,15 @@ function romanceChoices(charKey, enemy, stage){
 }
 function buildRomanceConv(charKey, enemy, stage){
   const c = CHARACTERS[charKey]; if(!c) return null;
-  const linesFr = [], linesEn = [];
-  if(stage==='flirt'){ const o = romanceOpen(c, enemy); linesFr.push(...(S.lang==='fr'?o:romanceOpen({...c},enemy))); }
+  let linesFr, linesEn;
   if(stage==='flirt'){
-    const savedLang = S.lang;
-    S.lang='fr'; const ofr = romanceOpen(c, enemy);
-    S.lang='en'; const oen = romanceOpen(c, enemy);
-    S.lang = savedLang;
-    linesFr.length = 0; linesFr.push(...ofr); linesEn.push(...oen);
+    const saved = S.lang;
+    S.lang='fr'; linesFr = romanceOpen(c, enemy);
+    S.lang='en'; linesEn = romanceOpen(c, enemy);
+    S.lang = saved;
   } else {
     const m = romanceMid(c, enemy, stage);
-    linesFr.push(...m.fr); linesEn.push(...m.en);
+    linesFr = m.fr; linesEn = m.en;
   }
   return { id:'rom_'+charKey+'_'+stage, charKey, romance:true, enemy, stage,
     linesFr, linesEn, choices: romanceChoices(charKey, enemy, stage) };
