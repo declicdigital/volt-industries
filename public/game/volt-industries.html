@@ -4189,10 +4189,49 @@ function screenInvite(){
   d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
   return d;
 }
+/* Bilan d'annee : construit a partir de ce qui s'est reellement passe cette annee. */
+function yearRecap(y){
+  const fr = S.lang==='fr';
+  const h = S.yearsHistory[S.yearsHistory.length-1];
+  const e = (h && h.entries) || [];
+  let w=0,l=0,sv=0,fail=0;
+  e.forEach(x=>{ if(x.type==='combat'){ if(x.outcome==='win') w++; else l++; } else if(x.type==='rescue'){ if(x.outcome==='saved') sv++; else fail++; } });
+  const zone = zoneOf(S.align); const total = S.missionsPlan.length||10;
+  const phase = y<=Math.max(2,Math.round(total*0.2)) ? 'debut' : (y>=total-1 ? 'fin' : 'milieu');
+  const lines = [];
+  /* 1) Le terrain */
+  if(w+l===0 && sv+fail===0){
+    lines.push(fr?`Annee sans affrontement direct : des reunions, des dossiers, des silences.`:`A year without direct confrontation: meetings, files, silences.`);
+  } else if(l>w && l>0){
+    lines.push(fr?`Annee dure : ${l} defaite${l>1?'s':''} pour ${w} victoire${w>1?'s':''}. Ton corps et ta reputation ont encaisse.`:`A hard year: ${l} loss${l>1?'es':''} against ${w} win${w>1?'s':''}. Body and reputation both took the hit.`);
+  } else if(w>l){
+    lines.push(fr?`Annee solide : ${w} victoire${w>1?'s':''} contre ${l} defaite${l>1?'s':''}. On commence a te craindre dans les briefings.`:`A solid year: ${w} win${w>1?'s':''} against ${l} loss${l>1?'es':''}. Briefings start naming you.`);
+  } else {
+    lines.push(fr?`Annee en equilibre : ${w} victoire${w>1?'s':''}, ${l} defaite${l>1?'s':''}. Rien de decisif, tout reste ouvert.`:`A balanced year: ${w} win${w>1?'s':''}, ${l} loss${l>1?'es':''}. Nothing decided, everything still open.`);
+  }
+  if(sv+fail>0){
+    lines.push(sv>=fail
+      ? (fr?`${sv} zone${sv>1?'s':''} securisee${sv>1?'s':''} cette annee${fail?`, ${fail} perdue${fail>1?'s':''}`:''}.`:`${sv} zone${sv>1?'s':''} secured this year${fail?`, ${fail} lost`:''}.`)
+      : (fr?`${fail} operation${fail>1?'s':''} de sauvetage ratee${fail>1?'s':''} : les rapports internes ne t'epargnent pas.`:`${fail} failed rescue op${fail>1?'s':''}: internal reports are not kind.`));
+  }
+  /* 2) La trajectoire morale, sans certitude */
+  const a = Math.abs(S.align);
+  if(zone==='neutral') lines.push(fr?`Personne ne sait encore de quel cote tu tombes. Les deux camps attendent.`:`Nobody knows which side you fall on yet. Both camps are waiting.`);
+  else if(a>=75) lines.push(zone==='hero'?(fr?`Ton nom circule comme une garantie. C'est aussi une cible.`:`Your name circulates as a guarantee. It is also a target.`):(fr?`Ta signature suffit a vider une rue. Peu de gens osent encore negocier.`:`Your signature empties a street. Few still dare negotiate.`));
+  else if(a>=40) lines.push(zone==='hero'?(fr?`Ton camp te fait confiance, sans totalement te comprendre.`:`Your side trusts you, without fully understanding you.`):(fr?`Tes commanditaires te trouvent utile. Utile n'est pas sur.`:`Your backers find you useful. Useful is not safe.`));
+  else lines.push(fr?`Ta ligne reste floue, et ca se voit dans les rapports.`:`Your line stays blurry, and the reports show it.`);
+  /* 3) Perspective, selon le moment de la carriere */
+  if(phase==='debut') lines.push(fr?`Il te reste tout a construire : ${total-y} annee${total-y>1?'s':''} devant toi.`:`Everything is still to build: ${total-y} year${total-y>1?'s':''} ahead.`);
+  else if(phase==='fin') lines.push(fr?`La fin approche. Ce qui est ecrit maintenant restera dans le dossier.`:`The end is near. What is written now stays in the file.`);
+  else lines.push(fr?`Popularite ${S.stats.popularity} - on t'observe plus qu'avant.`:`Popularity ${S.stats.popularity} - you are watched more than before.`);
+  return lines;
+}
 function screenYearBreak(){
   const d = document.createElement('div'); const y = S.currentYear;
+  const rec = yearRecap(y);
   d.innerHTML = `<span class="eyebrow">${t('year')} ${y}</span><h2>${S.lang==='fr' ? `Fin de l'annee ${y}` : `End of year ${y}`}</h2>
-    <p class="lead">${S.lang==='fr' ? "Le bilan de cette annee facconne deja ta legende." : "This year's outcome is already shaping your legend."}</p>
+    <p class="lead">${rec[0]}</p>
+    ${rec.slice(1).map(x=>`<p class="lead" style="opacity:.82; font-size:.95em;">${x}</p>`).join('')}
     <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
   d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
     if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
