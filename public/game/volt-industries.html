@@ -7066,9 +7066,15 @@ function renderConversationOverlay(){
 
 
   document.body.appendChild(el);
-  if(!isLast){ el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); }; }
-  else { el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; });
-    jvAttachAdvice(el.querySelector('#convChoices'), conv.choices); }
+  if(!isLast){
+    el.querySelector('#convNext').onclick=()=>{ S.convLineIndex++; renderConversationOverlay(); };
+    if(S.careerAuto) setTimeout(()=>{ if(S.careerAuto && document.getElementById('convOverlay')===el){ S.convLineIndex++; renderConversationOverlay(); } }, 220);
+  }
+  else {
+    el.querySelectorAll('.choice').forEach(btn=>{ btn.onclick = ()=>{ applyConvChoice(conv, conv.choices[parseInt(btn.dataset.idx)]); }; });
+    jvAttachAdvice(el.querySelector('#convChoices'), conv.choices);
+    if(S.careerAuto) setTimeout(()=>{ if(S.careerAuto && document.getElementById('convOverlay')===el){ applyConvChoice(conv, pick(conv.choices)); } }, 260);
+  }
 }
 function applyConvChoice(conv, choice){
   const eff = choice.eff || {};
