@@ -2622,13 +2622,13 @@ function careerScore(){
   // Le niveau ne mesure que la force et la reussite : rien ici ne depend du camp (heros/villain).
   // 1) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
   const winRate = fights ? S.combat.won / fights : 0;
-  const reliability = fights ? Math.min(1, fights/5) : 0;
-  const combatPart = fights ? (winRate * 30 * reliability + 30*(1-reliability)*0.5) : 30*0.4;
+  const reliability = fights ? Math.min(1, fights/4) : 0;
+  const combatPart = fights ? (winRate * 30 * reliability + 30*(1-reliability)*0.55) : 30*0.45;
   // 2) Impact terrain : lieux marques, ponderes par leur ampleur (peu importe si sauves ou detruits)
   const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
   const locArr = Object.values(uniqueLocs);
   const locWeight = locArr.reduce((s,l)=> s + (1 + (l.type||1)*0.6), 0);
-  const expected = Math.max(4, (S.missionsPlan.length||10) * 0.85);
+  const expected = Math.max(3, (S.missionsPlan.length||10) * 0.62);
   const impact = clamp(locWeight/expected, 0, 1) * 22;
   // 3) Puissance : statistiques et niveau atteint
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
@@ -2639,13 +2639,13 @@ function careerScore(){
   const relVals = Object.keys(S.rel).map(k=>S.rel[k]);
   const allies = relVals.filter(v=>v>=6).length;
   const romancePts = S.romance ? (S.romance.stage>=3 ? 3 : 2) : (S.romanceHistory.length ? 1 : 0);
-  let legacy = Math.min(6, goodMentees*2) + Math.min(6, allies*1.2) + romancePts + Math.min(3, S.skills.length*0.75);
+  let legacy = Math.min(6, goodMentees*2.4) + Math.min(6, allies*1.5) + romancePts + Math.min(3, S.skills.length*0.75);
   legacy = clamp(legacy - lostMentees*0.8, 0, 16);
   // 5) Envergure cosmique : missions de tres grande ampleur (systeme/cosmique) reussies au fil de la carriere
-  const cosmicBonus = clamp((S.cosmicWins||0)/4, 0, 1) * 12;
+  const cosmicBonus = clamp((S.cosmicWins||0)/3, 0, 1) * 12;
   // Malus : defaites en serie, mort, blessure non refermee
   let malus = 0;
-  if(fights) malus += Math.min(8, S.combat.lost * (winRate<0.4 ? 0.9 : 0.35));
+  if(fights) malus += Math.min(6, S.combat.lost * (winRate<0.4 ? 0.7 : 0.28));
   if(S.dead) malus += 4;
   if(S.battleForm && S.battleForm.injury) malus += 1;
   const parts = [
@@ -3919,6 +3919,32 @@ function startCrossedMenteeArc(){
   S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:name, arc:true, crossed:true });
   S.screen='mentor'; render(); maybeTriggerConversation(); return true;
 }
+/* ---------- Evenement Majeur : rare, mais capable de faire bondir le score d'un seul coup si tu le remportes ---------- */
+function shouldTriggerGrandEvent(){
+  if(S.currentYear < 3) return false;
+  if(S.lastGrandEventYear!=null && (S.currentYear - S.lastGrandEventYear) < 3) return false;
+  return Math.random() < 0.12;
+}
+function startGrandEvent(){
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  const pool = otherCharKeys().filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
+  const foeKey = pool.length ? pick(pool) : null;
+  const villainSide = mySide==='villain';
+  const m = {
+    id:'grand_event', type:'combat', danger:3, scope:7, grandEvent:true, charKey:foeKey,
+    tagFr:'EVENEMENT MAJEUR', tagEn:'MAJOR EVENT',
+    fr:"Une crise d'ampleur historique frappe plusieurs mondes a la fois. Ce qui se joue aujourd'hui restera dans les annales, quel que soit ton camp.",
+    en:"A crisis of historic scale strikes several worlds at once. What happens today will be remembered, whichever side you're on.",
+    location: { name: randLocationName(7), type:7 },
+    choices:[
+      { fr:"Foncer au coeur de la crise, sans reserve.", en:"Charge straight into the crisis, holding nothing back.", eff:{courage:6, popularity:4, align: villainSide?-6:6} },
+      { fr:"Coordonner la riposte avec sang-froid.", en:"Coordinate the response with cold precision.", eff:{intelligence:6, popularity:3, align: villainSide?-4:4} },
+      { fr:"Saisir l'occasion pour asseoir ta reputation, quoi qu'il en coute.", en:"Seize the moment to cement your reputation, whatever the cost.", eff:{courage:4, intelligence:2, popularity:2, align: villainSide?-8:2} },
+    ]};
+  S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  S.lastGrandEventYear = S.currentYear;
+  return true;
+}
 /* Les propositions de clan ne tombent pas a chaque palier : elles dependent du palmares,
    de la popularite, de la nettete de la trajectoire, et restent rares (2-3 par carriere). */
 function checkTeamInvite(){
@@ -3955,6 +3981,7 @@ function nextMission(){
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
+  if(!S.peacefulEra && shouldTriggerGrandEvent() && startGrandEvent()) return;
   if(shouldTriggerCrossedMenteeArc() && startCrossedMenteeArc()){ S.lastCrossedArcYear = S.currentYear; return; }
   if(shouldTriggerMentor() && startMentorScene()) return;
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
@@ -5223,7 +5250,19 @@ function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
   const hadEighthBefore = S.eighthStar;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
+    if(mission.grandEvent && win){
+      // Un evenement historique remporte compte pour plusieurs victoires a la fois : un vrai tournant de carriere.
+      S.combat.won += 2;
+      S.cosmicWins = (S.cosmicWins||0) + 3;
+      S.trueCosmicWins = (S.trueCosmicWins||0) + 1;
+      for(let i=0;i<2;i++){ S.locations.push({ name: randLocationName(7)+' '+(i+2), type:7, kind: zoneOf(S.align)==='villain'?'destroyed':'saved' }); }
+      S.stats.courage = clamp(S.stats.courage+6,0,100);
+      S.stats.intelligence = clamp(S.stats.intelligence+6,0,100);
+      S.stats.popularity = clamp(S.stats.popularity+6,0,100);
+      jarvisSay(S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?'tournant historique':'historic turning point');
+    }
+  }
   else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost';
     const kind = (zoneOf(S.align)==='villain' || !win) ? 'destroyed' : 'saved';
     S.locations.push(Object.assign({}, mission.location, { kind }));
