@@ -5133,7 +5133,7 @@ function screenMentor(){
   const text = (S.lang==='fr'?m.fr:m.en).replace(/\{name\}/g, name);
   const c = m.recruitKey ? CHARACTERS[m.recruitKey] : null;
   const col = c ? convBeamColor(c.align) : 'var(--accent)';
-  const roleLabel = m.arc ? (S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT') : (S.lang==='fr'?'RECRUE':'RECRUIT');
+  const roleLabel = m.crossed ? (S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT') : (S.lang==='fr'?'RECRUE':'RECRUIT');
   const portrait = c ? `<div style="display:flex; align-items:center; gap:14px; margin:10px 0 4px;">
       <div style="width:96px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
       <div>
