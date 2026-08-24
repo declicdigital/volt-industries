@@ -1858,12 +1858,19 @@ const INTRIGUE_MISSIONS = [
       { fr:"Infiltrer, copier leurs recherches, puis tout effacer.", en:"Infiltrate, copy their research, then wipe it.", eff:{intelligence:7, align:-2, courage:3} },
       { fr:"Leur proposer un partenariat exclusif.", en:"Offer them an exclusive partnership.", eff:{align:-8, intelligence:5, popularity:2} },
     ]},
-  { id:'itg_proces', tagFr:'Audience publique', tagEn:'Public hearing',
+  { id:'itg_proces', tagFr:'Audience publique', tagEn:'Public hearing', sideOnly:'hero',
     fr:"Une commission internationale te convoque pour repondre des degats du dernier incident.", en:"An international commission summons you to answer for the damage from the last incident.",
     choices:[
       { fr:"Y aller seul et repondre a chaque question.", en:"Go alone and answer every question.", eff:{align:5, courage:4, popularity:2} },
       { fr:"Envoyer un avocat et rester injoignable.", en:"Send a lawyer and stay unreachable.", eff:{intelligence:3, popularity:-3} },
       { fr:"Menacer de retirer ta protection a la ville.", en:"Threaten to withdraw your protection from the city.", eff:{align:-9, popularity:-2, courage:3} },
+    ]},
+  { id:'itg_proces_villain', tagFr:'Convocation', tagEn:'Summons', sideOnly:'villain',
+    fr:"Une commission internationale ose te convoquer pour repondre du dernier incident. Peu de gens ont cette audace deux fois.", en:"An international commission dares to summon you over the last incident. Few people have that nerve twice.",
+    choices:[
+      { fr:"Y aller et jouer avec leurs nerfs, question apres question.", en:"Show up and toy with their nerves, question after question.", eff:{align:-4, intelligence:4, popularity:-2} },
+      { fr:"Ignorer purement et simplement la convocation.", en:"Simply ignore the summons entirely.", eff:{align:-6, courage:3, popularity:-4} },
+      { fr:"Faire savoir que le prochain qui te convoque le regrettera.", en:"Make it known that the next person to summon you will regret it.", eff:{align:-11, courage:5, popularity:-6} },
     ]},
   { id:'itg_disparition', tagFr:'Disparition', tagEn:'Disappearance',
     fr:"Trois membres d'equipe ont disparu sans signal de detresse. Aucune trace, aucune demande.", en:"Three team members vanished with no distress signal. No trace, no demands.",
@@ -2611,47 +2618,44 @@ function heroVillainScore(){ return Math.round(clamp(Math.abs(S.align),0,100)); 
 function careerScore(){
   const fr = S.lang==='fr';
   const fights = S.combat.won + S.combat.lost;
-  // 1) Conviction : la nettete de la trajectoire (heros ou villain assume)
-  const conviction = clamp(Math.abs(S.align),0,100)/100 * 20;
-  // 2) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
+  // Le niveau ne mesure que la force et la reussite : rien ici ne depend du camp (heros/villain).
+  // 1) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
   const winRate = fights ? S.combat.won / fights : 0;
   const reliability = fights ? Math.min(1, fights/5) : 0;
-  const combatPart = fights ? (winRate * 24 * reliability + 24*(1-reliability)*0.5) : 24*0.4;
-  // 3) Impact terrain : lieux marques, ponderes par leur ampleur
+  const combatPart = fights ? (winRate * 30 * reliability + 30*(1-reliability)*0.5) : 30*0.4;
+  // 2) Impact terrain : lieux marques, ponderes par leur ampleur (peu importe si sauves ou detruits)
   const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
   const locArr = Object.values(uniqueLocs);
   const locWeight = locArr.reduce((s,l)=> s + (1 + (l.type||1)*0.6), 0);
   const expected = Math.max(4, (S.missionsPlan.length||10) * 0.85);
-  const impact = clamp(locWeight/expected, 0, 1) * 18;
-  // 4) Puissance : statistiques et niveau atteint
+  const impact = clamp(locWeight/expected, 0, 1) * 22;
+  // 3) Puissance : statistiques et niveau atteint
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
-  const power = ((statAvg/100)*0.6 + (computePowerLevel()/100)*0.4) * 14;
-  // 5) Heritage : eleves, alliances, coeur, techniques apprises
-  const side = zoneOf(S.align);
-  const goodMentees = S.mentees.filter(m=> side==='villain' ? m.outcome==='villain' : m.outcome==='hero').length;
+  const power = ((statAvg/100)*0.6 + (computePowerLevel()/100)*0.4) * 20;
+  // 4) Heritage : eleves formes (peu importe leur camp final), alliances, coeur, techniques apprises
+  const goodMentees = S.mentees.filter(m=> m.outcome==='hero'||m.outcome==='villain').length;
   const lostMentees = S.mentees.filter(m=> m.outcome==='died').length;
   const relVals = Object.keys(S.rel).map(k=>S.rel[k]);
   const allies = relVals.filter(v=>v>=6).length;
   const romancePts = S.romance ? (S.romance.stage>=3 ? 3 : 2) : (S.romanceHistory.length ? 1 : 0);
-  let legacy = Math.min(5, goodMentees*2) + Math.min(5, allies*1.2) + romancePts + Math.min(3, S.skills.length*0.75);
-  legacy = clamp(legacy - lostMentees*0.8, 0, 14);
-  // 6) Envergure cosmique : missions de tres grande ampleur (systeme/cosmique) reussies au fil de la carriere
-  const cosmicBonus = clamp((S.cosmicWins||0)/4, 0, 1) * 10;
+  let legacy = Math.min(6, goodMentees*2) + Math.min(6, allies*1.2) + romancePts + Math.min(3, S.skills.length*0.75);
+  legacy = clamp(legacy - lostMentees*0.8, 0, 16);
+  // 5) Envergure cosmique : missions de tres grande ampleur (systeme/cosmique) reussies au fil de la carriere
+  const cosmicBonus = clamp((S.cosmicWins||0)/4, 0, 1) * 12;
   // Malus : defaites en serie, mort, blessure non refermee
   let malus = 0;
   if(fights) malus += Math.min(8, S.combat.lost * (winRate<0.4 ? 0.9 : 0.35));
   if(S.dead) malus += 4;
   if(S.battleForm && S.battleForm.injury) malus += 1;
   const parts = [
-    { label: fr?'Conviction':'Conviction', value: conviction, max:20 },
-    { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:24 },
-    { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:18 },
-    { label: fr?'Puissance atteinte':'Power reached', value: power, max:14 },
-    { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:14 },
-    { label: fr?'Envergure cosmique':'Cosmic scale', value: cosmicBonus, max:10 },
+    { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:30 },
+    { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:22 },
+    { label: fr?'Puissance atteinte':'Power reached', value: power, max:20 },
+    { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:16 },
+    { label: fr?'Envergure cosmique':'Cosmic scale', value: cosmicBonus, max:12 },
     { label: fr?'Sanctions et pertes':'Setbacks', value: -malus, max:0 },
   ];
-  const total = clamp(Math.round(conviction + combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
+  const total = clamp(Math.round(combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
   let grade, gradeLabelFr, gradeLabelEn;
   if(total>=92){ grade='S'; gradeLabelFr='Legende du multivers'; gradeLabelEn='Multiverse legend'; }
   else if(total>=82){ grade='A'; gradeLabelFr='Carriere majeure'; gradeLabelEn='Major career'; }
