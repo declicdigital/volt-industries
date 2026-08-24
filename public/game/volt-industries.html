@@ -314,6 +314,13 @@
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
   body.shake-cosmic #app{ animation: bodyShakeCosmic .28s ease-in-out 7; }
   @keyframes bodyShakeCosmic{ 0%,100%{ transform:translate(0,0); } 20%{ transform:translate(-5px,4px) rotate(-.3deg); } 40%{ transform:translate(5px,-4px) rotate(.3deg); } 60%{ transform:translate(-4px,-3px); } 80%{ transform:translate(4px,3px); } }
+  body.shake-system #app{ animation: bodyShakeSystem .32s ease-in-out 5; }
+  @keyframes bodyShakeSystem{ 0%,100%{ transform:translate(0,0); } 25%{ transform:translate(-3px,2px); } 50%{ transform:translate(3px,-2px); } 75%{ transform:translate(-2px,-2px); } }
+  .cine-overlay.system .cine-flash{ animation: cinePulseSystem .9s ease-in-out infinite; background:radial-gradient(ellipse at 50% 50%, rgba(120,90,255,.45), rgba(0,194,255,.3) 45%, transparent 75%); }
+  .cine-overlay.system .cine-scope{ color:#9a8cff; text-shadow:0 0 18px #9a8cff; font-size:13px; }
+  .cine-overlay.system .cine-title{ font-size: clamp(20px,4.6vw,38px); text-shadow:0 0 20px #9a8cff, 0 0 50px var(--accent); animation: cineZoomBig .85s cubic-bezier(.2,.8,.3,1); }
+  .cine-overlay.system .cine-rays{ animation-duration:8s; opacity:.35; }
+  @keyframes cinePulseSystem{ 0%,100%{ opacity:.5; } 50%{ opacity:.92; } }
   .cine-overlay.cosmic .cine-flash{ animation: cinePulseCosmic .8s ease-in-out infinite; background:radial-gradient(ellipse at 50% 50%, rgba(255,178,32,.5), rgba(0,194,255,.25) 45%, transparent 75%); }
   .cine-overlay.cosmic .cine-scope{ color:var(--gold); text-shadow:0 0 22px var(--gold); font-size:14px; }
   .cine-overlay.cosmic .cine-title{ font-size: clamp(22px,5vw,42px); text-shadow:0 0 24px var(--gold), 0 0 60px var(--accent), 0 0 100px var(--gold); animation: cineZoomBig .9s cubic-bezier(.2,.8,.3,1); }
@@ -322,12 +329,15 @@
   @keyframes cinePulseCosmic{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
 
   /* --- Combat tactique (style Pokemon) --- */
-  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:center; overflow-y:auto;
+  .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:flex-start; overflow-y:auto; padding-top:4vh;
 
     background:#04070d; background-image:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
   .btl-overlay.cosmic-battle{ background: radial-gradient(ellipse 120% 90% at 50% 0%, rgba(255,178,32,.12), transparent 60%), rgba(3,6,13,.97); box-shadow: inset 0 0 120px rgba(255,178,32,.18); }
   .btl-overlay.cosmic-battle .btl-frame{ box-shadow: 0 0 0 2px var(--gold), 0 0 34px rgba(255,178,32,.5); }
   .btl-overlay.cosmic-battle .btl-vs{ text-shadow:0 0 30px var(--gold), 0 0 60px var(--accent); }
+  .btl-overlay.system-battle{ background: radial-gradient(ellipse 120% 90% at 50% 0%, rgba(120,90,255,.12), transparent 60%), rgba(3,6,13,.97); box-shadow: inset 0 0 90px rgba(120,90,255,.15); }
+  .btl-overlay.system-battle .btl-frame{ box-shadow: 0 0 0 2px #9a8cff, 0 0 26px rgba(120,90,255,.4); }
+  .btl-overlay.system-battle .btl-vs{ text-shadow:0 0 24px #9a8cff, 0 0 48px var(--accent); }
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
   .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
     width:100%; max-width:660px; margin:0 auto; }
@@ -392,7 +402,7 @@
   .btl-frame.frame-swap{ animation: sqAssist .5s cubic-bezier(.2,.9,.3,1) 1; }
   .btl-frame-tag{ position:absolute; left:6px; bottom:6px; font-size:9.5px; font-weight:900; letter-spacing:1px; padding:2px 7px; border-radius:8px; background:rgba(6,10,18,.75); text-transform:uppercase; z-index:4; }
   @keyframes squadIn{ from{ opacity:0; transform:translateY(8px) scale(.8);} to{ opacity:1; transform:none;} }
-  @media (max-width:560px){ .btl-squad .sq{ width:26px; height:26px; border-radius:7px; } .btl-squad{ gap:3px; } }
+  @media (max-width:560px){ .btl-squad .sq{ width:24px; height:24px; border-radius:6px; } .btl-squad{ gap:3px; margin-top:1px; } .sq-hp{ height:3px; margin-top:2px; } }
 
 
   /* --- Interventions d'escouade : un allie/ennemi entre dans l'echange --- */
@@ -494,6 +504,7 @@
     #jarvis .jv-body{ font-size:10px; min-height:22px; margin-top:6px; line-height:1.35; }
     #jarvis .jv-meta{ font-size:7px; margin-top:5px; }
     #jarvis .jv-mute{ font-size:7px; padding:2px 6px; }
+    #app{ padding-bottom:130px; }
   }
 </style>
 </head>
@@ -2543,13 +2554,13 @@ function careerScore(){
   const conviction = clamp(Math.abs(S.align),0,100)/100 * 20;
   // 2) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
   const winRate = fights ? S.combat.won / fights : 0;
-  const reliability = fights ? Math.min(1, fights/6) : 0;
-  const combatPart = fights ? (winRate * 24 * reliability + 24*(1-reliability)*0.45) : 24*0.35;
+  const reliability = fights ? Math.min(1, fights/5) : 0;
+  const combatPart = fights ? (winRate * 24 * reliability + 24*(1-reliability)*0.5) : 24*0.4;
   // 3) Impact terrain : lieux marques, ponderes par leur ampleur
   const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
   const locArr = Object.values(uniqueLocs);
   const locWeight = locArr.reduce((s,l)=> s + (1 + (l.type||1)*0.6), 0);
-  const expected = Math.max(5, (S.missionsPlan.length||10) * 1.1);
+  const expected = Math.max(4, (S.missionsPlan.length||10) * 0.85);
   const impact = clamp(locWeight/expected, 0, 1) * 18;
   // 4) Puissance : statistiques et niveau atteint
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
@@ -2559,17 +2570,17 @@ function careerScore(){
   const goodMentees = S.mentees.filter(m=> side==='villain' ? m.outcome==='villain' : m.outcome==='hero').length;
   const lostMentees = S.mentees.filter(m=> m.outcome==='died').length;
   const relVals = Object.keys(S.rel).map(k=>S.rel[k]);
-  const allies = relVals.filter(v=>v>=8).length;
+  const allies = relVals.filter(v=>v>=6).length;
   const romancePts = S.romance ? (S.romance.stage>=3 ? 3 : 2) : (S.romanceHistory.length ? 1 : 0);
-  let legacy = Math.min(5, goodMentees*1.5) + Math.min(5, allies*1) + romancePts + Math.min(3, S.skills.length*0.75);
-  legacy = clamp(legacy - lostMentees*1.2, 0, 14);
+  let legacy = Math.min(5, goodMentees*2) + Math.min(5, allies*1.2) + romancePts + Math.min(3, S.skills.length*0.75);
+  legacy = clamp(legacy - lostMentees*0.8, 0, 14);
   // 6) Envergure cosmique : missions de tres grande ampleur (systeme/cosmique) reussies au fil de la carriere
-  const cosmicBonus = clamp((S.cosmicWins||0)/6, 0, 1) * 10;
+  const cosmicBonus = clamp((S.cosmicWins||0)/4, 0, 1) * 10;
   // Malus : defaites en serie, mort, blessure non refermee
   let malus = 0;
-  if(fights) malus += Math.min(10, S.combat.lost * (winRate<0.4 ? 1.2 : 0.5));
-  if(S.dead) malus += 6;
-  if(S.battleForm && S.battleForm.injury) malus += 2;
+  if(fights) malus += Math.min(8, S.combat.lost * (winRate<0.4 ? 0.9 : 0.35));
+  if(S.dead) malus += 4;
+  if(S.battleForm && S.battleForm.injury) malus += 1;
   const parts = [
     { label: fr?'Conviction':'Conviction', value: conviction, max:20 },
     { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:24 },
@@ -2617,6 +2628,8 @@ const app = document.getElementById('app');
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
+  const oldToast = document.getElementById('impactToast'); if(oldToast) oldToast.remove();
+  const oldRankToast = document.getElementById('rankUpToast'); if(oldRankToast) oldRankToast.remove();
   app.innerHTML = '';
   app.appendChild(topbar());
   renderRankBadge();
@@ -3860,27 +3873,32 @@ function nextMission(){
 function missionEpicness(mission){
   if(!mission || mission.type!=='combat') return 'none';
   if((mission.scope||1)>=7) return 'cosmic';
+  if((mission.scope||1)>=6) return 'system';
   if((mission.danger||0)>=3 || (mission.scope||1)>=5) return 'epic';
   if((mission.danger||0)>=2) return 'major';
   return 'none';
 }
+const SYSTEM_LABELS_FR = ['LE SYSTEME STELLAIRE ENTIER VACILLE','DES MONDES ENTIERS SONT EN JEU','L\'ECHELLE DEPASSE LA SEULE TERRE','ALERTE INTERSTELLAIRE'];
+const SYSTEM_LABELS_EN = ['THE WHOLE STAR SYSTEM SHUDDERS','ENTIRE WORLDS ARE AT STAKE','THE SCALE GOES BEYOND EARTH ALONE','INTERSTELLAR ALERT'];
 const COSMIC_LABELS_FR = ['ONDE DE CHOC MULTIVERSELLE','LE CIEL SE DECHIRE','L\'AMPLEUR DEPASSE TOUT CE QUE TU AS VECU','LA REALITE VACILLE'];
 const COSMIC_LABELS_EN = ['MULTIVERSAL SHOCKWAVE','THE SKY TEARS OPEN','A SCALE BEYOND ANYTHING YOU\'VE FACED','REALITY ITSELF SHAKES'];
 function showCombatCinematic(mission, epicness){
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + epicness;
-  const isCosmic = epicness==='cosmic';
-  const bigLabel = isCosmic ? (S.lang==='fr'?pick(COSMIC_LABELS_FR):pick(COSMIC_LABELS_EN)) : 'COMBAT';
+  const isCosmic = epicness==='cosmic', isSystem = epicness==='system';
+  const bigLabel = isCosmic ? (S.lang==='fr'?pick(COSMIC_LABELS_FR):pick(COSMIC_LABELS_EN))
+    : isSystem ? (S.lang==='fr'?pick(SYSTEM_LABELS_FR):pick(SYSTEM_LABELS_EN)) : 'COMBAT';
   if(mission.charKey){ overlay.style.setProperty('--accent', charColor(CHARACTERS[mission.charKey].align)); }
-  overlay.innerHTML = `<div class="cine-flash"></div>${isCosmic?'<div class="cine-rays"></div>':''}<div class="cine-content">
+  overlay.innerHTML = `<div class="cine-flash"></div>${(isCosmic||isSystem)?'<div class="cine-rays"></div>':''}<div class="cine-content">
       <div class="cine-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
       <div class="cine-title">${bigLabel}</div>
     </div>`;
   document.body.appendChild(overlay);
   if(epicness==='epic') document.body.classList.add('shake');
+  if(isSystem) document.body.classList.add('shake-system');
   if(isCosmic) document.body.classList.add('shake-cosmic');
-  const dur = isCosmic ? 3200 : (epicness==='epic' ? 2200 : 1100);
+  const dur = isCosmic ? 3200 : (isSystem ? 2700 : (epicness==='epic' ? 2200 : 1100));
   setTimeout(()=>{
-    overlay.classList.add('cine-out'); document.body.classList.remove('shake'); document.body.classList.remove('shake-cosmic');
+    overlay.classList.add('cine-out'); document.body.classList.remove('shake'); document.body.classList.remove('shake-system'); document.body.classList.remove('shake-cosmic');
     setTimeout(()=>overlay.remove(), 500);
   }, dur);
   return dur;
@@ -4401,7 +4419,7 @@ function startBattle(mission, done){
   };
   st.foeMax = st.foeHP;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
+  let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend de l'ampleur du combat (scope 1 a 7). */
   const scope = squadCapForScope(mission && mission.scope);
   const squads = buildBattleSquads(foeKey, mission);
@@ -4413,7 +4431,7 @@ function startBattle(mission, done){
   const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
 
   const ov = document.createElement('div');
-  ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : '');
+  ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
     <div class="btl-arena">
       <div class="btl-fighter me">
@@ -4528,7 +4546,41 @@ function startBattle(mission, done){
                          : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
       return `<button class="btl-move" data-i="${i}"><b>${label}</b><span>${sub}</span></button>`;
     }).join('');
-    movesEl.querySelectorAll('button').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
+    if(S.playerCharKey==='vipera' && !st.transformed){
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
+        <b>${S.lang==='fr'?`Se transformer en ${foeName}`:`Shapeshift into ${foeName}`}</b>
+        <span>${S.lang==='fr'?'Prends son apparence et ses attaques pour le reste du combat':"Take their appearance and attacks for the rest of the fight"}</span></button>`;
+    }
+    if(S.playerCharKey==='vipera' && !st.vanishUsed){
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlVanish" style="grid-column:1 / -1; border-color:var(--dim); background:rgba(255,255,255,.03);">
+        <b>${S.lang==='fr'?'Disparaitre':'Vanish'}</b>
+        <span>${S.lang==='fr'?'Esquive garantie la prochaine attaque, petit soin':'Guaranteed dodge on the next attack, small heal'}</span></button>`;
+    }
+    movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
+    const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
+    const vBtn = movesEl.querySelector('#btlVanish'); if(vBtn) vBtn.onclick = vanishMove;
+  }
+  function vanishMove(){
+    if(st.busy || st.vanishUsed) return;
+    st.busy = true; setMovesEnabled(false);
+    st.vanishUsed = true; st.dodgeNext = true;
+    const heal = Math.round(st.myMax*0.08);
+    st.myHP = Math.min(st.myMax, st.myHP + heal);
+    floatDmg(meFrame, -heal, myCol); refreshBars();
+    setLog(S.lang==='fr'?`${myName} disparait dans les ombres. La prochaine attaque frappera dans le vide.`:`${myName} vanishes into the shadows. The next attack will hit nothing but air.`);
+    renderMoves();
+    setTimeout(()=>{ foeTurn(); }, 1000);
+  }
+  function transformIntoFoe(){
+    if(st.busy || st.transformed) return;
+    st.busy = true; setMovesEnabled(false);
+    st.transformed = true;
+    meFrame.innerHTML = battleFrameInner(foe);
+    const nameEl = ov.querySelector('.btl-fighter.me .btl-name'); if(nameEl) nameEl.textContent = myName + ' (' + foeName + ')';
+    myMoves = foeMoves.slice();
+    setLog(S.lang==='fr'?`${myName} se change en ${foeName} - meme visage, memes coups.`:`${myName} shifts into ${foeName} - same face, same moves.`);
+    renderMoves();
+    setTimeout(()=>{ foeTurn(); }, 1000);
   }
   function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
@@ -4587,8 +4639,10 @@ function startBattle(mission, done){
     if(fullSquadFight) tickBackgroundDuels();
     const m = foeAI();
     const label = S.lang==='fr'?m.fr:m.en;
-    if(Math.random() > m.acc){
-      setLog(S.lang==='fr'?`${foeName} tente ${label}... et te manque.`:`${foeName} tries ${label}... and misses.`);
+    if(st.dodgeNext || Math.random() > m.acc){
+      const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${foeName} frappe dans le vide - ${myName} a disparu.`:`${foeName} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${foeName} tente ${label}... et te manque.`:`${foeName} tries ${label}... and misses.`);
+      st.dodgeNext = false;
+      setLog(dodgeMsg);
       setTimeout(()=>{ st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.'); }, 900);
       return;
     }
@@ -6769,13 +6823,11 @@ function jvAdviceFor(choices){
       : jvL("Les options se valent sur le papier. Suis ton instinct, je couvre les consequences.",
             "The options are equivalent on paper. Follow your instinct, I'll cover the fallout.") };
   }
-  const label = (S.lang==='fr' ? (best.c.fr||best.c.label||'') : (best.c.en||best.c.label||'')).replace(/^"|"$/g,'');
-  const short = label.length > 56 ? label.slice(0,54).trim() + '...' : label;
   const text = jvIsUltron()
-    ? jvL('Recommandation : "'+short+'". Rendement maximal, coherent avec '+sideLab+', et ca renforce '+wLab+'.',
-          'Recommendation: "'+short+'". Highest yield, consistent with '+sideLab+', and it reinforces '+wLab+'.')
-    : jvL('Mon conseil : "'+short+'". C\'est ce qui tient '+sideLab+' et renforce '+wLab+'. La decision reste la tienne.',
-          'My advice: "'+short+'". It holds '+sideLab+' and reinforces '+wLab+'. The call is still yours.');
+    ? jvL('Option recommandee ci-dessous : rendement maximal, coherent avec '+sideLab+', et ca renforce '+wLab+'.',
+          'Recommended option below: highest yield, consistent with '+sideLab+', and it reinforces '+wLab+'.')
+    : jvL('Mon conseil : l\'option ci-dessous tient '+sideLab+' et renforce '+wLab+'. La decision reste la tienne.',
+          'My advice: the option below holds '+sideLab+' and reinforces '+wLab+'. The call is still yours.');
   return { idx: best.i, text };
 }
 function jvAdvice(mission){
