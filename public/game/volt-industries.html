@@ -312,9 +312,12 @@
   @keyframes cineZoomBig{ 0%{ opacity:0; transform:scale(1.6);} 60%{ opacity:1; transform:scale(.95);} 100%{ transform:scale(1);} }
   @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
+  body.shake .btl-overlay{ animation: bodyShake .35s ease-in-out 3; }
   body.shake-cosmic #app{ animation: bodyShakeCosmic .28s ease-in-out 7; }
+  body.shake-cosmic .btl-overlay{ animation: bodyShakeCosmic .28s ease-in-out 7; }
   @keyframes bodyShakeCosmic{ 0%,100%{ transform:translate(0,0); } 20%{ transform:translate(-5px,4px) rotate(-.3deg); } 40%{ transform:translate(5px,-4px) rotate(.3deg); } 60%{ transform:translate(-4px,-3px); } 80%{ transform:translate(4px,3px); } }
   body.shake-system #app{ animation: bodyShakeSystem .32s ease-in-out 5; }
+  body.shake-system .btl-overlay{ animation: bodyShakeSystem .32s ease-in-out 5; }
   @keyframes bodyShakeSystem{ 0%,100%{ transform:translate(0,0); } 25%{ transform:translate(-3px,2px); } 50%{ transform:translate(3px,-2px); } 75%{ transform:translate(-2px,-2px); } }
   .cine-overlay.system .cine-flash{ animation: cinePulseSystem .9s ease-in-out infinite; background:radial-gradient(ellipse at 50% 50%, rgba(120,90,255,.45), rgba(0,194,255,.3) 45%, transparent 75%); }
   .cine-overlay.system .cine-scope{ color:#9a8cff; text-shadow:0 0 18px #9a8cff; font-size:13px; }
@@ -380,83 +383,85 @@
   @keyframes dmgFloatEpic{ 0%{ opacity:0; transform:translate(-50%,14px) scale(.6) rotate(-4deg);} 20%{ opacity:1; transform:translate(-50%,-6px) scale(1.35) rotate(2deg);} 45%{ transform:translate(-50%,-14px) scale(1.15) rotate(0deg);} 100%{ opacity:0; transform:translate(-50%,-58px) scale(1.05);} }
   .btl-epic-flash{ position:fixed; inset:0; z-index:330; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.55), rgba(255,178,32,.2) 40%, transparent 72%); }
   .btl-epic-flash.go{ animation: epicFlashGo .55s ease; }
+  .btl-epic-flash.go.small{ animation: epicFlashSmall .3s ease; background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.28), transparent 60%); }
   @keyframes epicFlashGo{ 0%{ opacity:0;} 12%{ opacity:1;} 100%{ opacity:0;} }
+  @keyframes epicFlashSmall{ 0%{ opacity:0;} 20%{ opacity:1;} 100%{ opacity:0;} }
   .btl-set{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
   /* --- Decor photo (une image reelle par niveau), anime par-dessus --- */
-  .photo-img{ position:absolute; inset:-7%; background-size:cover; background-position:center 42%; filter:saturate(1.12) contrast(1.05) brightness(.92);
+  .photo-img{ position:absolute; inset:-7%; background-size:cover; background-position:center 42%; filter:saturate(.85) contrast(.95) brightness(.62) blur(2px);
     animation: photoKenBurns 24s ease-in-out infinite alternate; }
   @keyframes photoKenBurns{ 0%{ transform:scale(1) translate(0,0);} 100%{ transform:scale(1.13) translate(-2.2%,-1.4%);} }
-  .photo-sweep{ position:absolute; inset:0; background:linear-gradient(115deg, transparent 32%, rgba(0,194,255,.16) 46%, transparent 60%);
+  .photo-sweep{ position:absolute; inset:0; background:linear-gradient(115deg, transparent 32%, rgba(0,194,255,.08) 46%, transparent 60%);
     background-size:260% 260%; animation: photoSweepMove 8s linear infinite; mix-blend-mode:screen; }
   @keyframes photoSweepMove{ 0%{ background-position:-120% -120%;} 100%{ background-position:120% 120%;} }
-  .photo-grade{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(6,10,20,.1) 0%, rgba(6,10,20,.35) 60%, rgba(6,10,20,.7) 100%); }
-  .photo-vignette{ position:absolute; inset:0; box-shadow: inset 0 0 170px 46px rgba(0,0,0,.8); animation: photoVignettePulse 4.8s ease-in-out infinite; }
-  @keyframes photoVignettePulse{ 0%,100%{ opacity:.72;} 50%{ opacity:1;} }
+  .photo-grade{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(6,10,20,.35) 0%, rgba(6,10,20,.6) 60%, rgba(6,10,20,.85) 100%); }
+  .photo-vignette{ position:absolute; inset:0; box-shadow: inset 0 0 210px 70px rgba(0,0,0,.9); animation: photoVignettePulse 6.5s ease-in-out infinite; }
+  @keyframes photoVignettePulse{ 0%,100%{ opacity:.85;} 50%{ opacity:1;} }
   .photo-steam{ position:absolute; bottom:14%; width:120px; height:190px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,.1), transparent 70%);
     filter:blur(7px); animation: photoSteamRise 9s ease-in infinite; }
   @keyframes photoSteamRise{ 0%{ transform:translateY(0) scale(.75); opacity:0;} 18%{ opacity:.55;} 100%{ transform:translateY(-260px) scale(1.35); opacity:0;} }
   .photo-ember{ position:absolute; bottom:6%; width:6px; height:6px; border-radius:50%; background:radial-gradient(circle, #fff6c8, #ff9a2e 55%, transparent 75%);
-    box-shadow:0 0 8px 2px rgba(255,140,30,.8); animation: emberRise 6.5s ease-in infinite; }
-  @keyframes emberRise{ 0%{ transform:translate(0,0) scale(1); opacity:0;} 10%{ opacity:1;} 55%{ transform:translate(18px,-260px) scale(.7); opacity:.9;} 100%{ transform:translate(30px,-420px) scale(.3); opacity:0;} }
-  .photo-flicker{ position:absolute; inset:0; background:radial-gradient(ellipse 70% 40% at 15% 85%, rgba(255,120,30,.16), transparent 60%),
+    box-shadow:0 0 5px 1px rgba(255,140,30,.4); animation: emberRise 6.5s ease-in infinite; }
+  @keyframes emberRise{ 0%{ transform:translate(0,0) scale(1); opacity:0;} 10%{ opacity:.55;} 55%{ transform:translate(18px,-260px) scale(.7); opacity:.45;} 100%{ transform:translate(30px,-420px) scale(.3); opacity:0;} }
+  .photo-flicker{ position:absolute; inset:0; background:radial-gradient(ellipse 70% 40% at 15% 85%, rgba(255,120,30,.08), transparent 60%),
       radial-gradient(ellipse 60% 35% at 88% 82%, rgba(255,120,30,.14), transparent 60%);
     animation: fireFlicker 1.8s ease-in-out infinite; }
-  @keyframes fireFlicker{ 0%,100%{ opacity:.7;} 30%{ opacity:1;} 50%{ opacity:.6;} 75%{ opacity:.95;} }
-  .fire-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(255,120,30,.16) 46%, transparent 60%); }
+  @keyframes fireFlicker{ 0%,100%{ opacity:.45;} 30%{ opacity:.65;} 50%{ opacity:.4;} 75%{ opacity:.6;} }
+  .fire-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(255,120,30,.08) 46%, transparent 60%); }
   .fire-mood .photo-vignette{ box-shadow: inset 0 0 170px 46px rgba(20,4,0,.82); }
   .photo-smoke{ position:absolute; bottom:30%; width:90px; height:280px; border-radius:50%; background:radial-gradient(circle, rgba(40,40,45,.16), transparent 70%);
     filter:blur(9px); animation: photoSmokeRise 14s ease-in infinite; }
   @keyframes photoSmokeRise{ 0%{ transform:translateY(0) scale(.7) translateX(0); opacity:0;} 15%{ opacity:.5;} 70%{ transform:translateY(-220px) scale(1.3) translateX(20px); opacity:.35;} 100%{ transform:translateY(-320px) scale(1.6) translateX(30px); opacity:0;} }
-  .photo-rays{ position:absolute; inset:0; background:conic-gradient(from 200deg at 78% 18%, transparent 0deg, rgba(255,220,150,.14) 8deg, transparent 20deg, transparent 340deg, rgba(255,220,150,.1) 350deg, transparent 360deg);
+  .photo-rays{ position:absolute; inset:0; background:conic-gradient(from 200deg at 78% 18%, transparent 0deg, rgba(255,220,150,.08) 8deg, transparent 20deg, transparent 340deg, rgba(255,220,150,.06) 350deg, transparent 360deg);
     animation: raysDrift 12s ease-in-out infinite; mix-blend-mode:screen; }
-  @keyframes raysDrift{ 0%,100%{ opacity:.55;} 50%{ opacity:1;} }
-  .sky-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(255,210,150,.14) 46%, transparent 60%); }
+  @keyframes raysDrift{ 0%,100%{ opacity:.4;} 50%{ opacity:.7;} }
+  .sky-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(255,210,150,.07) 46%, transparent 60%); }
   .sky-mood .photo-vignette{ box-shadow: inset 0 0 170px 46px rgba(10,10,14,.78); }
   .sky-mood .photo-img{ animation-duration:34s; }
   .photo-beam-glow{ position:absolute; left:44%; top:30%; width:26%; height:55%; border-radius:50%;
-    background:radial-gradient(ellipse at 50% 20%, rgba(255,244,200,.4), rgba(255,210,120,.14) 40%, transparent 70%);
+    background:radial-gradient(ellipse at 50% 20%, rgba(255,244,200,.22), rgba(255,210,120,.08) 40%, transparent 70%);
     animation: beamPulse 2.2s ease-in-out infinite; mix-blend-mode:screen; }
-  @keyframes beamPulse{ 0%,100%{ opacity:.55; transform:scale(1);} 50%{ opacity:1; transform:scale(1.08);} }
+  @keyframes beamPulse{ 0%,100%{ opacity:.4; transform:scale(1);} 50%{ opacity:.7; transform:scale(1.05);} }
   .photo-lightning{ position:absolute; width:3px; height:120px; background:linear-gradient(180deg, rgba(200,160,255,0), rgba(210,180,255,.95), rgba(200,160,255,0));
-    box-shadow:0 0 16px 3px rgba(180,140,255,.8); opacity:0; animation: lightningFlash 5.5s ease-in-out infinite; transform:rotate(8deg); }
-  @keyframes lightningFlash{ 0%,92%,100%{ opacity:0;} 93%{ opacity:1;} 94%{ opacity:.2;} 95%{ opacity:1;} 97%{ opacity:0;} }
-  .beam-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(180,140,255,.15) 46%, transparent 60%); }
+    box-shadow:0 0 9px 2px rgba(180,140,255,.45); opacity:0; animation: lightningFlash 5.5s ease-in-out infinite; transform:rotate(8deg); }
+  @keyframes lightningFlash{ 0%,92%,100%{ opacity:0;} 93%{ opacity:.5;} 94%{ opacity:.1;} 95%{ opacity:.5;} 97%{ opacity:0;} }
+  .beam-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(180,140,255,.08) 46%, transparent 60%); }
   .beam-mood .photo-vignette{ box-shadow: inset 0 0 170px 46px rgba(6,6,16,.8); }
   .beam-mood .photo-img{ animation-duration:40s; background-position:center 30%; }
-  .photo-sparkle{ position:absolute; width:4px; height:4px; border-radius:50%; background:#fff; box-shadow:0 0 8px 2px rgba(255,255,255,.9);
+  .photo-sparkle{ position:absolute; width:4px; height:4px; border-radius:50%; background:#fff; box-shadow:0 0 5px 1px rgba(255,255,255,.5);
     animation: sparkleTwinkle 2.6s ease-in-out infinite; opacity:0; }
-  @keyframes sparkleTwinkle{ 0%,100%{ opacity:0; transform:scale(.5);} 50%{ opacity:1; transform:scale(1.4);} }
+  @keyframes sparkleTwinkle{ 0%,100%{ opacity:0; transform:scale(.5);} 50%{ opacity:.55; transform:scale(1.15);} }
   .photo-sunflare{ position:absolute; left:6%; top:22%; width:160px; height:160px; border-radius:50%;
-    background:radial-gradient(circle, rgba(255,240,200,.55), rgba(255,200,100,.2) 45%, transparent 72%);
+    background:radial-gradient(circle, rgba(255,240,200,.3), rgba(255,200,100,.1) 45%, transparent 72%);
     animation: sunflarePulse 3.4s ease-in-out infinite; mix-blend-mode:screen; }
-  @keyframes sunflarePulse{ 0%,100%{ opacity:.6; transform:scale(1);} 50%{ opacity:1; transform:scale(1.15);} }
-  .rainbow-mood .photo-sweep{ background:linear-gradient(100deg, rgba(255,70,70,.1) 20%, rgba(255,210,60,.1) 35%, rgba(90,220,140,.1) 50%, rgba(70,150,255,.12) 65%, rgba(180,90,255,.12) 80%);
+  @keyframes sunflarePulse{ 0%,100%{ opacity:.4; transform:scale(1);} 50%{ opacity:.65; transform:scale(1.08);} }
+  .rainbow-mood .photo-sweep{ background:linear-gradient(100deg, rgba(255,70,70,.05) 20%, rgba(255,210,60,.05) 35%, rgba(90,220,140,.05) 50%, rgba(70,150,255,.06) 65%, rgba(180,90,255,.06) 80%);
     background-size:250% 250%; animation: photoSweepMove 10s ease-in-out infinite; }
   .rainbow-mood .photo-vignette{ box-shadow: inset 0 0 170px 46px rgba(8,6,16,.7); }
   .rainbow-mood .photo-img{ animation-duration:36s; }
   .photo-tower-pulse{ position:absolute; left:44%; top:12%; width:16%; height:60%; border-radius:50%;
-    background:radial-gradient(ellipse at 50% 30%, rgba(140,200,255,.4), rgba(80,160,255,.14) 42%, transparent 72%);
+    background:radial-gradient(ellipse at 50% 30%, rgba(140,200,255,.22), rgba(80,160,255,.08) 42%, transparent 72%);
     animation: beamPulse 2.6s ease-in-out infinite; mix-blend-mode:screen; }
   .photo-laser{ position:absolute; height:2px; background:linear-gradient(90deg, rgba(255,70,70,0), rgba(255,90,90,.95) 40%, rgba(255,150,150,1) 55%, rgba(255,70,70,0));
-    box-shadow:0 0 10px 2px rgba(255,70,70,.8); opacity:0; animation: laserFire 4.5s ease-in-out infinite; }
-  @keyframes laserFire{ 0%,88%,100%{ opacity:0;} 89%{ opacity:1;} 91%{ opacity:.3;} 93%{ opacity:1;} 96%{ opacity:0;} }
+    box-shadow:0 0 6px 1px rgba(255,70,70,.45); opacity:0; animation: laserFire 4.5s ease-in-out infinite; }
+  @keyframes laserFire{ 0%,88%,100%{ opacity:0;} 89%{ opacity:.5;} 91%{ opacity:.15;} 93%{ opacity:.5;} 96%{ opacity:0;} }
   .photo-explosion-flicker{ position:absolute; left:22%; top:34%; width:180px; height:140px; border-radius:50%;
-    background:radial-gradient(circle, rgba(255,160,60,.4), rgba(255,90,20,.16) 45%, transparent 75%);
+    background:radial-gradient(circle, rgba(255,160,60,.22), rgba(255,90,20,.08) 45%, transparent 75%);
     animation: fireFlicker 1.4s ease-in-out infinite; }
-  .space-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(120,180,255,.14) 46%, transparent 60%); }
+  .space-mood .photo-sweep{ background:linear-gradient(115deg, transparent 32%, rgba(120,180,255,.07) 46%, transparent 60%); }
   .space-mood .photo-vignette{ box-shadow: inset 0 0 170px 46px rgba(4,6,14,.82); }
   .space-mood .photo-img{ animation-duration:38s; }
   .photo-planet-glow{ position:absolute; left:6%; top:-8%; width:46%; height:62%; border-radius:50%;
-    background:radial-gradient(circle at 60% 55%, rgba(255,150,90,.32), rgba(255,90,60,.12) 45%, transparent 72%);
+    background:radial-gradient(circle at 60% 55%, rgba(255,150,90,.18), rgba(255,90,60,.07) 45%, transparent 72%);
     animation: beamPulse 4.2s ease-in-out infinite; mix-blend-mode:screen; }
   .photo-rift{ position:absolute; left:28%; top:4%; width:48%; height:36%; border-radius:50%; filter:blur(20px); mix-blend-mode:screen;
-    background: conic-gradient(from 0deg, rgba(255,120,200,.14), rgba(120,150,255,.16), rgba(180,120,255,.14), rgba(255,120,200,.14));
+    background: conic-gradient(from 0deg, rgba(255,120,200,.08), rgba(120,150,255,.09), rgba(180,120,255,.08), rgba(255,120,200,.08));
     animation: riftDrift 11s linear infinite; }
   @keyframes riftDrift{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
   .photo-debris{ position:absolute; width:5px; height:5px; border-radius:2px; background:rgba(205,205,215,.55); box-shadow:0 0 5px rgba(255,255,255,.35);
     animation: debrisDrift 17s linear infinite; }
   @keyframes debrisDrift{ 0%{ transform:translate(0,0) rotate(0deg); opacity:0;} 10%{ opacity:.7;} 88%{ opacity:.5;} 100%{ transform:translate(-70px,46px) rotate(200deg); opacity:0;} }
-  .multiverse-mood .photo-sweep{ background:linear-gradient(115deg, transparent 30%, rgba(200,120,255,.15) 46%, transparent 62%); }
+  .multiverse-mood .photo-sweep{ background:linear-gradient(115deg, transparent 30%, rgba(200,120,255,.08) 46%, transparent 62%); }
   .multiverse-mood .photo-vignette{ box-shadow: inset 0 0 180px 50px rgba(10,4,10,.82); }
   .multiverse-mood .photo-img{ animation-duration:44s; }
   /* --- Labo techno (niveau systeme) : sol circulaire lumineux, vitrines de combinaisons, orbe holographique --- */
@@ -5043,17 +5048,20 @@ function startBattle(mission, done){
   function hit(frame, big){
     if(!frame) return;
     frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit');
-    if(big && scope>=6){
+    flashBattleOverlay(big ? 'big' : 'small');
+    if(big){
       frame.classList.remove('hit-epic'); void frame.offsetWidth; frame.classList.add('hit-epic');
-      const shakeClass = scope>=7 ? 'shake-cosmic' : 'shake-system';
+      const shakeClass = scope>=7 ? 'shake-cosmic' : (scope>=6 ? 'shake-system' : 'shake');
       document.body.classList.remove(shakeClass); void document.body.offsetWidth; document.body.classList.add(shakeClass);
       setTimeout(()=>{ document.body.classList.remove(shakeClass); }, 650);
-      flashBattleOverlay();
     }
   }
-  function flashBattleOverlay(){
+  function flashBattleOverlay(size){
     const fl = ov.querySelector('.btl-epic-flash'); if(!fl) return;
-    fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+    fl.classList.remove('go','small');
+    void fl.offsetWidth;
+    fl.classList.add('go');
+    if(size==='small') fl.classList.add('small');
   }
   function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
