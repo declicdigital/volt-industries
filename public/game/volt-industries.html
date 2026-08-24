@@ -382,19 +382,38 @@
   .btl-epic-flash.go{ animation: epicFlashGo .55s ease; }
   @keyframes epicFlashGo{ 0%{ opacity:0;} 12%{ opacity:1;} 100%{ opacity:0;} }
   .btl-set{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
-  /* --- Tour techno (niveau systeme) --- */
-  .tower-window{ position:absolute; inset:0;
-    background: linear-gradient(180deg, rgba(6,10,20,0) 0%, rgba(6,10,20,.55) 100%),
-      repeating-radial-gradient(circle at 15% 82%, rgba(0,194,255,.55) 0 1.5px, transparent 2.5px 46px),
-      repeating-radial-gradient(circle at 65% 88%, rgba(255,178,32,.4) 0 1.5px, transparent 2.5px 62px),
-      repeating-radial-gradient(circle at 88% 78%, rgba(120,90,255,.35) 0 1.5px, transparent 2.5px 54px);
-    background-size:100% 100%, 240px 240px, 320px 320px, 280px 280px;
-    animation: towerDrift 24s linear infinite; opacity:.8; }
-  @keyframes towerDrift{ 0%{ background-position:0 0, 0 0, 0 0, 0 0; } 100%{ background-position:0 0, -240px -70px, 320px -90px, -280px 60px; } }
-  .tower-cols{ position:absolute; inset:0; background: repeating-linear-gradient(90deg, rgba(0,194,255,.05) 0 2px, transparent 2px 150px); animation: towerColsMove 30s linear infinite; }
-  @keyframes towerColsMove{ from{ background-position:0 0; } to{ background-position:-1500px 0; } }
-  .tower-scan{ position:absolute; left:0; right:0; height:160px; top:-160px; background: linear-gradient(180deg, transparent, rgba(0,194,255,.14), transparent); animation: towerScan 6.5s ease-in-out infinite; }
-  @keyframes towerScan{ 0%{ top:-160px;} 100%{ top:100%; } }
+  /* --- Labo techno (niveau systeme) : sol circulaire lumineux, vitrines de combinaisons, orbe holographique --- */
+  .lab-set{ background: radial-gradient(ellipse 90% 70% at 50% 8%, rgba(0,194,255,.08), transparent 60%), #05070c; }
+  .lab-ceiling{ position:absolute; top:0; left:8%; right:8%; height:3px; border-radius:50%;
+    background:linear-gradient(90deg, transparent, rgba(0,194,255,.95), transparent);
+    box-shadow:0 0 34px 7px rgba(0,194,255,.55); animation: labCeilingPulse 3s ease-in-out infinite; }
+  @keyframes labCeilingPulse{ 0%,100%{ opacity:.45;} 50%{ opacity:1;} }
+  .lab-floor{ position:absolute; left:50%; bottom:-38%; width:150%; height:75%; transform:translateX(-50%); border-radius:50%;
+    background:
+      radial-gradient(ellipse at center, transparent 38%, rgba(0,194,255,.1) 39% 40%, transparent 41%),
+      radial-gradient(ellipse at center, transparent 54%, rgba(0,194,255,.08) 55% 56%, transparent 57%),
+      radial-gradient(ellipse at center, transparent 70%, rgba(0,194,255,.06) 71% 72%, transparent 73%),
+      radial-gradient(ellipse at center, rgba(0,194,255,.05), transparent 30%); }
+  .lab-floor-sweep{ position:absolute; left:50%; bottom:-38%; width:150%; height:75%; transform:translateX(-50%); border-radius:50%; overflow:hidden;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(0,194,255,.4) 10deg, transparent 26deg);
+    animation: labSweep 5.5s linear infinite; mix-blend-mode:screen; }
+  @keyframes labSweep{ from{ transform:translateX(-50%) rotate(0deg);} to{ transform:translateX(-50%) rotate(360deg);} }
+  .lab-cases{ position:absolute; top:10%; bottom:22%; width:64px; display:flex; flex-direction:column; justify-content:space-around; opacity:.65; }
+  .lab-cases.left{ left:1.5%; } .lab-cases.right{ right:1.5%; }
+  .lab-case{ width:42px; height:112px; margin:0 auto; border:1.5px solid rgba(0,194,255,.5); border-radius:7px; position:relative; overflow:hidden;
+    background:linear-gradient(180deg, rgba(0,194,255,.14), rgba(0,194,255,.02));
+    box-shadow:0 0 14px rgba(0,194,255,.25), inset 0 0 10px rgba(0,194,255,.15);
+    animation: labCaseGlow 4s ease-in-out infinite; }
+  .lab-case::before{ content:''; position:absolute; left:32%; right:32%; top:14%; height:34%; border-radius:40% 40% 20% 20%; background:rgba(0,194,255,.22); }
+  .lab-case::after{ content:''; position:absolute; left:24%; right:24%; top:48%; bottom:10%; border-radius:8px; background:rgba(0,194,255,.14); }
+  @keyframes labCaseGlow{ 0%,100%{ box-shadow:0 0 14px rgba(0,194,255,.25);} 50%{ box-shadow:0 0 26px rgba(0,194,255,.55);} }
+  .lab-orb{ position:absolute; top:14%; right:7%; width:110px; height:110px; border-radius:50%;
+    background: radial-gradient(circle at 38% 32%, rgba(255,255,255,.55), rgba(0,194,255,.4) 42%, transparent 72%);
+    box-shadow:0 0 55px rgba(0,194,255,.45); animation: labOrbFloat 6s ease-in-out infinite; }
+  .lab-orb::before{ content:''; position:absolute; inset:-14px; border-radius:50%; border:1px solid rgba(0,194,255,.4); animation: labOrbRing 4s linear infinite; }
+  @keyframes labOrbFloat{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-16px);} }
+  @keyframes labOrbRing{ from{ transform:rotate(0deg) scale(1);} to{ transform:rotate(360deg) scale(1);} }
+  @media (max-width:700px){ .lab-cases{ width:40px; } .lab-case{ width:28px; height:76px; } .lab-orb{ width:70px; height:70px; top:8%; } }
   /* --- Salle d'incubateurs (niveau cosmique) --- */
   .incub-glow{ position:absolute; inset:0; background:radial-gradient(ellipse 90% 60% at 50% 15%, rgba(255,178,32,.12), transparent 65%); animation: ambientPulse 2.6s ease-in-out infinite; }
   @keyframes ambientPulse{ 0%,100%{ opacity:.55;} 50%{ opacity:1;} }
@@ -4766,7 +4785,9 @@ function startBattle(mission, done){
     return `<div class="btl-set incub-set">${col('left')}${col('right')}<div class="incub-glow"></div><div class="incub-floor"></div></div>`;
   }
   function towerSetHTML(){
-    return `<div class="btl-set tower-set"><div class="tower-window"></div><div class="tower-cols"></div><div class="tower-scan"></div></div>`;
+    const caseDiv = (delay)=>`<div class="lab-case" style="animation-delay:${delay}s;"></div>`;
+    const cases = (side)=>`<div class="lab-cases ${side}">${[0,.6,1.2,1.8].map(d=>caseDiv(d)).join('')}</div>`;
+    return `<div class="btl-set lab-set"><div class="lab-ceiling"></div><div class="lab-floor"></div><div class="lab-floor-sweep"></div>${cases('left')}${cases('right')}<div class="lab-orb"></div></div>`;
   }
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
