@@ -322,6 +322,16 @@
   .cine-overlay.system .cine-rays{ animation-duration:8s; opacity:.35; }
   @keyframes cinePulseSystem{ 0%,100%{ opacity:.5; } 50%{ opacity:.92; } }
   .cine-overlay.cosmic .cine-flash{ animation: cinePulseCosmic .8s ease-in-out infinite; background:radial-gradient(ellipse at 50% 50%, rgba(255,178,32,.5), rgba(0,194,255,.25) 45%, transparent 75%); }
+  .cine-overlay.eighth-star{ z-index:340; }
+  .star8-icon{ font-size:64px; line-height:1; color:var(--gold); text-shadow:0 0 30px var(--gold), 0 0 80px var(--gold); animation: star8Spin 2.2s ease-in-out infinite; margin-bottom:8px; }
+  @keyframes star8Spin{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.28) rotate(14deg);} }
+  .star8-burst{ position:absolute; inset:-30%; z-index:1; pointer-events:none; background:radial-gradient(circle at 50% 50%, rgba(255,210,63,.4), transparent 60%); animation: star8Pulse 1.3s ease-in-out infinite; }
+  @keyframes star8Pulse{ 0%,100%{ opacity:.5; transform:scale(1);} 50%{ opacity:1; transform:scale(1.1);} }
+  .cine-overlay.eighth-star .cine-scope{ color:var(--gold); text-shadow:0 0 20px var(--gold); font-size:14px; letter-spacing:5px; }
+  .cine-overlay.eighth-star .cine-title{ font-size:clamp(24px,5.5vw,44px); text-shadow:0 0 26px var(--gold), 0 0 60px var(--gold); }
+  .cine-overlay.villain-8 .cine-title{ text-shadow:0 0 24px var(--red), 0 0 60px var(--gold); }
+  .cine-overlay.villain-8 .star8-burst{ background:radial-gradient(circle at 50% 50%, rgba(255,59,92,.35), rgba(255,210,63,.2) 55%, transparent 75%); }
+  .star8-sub{ margin-top:10px; font-size:14.5px; color:var(--ink); opacity:.88; max-width:440px; margin-left:auto; margin-right:auto; }
   .cine-overlay.cosmic .cine-scope{ color:var(--gold); text-shadow:0 0 22px var(--gold); font-size:14px; }
   .cine-overlay.cosmic .cine-title{ font-size: clamp(22px,5vw,42px); text-shadow:0 0 24px var(--gold), 0 0 60px var(--accent), 0 0 100px var(--gold); animation: cineZoomBig .9s cubic-bezier(.2,.8,.3,1); }
   .cine-rays{ position:absolute; inset:-20%; z-index:1; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.09) 0deg 4deg, transparent 4deg 16deg); animation: raySpin 6s linear infinite; opacity:.5; }
@@ -341,6 +351,11 @@
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
   .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
     width:100%; max-width:660px; margin:0 auto; }
+  .btl-spotlight{ position:relative; display:flex; align-items:flex-start; justify-content:center; gap:22px; padding:18px 12px 8px;
+    width:100%; max-width:820px; margin:0 auto; }
+  .btl-spotlight .btl-fighter{ flex:1 1 0; max-width:340px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .btl-frame-tag{ position:absolute; left:8px; bottom:8px; font-size:10px; font-weight:900; letter-spacing:1px; padding:3px 8px; border-radius:8px; background:rgba(6,10,18,.78); text-transform:uppercase; z-index:4; }
+  .btl-frame.frame-swap{ animation: sqAssist .5s cubic-bezier(.2,.9,.3,1) 1; }
   .btl-fighter{ flex:1 1 0; max-width:300px; display:flex; flex-direction:column; gap:8px; min-width:0; }
   .btl-frame{ position:relative; width:100%; aspect-ratio:1/1; border-radius:16px; overflow:hidden;
     border:2px solid var(--cp-color, var(--accent)); box-shadow:0 0 30px -6px var(--cp-color, var(--accent)), inset 0 0 50px -14px var(--cp-color, var(--accent));
@@ -355,10 +370,22 @@
   @keyframes slideFromRight{ from{ opacity:0; transform:translateX(14%) scale(.94);} to{ opacity:1; transform:none;} }
   .btl-frame.hit{ animation: btlHit .38s ease; }
   @keyframes btlHit{ 0%{ filter:brightness(1);} 25%{ filter:brightness(2.4) saturate(.4); transform:translateX(-6px);} 55%{ transform:translateX(5px);} 100%{ filter:brightness(1); transform:none;} }
+  .btl-frame.hit-epic{ animation: btlHitEpic .55s ease; z-index:6; }
+  @keyframes btlHitEpic{ 0%{ filter:brightness(1);} 15%{ filter:brightness(3.2) saturate(.2); transform:translateX(-14px) scale(1.05);} 35%{ filter:brightness(2.6); transform:translateX(11px) scale(1.03);} 60%{ transform:translateX(-6px);} 100%{ filter:brightness(1); transform:none;} }
   .btl-frame.ko{ filter:grayscale(1) brightness(.5); transition:filter .6s ease; }
   .btl-dmg{ position:absolute; left:50%; top:38%; transform:translateX(-50%); font-size:30px; font-weight:900; color:#fff;
     text-shadow:0 0 18px var(--cp-color), 0 0 40px #000; animation: dmgFloat 1s ease forwards; pointer-events:none; z-index:4; }
+  .btl-dmg.epic{ font-size:44px; text-shadow:0 0 26px var(--cp-color), 0 0 60px var(--cp-color), 0 0 90px #000; animation: dmgFloatEpic 1.4s cubic-bezier(.2,.8,.3,1) forwards; }
   @keyframes dmgFloat{ 0%{ opacity:0; transform:translate(-50%,10px) scale(.7);} 25%{ opacity:1; transform:translate(-50%,-4px) scale(1.15);} 100%{ opacity:0; transform:translate(-50%,-42px) scale(1);} }
+  @keyframes dmgFloatEpic{ 0%{ opacity:0; transform:translate(-50%,14px) scale(.6) rotate(-4deg);} 20%{ opacity:1; transform:translate(-50%,-6px) scale(1.35) rotate(2deg);} 45%{ transform:translate(-50%,-14px) scale(1.15) rotate(0deg);} 100%{ opacity:0; transform:translate(-50%,-58px) scale(1.05);} }
+  .btl-epic-flash{ position:fixed; inset:0; z-index:330; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.55), rgba(255,178,32,.2) 40%, transparent 72%); }
+  .btl-epic-flash.go{ animation: epicFlashGo .55s ease; }
+  @keyframes epicFlashGo{ 0%{ opacity:0;} 12%{ opacity:1;} 100%{ opacity:0;} }
+  .btl-ambient-rays{ position:fixed; inset:-25%; z-index:1; pointer-events:none; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.05) 0deg 3deg, transparent 3deg 14deg); animation: raySpin 22s linear infinite; opacity:.4; }
+  .cosmic-battle .btl-ambient-rays{ animation-duration:16s; opacity:.55; }
+  .btl-ambient-pulse{ position:fixed; inset:0; z-index:1; pointer-events:none; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120,90,255,.14), transparent 65%); animation: ambientPulse 3.2s ease-in-out infinite; }
+  .cosmic-battle .btl-ambient-pulse{ background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,178,32,.16), transparent 65%); animation-duration:2.4s; }
+  @keyframes ambientPulse{ 0%,100%{ opacity:.5;} 50%{ opacity:1;} }
   .btl-meta{ display:flex; flex-direction:column; gap:5px; }
   .btl-name{ font-size:12px; font-weight:900; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 12px currentColor; }
   .btl-hpbar{ height:11px; border-radius:8px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; }
@@ -368,7 +395,7 @@
     letter-spacing:2px; text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
   .btl-vs.gone{ animation: cineOut .35s ease forwards; }
   /* --- Arene en roster : chaque combattant est une carte avec ses propres PV visibles --- */
-  .btl-arena2{ position:relative; display:flex; align-items:flex-start; justify-content:center; gap:14px; padding:14px 12px 6px; max-width:760px; margin:0 auto; width:100%; }
+  .btl-arena2{ position:relative; display:flex; align-items:flex-start; justify-content:center; gap:20px; padding:14px 12px 6px; max-width:820px; margin:0 auto; width:100%; }
   .btl-side{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; }
   .btl-side-label{ font-size:10px; font-weight:900; letter-spacing:1.6px; text-transform:uppercase; text-align:center; opacity:.85; }
   .btl-roster{ display:flex; flex-direction:column; gap:6px; }
@@ -378,7 +405,7 @@
   .rcard.pickable:hover{ border-color:var(--cp-color); }
   .rcard.selected{ border-color:var(--cp-color); box-shadow:0 0 16px -4px var(--cp-color), inset 0 0 0 1px var(--cp-color); background:rgba(255,255,255,.06); }
   .rcard.ko{ opacity:.4; filter:grayscale(1); }
-  .rcard-frame{ position:relative; width:42px; height:42px; flex:0 0 auto; border-radius:10px; overflow:hidden; border:1.5px solid var(--cp-color); background:rgba(0,0,0,.4); }
+  .rcard-frame{ position:relative; width:48px; height:48px; flex:0 0 auto; border-radius:10px; overflow:hidden; border:1.5px solid var(--cp-color); background:rgba(0,0,0,.4); }
   .rcard-frame img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
   .rcard-frame .portrait-avatar, .rcard-frame svg{ width:100%; height:100%; }
   .rcard-frame .cp-glyph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; color:#fff; opacity:.85; }
@@ -398,8 +425,8 @@
     .rcard-hpnum{ font-size:8px; }
     .btl-side-label{ font-size:8.5px; }
   }
-  .btl-log{ width:100%; max-width:660px; margin:0 auto; min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
-  .btl-moves{ width:100%; max-width:660px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
+  .btl-log{ width:100%; max-width:760px; margin:0 auto; min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
+  .btl-moves{ width:100%; max-width:760px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
   .btl-move{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer;
     color:var(--ink); font:inherit; transition:border-color .15s, transform .15s, background .15s; }
   .btl-move:hover:not(:disabled){ border-color:var(--accent); background:var(--accent-soft); transform:translateY(-1px); }
@@ -2469,7 +2496,8 @@ function freshState(lang){
     romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
     lastStars:1, savedToHistory:false,
     startAge:24, extensions:0,
-    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0,
+    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
+    eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
   };
 }
 let S = freshState('fr');
@@ -2654,7 +2682,30 @@ function softenAlign(delta){
 }
 function clampToReputation(v){ const cap = Math.min(reputationCap(), convictionCap()); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
 function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
-function computeStars(){ const score = heroVillainScore(); return Math.max(1, Math.min(7, Math.round(score/100*7))); }
+function computeStars(){
+  const score = careerScore().total;
+  if(score<=15) return 1;
+  if(score<=30) return 2;
+  if(score<=50) return 3;
+  if(score<=65) return 4;
+  if(score<=80) return 5;
+  if(score<=90) return 6;
+  return 7;
+}
+/* ---------- 8eme etoile doree, cachee : avoir reellement sauve (hero) ou detruit (villain) l'univers cosmique ---------- */
+function eighthStarQualifies(){
+  if(computeStars() < 7) return false;
+  if(Math.abs(S.align) < 90) return false;
+  return (S.trueCosmicWins||0) >= 2;
+}
+/* Seules 5% des carrieres sont meme capables d'y pretendre (tirage unique au debut de la partie). */
+function tryGrantEighthStar(){
+  if(S.eighthStar) return false;
+  if(!S.eighthStarEligible) return false;
+  if(!eighthStarQualifies()) return false;
+  S.eighthStar = true;
+  return true;
+}
 
 /* ============================ RENDER ============================ */
 const app = document.getElementById('app');
@@ -2713,8 +2764,10 @@ function renderRankBadge(){
   const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
   const stars = computeStars();
   const cs = careerScore(); const score = cs.total;
+  const eighth = S.eighthStar;
   const starColor = zone==='hero' ? '#ffd23f' : (zone==='villain' ? 'var(--red)' : '#b98bff');
   let starsHtml = ''; for(let i=1;i<=7;i++){ starsHtml += `<span style="color:${i<=stars?starColor:'rgba(255,255,255,.15)'}">&#9733;</span>`; }
+  if(eighth) starsHtml += `<span style="color:var(--gold); text-shadow:0 0 10px var(--gold); margin-left:2px;">&#9733;</span>`;
   const factionHtml = S.team ? `<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
       <span style="font-size:10px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
       <div style="width:24px;height:24px;">${factionEmblemSVG(S.team.side, S.team.tier, 24)}</div>
@@ -3901,7 +3954,7 @@ function nextMission(){
   if(shouldTriggerMentor() && startMentorScene()) return;
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   S.pendingBattleWin = null;
-  S.currentMission = pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
+  S.currentMission = S.peacefulEra ? pickIntrigueMission() : pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
 function missionEpicness(mission){
   if(!mission || mission.type!=='combat') return 'none';
@@ -3957,6 +4010,132 @@ function showBreakthroughCinematic(){
   const dur = 1900;
   setTimeout(()=>{ overlay.classList.add('cine-out'); setTimeout(()=>overlay.remove(), 500); }, dur);
   return dur;
+}
+/* ---------- 8eme etoile : cinematique doree, cachee, pour un accomplissement veritablement cosmique ---------- */
+/* ---------- Carte-trophee doree de la 8eme etoile, generee en canvas et telechargeable en PNG ---------- */
+function drawStarPath(ctx, cx, cy, points, outerR, innerR){
+  ctx.beginPath();
+  const step = Math.PI / points;
+  let rot = -Math.PI/2;
+  ctx.moveTo(cx + Math.cos(rot)*outerR, cy + Math.sin(rot)*outerR);
+  for(let i=0;i<points;i++){
+    rot += step; ctx.lineTo(cx + Math.cos(rot)*innerR, cy + Math.sin(rot)*innerR);
+    rot += step; ctx.lineTo(cx + Math.cos(rot)*outerR, cy + Math.sin(rot)*outerR);
+  }
+  ctx.closePath();
+}
+function wrapCenteredText(ctx, text, cx, cy, maxWidth, lineHeight){
+  const words = text.split(' '); let line = ''; const lines = [];
+  for(let n=0;n<words.length;n++){
+    const test = line + words[n] + ' ';
+    if(ctx.measureText(test).width > maxWidth && n>0){ lines.push(line.trim()); line = words[n] + ' '; }
+    else line = test;
+  }
+  lines.push(line.trim());
+  const startY = cy - (lines.length-1)*lineHeight/2;
+  lines.forEach((l,i)=> ctx.fillText(l, cx, startY + i*lineHeight));
+  return lines.length;
+}
+function generateTrophyCardCanvas(){
+  const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
+  const W = 1080, H = 1350, cx = W/2;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const goldA = '#ffe38a', gold = '#ffd23f', goldDark = '#a9761f';
+  // Fond degrade sombre
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  if(villain){ bg.addColorStop(0,'#170406'); bg.addColorStop(.5,'#2a070a'); bg.addColorStop(1,'#0c0304'); }
+  else { bg.addColorStop(0,'#070a14'); bg.addColorStop(.5,'#111a2e'); bg.addColorStop(1,'#06080f'); }
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  // Halo central lumineux
+  const glow = ctx.createRadialGradient(cx, H*0.32, 40, cx, H*0.32, W*0.78);
+  glow.addColorStop(0, villain? 'rgba(255,120,60,.38)' : 'rgba(255,210,63,.4)');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
+  // Rayons subtils
+  ctx.save(); ctx.globalAlpha = .1; ctx.strokeStyle = gold; ctx.lineWidth = 2;
+  for(let a=0;a<360;a+=12){ const r1=140, r2=W*0.8; const rad=a*Math.PI/180;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(rad)*r1, H*0.32+Math.sin(rad)*r1); ctx.lineTo(cx+Math.cos(rad)*r2, H*0.32+Math.sin(rad)*r2); ctx.stroke(); }
+  ctx.restore();
+  // Cadre dore double
+  const pad = 34;
+  ctx.strokeStyle = gold; ctx.lineWidth = 7; ctx.strokeRect(pad,pad,W-pad*2,H-pad*2);
+  ctx.strokeStyle = 'rgba(255,210,63,.45)'; ctx.lineWidth = 1.5; ctx.strokeRect(pad+16,pad+16,W-(pad+16)*2,H-(pad+16)*2);
+  // Coins decoratifs
+  [[pad+16,pad+16,1,1],[W-pad-16,pad+16,-1,1],[pad+16,H-pad-16,1,-1],[W-pad-16,H-pad-16,-1,-1]].forEach(([x,y,sx,sy])=>{
+    ctx.strokeStyle = gold; ctx.lineWidth = 4; ctx.beginPath();
+    ctx.moveTo(x, y+34*sy); ctx.lineTo(x, y); ctx.lineTo(x+34*sx, y); ctx.stroke();
+  });
+  // Grande etoile a 8 branches, brillante
+  ctx.shadowColor = gold; ctx.shadowBlur = 70;
+  const starGrad = ctx.createRadialGradient(cx,225,10,cx,225,110);
+  starGrad.addColorStop(0,'#fffbe6'); starGrad.addColorStop(.45, goldA); starGrad.addColorStop(1, goldDark);
+  ctx.fillStyle = starGrad;
+  drawStarPath(ctx, cx, 225, 8, 100, 46); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Titre
+  ctx.textAlign = 'center';
+  ctx.fillStyle = gold; ctx.font = '900 30px Arial, sans-serif';
+  ctx.fillText((isFr?'8EME ETOILE DEBLOQUEE':'8TH STAR UNLOCKED'), cx, 388);
+  // Accroche principale
+  ctx.fillStyle = '#ffffff'; ctx.font = '900 52px Arial, sans-serif';
+  const mainLine = villain ? (isFr?"L'UNIVERS COSMIQUE EST TOMBE":"THE COSMIC UNIVERSE HAS FALLEN") : (isFr?"L'UNIVERS COSMIQUE EST SAUVE":"THE COSMIC UNIVERSE IS SAVED");
+  const nLines = wrapCenteredText(ctx, mainLine, cx, 480, W-180, 60);
+  // Nom du heros/villain
+  const nameY = 480 + (nLines*30) + 90;
+  ctx.font = '700 34px Arial, sans-serif'; ctx.fillStyle = villain ? '#ff5c6e' : '#4fd3ff';
+  ctx.fillText((S.heroName||'').toUpperCase(), cx, nameY);
+  ctx.font = '400 22px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
+  ctx.fillText(villain ? (isFr?'VILLAIN LEGENDAIRE':'LEGENDARY VILLAIN') : (isFr?'HEROS LEGENDAIRE':'LEGENDARY HERO'), cx, nameY+34);
+  // Ligne de statistiques
+  const cs = careerScore(); const stars = computeStars();
+  ctx.font = '600 25px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+  const starsStr = '\u2605'.repeat(stars) + '\u2605';
+  ctx.fillText(`${isFr?'Score':'Score'} ${cs.total}/100  \u2022  ${isFr?'Annee':'Year'} ${S.currentYear}`, cx, nameY+100);
+  ctx.fillStyle = gold; ctx.font = '600 32px Arial, sans-serif';
+  ctx.fillText(starsStr, cx, nameY+150);
+  // Pied de carte
+  ctx.font = '400 18px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+  const dateStr = new Date().toLocaleDateString(isFr?'fr-FR':'en-US');
+  ctx.fillText(`VOLT INDUSTRIES \u2014 ${dateStr}`, cx, H-64);
+  return canvas;
+}
+function downloadTrophyCard(){
+  const canvas = generateTrophyCardCanvas();
+  canvas.toBlob(blob=>{
+    if(!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `8eme-etoile-${(S.heroName||'heros').replace(/[^a-z0-9]+/gi,'_')}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }, 'image/png');
+}
+function showEighthStarCinematic(cb){
+  const isFr = S.lang==='fr'; const zone = zoneOf(S.align);
+  const villain = zone==='villain';
+  const title = villain ? (isFr?'L\'UNIVERS COSMIQUE EST TOMBE':'THE COSMIC UNIVERSE HAS FALLEN') : (isFr?'L\'UNIVERS COSMIQUE EST SAUVE':'THE COSMIC UNIVERSE IS SAVED');
+  const sub = villain ? (isFr?"Rien ne subsiste de ce qui s'opposait a toi.":"Nothing remains of what stood against you.") : (isFr?"Chaque monde respire encore grace a toi.":"Every world still breathes because of you.");
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay eighth-star ' + (villain?'villain-8':'hero-8');
+  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-rays"></div><div class="star8-burst"></div>
+    <div class="cine-content">
+      <div class="star8-icon">&#9733;</div>
+      <div class="cine-scope">${isFr?'8EME ETOILE DEBLOQUEE':'8TH STAR UNLOCKED'}</div>
+      <div class="cine-title">${title}</div>
+      <p class="star8-sub">${sub}</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px;">
+        <button class="btl-move" id="star8Download" style="min-width:220px; border-color:var(--gold); background:rgba(255,210,63,.1);"><b>${isFr?'TELECHARGER LA CARTE':'DOWNLOAD THE CARD'}</b></button>
+        <button class="btl-move" id="star8Continue" style="min-width:160px;"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.classList.add('shake-cosmic');
+  setTimeout(()=>{ document.body.classList.remove('shake-cosmic'); }, 2200);
+  overlay.querySelector('#star8Download').onclick = downloadTrophyCard;
+  overlay.querySelector('#star8Continue').onclick = ()=>{
+    overlay.classList.add('cine-out');
+    setTimeout(()=>{ overlay.remove(); cb(); }, 500);
+  };
 }
 /* ================= COMBAT TACTIQUE (style Pokemon) ================= */
 const MOVES_BY_POWER = {
@@ -4453,22 +4632,48 @@ function startBattle(mission, done){
   const foeExtras = buildRosterExtras(squads.foes, false);
   const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
 
-  /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles. */
-  const allyRoster = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
+  /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
+  function spdFor(entry){
+    if(entry.isPlayer) return 46 + Math.round(S.stats.courage*0.18) + Math.round(Math.random()*10);
+    return 26 + tierOfKey(entry.key)*4 + Math.round(Math.random()*12);
+  }
+  const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const foeRoster = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
+  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false };
+  allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
+  const allyRoster = allyRosterRaw, foeRoster = foeRosterRaw;
+  /* Ordre d'initiative : chacun agit a son tour, du plus rapide au plus lent, sur toute la duree du combat. */
+  const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
+    .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
+    .sort((a,b)=> b.ref.spd - a.ref.spd);
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0 };
 
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
+    ${scope>=6 ? '<div class="btl-ambient-rays"></div><div class="btl-ambient-pulse"></div>' : ''}
+    <div class="btl-epic-flash"></div>
+    <div class="btl-spotlight">
+      <div class="btl-fighter me">
+        <div class="btl-frame" id="btlMeFrame" style="--cp-color:${myCol};">${avatarVisual()}</div>
+        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
+          <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
+          <div class="btl-hpnum" id="btlMeNum"></div></div>
+      </div>
+      <div class="btl-vs" id="btlVS">VS</div>
+      <div class="btl-fighter foe">
+        <div class="btl-frame" id="btlFoeFrame" style="--cp-color:${foeCol};">${battleFrameInner(foe)}</div>
+        <div class="btl-meta"><div class="btl-name" id="btlFoeSpotName" style="color:${foeCol};">${foeName}</div>
+          <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
+          <div class="btl-hpnum" id="btlFoeNum"></div></div>
+      </div>
+    </div>
     <div class="btl-arena2">
       <div class="btl-side">
         <div class="btl-side-label" style="color:${myCol};">${S.lang==='fr'?'TON EQUIPE':'YOUR TEAM'}</div>
         <div class="btl-roster" id="allyRosterEl"></div>
       </div>
-      <div class="btl-vs" id="btlVS">VS</div>
       <div class="btl-side">
         <div class="btl-side-label" style="color:${foeCol};">${S.lang==='fr'?'CIBLES - touche pour choisir':'TARGETS - tap to choose'}</div>
         <div class="btl-roster" id="foeRosterEl"></div>
@@ -4479,7 +4684,34 @@ function startBattle(mission, done){
   document.body.appendChild(ov);
   const logEl = ov.querySelector('#btlLog'), movesEl = ov.querySelector('#btlMoves');
   const allyRosterEl = ov.querySelector('#allyRosterEl'), foeRosterEl = ov.querySelector('#foeRosterEl');
+  const meSpotFrame = ov.querySelector('#btlMeFrame'), foeSpotFrame = ov.querySelector('#btlFoeFrame');
+  const meSpotFrameDefault = meSpotFrame.innerHTML;
   const setLog = txt => { logEl.textContent = txt; };
+
+  function refreshSpotlight(){
+    const p = allyRoster[0];
+    const pPct = clamp(p.hp/p.maxHp*100, 0, 100);
+    ov.querySelector('#btlMeHP').style.width = pPct+'%'; ov.querySelector('#btlMeHP').style.background = hpColor(pPct);
+    ov.querySelector('#btlMeNum').textContent = Math.max(0,Math.round(p.hp))+' / '+p.maxHp;
+    const t = foeRoster[st.targetIdx];
+    if(t){
+      foeSpotFrame.innerHTML = t.img ? `<img src="${t.img}" alt="${t.name}">` : `<span class="cp-glyph">${t.name.charAt(0).toUpperCase()}</span>`;
+      const nameEl = ov.querySelector('#btlFoeSpotName'); nameEl.textContent = t.name; nameEl.style.color = t.col;
+      const tPct = clamp(t.hp/t.maxHp*100, 0, 100);
+      ov.querySelector('#btlFoeHP').style.width = tPct+'%'; ov.querySelector('#btlFoeHP').style.background = hpColor(tPct);
+      ov.querySelector('#btlFoeNum').textContent = Math.max(0,Math.round(t.hp))+' / '+t.maxHp;
+      foeSpotFrame.style.setProperty('--cp-color', t.col);
+    }
+  }
+  /* Fait apparaitre brievement un autre combattant (coequipier ou renfort adverse) au premier plan pour un effet dynamique. */
+  function flashSpotlight(side, entry){
+    const frame = side==='ally' ? meSpotFrame : foeSpotFrame;
+    const revertHTML = side==='ally' ? meSpotFrameDefault : frame.innerHTML;
+    frame.innerHTML = entry.img ? `<img src="${entry.img}" alt="${entry.name}">` : `<span class="cp-glyph">${entry.name.charAt(0).toUpperCase()}</span>`;
+    frame.innerHTML += `<div class="btl-frame-tag" style="color:${entry.col};">${S.lang==='fr'?'RENFORT':'BACKUP'}</div>`;
+    frame.classList.add('frame-swap');
+    setTimeout(()=>{ frame.classList.remove('frame-swap'); if(side==='foe') refreshSpotlight(); else frame.innerHTML = revertHTML; }, 1100);
+  }
 
   function rosterCardHTML(entry, i, side){
     const pct = clamp(entry.hp/entry.maxHp*100, 0, 100);
@@ -4502,7 +4734,7 @@ function startBattle(mission, done){
     el.innerHTML = roster.map((e,i)=>rosterCardHTML(e,i,side)).join('');
     if(side==='foe'){
       el.querySelectorAll('.rcard.pickable').forEach(c=>{
-        c.onclick = ()=>{ if(st.busy) return; st.targetIdx = parseInt(c.dataset.idx,10); renderRoster('foe'); };
+        c.onclick = ()=>{ if(st.busy) return; st.targetIdx = parseInt(c.dataset.idx,10); renderRoster('foe'); refreshSpotlight(); };
       });
     }
   }
@@ -4521,13 +4753,27 @@ function startBattle(mission, done){
     const alive = livingIdx(foeRoster);
     if(!alive.includes(st.targetIdx)) st.targetIdx = alive.length ? alive[0] : -1;
   }
-  function floatDmg(frame, val, col){
+  function floatDmg(frame, val, col, big){
     if(!frame) return;
-    const el = document.createElement('div'); el.className='btl-dmg'; el.style.setProperty('--cp-color', col);
+    const el = document.createElement('div'); el.className='btl-dmg'+(big&&scope>=6?' epic':''); el.style.setProperty('--cp-color', col);
     el.textContent = (val>0? '-' : '+') + Math.abs(val);
-    frame.appendChild(el); setTimeout(()=>el.remove(), 1000);
+    frame.appendChild(el); setTimeout(()=>el.remove(), big&&scope>=6?1400:1000);
   }
-  function hit(frame){ if(!frame) return; frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
+  function hit(frame, big){
+    if(!frame) return;
+    frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit');
+    if(big && scope>=6){
+      frame.classList.remove('hit-epic'); void frame.offsetWidth; frame.classList.add('hit-epic');
+      const shakeClass = scope>=7 ? 'shake-cosmic' : 'shake-system';
+      document.body.classList.remove(shakeClass); void document.body.offsetWidth; document.body.classList.add(shakeClass);
+      setTimeout(()=>{ document.body.classList.remove(shakeClass); }, 650);
+      flashBattleOverlay();
+    }
+  }
+  function flashBattleOverlay(){
+    const fl = ov.querySelector('.btl-epic-flash'); if(!fl) return;
+    fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  }
   function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
     return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
@@ -4537,17 +4783,21 @@ function startBattle(mission, done){
     const e = foeRoster[i]; if(!e || e.ko) return;
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('foe', i)); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
+    if(i===st.targetIdx){ hit(foeSpotFrame, true); floatDmg(foeSpotFrame, d, col, true); }
     if(e.hp<=0){ e.ko = true; refreshEntry('foe', i); pickNextTarget(); }
+    refreshSpotlight();
   }
   /* Un adversaire inflige des degats a un allie (le joueur ou un membre de son escouade). */
   function dealToAlly(i, d, col){
     const e = allyRoster[i]; if(!e || e.ko) return;
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('ally', i)); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
+    if(i===0){ hit(meSpotFrame, true); floatDmg(meSpotFrame, d, col, true); }
     if(e.hp<=0 && !e.isPlayer){
       e.ko = true; refreshEntry('ally', i);
       if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
     }
+    refreshSpotlight();
   }
   function allFoesDown(){ return foeRoster.every(f=>f.ko); }
   function playerDown(){ return allyRoster[0].hp<=0; }
@@ -4580,10 +4830,12 @@ function startBattle(mission, done){
     const targetFoe = foeRoster[st.targetIdx] || foeRoster[0];
     allyRoster[0].transformedImg = targetFoe.img || foe.img;
     renderRoster('ally');
+    meSpotFrame.innerHTML = targetFoe.img ? `<img src="${targetFoe.img}" alt="${myName}">` : `<span class="cp-glyph">${myName.charAt(0).toUpperCase()}</span>`;
+    const meNameEl = ov.querySelector('.btl-fighter.me .btl-name'); if(meNameEl) meNameEl.textContent = myName + ' (' + targetFoe.name + ')';
     myMoves = (targetFoe.key ? foeMovesFor(targetFoe.key) : foeMoves).slice();
     setLog(S.lang==='fr'?`${myName} se change en ${targetFoe.name} - meme visage, memes coups.`:`${myName} shifts into ${targetFoe.name} - same face, same moves.`);
     renderMoves();
-    setTimeout(()=>{ foeTurn(); }, 1000);
+    setTimeout(()=>{ runTurn(); }, 1000);
   }
   function vanishMove(){
     if(st.busy || st.vanishUsed) return;
@@ -4594,7 +4846,7 @@ function startBattle(mission, done){
     floatDmg(frameOf('ally',0), -heal, myCol); refreshEntry('ally', 0);
     setLog(S.lang==='fr'?`${myName} disparait dans les ombres. La prochaine attaque frappera dans le vide.`:`${myName} vanishes into the shadows. The next attack will hit nothing but air.`);
     renderMoves();
-    setTimeout(()=>{ foeTurn(); }, 1000);
+    setTimeout(()=>{ runTurn(); }, 1000);
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
@@ -4642,33 +4894,76 @@ function startBattle(mission, done){
     if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
     return 0; // le joueur reste la cible privilegiee
   }
-  function foeTurn(){
-    const aliveFoes = livingIdx(foeRoster);
-    if(!aliveFoes.length){ finish(true); return; }
-    // 65% de chances que la cible actuellement engagee riposte, sinon un autre membre de l'escouade agit.
-    const actorIdx = (aliveFoes.includes(st.targetIdx) && Math.random()<0.65) ? st.targetIdx : pick(aliveFoes);
-    const actor = foeRoster[actorIdx];
+  function nextActor(){
+    const n = turnOrder.length;
+    for(let k=0;k<n;k++){
+      const idx = (st.turnPtr + k) % n;
+      if(!turnOrder[idx].ref.ko){ st.turnPtr = idx+1; return turnOrder[idx]; }
+    }
+    return null;
+  }
+  /* Dispatcher de tour : chacun agit dans l'ordre d'initiative, joueur inclus. */
+  function runTurn(){
+    if(allFoesDown()){ finish(true); return; }
+    if(playerDown()){ finish(false); return; }
+    const actor = nextActor();
+    if(!actor){ setTimeout(runTurn, 50); return; }
+    if(actor.side==='ally' && actor.ref.isPlayer){
+      st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+      return;
+    }
+    st.busy = true; setMovesEnabled(false);
+    if(actor.side==='ally') doAllyAct(actor.idx); else doFoeAct(actor.idx);
+  }
+  /* Un membre de ton escouade (autre que toi) frappe la cible actuellement engagee. */
+  function doAllyAct(idx){
+    const ally = allyRoster[idx];
+    if(!foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko) pickNextTarget();
+    if(st.targetIdx<0){ finish(true); return; }
+    flashSpotlight('ally', ally);
+    const tier = tierOfKey(ally.key);
+    const d = Math.max(3, Math.round((6 + tier*1.7) * (0.8 + Math.random()*0.5)));
+    setTimeout(()=>{
+      const tName = foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : '';
+      dealToFoe(st.targetIdx, d, ally.col);
+      setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + d + (S.lang==='fr'?' degats.':' damage.'));
+      setTimeout(runTurn, 850);
+    }, 500);
+  }
+  function foeAIMoveFor(fk){
+    const fm = fk ? foeMovesFor(fk) : foeMoves;
+    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.3;
+    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.7) return best; }
+    const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
+    return Math.random()<0.6 ? weighted[0] : pick(fm);
+  }
+  function pickAllyTarget(){
+    const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
+    if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
+    return 0; // le joueur reste la cible privilegiee
+  }
+  /* Un adversaire (principal ou renfort) agit a son tour. */
+  function doFoeAct(idx){
+    const actor = foeRoster[idx];
+    if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key);
     const label = S.lang==='fr'?m.fr:m.en;
     if(st.dodgeNext || Math.random() > m.acc){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
-      setTimeout(()=>{ st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.'); }, 900);
+      setTimeout(runTurn, 900);
       return;
     }
-    const power = actorIdx===0 ? foePower : (44 + tierOfKey(actor.key)*7);
-    const mult = actorIdx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
+    const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*7);
+    const mult = idx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget();
     dealToAlly(targetAllyIdx, d, actor.col);
-    if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', actorIdx); }
+    if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
     const targetName = allyRoster[targetAllyIdx].name;
     setLog(S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`);
-    setTimeout(()=>{
-      if(playerDown()){ finish(false); return; }
-      st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
-    }, 950);
+    setTimeout(runTurn, 950);
   }
   function playerTurn(i){
     if(st.busy) return;
@@ -4678,35 +4973,16 @@ function startBattle(mission, done){
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
-      setTimeout(foeTurn, 900);
+      setTimeout(runTurn, 900);
       return;
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     dealToFoe(targetIdx, d, myCol);
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
-    setTimeout(()=>{
-      if(allFoesDown()){ finish(true); return; }
-      // Un allie vivant peut enchainer sur la meme cible.
-      const aliveAllies = allyRoster.map((e,idx)=>idx).filter(idx=>idx>0 && !allyRoster[idx].ko);
-      if(aliveAllies.length && Math.random()<0.32){
-        const aIdx = pick(aliveAllies); const ally = allyRoster[aIdx];
-        const tier = tierOfKey(ally.key);
-        const ad = Math.max(3, Math.round((5 + tier*1.6) * (0.8 + Math.random()*0.5)));
-        setTimeout(()=>{
-          if(!foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko) pickNextTarget();
-          if(st.targetIdx>=0){
-            dealToFoe(st.targetIdx, ad, ally.col);
-            setLog((S.lang==='fr'?`${ally.name} enchaine sur ${foeRoster[st.targetIdx]?foeRoster[st.targetIdx].name:targetName}`:`${ally.name} follows up on ${foeRoster[st.targetIdx]?foeRoster[st.targetIdx].name:targetName}`) + ' : ' + ad + (S.lang==='fr'?' degats.':' damage.'));
-          }
-          setTimeout(()=>{ if(allFoesDown()){ finish(true); return; } foeTurn(); }, 900);
-        }, 500);
-        return;
-      }
-      foeTurn();
-    }, 950);
+    setTimeout(runTurn, 950);
   }
-  renderRoster('ally'); renderRoster('foe'); renderMoves(); setMovesEnabled(false);
+  renderRoster('ally'); renderRoster('foe'); refreshSpotlight(); renderMoves(); setMovesEnabled(false);
   setTimeout(()=>{
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
@@ -4721,15 +4997,18 @@ function startBattle(mission, done){
       }
       delay = 1400;
     }
-    const foeFirst = Math.random() < clamp(0.30 + (fs-ps)*0.012, 0.1, 0.6);
+    const first = turnOrder[0];
+    const firstName = first.ref.name;
+    const fl2 = fl ? ' | '+fl : '';
     setTimeout(()=>{
-      if(foeFirst){
-        setLog((S.lang==='fr'?`${foeName} ne te laisse pas le temps : il attaque le premier.`:`${foeName} doesn't wait: he strikes first.`) + (fl? ' | '+fl : ''));
-        setTimeout(foeTurn, 1000);
+      if(first.side==='foe'){
+        setLog((S.lang==='fr'?`${firstName} est plus rapide : il ouvre les hostilites.`:`${firstName} is faster: they open hostilities.`) + fl2);
+      } else if(first.ref.isPlayer){
+        setLog((S.lang==='fr'?`Tu es le/la plus rapide. A toi d'ouvrir.`:`You're the fastest. Make the first move.`) + fl2);
       } else {
-        setLog((S.lang==='fr'?`${foeName} te barre la route. A toi d'ouvrir.`:`${foeName} blocks your path. Make the first move.`) + (fl? ' | '+fl : ''));
-        st.busy = false; setMovesEnabled(true);
+        setLog((S.lang==='fr'?`${firstName} est le/la plus rapide et ouvre le combat a tes cotes.`:`${firstName} is fastest and opens the fight at your side.`) + fl2);
       }
+      runTurn();
     }, delay);
   }, 1500);
 }
@@ -4864,11 +5143,14 @@ function handleZoneCheckAndContinue(){
 function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; }
+  const hadEighthBefore = S.eighthStar;
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
   else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost';
     const kind = (zoneOf(S.align)==='villain' || !win) ? 'destroyed' : 'saved';
     S.locations.push(Object.assign({}, mission.location, { kind }));
-    if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; }
+    if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1;
+    if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
+  if(!hadEighthBefore && tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
   return { type, outcome };
 }
 function checkDeath(mission){
@@ -4907,6 +5189,11 @@ function applyChoice(choice){
     S.dead = true; S.deathInfo = { year: S.currentYear, cause };
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
+  }
+  if(S.pendingEighthStarCinematic){
+    S.pendingEighthStarCinematic = false;
+    showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); });
+    return;
   }
   handleZoneCheckAndContinue();
 }
@@ -4980,7 +5267,42 @@ function yearRecap(y){
   else lines.push(fr?`Popularite ${S.stats.popularity} - on t'observe plus qu'avant.`:`Popularity ${S.stats.popularity} - you are watched more than before.`);
   return lines;
 }
+function maybeOfferRetirement(){
+  if(!S.eighthStar || S.retirementOffered) return false;
+  S.retirementOffered = true;
+  return true;
+}
+function screenRetirementOffer(){
+  const d = document.createElement('div');
+  const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
+  const leadFr = villain
+    ? "Il n'y a plus rien a detruire. L'univers cosmique est a tes pieds. Que fais-tu du temps qu'il te reste ?"
+    : "Il n'y a plus rien a sauver dans l'urgence. L'univers cosmique respire grace a toi. Que fais-tu du temps qu'il te reste ?";
+  const leadEn = villain
+    ? "There is nothing left to destroy. The cosmic universe lies at your feet. What do you do with the time you have left?"
+    : "There is nothing left to save in urgency. The cosmic universe breathes because of you. What do you do with the time you have left?";
+  d.innerHTML = `<span class="eyebrow">${isFr?'UN TOURNANT':'A TURNING POINT'}</span>
+    <h1>${isFr?'Le monde a change grace a toi':'The world has changed because of you'}</h1>
+    <p class="lead" style="font-size:16px;">${isFr?leadFr:leadEn}</p>
+    <div class="actions" style="flex-direction:column; gap:10px; align-items:stretch; margin-top:18px;">
+      <button class="btn cyan" id="retireNow">${isFr?'Prendre ta retraite maintenant':'Retire now'}</button>
+      <button class="btn ghost" id="livePeace">${isFr?'Continuer a vivre, mais en paix':'Keep living, but in peace'}</button>
+    </div>`;
+  d.querySelector('#retireNow').onclick = ()=>{
+    S.retiredTriumphant = true;
+    pushYearHistoryIfDone();
+    S.screen='end'; render();
+  };
+  d.querySelector('#livePeace').onclick = ()=>{
+    S.peacefulEra = true;
+    S.currentYear += 1; S.currentMissionInYear = 0;
+    if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; }
+    nextMission();
+  };
+  return d;
+}
 function screenYearBreak(){
+  if(maybeOfferRetirement()) return screenRetirementOffer();
   const d = document.createElement('div'); const y = S.currentYear;
   const rec = yearRecap(y);
   d.innerHTML = `<span class="eyebrow">${t('year')} ${y}</span><h2>${S.lang==='fr' ? `Fin de l'annee ${y}` : `End of year ${y}`}</h2>
@@ -6375,7 +6697,8 @@ function screenEnd(){
   const teamLineFr = S.team ? ` En tant que membre de ${factionName(S.team.side,S.team.tier)}, ${S.heroName} ${S.team.side==='hero'?'combat aux cotes des plus grands':"etend son influence dans l'ombre"}.` : '';
   const teamLineEn = S.team ? ` As a member of ${factionName(S.team.side,S.team.tier)}, ${S.heroName} ${S.team.side==='hero'?'fights alongside the greatest':'extends their influence from the shadows'}.` : '';
   let endingFr, endingEn;
-  if(S.dead){ endingFr = `${S.heroName} n'aura pas vu la fin de cette carriere. ${topRel.fr} se souvient neanmoins d'un destin marquant.`; endingEn = `${S.heroName} did not live to see the end of this career. ${topRel.en} still remembers a remarkable fate.`; }
+  if(S.retiredTriumphant){ endingFr = `${S.heroName} a choisi de s'arreter au sommet, la 8eme etoile encore chaude. ${topRel.fr} se souviendra de ce depart, pas d'un declin.${teamLineFr}`; endingEn = `${S.heroName} chose to stop at the summit, the 8th star still warm. ${topRel.en} will remember this departure, not a decline.${teamLineEn}`; }
+  else if(S.dead){ endingFr = `${S.heroName} n'aura pas vu la fin de cette carriere. ${topRel.fr} se souvient neanmoins d'un destin marquant.`; endingEn = `${S.heroName} did not live to see the end of this career. ${topRel.en} still remembers a remarkable fate.`; }
   else if(S.align >= 40){ endingFr = `${S.heroName} est devenu(e) une legende protectrice apres ${S.missionsPlan.length} annees de service. ${topRel.fr} le/la considere comme un allie indefectible.${teamLineFr}`; endingEn = `${S.heroName} became a protective legend after ${S.missionsPlan.length} years of service. ${topRel.en} considers them an unshakeable ally.${teamLineEn}`; }
   else if(S.align <= -40){ endingFr = `${S.heroName} a sombre du cote des fleaux au fil de ${S.missionsPlan.length} annees, semant la crainte partout ou il/elle passe. ${topRel.fr} salue cette ascension.${teamLineFr}`; endingEn = `${S.heroName} fell to the side of menace over ${S.missionsPlan.length} years, sowing fear wherever they go. ${topRel.en} welcomes this rise.${teamLineEn}`; }
   else { endingFr = `Apres ${S.missionsPlan.length} annees, ${S.heroName} trace sa propre voie, entre ombre et lumiere. ${topRel.fr} reste la relation la plus marquante.${teamLineFr}`; endingEn = `After ${S.missionsPlan.length} years, ${S.heroName} walks their own path, between shadow and light. ${topRel.en} remains the most defining relationship.${teamLineEn}`; }
@@ -6474,6 +6797,13 @@ function screenEnd(){
     <h3>${t('yearByYearTitle')}</h3><div style="margin-top:6px;">${yearsHtml}</div>
     <h3>${t('logTitle')}</h3>
     <div style="margin-top:10px; max-height:280px; overflow:auto;">${S.log.map(e=>`<div class="log-entry ${e.villain?'villain':''}">${t('year')} ${e.year} - ${S.lang==='fr'?e.textFr:e.textEn}</div>`).join('')}</div>
+    ${S.eighthStar ? `<div class="dl-box" style="margin-top:14px; border-color:var(--gold); background:rgba(255,210,63,.06);">
+      <div class="dl-title" style="color:var(--gold);">${isFr?'Carte-trophee : 8eme etoile':'Trophy card: 8th star'}</div>
+      <p class="dl-sub">${isFr?'La carte doree de ton accomplissement cosmique, prete a garder ou partager.':'The golden card of your cosmic achievement, ready to keep or share.'}</p>
+      <div class="dl-actions">
+        <button class="btn cyan" id="dlTrophy" style="border-color:var(--gold);">${isFr?'Telecharger la carte':'Download the card'}</button>
+      </div>
+    </div>` : ''}
     <div class="dl-box">
       <div class="dl-title">${isFr?'Emporte ton dossier':'Take your file'}</div>
       <p class="dl-sub">${isFr?'Une carte de carriere signee Volt Industries, prete a partager.':'A Volt Industries career card, ready to share.'}</p>
@@ -6501,6 +6831,7 @@ function screenEnd(){
     ], verdicts, alignLabel, faction:(S.team?factionName(S.team.side,S.team.tier):null), gradeCol };
   const extBtn = d.querySelector('#extend5'); if(extBtn) extBtn.onclick=()=>extendCareer(5);
   d.querySelector('#dlPng').onclick=()=>downloadRecapCard('png', recapData);
+  const dlTrophyBtn = d.querySelector('#dlTrophy'); if(dlTrophyBtn) dlTrophyBtn.onclick = downloadTrophyCard;
   d.querySelector('#dlJpg').onclick=()=>downloadRecapCard('jpg', recapData);
   d.querySelector('#restart').onclick=()=>{ const lang = S.lang; S = freshState(lang); const badge=document.getElementById('rankBadgeFixed'); if(badge) badge.remove(); removeConvOverlay(); render(); };
   return d;
