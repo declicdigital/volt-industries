@@ -2906,24 +2906,30 @@ function renderCareerAutoWidget(){
 function autoCareerStep(){
   if(!S.careerAuto) return;
   if(S.screen==='end'){ S.careerAuto = false; return; }
-  if(document.querySelector('.btl-overlay')) return; // un combat gere sa propre vitesse/auto
+  if(S._autoStepPending) return;
+  S._autoStepPending = true;
   setTimeout(()=>{
+    S._autoStepPending = false;
     if(!S.careerAuto || S.screen==='end') return;
-    if(document.querySelector('.btl-overlay')) return;
-    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training'){
-      const cbox = document.getElementById('choices');
-      if(cbox){ const btns = Array.from(cbox.querySelectorAll('button')); if(btns.length) pick(btns).click(); }
+    if(document.querySelector('.btl-overlay') || document.getElementById('convOverlay') || document.querySelector('.cine-overlay')){
+      // Quelque chose est encore affiche par-dessus (overlay en train de disparaitre, etc.) : on retente un peu plus tard, sans jamais abandonner.
+      setTimeout(autoCareerStep, 400);
       return;
     }
+    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training'){
+      const cbox = document.getElementById('choices');
+      if(cbox){ const btns = Array.from(cbox.querySelectorAll('button')); if(btns.length){ pick(btns).click(); return; } }
+      setTimeout(autoCareerStep, 400); return;
+    }
     if(S.screen==='invite'){
-      const accept = document.getElementById('accept'); if(accept) accept.click();
-      return;
+      const accept = document.getElementById('accept'); if(accept){ accept.click(); return; }
+      setTimeout(autoCareerStep, 400); return;
     }
     if(S.screen==='yearbreak'){
       const livePeace = document.getElementById('livePeace');
       if(livePeace){ livePeace.click(); return; }
-      const go = document.getElementById('go'); if(go) go.click();
-      return;
+      const go = document.getElementById('go'); if(go){ go.click(); return; }
+      setTimeout(autoCareerStep, 400); return;
     }
   }, 300);
 }
@@ -5423,10 +5429,10 @@ function startBattle(mission, done){
 }
 function afterMissionRender(mission){
   if(mission && mission.pivotal){
-    if(Math.random() < 0.3){ const dur = showPivotalCinematic(mission); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
-    maybeTriggerConversation(); return;
+    if(Math.random() < 0.3){ const dur = showPivotalCinematic(mission); setTimeout(()=>{ maybeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); return; }
+    maybeTriggerConversation(); if(S.careerAuto) autoCareerStep(); return;
   }
-  if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
+  if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>{ maybeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); return; }
   if(shouldBattle(mission)){
     S.pendingBattleWin = null;
     startBattle(mission, (win, foeKey, permaDeath)=>{ S.pendingBattleWin = win;
@@ -5436,14 +5442,15 @@ function afterMissionRender(mission){
       }
       if(win) jarvisSay("Cible neutralisee. J'enregistre la victoire dans ton dossier.","Target neutralized. Logging the win in your file.", S.lang==='fr'?'victoire confirmee':'win confirmed');
       else jarvisSay("Tu as perdu l'echange. Je stabilise tes constantes, on rejoue ca a froid.","You lost the exchange. Stabilizing your vitals - we'll review it cold.", S.lang==='fr'?'defaite enregistree':'loss logged');
-      maybeTriggerConversation(); });
+      maybeTriggerConversation();
+      if(S.careerAuto) autoCareerStep(); });
     return;
   }
   if(mission && mission.type==='combat'){ S.pendingBattleWin = resolveBattleOffscreen(mission); }
   const epicness = missionEpicness(mission);
 
-  if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>maybeTriggerConversation(), dur+150); }
-  else { maybeTriggerConversation(); }
+  if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>{ maybeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); }
+  else { maybeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }
 }
 function screenMission(){
   const d = document.createElement('div'); const m = S.currentMission;
@@ -7093,6 +7100,7 @@ function applyConvChoice(conv, choice){
     removeConvOverlay(); S.activeConversation=null; S.convLineIndex=0;
     applyTheme(); renderRankBadge();
     const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
+    if(S.careerAuto) autoCareerStep();
   }
   if(newZone !== oldZone){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
