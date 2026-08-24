@@ -1976,9 +1976,23 @@ const CONVERSATIONS = [
 
 
 
-const LOC_A = ['Nova','Astra','Vex','Kaer','Sol','Umbra','Lys','Drak','Zeph','Ilya','Cor','Thal','Bryn','Oster','Val','Mira','Iron','Sil'];
-const LOC_B = ['opolis','andra','ovia','ith','burg','mere','vane','stead','horn','dor','wyn','grad','fell','sen','mont','haven','cite','port'];
-function randLocationName(){ return LOC_A[Math.floor(Math.random()*LOC_A.length)] + LOC_B[Math.floor(Math.random()*LOC_B.length)]; }
+/* Lieux : vocabulaire MCU officiel (Terre-616, Neuf Royaumes, dimensions). */
+const LOC_BY_SCOPE = [
+  null,
+  ['Hell\u2019s Kitchen','Queens','Brooklyn','Manhattan','Birnin Zana','Westview','Novi Grad','Camp Lehigh','Kamar-Taj','Ta Lo'],
+  ['New York City','Madripoor','Westview','Novi Grad','Birnin Zana','Manhattan','Hell\u2019s Kitchen','Talokan'],
+  ['Wakanda','Sokovia','Latveria','Madripoor','Talokan','Ta Lo','New Asgard'],
+  ['Terre-616','Midgard','New Asgard','Counter-Earth','Terre-838'],
+  ['Xandar','Sakaar','Titan','Morag','Vormir','Hala','Contraxia','Lamentis-1','Knowhere','Berhert'],
+  ['Nidavellir','Jotunheim','Svartalfheim','Vanaheim','Muspelheim','Alfheim','Asgard','Nine Realms'],
+  ['Quantum Realm','Mirror Dimension','Dark Dimension','The Void','Citadel at the End of Time','Soul World','Astral Plane','Yggdrasil','Noor Dimension','World Forge'],
+];
+function randLocationName(level){
+  const lv = clamp(Number(level)||(1+Math.floor(Math.random()*7)),1,7);
+  const list = LOC_BY_SCOPE[lv];
+  return list[Math.floor(Math.random()*list.length)];
+}
+
 const SCOPE_TIERS = [
   null,
   { fr:'Quartier', en:'Neighborhood' },
