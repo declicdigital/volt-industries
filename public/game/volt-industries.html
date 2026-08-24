@@ -31,7 +31,13 @@
   .glow-orb.a{ width:420px;height:420px; background:var(--accent); top:-140px; left:-100px; }
   .glow-orb.b{ width:360px;height:360px; background:var(--accent-dark); bottom:-120px; right:-80px; animation-delay:4s;}
   @keyframes float{ 0%,100%{ transform: translateY(0) translateX(0);} 50%{ transform: translateY(-36px) translateX(24px);} }
-  #app{ position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:28px 20px 90px; }
+  #app{ position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:28px 20px 90px; perspective:1200px; }
+  .card.page-slide-in{ animation: pageSlideIn .38s cubic-bezier(.2,.8,.3,1); transform-origin:left center; }
+  @keyframes pageSlideIn{ from{ opacity:0; transform: translateX(24px) rotateY(-8deg); } to{ opacity:1; transform:translateX(0) rotateY(0); } }
+  @media (max-width:560px){
+    .card.page-slide-in{ animation: pageSlideInMobile .34s cubic-bezier(.2,.85,.3,1); }
+    @keyframes pageSlideInMobile{ from{ opacity:0; transform:translateX(34px) rotateY(-12deg) scale(.985); } to{ opacity:1; transform:translateX(0) rotateY(0) scale(1); } }
+  }
   .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
   .brand{ font-weight:800; letter-spacing:4px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--ink); transition:opacity .15s; }
   .brand:hover{ opacity:.8; }
@@ -306,10 +312,22 @@
   @keyframes cineZoomBig{ 0%{ opacity:0; transform:scale(1.6);} 60%{ opacity:1; transform:scale(.95);} 100%{ transform:scale(1);} }
   @keyframes bodyShake{ 0%,100%{ transform:translate(0,0);} 20%{ transform:translate(-2px,1px);} 40%{ transform:translate(2px,-1px);} 60%{ transform:translate(-1px,2px);} 80%{ transform:translate(1px,-2px);} }
   body.shake #app{ animation: bodyShake .35s ease-in-out 3; }
+  body.shake-cosmic #app{ animation: bodyShakeCosmic .28s ease-in-out 7; }
+  @keyframes bodyShakeCosmic{ 0%,100%{ transform:translate(0,0); } 20%{ transform:translate(-5px,4px) rotate(-.3deg); } 40%{ transform:translate(5px,-4px) rotate(.3deg); } 60%{ transform:translate(-4px,-3px); } 80%{ transform:translate(4px,3px); } }
+  .cine-overlay.cosmic .cine-flash{ animation: cinePulseCosmic .8s ease-in-out infinite; background:radial-gradient(ellipse at 50% 50%, rgba(255,178,32,.5), rgba(0,194,255,.25) 45%, transparent 75%); }
+  .cine-overlay.cosmic .cine-scope{ color:var(--gold); text-shadow:0 0 22px var(--gold); font-size:14px; }
+  .cine-overlay.cosmic .cine-title{ font-size: clamp(22px,5vw,42px); text-shadow:0 0 24px var(--gold), 0 0 60px var(--accent), 0 0 100px var(--gold); animation: cineZoomBig .9s cubic-bezier(.2,.8,.3,1); }
+  .cine-rays{ position:absolute; inset:-20%; z-index:1; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.09) 0deg 4deg, transparent 4deg 16deg); animation: raySpin 6s linear infinite; opacity:.5; }
+  @keyframes raySpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  @keyframes cinePulseCosmic{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
 
   /* --- Combat tactique (style Pokemon) --- */
   .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:center; overflow-y:auto;
+
     background:#04070d; background-image:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
+  .btl-overlay.cosmic-battle{ background: radial-gradient(ellipse 120% 90% at 50% 0%, rgba(255,178,32,.12), transparent 60%), rgba(3,6,13,.97); box-shadow: inset 0 0 120px rgba(255,178,32,.18); }
+  .btl-overlay.cosmic-battle .btl-frame{ box-shadow: 0 0 0 2px var(--gold), 0 0 34px rgba(255,178,32,.5); }
+  .btl-overlay.cosmic-battle .btl-vs{ text-shadow:0 0 30px var(--gold), 0 0 60px var(--accent); }
   .btl-overlay.btl-out{ animation: cineOut .45s ease forwards; }
   .btl-arena{ position:relative; flex:0 0 auto; display:flex; align-items:flex-start; justify-content:center; gap:12px; padding:14px 12px 6px;
     width:100%; max-width:660px; margin:0 auto; }
@@ -368,6 +386,11 @@
     animation: squadIn .5s cubic-bezier(.2,.8,.3,1) both; }
   .btl-squad .sq img{ width:100%; height:100%; object-fit:cover; object-position:50% 10%; }
   .btl-squad .sq span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:#fff; opacity:.85; }
+  .sq-hp{ height:4px; border-radius:3px; background:rgba(255,255,255,.14); overflow:hidden; margin-top:3px; }
+  .sq-hpfill{ height:100%; width:100%; transition:width .35s ease, background .35s ease; }
+  .btl-squad .sq.ko{ filter:grayscale(1) brightness(.45); opacity:.5; }
+  .btl-frame.frame-swap{ animation: sqAssist .5s cubic-bezier(.2,.9,.3,1) 1; }
+  .btl-frame-tag{ position:absolute; left:6px; bottom:6px; font-size:9.5px; font-weight:900; letter-spacing:1px; padding:2px 7px; border-radius:8px; background:rgba(6,10,18,.75); text-transform:uppercase; z-index:4; }
   @keyframes squadIn{ from{ opacity:0; transform:translateY(8px) scale(.8);} to{ opacity:1; transform:none;} }
   @media (max-width:560px){ .btl-squad .sq{ width:26px; height:26px; border-radius:7px; } .btl-squad{ gap:3px; } }
 
@@ -460,6 +483,17 @@
   @media (max-width:920px){
     #jarvis{ left:10px; right:10px; bottom:10px; width:auto; padding:9px 11px 10px; border-radius:15px; }
     #jarvis .jv-body{ font-size:12px; min-height:30px; }
+  }
+  @media (max-width:560px){
+    #jarvis{ left:auto; right:8px; bottom:8px; width:170px; padding:7px 9px 8px; border-radius:13px; }
+    #jarvis .jv-core{ width:20px; height:20px; }
+    #jarvis .jv-name{ font-size:9px; letter-spacing:1.6px; }
+    #jarvis .jv-sub{ font-size:7px; }
+    #jarvis .jv-eq{ height:13px; }
+    #jarvis .jv-wave{ margin-top:6px; }
+    #jarvis .jv-body{ font-size:10px; min-height:22px; margin-top:6px; line-height:1.35; }
+    #jarvis .jv-meta{ font-size:7px; margin-top:5px; }
+    #jarvis .jv-mute{ font-size:7px; padding:2px 6px; }
   }
 </style>
 </head>
@@ -777,11 +811,11 @@ const CHARACTERS = {
   obsidian:{fr:"Gigatron",en:"Gigatron",align:'villain', sex:'m', img:CHAR_IMG.char17},
   kaerus:{fr:"Cremsoler",en:"Cremsoler",align:'villain', sex:'m', img:CHAR_IMG.char13},
   aurelia:{fr:"Cruhela",en:"Cruhela",align:'villain', sex:'f', img:CHAR_IMG.char14},
-  vipera:{fr:"Mocki",en:"Mocki",align:'villain', sex:'m', img:CHAR_IMG.char15},
+  vipera:{fr:"Moki",en:"Moki",align:'villain', sex:'m', img:CHAR_IMG.char15},
   sepulcre:{fr:"Totemactus",en:"Totemactus",align:'villain', sex:'m', img:CHAR_IMG.char16},
   nihil:{fr:"Anusilus",en:"Anusilus",align:'villain', sex:'m', img:CHAR_IMG.char18},
   fuchsia:{fr:"Le Fou Vert",en:"The Green Fool",align:'villain', sex:'m', img:CHAR_IMG.char20},
-  boomnpc:{fr:"Doctor Boom",en:"Doctor Boom",align:'villain', sex:'m', img:CHAR_IMG.char42},
+  boomnpc:{fr:"Dr Boom",en:"Dr Boom",align:'villain', sex:'m', img:CHAR_IMG.char42},
   lorelei:{fr:"Audition",en:"Audition",align:'hero', sex:'m', img:CHAR_IMG.char8},
   kidspider:{fr:"Kid-Spider",en:"Kid-Spider",align:'hero', sex:'m', img:CHAR_IMG.char41},
   nightlark:{fr:"Arachno Kid",en:"Arachno Kid",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -796,7 +830,7 @@ const CHARACTERS = {
   archange:{fr:"Docteur Bizarre",en:"Doctor Bizarre",align:'hero', sex:'m', img:CHAR_IMG.char30},
   baronvex:{fr:"Ghamos",en:"Ghamos",align:'villain', sex:'m', img:CHAR_IMG.char31},
   venefica:{fr:"Thanax",en:"Thanax",align:'villain', sex:'m', img:CHAR_IMG.char32},
-  warlock:{fr:"Docteur Boom",en:"Doctor Boom",align:'villain', sex:'m', img:CHAR_IMG.char33},
+  warlock:{fr:"Dr Boom",en:"Dr Boom",align:'villain', sex:'m', img:CHAR_IMG.char33},
   pyra:{fr:"Le Bouffon Pourpre",en:"The Purple Jester",align:'villain', sex:'m', img:CHAR_IMG.char34},
   rustjaw:{fr:"Ultrone",en:"Ultrone",align:'villain', sex:'f', img:CHAR_IMG.char35},
   requiem:{fr:"Lokar",en:"Lokar",align:'villain', sex:'m', img:CHAR_IMG.char36},
@@ -937,12 +971,19 @@ const MISSIONS = [
       { fr:"Capturer le criminel - le bien commun avant tout.", en:"Capture the criminal - the greater good first.", eff:{align:2, intelligence:2, popularity:4, rel:{volt:2}} },
       { fr:"Laisser les deux se debrouiller et t'eclipser.", en:"Let both fend for themselves and slip away.", eff:{align:-6, popularity:-6, rel:{lorelei:2}} },
     ]},
-  { id:'media', type:'social', danger:0, scope:1, tagFr:'Opinion publique', tagEn:'Public opinion',
+  { id:'media', type:'social', danger:0, scope:1, tagFr:'Opinion publique', tagEn:'Public opinion', sideOnly:'hero',
     fr:"Le Daily Bugle veut t'interviewer en direct apres un incident controverse.", en:"The Daily Bugle wants to interview you live after a controversial incident.",
     choices:[
       { fr:"Assumer pleinement tes actes, sans filtre.", en:"Fully own your actions, no filter.", eff:{align:3, popularity:5, courage:3} },
       { fr:"Rester evasif et proteger ton identite.", en:"Stay evasive and protect your identity.", eff:{intelligence:4, popularity:1} },
       { fr:"Manipuler le discours pour ternir un rival.", en:"Spin the narrative to smear a rival.", eff:{align:-5, intelligence:3, popularity:-2, rel:{obsidian:2}} },
+    ]},
+  { id:'rumeurs_peur', type:'social', danger:0, scope:1, tagFr:'Reputation de la rue', tagEn:'Street reputation', sideOnly:'villain',
+    fr:"Des rumeurs sur ton dernier coup d'eclat circulent dans la ville. Personne n'ose confirmer, mais tout le monde en parle.", en:"Rumors about your latest move are spreading through the city. No one dares confirm them, but everyone talks.",
+    choices:[
+      { fr:"Laisser planer le doute - la peur invente toujours pire que la realite.", en:"Let the doubt linger - fear always invents worse than reality.", eff:{align:-3, popularity:-2, intelligence:3} },
+      { fr:"Envoyer un message sans equivoque pour couper court aux rumeurs faibles.", en:"Send an unambiguous message to cut the weak rumors short.", eff:{align:-7, popularity:-4, courage:3} },
+      { fr:"Se taire completement - le silence aussi terrorise.", en:"Stay completely silent - silence terrifies too.", eff:{align:-2, popularity:-1, intelligence:2} },
     ]},
   { id:'recrutement_heros', type:'social', danger:0, scope:1, charKey:'volt', tagFr:'Recrutement', tagEn:'Recruitment',
     fr:"Iron Boy t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Iron Boy personally invites you to join his elite response team.",
@@ -951,12 +992,12 @@ const MISSIONS = [
       { fr:"Accepter, mais a tes conditions.", en:"Accept, but on your own terms.", eff:{align:4, intelligence:3, rel:{volt:2}} },
       { fr:"Refuser - tu preferes agir seul.", en:"Refuse - you prefer working alone.", eff:{align:0, courage:3, rel:{volt:-3}} },
     ]},
-  { id:'approche_villain', type:'social', danger:0, scope:1, charKey:'mandate', tagFr:'Tentation', tagEn:'Temptation',
-    fr:"Bang t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"Bang secretly approaches you, offering unlimited resources for your loyalty.",
+  { id:'approche_villain', type:'social', danger:0, scope:1, charKey:'boomnpc', tagFr:'Tentation', tagEn:'Temptation',
+    fr:"Dr Boom t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"Dr Boom secretly approaches you, offering unlimited resources for your loyalty.",
     choices:[
-      { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to S.H.I.E.L.D..", eff:{align:8, popularity:2, rel:{mandate:-5, volt:3}} },
-      { fr:"Ecouter, sans t'engager, pour recolter des informations.", en:"Listen without committing, to gather intel.", eff:{align:-1, intelligence:4, rel:{mandate:1, nyx:2}} },
-      { fr:"Accepter l'offre - le pouvoir a un prix que tu es pret a payer.", en:"Accept the offer - power has a price you're willing to pay.", eff:{align:-12, popularity:-3, rel:{mandate:6}} },
+      { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to the authorities.", eff:{align:8, popularity:2, rel:{boomnpc:-5, volt:3}} },
+      { fr:"Ecouter, sans t'engager, pour recolter des informations.", en:"Listen without committing, to gather intel.", eff:{align:-1, intelligence:4, rel:{boomnpc:1, nyx:2}} },
+      { fr:"Accepter l'offre - le pouvoir a un prix que tu es pret a payer.", en:"Accept the offer - power has a price you're willing to pay.", eff:{align:-12, popularity:-3, rel:{boomnpc:6}} },
     ]},
   { id:'deuil_malachar', type:'combat', danger:2, scope:3, charKey:'malachar', tagFr:'Rencontre', tagEn:'Encounter',
     fr:"Ghamos te confronte, ronge par le deuil, et te demande de l'aider dans sa quete de vengeance.", en:"Ghamos confronts you, consumed by grief, and asks for your help in his quest for vengeance.",
@@ -1725,12 +1766,19 @@ const INTRIGUE_MISSIONS = [
       { fr:"Remonter la chaine et couper le maitre-chanteur de ses appuis.", en:"Trace the chain and cut the blackmailer off from support.", eff:{intelligence:6, align:1} },
       { fr:"Payer, et noter son nom pour plus tard.", en:"Pay, and note the name for later.", eff:{align:-4, popularity:1} },
     ]},
-  { id:'itg_hopital', tagFr:'Vie civile', tagEn:'Civilian life',
+  { id:'itg_hopital', tagFr:'Vie civile', tagEn:'Civilian life', sideOnly:'hero',
     fr:"L'hopital du quartier ou tu as grandi va fermer. On te demande d'y mettre ton nom et ton argent.", en:"The hospital in the neighbourhood where you grew up is closing. They ask for your name and your money.",
     choices:[
       { fr:"Financer et venir chaque semaine, sans camera.", en:"Fund it and show up weekly, no cameras.", eff:{align:7, popularity:4} },
       { fr:"Financer avec une conference de presse et ton logo partout.", en:"Fund it with a press conference and your logo everywhere.", eff:{popularity:7, align:1, intelligence:1} },
       { fr:"Refuser : ton temps vaut plus ailleurs.", en:"Refuse: your time is worth more elsewhere.", eff:{align:-5, popularity:-4, intelligence:2} },
+    ]},
+  { id:'itg_quartier_peur', tagFr:'Emprise', tagEn:'Grip on the district', sideOnly:'villain',
+    fr:"Un quartier entier retient son souffle en apprenant que tu t'y installes. Des habitants viennent te supplier de partir.", en:"An entire district holds its breath when it learns you're moving in. Residents come begging you to leave.",
+    choices:[
+      { fr:"Les laisser partir sans un mot - la peur suffit, pas besoin d'en faire plus.", en:"Let them leave without a word - the fear is enough, no need to do more.", eff:{align:-3, popularity:-2, courage:2} },
+      { fr:"Faire un exemple public pour que le message circule vite.", en:"Make a public example so the message spreads fast.", eff:{align:-10, popularity:-6, courage:4} },
+      { fr:"Exiger un tribut hebdomadaire en echange de leur tranquillite.", en:"Demand a weekly tribute in exchange for their peace.", eff:{align:-6, popularity:-3, intelligence:3} },
     ]},
   { id:'itg_labo', tagFr:'Secret technologique', tagEn:'Tech secret',
     fr:"Un laboratoire clandestin reproduit ta signature energetique pour armer des mercenaires.", en:"A clandestine lab is replicating your energy signature to arm mercenaries.",
@@ -1942,8 +1990,8 @@ const CONVERSATIONS = [
       { fr:"Payer son prix, quel qu'il soit.", en:"Pay her price, whatever it is.", eff:{align:-9, popularity:4, rel:{aurelia:7}} },
     ]},
   { id:'conv_vipera', charKey:'vipera',
-    linesFr:["Mocki avance, ses serpents sifflant autour d'elle. \"On m'a chassee, maudite, exhibee. Alors j'ai appris a mordre.\"","\"Toi aussi ils te lacheront. La seule question, c'est quand.\""],
-    linesEn:["Mocki steps forward, serpents hissing around her. \"They hunted me, cursed me, paraded me. So I learned to bite.\"","\"They'll drop you too. The only question is when.\""],
+    linesFr:["Moki avance, ses serpents sifflant autour d'elle. \"On m'a chassee, maudite, exhibee. Alors j'ai appris a mordre.\"","\"Toi aussi ils te lacheront. La seule question, c'est quand.\""],
+    linesEn:["Moki steps forward, serpents hissing around her. \"They hunted me, cursed me, paraded me. So I learned to bite.\"","\"They'll drop you too. The only question is when.\""],
     choices:[
       { fr:"Lui promettre que tu ne l'abandonneras pas.", en:"Promise her you won't abandon her.", eff:{align:6, rel:{vipera:6}} },
       { fr:"Lui dire que la morsure ne guerit rien.", en:"Tell her biting heals nothing.", eff:{courage:3, rel:{vipera:-3}} },
@@ -2103,7 +2151,7 @@ const PRESETS = [
     perkFr:'Fortune et influence : achete le Daily Bugle, les proces et les silences.', perkEn:'Wealth and influence: buys media, trials and silence.',
     flawFr:'Courage faible : fuit les combats et perd ses alliances sous pression.', flawEn:'Low courage: flees fights and loses alliances under pressure.',
     descFr:'Financiere devenue arme. Le pouvoir est une monnaie qui s\'achete.', descEn:'Financier turned weapon. Power is a currency you buy.' },
-  { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Mocki', nameEn:'Mocki', heroFr:'Mocki', heroEn:'Mocki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
+  { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Moki', nameEn:'Moki', heroFr:'Moki', heroEn:'Moki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'claws', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1c2b24', secondaryColor:'#7ad14f', symbol:'' },
     align:-35, stats:{courage:12, intelligence:10, popularity:2},
     perkFr:'Venin et illusions : elimine ses cibles avant qu\'elles ne la voient.', perkEn:'Venom and illusions: removes targets before they see her.',
@@ -2213,7 +2261,7 @@ const PRESETS = [
     perkFr:'Titan cosmique : presque rien ne peut l\'arreter physiquement.', perkEn:'Cosmic titan: almost nothing can stop him physically.',
     flawFr:'Lent et voyant : impossible d\'agir discretement.', flawEn:'Slow and conspicuous: he can never act discreetly.',
     descFr:'Colosse a la peau bronze, gantelet serti de gemmes.', descEn:'Bronze-skinned colossus with a jeweled gauntlet.' },
-  { id:'warlock', charKey:'warlock', side:'villain', img:CHAR_IMG.char33, nameFr:'Docteur Boom', nameEn:'Doctor Boom', heroFr:'Docteur Boom', heroEn:'Doctor Boom', morphology:'armure', path:'tech', powers:['armure','ia'],
+  { id:'warlock', charKey:'warlock', side:'villain', img:CHAR_IMG.char33, nameFr:'Dr Boom', nameEn:'Dr Boom', heroFr:'Dr Boom', heroEn:'Dr Boom', morphology:'armure', path:'tech', powers:['armure','ia'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#25306b', secondaryColor:'#b98b3a', symbol:'' },
     align:-30, stats:{courage:16, intelligence:26, popularity:6},
     perkFr:'Genie souverain : il prepare chaque coup des annees a l\'avance.', perkEn:'Sovereign genius: he plans every move years ahead.',
@@ -2267,7 +2315,7 @@ const PRESETS = [
     perkFr:'Reflexes arachneens : esquive et contre-attaque quasi automatiques.', perkEn:'Arachnid reflexes: near-automatic dodge and counter.',
     flawFr:'Trop jeune : la presse et les mentors le sous-estiment.', flawEn:'Too young: press and mentors underestimate him.',
     descFr:'Gamin du quartier devenu acrobate masque, toujours en mouvement.', descEn:'A neighborhood kid turned masked acrobat, always moving.' },
-  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Doctor Boom', nameEn:'Doctor Boom', heroFr:'Doctor Boom', heroEn:'Doctor Boom', morphology:'colosse', path:'tech', powers:['technologie','elementaire'],
+  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Dr Boom', nameEn:'Dr Boom', heroFr:'Dr Boom', heroEn:'Dr Boom', morphology:'colosse', path:'tech', powers:['technologie','elementaire'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#2f6b4a', secondaryColor:'#8c8f96', symbol:'' },
     align:-30, stats:{courage:13, intelligence:18, popularity:3},
     perkFr:'Genie souverain : ses machines de siege brisent les defenses.', perkEn:'Sovereign genius: his siege machines break defenses.',
@@ -2377,6 +2425,7 @@ function freshState(lang){
     romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
     lastStars:1, savedToHistory:false,
     startAge:24, extensions:0,
+    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0,
   };
 }
 let S = freshState('fr');
@@ -2432,6 +2481,34 @@ function charTier(key){
   if(!c) return 5;
   return 4; /* recrues et personnages jouables : encore en construction */
 }
+/* ---------- Niveau minimum d'apparition (echelle de rang 1-7, comme les combats) ---------- */
+const CHAR_UNLOCK_TIER = {
+  kaerus:1, fuchsia:1, kidspider:1,
+  obsidian:2, marsh:2, sable:2,
+  vipera:3, ferrum:3,
+  nihil:4, aegis:4, volt:4, titanwolf:4,
+  aurelia:5, sepulcre:5, nyx:5, theg:5,
+  mandate:6, siddartha:6, solen:6,
+  boomnpc:7, warlock:7, malachar:7, baronvex:7, lorelei:7, vaelor:7
+};
+/* Une fois debloque, un personnage le reste (on peut toujours le recroiser/combattre apres). */
+function charUnlocked(key){
+  const req = CHAR_UNLOCK_TIER[key];
+  if(req===undefined) return true;
+  if(!S.unlockedChars) S.unlockedChars = {};
+  if(S.unlockedChars[key]) return true;
+  if(computeStars() >= req){ S.unlockedChars[key] = true; return true; }
+  return false;
+}
+/* ---------- Proximite morale : certains mechants sont plus proches des heros (recuperables), d'autres pas du tout. ---------- */
+const CHAR_HERO_PROXIMITY = {
+  vipera:7,   /* Moki : capricieux, jamais totalement perdu */
+  fuchsia:5,  /* Le Fou Vert : plus maladroit que malfaisant */
+  aurelia:4, mandate:3, obsidian:2, kaerus:2, boomnpc:2, warlock:2,
+  siddartha:1, sepulcre:1, nihil:0,
+  malachar:0, baronvex:0 /* Ghamos : aucune proximite, irrecuperable */
+};
+function heroProximity(key){ return CHAR_HERO_PROXIMITY[key]!==undefined ? CHAR_HERO_PROXIMITY[key] : 3; }
 /* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
 function playerStrength(){
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
@@ -2463,20 +2540,20 @@ function careerScore(){
   const fr = S.lang==='fr';
   const fights = S.combat.won + S.combat.lost;
   // 1) Conviction : la nettete de la trajectoire (heros ou villain assume)
-  const conviction = clamp(Math.abs(S.align),0,100)/100 * 22;
+  const conviction = clamp(Math.abs(S.align),0,100)/100 * 20;
   // 2) Palmares : taux de victoires, pondere par le nombre de combats (peu de combats = peu de credit)
   const winRate = fights ? S.combat.won / fights : 0;
-  const reliability = fights ? Math.min(1, fights/8) : 0;
-  const combatPart = fights ? (winRate * 26 * reliability + 26*(1-reliability)*0.45) : 26*0.35;
+  const reliability = fights ? Math.min(1, fights/6) : 0;
+  const combatPart = fights ? (winRate * 24 * reliability + 24*(1-reliability)*0.45) : 24*0.35;
   // 3) Impact terrain : lieux marques, ponderes par leur ampleur
   const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
   const locArr = Object.values(uniqueLocs);
   const locWeight = locArr.reduce((s,l)=> s + (1 + (l.type||1)*0.6), 0);
-  const expected = Math.max(6, (S.missionsPlan.length||10) * 1.6);
-  const impact = clamp(locWeight/expected, 0, 1) * 20;
+  const expected = Math.max(5, (S.missionsPlan.length||10) * 1.1);
+  const impact = clamp(locWeight/expected, 0, 1) * 18;
   // 4) Puissance : statistiques et niveau atteint
   const statAvg = (S.stats.courage + S.stats.intelligence + S.stats.popularity)/3;
-  const power = ((statAvg/100)*0.6 + (computePowerLevel()/100)*0.4) * 16;
+  const power = ((statAvg/100)*0.6 + (computePowerLevel()/100)*0.4) * 14;
   // 5) Heritage : eleves, alliances, coeur, techniques apprises
   const side = zoneOf(S.align);
   const goodMentees = S.mentees.filter(m=> side==='villain' ? m.outcome==='villain' : m.outcome==='hero').length;
@@ -2484,22 +2561,25 @@ function careerScore(){
   const relVals = Object.keys(S.rel).map(k=>S.rel[k]);
   const allies = relVals.filter(v=>v>=8).length;
   const romancePts = S.romance ? (S.romance.stage>=3 ? 3 : 2) : (S.romanceHistory.length ? 1 : 0);
-  let legacy = Math.min(4, goodMentees*1.5) + Math.min(4, allies*1) + romancePts + Math.min(3, S.skills.length*0.75);
-  legacy = clamp(legacy - lostMentees*1.2, 0, 16);
+  let legacy = Math.min(5, goodMentees*1.5) + Math.min(5, allies*1) + romancePts + Math.min(3, S.skills.length*0.75);
+  legacy = clamp(legacy - lostMentees*1.2, 0, 14);
+  // 6) Envergure cosmique : missions de tres grande ampleur (systeme/cosmique) reussies au fil de la carriere
+  const cosmicBonus = clamp((S.cosmicWins||0)/6, 0, 1) * 10;
   // Malus : defaites en serie, mort, blessure non refermee
   let malus = 0;
   if(fights) malus += Math.min(10, S.combat.lost * (winRate<0.4 ? 1.2 : 0.5));
   if(S.dead) malus += 6;
   if(S.battleForm && S.battleForm.injury) malus += 2;
   const parts = [
-    { label: fr?'Conviction':'Conviction', value: conviction, max:22 },
-    { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:26 },
-    { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:20 },
-    { label: fr?'Puissance atteinte':'Power reached', value: power, max:16 },
-    { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:16 },
+    { label: fr?'Conviction':'Conviction', value: conviction, max:20 },
+    { label: fr?'Palmares au combat':'Combat record', value: combatPart, max:24 },
+    { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:18 },
+    { label: fr?'Puissance atteinte':'Power reached', value: power, max:14 },
+    { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:14 },
+    { label: fr?'Envergure cosmique':'Cosmic scale', value: cosmicBonus, max:10 },
     { label: fr?'Sanctions et pertes':'Setbacks', value: -malus, max:0 },
   ];
-  const total = clamp(Math.round(conviction + combatPart + impact + power + legacy - malus), 1, 100);
+  const total = clamp(Math.round(conviction + combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
   let grade, gradeLabelFr, gradeLabelEn;
   if(total>=92){ grade='S'; gradeLabelFr='Legende du multivers'; gradeLabelEn='Multiverse legend'; }
   else if(total>=82){ grade='A'; gradeLabelFr='Carriere majeure'; gradeLabelEn='Major career'; }
@@ -2544,12 +2624,12 @@ function render(){
     const shell = document.createElement('div'); shell.className='game-shell';
     const side = document.createElement('div'); side.className='side-avatar'; side.innerHTML = sideAvatarPanel();
     const main = document.createElement('div'); main.className='main-col';
-    const card = document.createElement('div'); card.className='card'; card.appendChild(screenContent());
+    const card = document.createElement('div'); card.className='card page-slide-in'; card.appendChild(screenContent());
     main.appendChild(card);
     shell.appendChild(side); shell.appendChild(main);
     app.appendChild(shell);
   } else {
-    const card = document.createElement('div'); card.className='card'; card.appendChild(screenContent());
+    const card = document.createElement('div'); card.className='card page-slide-in'; card.appendChild(screenContent());
     app.appendChild(card);
   }
   const foot = document.createElement('footer'); foot.className='mini';
@@ -2621,6 +2701,103 @@ function showExpelToast(facName){
   toast.innerHTML = `<div class="ru-title">${S.lang==='fr'?'EXCLUSION':'EXPELLED'}</div><div class="ru-sub">${facName}</div>`;
   document.body.appendChild(toast);
   setTimeout(()=>{ toast.classList.add('fadeout'); setTimeout(()=>toast.remove(), 700); }, 3600);
+}
+/* ---------- Reactions au changement de camp : trahison d'un cote, felicitations de l'autre ---------- */
+const SWITCH_BETRAYAL_LINES_FR = [
+  "{n} encaisse la nouvelle en silence. \"On t'a fait confiance. Tu nous as tourne le dos.\"",
+  "{n} te regarde de loin, la voix froide. \"J'aurais du m'en douter. Ne reviens plus vers nous.\"",
+  "{n} serre les poings. \"Un traitre de plus sur la liste. On s'en souviendra.\"",
+  "{n} ne repond meme plus a tes messages. Silence total.",
+];
+const SWITCH_BETRAYAL_LINES_EN = [
+  "{n} takes the news in silence. \"We trusted you. You turned your back on us.\"",
+  "{n} looks at you from a distance, voice cold. \"I should have seen it coming. Don't come back to us.\"",
+  "{n} clenches their fists. \"One more traitor on the list. We won't forget.\"",
+  "{n} stops answering your messages entirely. Dead silence.",
+];
+const SWITCH_WELCOME_HERO_FR = [
+  "{n} te tend la main. \"Bienvenue de ce cote. On a besoin de gens comme toi.\"",
+  "{n} sourit, sincere. \"Il n'est jamais trop tard pour bien faire. Content(e) de t'avoir avec nous.\"",
+  "{n} pose une main sur ton epaule. \"Ce que tu as fait avant ne definit pas ce que tu fais maintenant.\"",
+];
+const SWITCH_WELCOME_HERO_EN = [
+  "{n} offers a hand. \"Welcome to this side. We need people like you.\"",
+  "{n} smiles, genuinely. \"It's never too late to do right. Glad to have you with us.\"",
+  "{n} puts a hand on your shoulder. \"What you did before doesn't define what you do now.\"",
+];
+const SWITCH_WELCOME_VILLAIN_FR = [
+  "{n} eclate d'un rire sec. \"Enfin. J'attendais que tu arretes de jouer les boy-scouts.\"",
+  "{n} t'observe avec interet. \"Bienvenue de notre cote. On va faire de grandes choses.\"",
+  "{n} te tend une arme. \"Prouve-le. Prouve que tu es des notres, maintenant.\"",
+];
+const SWITCH_WELCOME_VILLAIN_EN = [
+  "{n} lets out a dry laugh. \"Finally. I was waiting for you to stop playing boy scout.\"",
+  "{n} eyes you with interest. \"Welcome to our side. We're going to do great things.\"",
+  "{n} hands you a weapon. \"Prove it. Prove you're one of us, now.\"",
+];
+function pickReactorForZone(zone, excludeKey){
+  const keys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align===zone && k!==excludeKey && k!==S.playerCharKey);
+  if(!keys.length) return null;
+  const known = keys.filter(k=>Math.abs(S.rel[k]||0) >= 3);
+  const leaders = keys.filter(k=>k==='volt'||k==='boomnpc'||k==='warlock'||k==='titanwolf');
+  const pool = known.length ? known : (leaders.length ? leaders : keys);
+  return pick(pool);
+}
+function showSwitchAnnouncement(fromZone, toZone, cb){
+  if(fromZone===toZone || (fromZone!=='hero'&&fromZone!=='villain')){ cb(); return; }
+  const isFr = S.lang==='fr';
+  const betrayerKey = pickReactorForZone(fromZone);
+  const welcomerKey = pickReactorForZone(toZone);
+  const betrayLine = betrayerKey ? pick(isFr?SWITCH_BETRAYAL_LINES_FR:SWITCH_BETRAYAL_LINES_EN).replace('{n}', isFr?CHARACTERS[betrayerKey].fr:CHARACTERS[betrayerKey].en) : '';
+  const welcomeLines = toZone==='villain' ? (isFr?SWITCH_WELCOME_VILLAIN_FR:SWITCH_WELCOME_VILLAIN_EN) : (isFr?SWITCH_WELCOME_HERO_FR:SWITCH_WELCOME_HERO_EN);
+  const welcomeLine = welcomerKey ? pick(welcomeLines).replace('{n}', isFr?CHARACTERS[welcomerKey].fr:CHARACTERS[welcomerKey].en) : '';
+  const col = toZone==='villain' ? 'var(--red)' : 'var(--accent)';
+  const title = toZone==='villain' ? (isFr?'BASCULEMENT - COTE OBSCUR':'SWITCH - DARK SIDE') : (isFr?'BASCULEMENT - RACHAT':'SWITCH - REDEMPTION');
+  if(betrayerKey){ const cold = 8 - heroProximity(betrayerKey)*0.5; S.rel[betrayerKey] = clamp((S.rel[betrayerKey]||0) - cold, -20, 20); }
+  if(welcomerKey) S.rel[welcomerKey] = clamp((S.rel[welcomerKey]||0) + 3, -20, 20);
+  const html = `<div class="ru-title" style="color:${col}; font-size:12px; letter-spacing:2px;">${title}</div>
+    ${betrayLine?`<p style="margin-top:12px; line-height:1.6;">${betrayLine}</p>`:''}
+    ${welcomeLine?`<p style="margin-top:10px; line-height:1.6; color:${col};">${welcomeLine}</p>`:''}`;
+  showBattleAftermath(html, col, cb);
+}
+/* ---------- Ton ancien camp te rappelle parfois : force, faiblesse, ou tentative de recuperation ---------- */
+function maybeOldSideReminder(){
+  if(!S.turningPoints.length) return;
+  if(Math.random() >= 0.12) return;
+  const lastSwitch = S.turningPoints[S.turningPoints.length-1];
+  const oldZone = lastSwitch.from;
+  if(oldZone!=='hero' && oldZone!=='villain') return;
+  if(zoneOf(S.align)===oldZone) return; // tu es deja revenu(e) de ce cote
+  const reactorKey = pickReactorForZone(oldZone);
+  if(!reactorKey) return;
+  const isFr = S.lang==='fr'; const name = isFr?CHARACTERS[reactorKey].fr:CHARACTERS[reactorKey].en;
+  const positive = Math.random() < 0.5;
+  const lureFr = positive
+    ? `${name} te recontacte. "On a toujours une place pour toi si tu reviens." Ses mots te redonnent un peu de force.`
+    : `${name} te recontacte, amer. "Tu nous manques a decouvert. On n'oublie pas ceux qui partent." Le poids de la culpabilite pese sur toi.`;
+  const lureEn = positive
+    ? `${name} reaches out. "There's always a place for you if you come back." The words give you a bit of strength.`
+    : `${name} reaches out, bitter. "You left us exposed. We don't forget the ones who leave." The guilt weighs on you.`;
+  if(positive) S.stats.courage = clamp(S.stats.courage+2, 0, 100); else S.stats.popularity = clamp(S.stats.popularity-2, 0, 100);
+  jarvisSay(lureFr, lureEn, isFr?'signal du passe':'signal from the past');
+}
+/* ---------- Trahison interne d'equipe, rare (7-8%) ---------- */
+function maybeTeamBetrayal(){
+  if(!S.team || S.teamBetrayalUsed) return;
+  if(Math.random() >= 0.075) return;
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  const pool = otherCharKeys().filter(k=>CHARACTERS[k].align===mySide);
+  if(!pool.length) return;
+  const traitorKey = pick(pool);
+  S.teamBetrayalUsed = true;
+  S.traitorKey = traitorKey;
+  S.rel[traitorKey] = clamp((S.rel[traitorKey]||0) - 8, -20, 20);
+  const isFr = S.lang==='fr'; const name = isFr?CHARACTERS[traitorKey].fr:CHARACTERS[traitorKey].en;
+  const facName = factionName(S.team.side, S.team.tier);
+  const txtFr = `${name}, un(e) des votres au sein de ${facName}, retourne discretement sa veste. Tu l'apprends trop tard pour l'empecher.`;
+  const txtEn = `${name}, one of your own within ${facName}, quietly switches sides. You find out too late to stop it.`;
+  S.stats.popularity = clamp(S.stats.popularity-3, 0, 100);
+  jarvisSay(txtFr, txtEn, isFr?'alerte interne':'internal alert');
 }
 function checkFactionExpulsion(){
   if(!S.team) return false;
@@ -2835,6 +3012,7 @@ async function saveCareerToHistory(){
   try{
     const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; });
     const zone = zoneOf(S.align);
+    const ts = Date.now();
     const record = {
       heroName: S.heroName, mode: S.mode,
       years: S.dead ? S.deathInfo.year : S.missionsPlan.length,
@@ -2843,10 +3021,12 @@ async function saveCareerToHistory(){
       team: S.team, fightsWon: S.combat.won, fightsLost: S.combat.lost,
       locationsCount: Object.keys(uniqueLocs).length, mentees: S.mentees.length,
       morphology: S.look.morphology, path: S.path, stars: computeStars(),
-      timestamp: Date.now(),
+      timestamp: ts, stateKey: 'career_state:'+ts,
     };
-    const key = 'career:'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    const key = 'career:'+ts+'_'+Math.random().toString(36).slice(2,6);
     await window.storage.set(key, JSON.stringify(record), false);
+    /* Etat complet, pour pouvoir revoir le bilan detaille ou relancer cette carriere plus tard. */
+    await window.storage.set(record.stateKey, JSON.stringify(S), false);
     S.savedToHistory = true;
   }catch(e){ /* storage unavailable - silently skip */ }
 }
@@ -2870,16 +3050,33 @@ function renderCareerHistoryList(box, items){
     const zoneLabel = c.zone==='hero'?t('alignHero'):(c.zone==='villain'?t('alignVillain'):t('alignNeutral'));
     const zoneColor = c.zone==='hero'?'#00e5ff':(c.zone==='villain'?'var(--red)':'#b98bff');
     const dateStr = new Date(c.timestamp).toLocaleDateString(S.lang==='fr'?'fr-FR':'en-US');
+    const canReplay = c.stateKey && !c.dead;
     return `<div class="history-card">
       <button class="history-del" data-key="${it.key}" title="${S.lang==='fr'?'Supprimer':'Delete'}">&times;</button>
       <div class="hc-name">${c.heroName}${c.dead ? ' &#10013;':''}</div>
       <div class="hc-meta" style="color:${zoneColor};">${zoneLabel} - ${'&#9733;'.repeat(c.stars||1)}</div>
       <div class="hc-meta">${c.years} ${S.lang==='fr'?'ans':'yrs'} - ${c.missionsTotal} ${S.lang==='fr'?'missions':'missions'} - ${dateStr}</div>
+      ${c.stateKey ? `<div class="hc-actions" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+        <button class="btn ghost hc-view" data-statekey="${c.stateKey}" style="font-size:11px; padding:6px 10px;">${S.lang==='fr'?'Voir le bilan':'View report'}</button>
+        ${canReplay ? `<button class="btn cyan hc-replay" data-statekey="${c.stateKey}" style="font-size:11px; padding:6px 10px;">${S.lang==='fr'?'Relancer +5 ans':'Replay +5 years'}</button>` : ''}
+      </div>` : ''}
     </div>`;
   }).join('')}</div>
   <div class="actions" style="justify-content:center;"><button class="btn ghost" id="clearHistory" style="font-size:12px; padding:8px 16px;">${S.lang==="fr"?"Vider l'historique":"Clear history"}</button></div>`;
   box.querySelectorAll('.history-del').forEach(btn=>{
     btn.onclick = async ()=>{ try{ await window.storage.delete(btn.dataset.key, false); }catch(e){} loadCareerHistory(box); };
+  });
+  box.querySelectorAll('.hc-view').forEach(btn=>{
+    btn.onclick = async ()=>{
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.screen='end'; render(); } }
+      catch(e){}
+    };
+  });
+  box.querySelectorAll('.hc-replay').forEach(btn=>{
+    btn.onclick = async ()=>{
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.savedToHistory = false; extendCareer(5); } }
+      catch(e){}
+    };
   });
   const clearBtn = box.querySelector('#clearHistory');
   if(clearBtn) clearBtn.onclick = async ()=>{ for(const it of items){ try{ await window.storage.delete(it.key, false); }catch(e){} } loadCareerHistory(box); };
@@ -3513,8 +3710,9 @@ function orientationBudgetLeft(){
 }
 function pickIntrigueMission(){
   if(!S.usedIntrigueIds) S.usedIntrigueIds = [];
-  let pool = INTRIGUE_MISSIONS.filter(m=>!S.usedIntrigueIds.includes(m.id));
-  if(!pool.length){ S.usedIntrigueIds = []; pool = INTRIGUE_MISSIONS; }
+  const zone = zoneOf(S.align)==='villain'?'villain':'hero';
+  let pool = INTRIGUE_MISSIONS.filter(m=>!S.usedIntrigueIds.includes(m.id) && (!m.sideOnly || m.sideOnly===zone));
+  if(!pool.length){ S.usedIntrigueIds = []; pool = INTRIGUE_MISSIONS.filter(m=>!m.sideOnly || m.sideOnly===zone); }
   const m = pick(pool); S.usedIntrigueIds.push(m.id);
   return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(1), type: 1 } });
 }
@@ -3536,6 +3734,7 @@ function pickMission(){
   let reachable = MISSIONS.filter(m => (m.scope||1) <= rank);
   if(reachable.length===0) reachable = MISSIONS.filter(m=>(m.scope||1)===1);
   reachable = reachable.filter(m=>!m.charKey || m.charKey!==S.playerCharKey);
+  reachable = reachable.filter(m=>!m.sideOnly || m.sideOnly===(zoneOf(S.align)==='villain'?'villain':'hero'));
   let pool = reachable.filter(m=>!S.usedIds.includes(m.id));
   if(pool.length===0){ pool = reachable; S.usedIds = S.usedIds.filter(id=>!reachable.some(m=>m.id===id)); }
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
@@ -3593,6 +3792,29 @@ function startRecruitArc(){
   S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:(S.lang==='fr'?c.fr:c.en), arc:true });
   S.screen='mentor'; render(); maybeTriggerConversation(); return true;
 }
+/* ---------- Confrontation avec une ancienne recrue passee de l'autre cote : convertir, affronter, ou laisser filer ---------- */
+function shouldTriggerCrossedMenteeArc(){
+  if(!crossedMentees().length) return false;
+  if(S.lastCrossedArcYear!=null && (S.currentYear - S.lastCrossedArcYear) < 2) return false;
+  return Math.random() < 0.35;
+}
+function startCrossedMenteeArc(){
+  const crossed = crossedMentees(); if(!crossed.length) return false;
+  const mentee = pick(crossed); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
+  const name = S.lang==='fr'?c.fr:c.en;
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  const m = {
+    id:'crossed_confront', tagFr:'Ancienne recrue - camp oppose', tagEn:'Former recruit - opposing side',
+    fr:`Tu croises {name}, ton ancienne recrue, desormais de l'autre cote. Son regard ne laisse aucun doute sur ce qu'il/elle pense de toi maintenant.`,
+    en:`You run into {name}, your former recruit, now on the other side. Their look leaves no doubt what they think of you now.`,
+    choices:[
+      { fr:"Tenter de le/la convertir a nouveau vers ton camp.", en:"Try to win them back to your side.", eff:{align:2, intelligence:2}, recruit:mySide, convertAttempt:true },
+      { fr:"L'affronter directement, sans detour.", en:"Confront them directly, no detour.", eff:{courage:2}, recruit:mentee.outcome, forceBattle:true },
+      { fr:"Le/la laisser filer - ce n'est plus ton combat.", en:"Let them go - this isn't your fight anymore.", eff:{align:-1}, recruit:mentee.outcome },
+    ]};
+  S.currentMission = Object.assign({}, m, { recruitKey:mentee.charKey, recruitName:name, arc:true, crossed:true });
+  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+}
 /* Les propositions de clan ne tombent pas a chaque palier : elles dependent du palmares,
    de la popularite, de la nettete de la trajectoire, et restent rares (2-3 par carriere). */
 function checkTeamInvite(){
@@ -3629,6 +3851,7 @@ function nextMission(){
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
+  if(shouldTriggerCrossedMenteeArc() && startCrossedMenteeArc()){ S.lastCrossedArcYear = S.currentYear; return; }
   if(shouldTriggerMentor() && startMentorScene()) return;
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   S.pendingBattleWin = null;
@@ -3636,23 +3859,28 @@ function nextMission(){
 }
 function missionEpicness(mission){
   if(!mission || mission.type!=='combat') return 'none';
+  if((mission.scope||1)>=7) return 'cosmic';
   if((mission.danger||0)>=3 || (mission.scope||1)>=5) return 'epic';
   if((mission.danger||0)>=2) return 'major';
   return 'none';
 }
+const COSMIC_LABELS_FR = ['ONDE DE CHOC MULTIVERSELLE','LE CIEL SE DECHIRE','L\'AMPLEUR DEPASSE TOUT CE QUE TU AS VECU','LA REALITE VACILLE'];
+const COSMIC_LABELS_EN = ['MULTIVERSAL SHOCKWAVE','THE SKY TEARS OPEN','A SCALE BEYOND ANYTHING YOU\'VE FACED','REALITY ITSELF SHAKES'];
 function showCombatCinematic(mission, epicness){
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + epicness;
-  const bigLabel = S.lang==='fr' ? 'COMBAT' : 'COMBAT';
+  const isCosmic = epicness==='cosmic';
+  const bigLabel = isCosmic ? (S.lang==='fr'?pick(COSMIC_LABELS_FR):pick(COSMIC_LABELS_EN)) : 'COMBAT';
   if(mission.charKey){ overlay.style.setProperty('--accent', charColor(CHARACTERS[mission.charKey].align)); }
-  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-content">
+  overlay.innerHTML = `<div class="cine-flash"></div>${isCosmic?'<div class="cine-rays"></div>':''}<div class="cine-content">
       <div class="cine-scope">${scopeLabel(mission.scope||1).toUpperCase()}</div>
       <div class="cine-title">${bigLabel}</div>
     </div>`;
   document.body.appendChild(overlay);
   if(epicness==='epic') document.body.classList.add('shake');
-  const dur = epicness==='epic' ? 2200 : 1100;
+  if(isCosmic) document.body.classList.add('shake-cosmic');
+  const dur = isCosmic ? 3200 : (epicness==='epic' ? 2200 : 1100);
   setTimeout(()=>{
-    overlay.classList.add('cine-out'); document.body.classList.remove('shake');
+    overlay.classList.add('cine-out'); document.body.classList.remove('shake'); document.body.classList.remove('shake-cosmic');
     setTimeout(()=>overlay.remove(), 500);
   }, dur);
   return dur;
@@ -3904,14 +4132,31 @@ function playerMoves(){
   return out.slice(0,4);
 }
 /* Adversaire : 90% camp adverse, 10% querelle interne */
+function crossedMentees(){
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  return livingMentees().filter(m => m.charKey && (m.outcome==='hero'||m.outcome==='villain') && m.outcome!==mySide);
+}
+function applyCrossedMenteeBond(foeKey){
+  const mentee = (S.mentees||[]).find(m=>m.charKey===foeKey);
+  if(!mentee) return;
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+  if((mentee.outcome==='hero'||mentee.outcome==='villain') && mentee.outcome!==mySide){
+    const warmChance = clamp(0.05 + heroProximity(foeKey)*0.005, 0.05, 0.10);
+    const warm = Math.random() < warmChance;
+    S.rel[foeKey] = clamp((S.rel[foeKey]||0) + (warm ? 2 : -5), -20, 20);
+  }
+}
 function pickOpponentKey(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-  const pool = otherCharKeys();
+  if(S.traitorKey && CHARACTERS[S.traitorKey] && Math.random()<0.18) return S.traitorKey;
+  const crossed = crossedMentees();
+  if(crossed.length && Math.random()<0.22) return pick(crossed).charKey;
+  const pool = otherCharKeys().filter(charUnlocked);
   const cross = pool.filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
   const same = pool.filter(k=>CHARACTERS[k].align===mySide);
   if(Math.random() < 0.9){ if(cross.length) return pick(cross); }
   if(same.length) return pick(same);
-  return cross.length ? pick(cross) : pick(pool);
+  return cross.length ? pick(cross) : pick(pool.length?pool:otherCharKeys());
 }
 function battleFoeKey(mission){
   if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey) return mission.charKey;
@@ -3949,6 +4194,7 @@ function shouldBattle(mission){
 }
 function resolveBattleOffscreen(mission){
   const foeKey = battleFoeKey(mission);
+  applyCrossedMenteeBond(foeKey);
   const foe = CHARACTERS[foeKey];
   const foeName = S.lang==='fr'?foe.fr:foe.en;
   const f = battleForm();
@@ -4051,9 +4297,14 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
   showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, 'var(--red)', cb);
 }
 /* ---------- Escouades visuelles : des allies (et des adversaires) au coude a coude ---------- */
-function buildBattleSquads(foeKey){
+/* Taille d'equipe plafonnee par l'ampleur du combat (scope) : 1=quartier (solo), 2=ville, 3=pays,
+   4=continent, 5=monde, 6=systeme, 7=cosmique. On peut toujours tomber en dessous du plafond. */
+function squadCapForScope(scope){ return clamp(scope||1, 1, 7); }
+function buildBattleSquads(foeKey, mission){
   const empty = { allies:[], foes:[] };
-  if(Math.random() < 0.45) return empty;
+  const cap = squadCapForScope(mission && mission.scope);
+  if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
+  const maxExtra = cap - 1; // en plus de toi / du adversaire principal
   const keys = otherCharKeys().filter(k=>k!==foeKey);
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
@@ -4061,21 +4312,40 @@ function buildBattleSquads(foeKey){
   const mine = menteeKeys().filter(k=>allyPool.includes(k));
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
-  const n = 3 + Math.floor(Math.random()*4); // 3 a 6 visages a tes cotes
-  const allies = allyPool.slice(0, n);
-  const foes = foePool.slice(0, Math.max(1, allies.length - 1 + (Math.random()<0.4?1:0)));
-  if(!allies.length) return empty;
+  // Biais vers le plafond mais toujours possible d'avoir moins de monde.
+  const rollExtra = (pool)=>{ if(maxExtra<=0 || !pool.length) return 0; const r = Math.pow(Math.random(), 0.55); return clamp(Math.round(maxExtra*r), 0, Math.min(maxExtra, pool.length)); };
+  const allies = allyPool.slice(0, rollExtra(allyPool));
+  const foes = foePool.slice(0, rollExtra(foePool));
   return { allies, foes };
 }
-function squadHTML(list){
+function tierOfKey(k){ return (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5; }
+function buildRosterExtras(keys, weakened){
+  return keys.map(k=>{
+    const c = CHARACTERS[k]; if(!c) return null;
+    const tier = tierOfKey(k);
+    let maxHp = Math.round(58 + tier*9);
+    let hp = maxHp;
+    if(weakened) hp = Math.round(maxHp * (0.3 + Math.random()*0.35)); // deja au front, en difficulte
+    return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp, ko:false, dead:false };
+  }).filter(Boolean);
+}
+function squadHTML(list, side){
   if(!list || !list.length) return '';
-  return `<div class="btl-squad">${list.map((k,i)=>{
-    const c = CHARACTERS[k]; if(!c) return '';
-    const col = convBeamColor(c.align);
-    const nm = S.lang==='fr'?c.fr:c.en;
-    const inner = c.img ? `<img src="${c.img}" alt="${nm}">` : `<span>${nm.charAt(0).toUpperCase()}</span>`;
-    return `<div class="sq" data-k="${k}" style="--cp-color:${col}; animation-delay:${0.5 + i*0.09}s;" title="${nm}">${inner}</div>`;
+  return `<div class="btl-squad">${list.map((e,i)=>{
+    const inner = e.img ? `<img src="${e.img}" alt="${e.name}">` : `<span>${e.name.charAt(0).toUpperCase()}</span>`;
+    return `<div class="sq" data-side="${side}" data-idx="${i}" style="--cp-color:${e.col}; animation-delay:${0.5 + i*0.09}s;" title="${e.name}">
+      ${inner}
+      <div class="sq-hp"><div class="sq-hpfill" id="sqhp-${side}-${i}" style="width:100%;background:var(--green);"></div></div>
+    </div>`;
   }).join('')}</div>`;
+}
+function refreshSquadBar(side, i, e){
+  const fill = document.getElementById(`sqhp-${side}-${i}`);
+  if(!fill) return;
+  const pct = clamp((e.maxHp? e.hp/e.maxHp*100 : 0), 0, 100);
+  fill.style.width = pct+'%'; fill.style.background = hpColor(pct);
+  const chip = fill.closest('.sq');
+  if(chip) chip.classList.toggle('ko', e.ko||e.dead);
 }
 
 /* Tracer visuel : un allie (ou un ennemi) entre dans l'echange. */
@@ -4106,6 +4376,7 @@ const FOEASSIST_FR = ["{n} te prend par derriere", "{n} entre dans la melee et t
 const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips you", "{n} punishes your low guard", "{n} crushes you as you back off"];
 function startBattle(mission, done){
   const foeKey = battleFoeKey(mission);
+  applyCrossedMenteeBond(foeKey);
   const foe = CHARACTERS[foeKey];
   const foeName = S.lang==='fr'?foe.fr:foe.en;
   const myName = S.heroName || (S.lang==='fr'?'Toi':'You');
@@ -4131,12 +4402,18 @@ function startBattle(mission, done){
   st.foeMax = st.foeHP;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   const myMoves = playerMoves(), foeMoves = foeMovesFor(foeKey);
-  /* Escouades : 55% des combats se jouent en groupe (3 a 6 visages de chaque cote). */
-  const squads = buildBattleSquads(foeKey);
+  /* Escouades : la taille de l'equipe depend de l'ampleur du combat (scope 1 a 7). */
+  const scope = squadCapForScope(mission && mission.scope);
+  const squads = buildBattleSquads(foeKey, mission);
   const allyBonus = 1 + squads.allies.length * 0.03;
+  // Parfois ton equipe est deja engagee et en difficulte : tu arrives en renfort.
+  const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
+  const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
+  const foeExtras = buildRosterExtras(squads.foes, false);
+  const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
 
   const ov = document.createElement('div');
-  ov.className = 'btl-overlay intro';
+  ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : '');
   ov.innerHTML = `
     <div class="btl-arena">
       <div class="btl-fighter me">
@@ -4144,7 +4421,7 @@ function startBattle(mission, done){
         <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlMeNum">${st.myHP} / ${st.myMax}</div></div>
-        ${squadHTML(squads.allies)}
+        ${squadHTML(allyExtras, 'ally')}
       </div>
       <div class="btl-vs" id="btlVS">VS</div>
       <div class="btl-fighter foe">
@@ -4152,7 +4429,7 @@ function startBattle(mission, done){
         <div class="btl-meta"><div class="btl-name" style="color:${foeCol};">${foeName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlFoeNum">${st.foeHP} / ${st.foeMax}</div></div>
-        ${squadHTML(squads.foes)}
+        ${squadHTML(foeExtras, 'foe')}
       </div>
 
     </div>
@@ -4162,6 +4439,29 @@ function startBattle(mission, done){
   const meFrame = ov.querySelector('#btlMeFrame'), foeFrame = ov.querySelector('#btlFoeFrame');
   const logEl = ov.querySelector('#btlLog'), movesEl = ov.querySelector('#btlMoves');
   const setLog = txt => { logEl.textContent = txt; };
+  allyExtras.forEach((e,i)=>refreshSquadBar('ally', i, e));
+  foeExtras.forEach((e,i)=>refreshSquadBar('foe', i, e));
+  /* Duels d'arriere-plan : chaque membre d'escouade affronte son vis-a-vis pendant que tu geres le combat principal. */
+  function tickBackgroundDuels(){
+    const n = Math.max(allyExtras.length, foeExtras.length);
+    for(let i=0;i<n;i++){
+      const a = allyExtras[i], f = foeExtras[i];
+      if(a && !a.ko && f && !f.ko){
+        const dToF = Math.round(6+Math.random()*11), dToA = Math.round(6+Math.random()*11);
+        f.hp = Math.max(0, f.hp-dToF); a.hp = Math.max(0, a.hp-dToA);
+        if(f.hp<=0){ f.ko=true; }
+        if(a.hp<=0){
+          a.ko=true;
+          if(scope>=6 && Math.random()<0.12){ a.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({key:a.key, name:a.name, year:S.currentYear}); }
+        }
+        refreshSquadBar('ally', i, a); refreshSquadBar('foe', i, f);
+      } else if(f && !f.ko && (!a || a.ko)){
+        // Cet adversaire n'a plus personne en face : il te met la pression.
+        st.myHP = Math.max(0, st.myHP - Math.round(2+Math.random()*4));
+      }
+    }
+    refreshBars();
+  }
   function refreshBars(){
     const mp = clamp(st.myHP/st.myMax*100,0,100), fp = clamp(st.foeHP/st.foeMax*100,0,100);
     const mb = ov.querySelector('#btlMeHP'), fb = ov.querySelector('#btlFoeHP');
@@ -4176,20 +4476,28 @@ function startBattle(mission, done){
     frame.appendChild(el); setTimeout(()=>el.remove(), 1000);
   }
   function hit(frame){ frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
+  const meFrameDefault = meFrame.innerHTML, foeFrameDefault = foeFrame.innerHTML;
+  function swapFrame(frame, defaultHTML, e, col){
+    frame.innerHTML = e.img ? `<img src="${e.img}" alt="${e.name}">` : `<span class="cp-glyph">${e.name.charAt(0).toUpperCase()}</span>`;
+    frame.innerHTML += `<div class="btl-frame-tag" style="color:${col};">${S.lang==='fr'?'RENFORT':'BACKUP'}</div>`;
+    frame.classList.add('frame-swap');
+    setTimeout(()=>{ frame.classList.remove('frame-swap'); frame.innerHTML = defaultHTML; }, 1100);
+  }
   function runAssist(side){
-    // side 'ally' : un de tes coequipiers frappe l'adversaire. side 'foe' : un de leurs renforts te touche.
-    const list = side==='ally' ? squads.allies : squads.foes;
-    if(!list || !list.length) return 0;
-    const k = pick(list);
-    const c = CHARACTERS[k]; if(!c) return 0;
-    const nm = S.lang==='fr'?c.fr:c.en;
-    const col = convBeamColor(c.align);
-    const chip = ov.querySelector((side==='ally'?'.btl-fighter.me':'.btl-fighter.foe')+' .sq[data-k="'+k+'"]');
+    // side 'ally' : un de tes coequipiers prend ta place un instant pour frapper. side 'foe' : un de leurs renforts te touche.
+    const list = side==='ally' ? allyExtras : foeExtras;
+    const alive = list.filter(e=>!e.ko);
+    if(!alive.length) return 0;
+    const e = pick(alive);
+    const idx = list.indexOf(e);
+    const nm = e.name, col = e.col;
+    const chip = ov.querySelector((side==='ally'?'.btl-fighter.me':'.btl-fighter.foe')+' .sq[data-idx="'+idx+'"]');
     const target = side==='ally' ? foeFrame : meFrame;
-    const tier = (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5;
+    const tier = tierOfKey(e.key);
     const d = Math.max(3, Math.round((5 + tier*1.6) * (0.8 + Math.random()*0.5)));
     if(chip){ chip.classList.remove('assist'); void chip.offsetWidth; chip.classList.add('assist'); }
     battleAssistName(chip || target, nm, col);
+    swapFrame(side==='ally'?meFrame:foeFrame, side==='ally'?meFrameDefault:foeFrameDefault, e, col);
     setTimeout(()=>{
       battleTracer(chip || (side==='ally'?meFrame:foeFrame), target, col);
       setTimeout(()=>{
@@ -4204,10 +4512,11 @@ function startBattle(mission, done){
     return d;
   }
   function assistChance(side){
-    const list = side==='ally' ? squads.allies : squads.foes;
-    if(!list || !list.length) return false;
+    const list = side==='ally' ? allyExtras : foeExtras;
+    const alive = list.filter(e=>!e.ko);
+    if(!alive.length) return false;
     const base = side==='ally' ? 0.34 : 0.3;
-    return Math.random() < Math.min(0.6, base + list.length*0.03);
+    return Math.random() < Math.min(0.6, base + alive.length*0.03);
   }
   function setMovesEnabled(on){
     movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on);
@@ -4228,14 +4537,37 @@ function startBattle(mission, done){
   function finish(win){
     st.busy = true; setMovesEnabled(false);
     (win?foeFrame:meFrame).classList.add('ko');
-    setLog(win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
-               : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`));
+    let extraLine = '';
+    if(fullSquadFight){
+      if(win){
+        // Combat complet : le reste de l'escouade adverse tombe aussi, balaye par ton equipe.
+        const downed = foeExtras.filter(f=>!f.ko).length;
+        foeExtras.forEach((f,i)=>{ f.ko = true; refreshSquadBar('foe', i, f); });
+        if(downed>0) extraLine = S.lang==='fr' ? ` Ton equipe maitrise les ${downed} renfort(s) adverse(s).` : ` Your team handles the ${downed} enemy backup(s).`;
+      } else {
+        const deadNow = (S.deadAllies||[]).filter(d=>d.year===S.currentYear);
+        if(deadNow.length) extraLine = S.lang==='fr' ? ` ${deadNow.map(d=>d.name).join(', ')} ne se relevera pas.` : ` ${deadNow.map(d=>d.name).join(', ')} won't get back up.`;
+      }
+    }
+    setLog((win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
+               : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`)) + extraLine);
     const hpPct = clamp(st.myHP/st.myMax*100, 0, 100);
+    // Mort permanente possible uniquement lors des tres grands combats perdus (systeme stellaire / cosmique).
+    let permaDeath = false;
+    if(!win && scope>=6){
+      const deathChance = 0.10 + (scope-6)*0.06; // ~10% niveau systeme, ~16% niveau cosmique
+      if(Math.random() < deathChance){
+        permaDeath = true;
+        const causeFr = `terrasse(e) par ${foeName} lors d'un affrontement d'ampleur ${scopeLabel(scope).toLowerCase()}`;
+        const causeEn = `struck down by ${foeName} during a ${scopeLabel(scope).toLowerCase()}-scale confrontation`;
+        S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
+      }
+    }
     setTimeout(()=>{
       ov.classList.add('btl-out');
       setTimeout(()=>{
         ov.remove();
-        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey); });
+        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey, permaDeath); });
       }, 450);
     }, 1500);
   }
@@ -4252,6 +4584,7 @@ function startBattle(mission, done){
     return Math.random()<0.6 ? weighted[0] : pick(foeMoves);
   }
   function foeTurn(){
+    if(fullSquadFight) tickBackgroundDuels();
     const m = foeAI();
     const label = S.lang==='fr'?m.fr:m.en;
     if(Math.random() > m.acc){
@@ -4310,9 +4643,13 @@ function startBattle(mission, done){
     ov.classList.remove('intro');
     const fl = formLabel();
     let delay = 0;
-    if(squads.allies.length){
-      const names = squads.allies.map(k=>S.lang==='fr'?CHARACTERS[k].fr:CHARACTERS[k].en).join(', ');
-      setLog(S.lang==='fr'?`${names} prennent position a tes cotes.`:`${names} take position at your side.`);
+    if(allyExtras.length){
+      const names = allyExtras.map(e=>e.name).join(', ');
+      if(isReinforcement){
+        setLog(S.lang==='fr'?`${names} tiennent le front depuis un moment, en difficulte. Ils t'appellent en renfort.`:`${names} have been holding the line, struggling. They call you in as backup.`);
+      } else {
+        setLog(S.lang==='fr'?`${names} prennent position a tes cotes.`:`${names} take position at your side.`);
+      }
       delay = 1400;
     }
     // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
@@ -4337,7 +4674,11 @@ function afterMissionRender(mission){
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>maybeTriggerConversation(), dur+150); return; }
   if(shouldBattle(mission)){
     S.pendingBattleWin = null;
-    startBattle(mission, (win)=>{ S.pendingBattleWin = win;
+    startBattle(mission, (win, foeKey, permaDeath)=>{ S.pendingBattleWin = win;
+      if(permaDeath || S.dead){
+        S.yearsHistory.push({ year:S.currentYear, entries:S.currentYearEntries.slice(), endAlign:S.align }); S.currentYearEntries = [];
+        S.screen='end'; render(); return;
+      }
       if(win) jarvisSay("Cible neutralisee. J'enregistre la victoire dans ton dossier.","Target neutralized. Logging the win in your file.", S.lang==='fr'?'victoire confirmee':'win confirmed');
       else jarvisSay("Tu as perdu l'echange. Je stabilise tes constantes, on rejoue ca a froid.","You lost the exchange. Stabilizing your vitals - we'll review it cold.", S.lang==='fr'?'defaite enregistree':'loss logged');
       maybeTriggerConversation(); });
@@ -4391,28 +4732,64 @@ function applyMentorChoice(choice, name){
   const eff = choice.eff || {};
   const m = S.currentMission || {};
   const key = m.recruitKey || null;
+  if(choice.forceBattle && key){
+    const pseudoMission = { type:'combat', danger:2, scope: clamp(computeStars(),1,7), charKey:key };
+    S.pendingBattleWin = null;
+    startBattle(pseudoMission, (win)=>{
+      S.pendingBattleWin = win;
+      const existing = key ? (S.mentees||[]).find(x=>x.charKey===key) : null;
+      const finalOutcome = choice.recruit || (existing?existing.outcome:'neutral');
+      if(existing){ existing.beats = (existing.beats||1) + 1; }
+      S.rel[key] = clamp((S.rel[key]||0) + (win?-3:-6), -20, 20);
+      const label = S.lang==='fr' ? choice.fr : choice.en;
+      S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false });
+      S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:finalOutcome });
+      handleZoneCheckAndContinue();
+    });
+    return;
+  }
+  let finalRecruit = choice.recruit;
+  let convertMsgFr = '', convertMsgEn = '';
+  if(choice.convertAttempt && key){
+    const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
+    const chance = mySide==='hero' ? clamp(0.30 + heroProximity(key)*0.05, 0.15, 0.75) : 0.45;
+    const success = Math.random() < chance;
+    finalRecruit = success ? mySide : (m.recruitKey ? ((S.mentees||[]).find(x=>x.charKey===key)||{}).outcome || 'neutral' : 'neutral');
+    convertMsgFr = success ? `${name} accepte de revenir de ton cote.` : `${name} refuse. "C'est trop tard pour moi."`;
+    convertMsgEn = success ? `${name} agrees to come back to your side.` : `${name} refuses. "It's too late for me."`;
+  }
   S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
   S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
   S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   if(key){
-    const bond = (choice.recruit==='hero'||choice.recruit==='villain') ? 4 : (choice.recruit==='died' ? -6 : 1);
+    const bond = (finalRecruit==='hero'||finalRecruit==='villain') ? 4 : (finalRecruit==='died' ? -6 : 1);
     S.rel[key] = clamp((S.rel[key]||0) + bond, -20, 20);
   }
   const existing = key ? (S.mentees||[]).find(x=>x.charKey===key) : null;
-  if(existing){ existing.outcome = choice.recruit; existing.beats = (existing.beats||1) + 1; existing.xp = (existing.xp||0) + (choice.xp||2); }
-  else S.mentees.push({ name, charKey:key, outcome: choice.recruit, since:S.currentYear, beats:1, xp:(choice.xp||2) });
-  const label = S.lang==='fr' ? choice.fr : choice.en;
+  if(existing){ existing.outcome = finalRecruit; existing.beats = (existing.beats||1) + 1; existing.xp = (existing.xp||0) + (choice.xp||2); }
+  else S.mentees.push({ name, charKey:key, outcome: finalRecruit, since:S.currentYear, beats:1, xp:(choice.xp||2) });
+  const label = (S.lang==='fr' ? choice.fr : choice.en) + (convertMsgFr ? ' ' + (S.lang==='fr'?convertMsgFr:convertMsgEn) : '');
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
-  S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:choice.recruit });
+  S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:finalRecruit });
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
+  if(convertMsgFr) jarvisSay(convertMsgFr, convertMsgEn, S.lang==='fr'?'tentative de conversion':'conversion attempt');
   handleZoneCheckAndContinue();
 }
 
 function handleZoneCheckAndContinue(){
+  const oldZone = S.lastZone;
   const newZone = zoneOf(S.align);
-  if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
+  if(newZone !== oldZone){
+    S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    showSwitchAnnouncement(oldZone, newZone, ()=>{
+      if(checkFactionExpulsion()){ nextMission(); return; }
+      if(checkTeamInvite()){ render(); return; }
+      nextMission();
+    });
+    return;
+  }
   if(checkFactionExpulsion()){ nextMission(); return; }
   if(checkTeamInvite()){ render(); return; }
   nextMission();
@@ -4420,8 +4797,11 @@ function handleZoneCheckAndContinue(){
 function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; }
-  else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost'; if(win){ S.locations.push(mission.location); } }
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; }
+  else if(type==='rescue'){ const winProb = clamp(0.42 + (S.stats.intelligence-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = Math.random() < winProb; outcome = win ? 'saved' : 'lost';
+    const kind = (zoneOf(S.align)==='villain' || !win) ? 'destroyed' : 'saved';
+    S.locations.push(Object.assign({}, mission.location, { kind }));
+    if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; }
   return { type, outcome };
 }
 function checkDeath(mission){
@@ -4541,6 +4921,7 @@ function screenYearBreak(){
     ${rec.slice(1).map(x=>`<p class="lead" style="opacity:.82; font-size:.95em;">${x}</p>`).join('')}
     <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
   d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
+    maybeOldSideReminder(); maybeTeamBetrayal();
     if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
   return d;
 }
@@ -5885,12 +6266,20 @@ function applyConvChoice(conv, choice){
   if(eff.rom){ handleRomanceEffect(eff.rom, conv); }
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
+  const oldZone = S.lastZone;
   const newZone = zoneOf(S.align);
-  if(newZone !== S.lastZone){ S.turningPoints.push({ year:S.currentYear, from:S.lastZone, to:newZone }); S.lastZone = newZone; }
-  checkFactionExpulsion();
-  removeConvOverlay(); S.activeConversation=null; S.convLineIndex=0;
-  applyTheme(); renderRankBadge();
-  const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
+  function finishConv(){
+    checkFactionExpulsion();
+    removeConvOverlay(); S.activeConversation=null; S.convLineIndex=0;
+    applyTheme(); renderRankBadge();
+    const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
+  }
+  if(newZone !== oldZone){
+    S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    showSwitchAnnouncement(oldZone, newZone, finishConv);
+    return;
+  }
+  finishConv();
 }
 function removeConvOverlay(){ const el=document.getElementById('convOverlay'); if(el) el.remove(); }
 
@@ -5928,14 +6317,20 @@ function screenEnd(){
   const alignLabel = S.align>=15 ? t('alignHero') : (S.align<=-15 ? t('alignVillain') : t('alignNeutral'));
   const finalZone = zoneOf(S.align);
   const locLabel = finalZone==='villain' ? t('locationsDestroyed') : t('locationsSaved');
-  const uniqueLocs = {}; S.locations.forEach(l=>{ uniqueLocs[l.type+':'+l.name]=l; }); const locArr = Object.values(uniqueLocs);
+  const uniqueLocs = {}; S.locations.forEach(l=>{ const key=l.type+':'+l.name; if(!uniqueLocs[key] || l.kind==='destroyed') uniqueLocs[key]=l; });
+  const locArr = Object.values(uniqueLocs);
+  const savedArr = locArr.filter(l=>l.kind==='saved' || (!l.kind && finalZone!=='villain'));
+  const destroyedArr = locArr.filter(l=>l.kind==='destroyed' || (!l.kind && finalZone==='villain'));
+  const showBoth = savedArr.length>0 && destroyedArr.length>0;
   const tierCounts = [0,0,0,0,0,0,0,0]; locArr.forEach(l=>{ tierCounts[l.type] = (tierCounts[l.type]||0)+1; });
   const menteeHero = S.mentees.filter(m=>m.outcome==='hero').length, menteeVillain = S.mentees.filter(m=>m.outcome==='villain').length;
   const menteeDied = S.mentees.filter(m=>m.outcome==='died').length, menteeNeutral = S.mentees.filter(m=>m.outcome==='neutral').length;
   const kpiHtml = `<div class="kpi-grid">
     <div class="kpi"><div class="kval">${S.dead ? S.deathInfo.year : S.missionsPlan.length}</div><div class="klabel">${t('yearsServed')}</div></div>
     <div class="kpi"><div class="kval">${S.totalMissionsDone}</div><div class="klabel">${t('missionsTotal')}</div></div>
-    <div class="kpi"><div class="kval">${locArr.length}</div><div class="klabel">${locLabel}</div></div>
+    ${showBoth ? `<div class="kpi"><div class="kval">${savedArr.length}</div><div class="klabel">${t('locationsSaved')}</div></div>
+    <div class="kpi"><div class="kval">${destroyedArr.length}</div><div class="klabel">${t('locationsDestroyed')}</div></div>`
+      : `<div class="kpi"><div class="kval">${locArr.length}</div><div class="klabel">${locLabel}</div></div>`}
     <div class="kpi"><div class="kval">${S.combat.won}</div><div class="klabel">${t('fightsWon')}</div></div>
     <div class="kpi"><div class="kval">${S.combat.lost}</div><div class="klabel">${t('fightsLost')}</div></div>
     <div class="kpi"><div class="kval">${S.mentees.length}</div><div class="klabel">${t('menteesCount')}</div></div></div>`;
@@ -5981,6 +6376,7 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?"Histoires d'amour":'Romances'}</div></div></div>
     <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>` : '';
+  const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
   const turningHtml = S.turningPoints.length ? S.turningPoints.map(tp=>{ const fromL = tp.from==='hero'?t('alignHero'):(tp.from==='villain'?t('alignVillain'):t('alignNeutral')); const toL = tp.to==='hero'?t('alignHero'):(tp.to==='villain'?t('alignVillain'):t('alignNeutral'));
     return `<div class="turn-item">${t('year')} ${tp.year}: ${fromL} -> ${toL}</div>`; }).join('') : `<p class="lead">${t('noTurning')}</p>`;
@@ -6003,7 +6399,7 @@ function screenEnd(){
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${factionName(S.team.side,S.team.tier)}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
-    ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}
+    ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}
     <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
 
