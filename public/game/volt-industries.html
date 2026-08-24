@@ -828,22 +828,22 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
 /* ============================ FACTIONS (7 tiers per side) ============================ */
 const FACTIONS = {
   hero: [ null,
-    { fr:'Garde de Quartier', en:'Neighborhood Watch', icon:'house' },
-    { fr:'Sentinelles Urbaines', en:'Urban Sentinels', icon:'skyline' },
-    { fr:'Legion Nationale', en:'National Legion', icon:'flag' },
-    { fr:'Alliance Continentale', en:'Continental Alliance', icon:'globe-segment' },
-    { fr:'VANGUARD', en:'VANGUARD', icon:'globe' },
-    { fr:'Concorde Stellaire', en:'Stellar Concord', icon:'rings' },
-    { fr:'AEGIS ETERNEL', en:'ETERNAL AEGIS', icon:'galaxy' },
+    { fr:'Defenders', en:'Defenders', icon:'house' },
+    { fr:'Damage Control', en:'Damage Control', icon:'skyline' },
+    { fr:'S.H.I.E.L.D.', en:'S.H.I.E.L.D.', icon:'flag' },
+    { fr:'X-Men', en:'X-Men', icon:'globe-segment' },
+    { fr:'AVENGERS', en:'AVENGERS', icon:'globe' },
+    { fr:'Nova Corps', en:'Nova Corps', icon:'rings' },
+    { fr:'ETERNALS', en:'ETERNALS', icon:'galaxy' },
   ],
   villain: [ null,
-    { fr:"Bande de l'Ombre", en:'Shadow Gang', icon:'fist' },
-    { fr:'Cartel Urbain', en:'Urban Cartel', icon:'chain' },
-    { fr:'LE MANDAT', en:'THE MANDATE', icon:'gauntlet' },
-    { fr:'Les Sinistres', en:'The Afflicted', icon:'crack' },
-    { fr:'PERDITION', en:'PERDITION', icon:'coil' },
-    { fr:"L'Ordre Fracture", en:'The Fractured Order', icon:'comet' },
-    { fr:'MENACE COSMIQUE', en:'COSMIC MENACE', icon:'void' },
+    { fr:'Red Room', en:'Red Room', icon:'fist' },
+    { fr:'Roxxon', en:'Roxxon', icon:'chain' },
+    { fr:'TEN RINGS', en:'TEN RINGS', icon:'gauntlet' },
+    { fr:'A.I.M.', en:'A.I.M.', icon:'crack' },
+    { fr:'HYDRA', en:'HYDRA', icon:'coil' },
+    { fr:'Brotherhood of Mutants', en:'Brotherhood of Mutants', icon:'comet' },
+    { fr:'CHITAURI ARMADA', en:'CHITAURI ARMADA', icon:'void' },
   ],
 };
 function factionEmblemSVG(side, tier, size){
@@ -924,7 +924,7 @@ const MISSIONS = [
       { fr:"Profiter du chaos pour disparaitre avec ce que tu es venu chercher.", en:"Use the chaos to slip away with what you came for.", eff:{align:-9, intelligence:3, popularity:-4, rel:{obsidian:3}} },
     ]},
   { id:'braquage', type:'combat', danger:1, scope:1, tagFr:'Crime organise', tagEn:'Organized crime',
-    fr:"Un gang tente de voler une technologie experimentale au sein meme de Volt Industries.", en:"A gang tries to steal experimental tech from inside Volt Industries itself.",
+    fr:"Un gang tente de voler une prototype vibranium au sein meme de Volt Industries.", en:"A gang tries to steal vibranium prototype from inside Volt Industries itself.",
     choices:[
       { fr:"Intervenir seul, sans prevenir personne, pour prouver ta valeur.", en:"Step in alone, telling no one, to prove your worth.", eff:{align:4, courage:7, popularity:1, rel:{volt:-1}} },
       { fr:"Appeler du renfort et agir en equipe.", en:"Call for backup and act as a team.", eff:{align:5, intelligence:3, popularity:3, rel:{marsh:2, nyx:2}} },
@@ -938,7 +938,7 @@ const MISSIONS = [
       { fr:"Laisser les deux se debrouiller et t'eclipser.", en:"Let both fend for themselves and slip away.", eff:{align:-6, popularity:-6, rel:{lorelei:2}} },
     ]},
   { id:'media', type:'social', danger:0, scope:1, tagFr:'Opinion publique', tagEn:'Public opinion',
-    fr:"Une chaine d'info veut t'interviewer en direct apres un incident controverse.", en:"A news network wants to interview you live after a controversial incident.",
+    fr:"Le Daily Bugle veut t'interviewer en direct apres un incident controverse.", en:"The Daily Bugle wants to interview you live after a controversial incident.",
     choices:[
       { fr:"Assumer pleinement tes actes, sans filtre.", en:"Fully own your actions, no filter.", eff:{align:3, popularity:5, courage:3} },
       { fr:"Rester evasif et proteger ton identite.", en:"Stay evasive and protect your identity.", eff:{intelligence:4, popularity:1} },
@@ -954,7 +954,7 @@ const MISSIONS = [
   { id:'approche_villain', type:'social', danger:0, scope:1, charKey:'mandate', tagFr:'Tentation', tagEn:'Temptation',
     fr:"Bang t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"Bang secretly approaches you, offering unlimited resources for your loyalty.",
     choices:[
-      { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to the authorities.", eff:{align:8, popularity:2, rel:{mandate:-5, volt:3}} },
+      { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to S.H.I.E.L.D..", eff:{align:8, popularity:2, rel:{mandate:-5, volt:3}} },
       { fr:"Ecouter, sans t'engager, pour recolter des informations.", en:"Listen without committing, to gather intel.", eff:{align:-1, intelligence:4, rel:{mandate:1, nyx:2}} },
       { fr:"Accepter l'offre - le pouvoir a un prix que tu es pret a payer.", en:"Accept the offer - power has a price you're willing to pay.", eff:{align:-12, popularity:-3, rel:{mandate:6}} },
     ]},
@@ -973,18 +973,18 @@ const MISSIONS = [
       { fr:"Detruire sa reputation en retour, sans pitie.", en:"Destroy his reputation in return, without mercy.", eff:{align:-7, popularity:-3, rel:{obsidian:-6}} },
     ]},
   { id:'sacrifice', type:'rescue', danger:3, scope:2, tagFr:'Sacrifice', tagEn:'Sacrifice',
-    fr:"Pour stopper une attaque, il faut desamorcer un dispositif au prix d'une exposition a une energie instable.", en:"To stop an attack, a device must be disarmed at the cost of exposure to unstable energy.",
+    fr:"Pour stopper une attaque, il faut desamorcer un dispositif au prix d'une exposition a une energie Pym instable.", en:"To stop an attack, a device must be disarmed at the cost of exposure to unstable Pym energy.",
     choices:[
       { fr:"Le faire toi-meme, sans hesiter.", en:"Do it yourself, without hesitation.", eff:{align:10, courage:8, popularity:5} },
       { fr:"Trouver une solution technique pour eviter le sacrifice.", en:"Find a technical workaround to avoid the sacrifice.", eff:{align:5, intelligence:8, rel:{volt:3}} },
       { fr:"Laisser quelqu'un d'autre prendre le risque a ta place.", en:"Let someone else take the risk instead.", eff:{align:-8, popularity:-6} },
     ]},
   { id:'infiltration', type:'combat', danger:2, scope:2, charKey:'nyx', tagFr:'Infiltration', tagEn:'Infiltration',
-    fr:"Purple Witch te propose de t'infiltrer dans une organisation criminelle pour la demanteler de l'interieur.", en:"Purple Witch proposes infiltrating a criminal organization to dismantle it from within.",
+    fr:"Purple Witch te propose de t'infiltrer dans une cellule HYDRA pour la demanteler de l'interieur.", en:"Purple Witch proposes infiltrating a HYDRA cell to dismantle it from within.",
     choices:[
       { fr:"Accepter la mission, quitte a mentir longtemps.", en:"Accept the mission, even if it means lying for a long time.", eff:{align:4, intelligence:5, rel:{nyx:5}} },
       { fr:"Refuser - ce n'est pas ton style.", en:"Refuse - it's not your style.", eff:{courage:2, rel:{nyx:-2}} },
-      { fr:"Accepter, mais garder les benefices de l'organisation pour toi.", en:"Accept, but keep the organization's profits for yourself.", eff:{align:-9, intelligence:2, rel:{nyx:-6, mandate:2}} },
+      { fr:"Accepter, mais garder les benefices de la cellule pour toi.", en:"Accept, but keep the organization's profits for yourself.", eff:{align:-9, intelligence:2, rel:{nyx:-6, mandate:2}} },
     ]},
   { id:'trickster', type:'social', danger:0, scope:1, charKey:'lorelei', tagFr:'Manipulation', tagEn:'Manipulation',
     fr:"Audition te propose un marche ambigu : il t'aide contre une menace, en echange d'une faveur non precisee.", en:"Audition offers an ambiguous deal: he helps against a threat, for an unspecified future favor.",
@@ -998,10 +998,10 @@ const MISSIONS = [
     choices:[
       { fr:"Combattre en premiere ligne a ses cotes.", en:"Fight on the front line at his side.", eff:{align:7, courage:6, rel:{vaelor:5}} },
       { fr:"Organiser l'evacuation des populations pendant qu'il agit.", en:"Organize civilian evacuation while he acts.", eff:{align:5, intelligence:4, popularity:4} },
-      { fr:"Profiter du chaos pour tester une arme experimentale sur la tempete.", en:"Use the chaos to test an experimental weapon on the storm.", eff:{align:-6, intelligence:3, popularity:-3, rel:{obsidian:2}} },
+      { fr:"Profiter du chaos pour tester une arme a particules Pym sur la tempete.", en:"Use the chaos to test an Pym particle weapon on the storm.", eff:{align:-6, intelligence:3, popularity:-3, rel:{obsidian:2}} },
     ]},
   { id:'proces', type:'social', danger:0, scope:2, tagFr:'Justice', tagEn:'Justice',
-    fr:"Un tribunal veut reguler l'activite des etres exceptionnels et te convoque a temoigner.", en:"A tribunal wants to regulate exceptional beings' activity and summons you to testify.",
+    fr:"Une commission de Damage Control veut reguler l'activite des etres exceptionnels et te convoque a temoigner.", en:"A Damage Control commission wants to regulate exceptional beings' activity and summons you to testify.",
     choices:[
       { fr:"Plaider pour une supervision responsable.", en:"Argue for responsible oversight.", eff:{align:4, intelligence:4, popularity:2, rel:{marsh:3}} },
       { fr:"Defendre une liberte d'action totale.", en:"Defend total freedom of action.", eff:{align:-1, courage:4, popularity:-1, rel:{mandate:1}} },
@@ -1066,39 +1066,39 @@ const THREATS = [
   {fr:"un train hors de controle", en:"a runaway train"},
   {fr:"une epidemie suspecte", en:"a suspicious outbreak"},
   {fr:"un sabotage du reseau electrique", en:"a sabotage of the power grid"},
-  {fr:"des experiences genetiques hors de controle", en:"genetic experiments running wild"},
-  {fr:"un vaisseau en perdition qui s'ecrase", en:"a crashing derelict ship"},
+  {fr:"des experiences Weapon X hors de controle", en:"Weapon X experiments running wild"},
+  {fr:"un vaisseau Ravager qui s'ecrase", en:"a crashing Ravager ship"},
   {fr:"une tempete electromagnetique", en:"an electromagnetic storm"},
   {fr:"un virus informatique paralysant les infrastructures", en:"a computer virus paralyzing infrastructure"},
   {fr:"un braquage a main armee dans une banque high-tech", en:"an armed heist at a high-tech bank"},
   {fr:"un attentat presque dejoue", en:"a nearly-thwarted bombing plot"},
-  {fr:"une fracture dimensionnelle qui s'ouvre", en:"a dimensional rift tearing open"},
-  {fr:"des drones autonomes qui se retournent contre leurs createurs", en:"autonomous drones turning on their creators"},
-  {fr:"une prise de controle hostile d'un satellite", en:"a hostile takeover of a satellite"},
+  {fr:"une Incursion qui dechire Terre-616", en:"an Incursion tearing Earth-616 open"},
+  {fr:"des drones EDITH qui se retournent contre leurs createurs", en:"EDITH drones turning on their creators"},
+  {fr:"une prise de controle hostile d'un satellite S.W.O.R.D.", en:"a hostile takeover of a S.W.O.R.D. satellite"},
   {fr:"un effondrement structurel imminent", en:"an imminent structural collapse"},
   {fr:"une contamination toxique en cours", en:"an ongoing toxic contamination"},
   {fr:"un chantage a grande echelle", en:"a large-scale blackmail scheme"},
-  {fr:"une evasion massive d'une prison de haute securite", en:"a mass breakout from a high-security prison"},
-  {fr:"un piratage des systemes de defense", en:"a hack of the defense systems"},
-  {fr:"une secte technologique preparant un coup d'eclat", en:"a tech cult preparing a major strike"},
-  {fr:"une breche multiverselle instable", en:"an unstable multiverse breach"},
-  {fr:"un artefact cosmique vole dans un coffre blinde", en:"a cosmic artifact stolen from a vault"},
-  {fr:"une variante hostile venue d'une autre ligne temporelle", en:"a hostile variant from another timeline"},
-  {fr:"une fuite de radiations gamma dans un laboratoire", en:"a gamma radiation leak in a lab"},
-  {fr:"un symbiote echappe d'un caisson de confinement", en:"a symbiote escaped from a containment pod"},
-  {fr:"un portail dimensionnel ouvert en pleine ville", en:"a dimensional portal open in the middle of the city"},
-  {fr:"une flotte d'eclaireurs extraterrestres en approche", en:"an incoming alien scout fleet"},
-  {fr:"une armure de combat autonome devenue incontrolable", en:"a rogue autonomous combat armor"},
-  {fr:"un culte de la fin des temps invoquant une entite ancienne", en:"an apocalypse cult summoning an ancient entity"},
-  {fr:"un serum d'amelioration humaine detourne au marche noir", en:"an enhancement serum diverted to the black market"},
-  {fr:"un reacteur a particules en surcharge critique", en:"a particle reactor in critical overload"},
-  {fr:"une anomalie temporelle qui rejoue la meme heure", en:"a temporal anomaly looping the same hour"},
-  {fr:"un sceptre psychique retrouve entre de mauvaises mains", en:"a psychic scepter found in the wrong hands"},
-  {fr:"une armee de sentinelles synthetiques activee a distance", en:"an army of synthetic sentinels remotely activated"},
-  {fr:"un vaisseau-mere en orbite basse qui charge ses canons", en:"a mothership in low orbit charging its cannons"},
-  {fr:"un pillard cosmique reclamant un tribut planetaire", en:"a cosmic raider demanding planetary tribute"},
-  {fr:"une faille de dimension miroir qui aspire des quartiers entiers", en:"a mirror-dimension fault swallowing whole blocks"},
-  {fr:"un sorcier renegat brisant les sceaux d'un sanctuaire", en:"a rogue sorcerer breaking a sanctum's seals"},
+  {fr:"une evasion massive d'un penitencier du S.H.I.E.L.D.", en:"a mass breakout from a S.H.I.E.L.D. penitentiary"},
+  {fr:"un piratage des systemes du S.H.I.E.L.D.", en:"a hack of S.H.I.E.L.D. defense systems"},
+  {fr:"une cellule A.I.M. preparant un coup d'eclat", en:"an A.I.M. cell preparing a major strike"},
+  {fr:"une Incursion multiverselle instable", en:"an unstable multiversal Incursion"},
+  {fr:"une Infinity Stone volee dans un coffre blinde", en:"an Infinity Stone stolen from a vault"},
+  {fr:"un Variant hostile issu d'une branche temporelle", en:"a hostile Variant from another branch timeline"},
+  {fr:"une fuite de radiations gamma dans un labo A.I.M.", en:"a gamma radiation leak in an A.I.M. lab"},
+  {fr:"un symbiote Klyntar echappe d'un caisson de confinement", en:"a Klyntar symbiote escaped from a containment pod"},
+  {fr:"une Time Door ouverte en pleine ville", en:"a Time Door open in the middle of the city"},
+  {fr:"une flotte d'eclaireurs Chitauri en approche", en:"an incoming Chitauri scout fleet"},
+  {fr:"une armure Hulkbuster devenue incontrolable", en:"a rogue Hulkbuster armor"},
+  {fr:"un culte invoquant une entite de la Dark Dimension", en:"a cult summoning an entity from the Dark Dimension"},
+  {fr:"une dose d'Extremis detournee au marche noir", en:"an Extremis dose diverted to the black market"},
+  {fr:"un Super Collider en surcharge critique", en:"a Super Collider in critical overload"},
+  {fr:"un Nexus Event qui rejoue la meme heure", en:"a Nexus Event looping the same hour"},
+  {fr:"le sceptre contenant la Mind Stone entre de mauvaises mains", en:"the scepter holding the Mind Stone in the wrong hands"},
+  {fr:"une escouade de Sentinels activee a distance", en:"a squad of Sentinels remotely activated"},
+  {fr:"un vaisseau-mere Chitauri en orbite basse qui charge ses canons", en:"a Chitauri mothership in low orbit charging its cannons"},
+  {fr:"un chef Ravager reclamant un tribut planetaire", en:"a Ravager warlord demanding planetary tribute"},
+  {fr:"une faille de Mirror Dimension qui aspire Hell’s Kitchen", en:"a Mirror Dimension fault swallowing Hell’s Kitchen"},
+  {fr:"un sorcier renegat brisant les sceaux du Sanctum Sanctorum", en:"a rogue sorcerer breaking the Sanctum Sanctorum's seals"},
 ];
 const STAKES = [
   {fr:"des centaines de civils", en:"hundreds of civilians"},
@@ -1112,21 +1112,21 @@ const STAKES = [
   {fr:"l'equilibre ecologique de la zone", en:"the area's ecological balance"},
   {fr:"la securite de milliers de familles", en:"the safety of thousands of families"},
   {fr:"des secrets sensibles", en:"sensitive secrets"},
-  {fr:"la confiance du public envers les heros", en:"public trust in heroes"},
+  {fr:"la confiance du public relayee par le Daily Bugle", en:"public trust relayed by the Daily Bugle"},
   {fr:"un vaccin vital en cours de production", en:"a vital vaccine in production"},
   {fr:"l'avenir economique de la ville", en:"the city's economic future"},
   {fr:"une infrastructure critique", en:"critical infrastructure"},
   {fr:"la vie d'un enfant pris au piege", en:"the life of a trapped child"},
-  {fr:"l'integrite de la ligne temporelle sacree", en:"the integrity of the sacred timeline"},
-  {fr:"un artefact cosmique capable de reecrire la realite", en:"a cosmic artifact able to rewrite reality"},
+  {fr:"l'integrite de la Timeline sacree", en:"the integrity of the Sacred Timeline"},
+  {fr:"l'Aether, capable de reecrire la realite", en:"the Aether, able to rewrite reality"},
   {fr:"la moitie de la population d'un continent", en:"half a continent's population"},
-  {fr:"les sceaux d'un sanctuaire millenaire", en:"the seals of a thousand-year-old sanctum"},
+  {fr:"les sceaux du Sanctum Sanctorum", en:"the Sanctum Sanctorum's seals"},
   {fr:"le secret de l'identite civile de ton equipe", en:"your team's secret civilian identities"},
-  {fr:"les accords qui encadrent les surhumains", en:"the accords governing enhanced individuals"},
-  {fr:"la barriere entre deux univers voisins", en:"the barrier between two neighboring universes"},
-  {fr:"un reacteur ARC de derniere generation", en:"a next-generation arc reactor"},
-  {fr:"le dernier echantillon du serum d'amelioration", en:"the last sample of the enhancement serum"},
-  {fr:"l'existence meme de ta variante dans une autre realite", en:"the very existence of your variant in another reality"},
+  {fr:"les accords supervises par Damage Control", en:"the accords enforced by Damage Control"},
+  {fr:"la barriere entre Terre-616 et Terre-838", en:"the barrier between Earth-616 and Earth-838"},
+  {fr:"un Arc Reactor de derniere generation", en:"a next-generation Arc Reactor"},
+  {fr:"le dernier echantillon d'Extremis", en:"the last Extremis sample"},
+  {fr:"l'existence meme de ton Variant sur une autre branche temporelle", en:"the very existence of your Variant on another branch timeline"},
 ];
 const MISSION_SENTENCE_PATTERNS = [
   { fr:(T,S_,L)=>`${cap(T)} eclate a ${L} et menace ${S_}. Chaque seconde compte.`,
@@ -1252,7 +1252,7 @@ function generateProceduralMission(rank){
   const danger = dangerForScope(scope, type);
   const threat = pickNoRepeat('threats', THREATS);
   const stakes = pickNoRepeat('stakes', STAKES);
-  const locName = randLocationName();
+  const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
@@ -1362,7 +1362,7 @@ function generateVillainMission(rank){
   const danger = dangerForScope(scope, type);
   const threat = pickNoRepeat('threats', THREATS);
   const stakes = pickNoRepeat('stakes', STAKES);
-  const locName = randLocationName();
+  const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
@@ -1421,8 +1421,9 @@ function generateSignatureMission(rank){
   const charKey = type==='combat' ? pickOpponentKey() : pick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
-  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
+  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES); let locName = null;
   const scope = pickScopeForRank(rank);
+  locName = randLocationName(scope);
   const danger = dangerForScope(scope, type);
   const fr = roleT.fr(c.fr, threat.fr, stakes.fr, locName);
   const en = roleT.en(c.en, threat.en, stakes.en, locName);
@@ -1976,18 +1977,32 @@ const CONVERSATIONS = [
 
 
 
-const LOC_A = ['Nova','Astra','Vex','Kaer','Sol','Umbra','Lys','Drak','Zeph','Ilya','Cor','Thal','Bryn','Oster','Val','Mira','Iron','Sil'];
-const LOC_B = ['opolis','andra','ovia','ith','burg','mere','vane','stead','horn','dor','wyn','grad','fell','sen','mont','haven','cite','port'];
-function randLocationName(){ return LOC_A[Math.floor(Math.random()*LOC_A.length)] + LOC_B[Math.floor(Math.random()*LOC_B.length)]; }
+/* Lieux : vocabulaire MCU officiel (Terre-616, Neuf Royaumes, dimensions). */
+const LOC_BY_SCOPE = [
+  null,
+  ['Hell\u2019s Kitchen','Queens','Brooklyn','Manhattan','Birnin Zana','Westview','Novi Grad','Camp Lehigh','Kamar-Taj','Ta Lo'],
+  ['New York City','Madripoor','Westview','Novi Grad','Birnin Zana','Manhattan','Hell\u2019s Kitchen','Talokan'],
+  ['Wakanda','Sokovia','Latveria','Madripoor','Talokan','Ta Lo','New Asgard'],
+  ['Terre-616','Midgard','New Asgard','Counter-Earth','Terre-838'],
+  ['Xandar','Sakaar','Titan','Morag','Vormir','Hala','Contraxia','Lamentis-1','Knowhere','Berhert'],
+  ['Nidavellir','Jotunheim','Svartalfheim','Vanaheim','Muspelheim','Alfheim','Asgard','Nine Realms'],
+  ['Quantum Realm','Mirror Dimension','Dark Dimension','The Void','Citadel at the End of Time','Soul World','Astral Plane','Yggdrasil','Noor Dimension','World Forge'],
+];
+function randLocationName(level){
+  const lv = clamp(Number(level)||(1+Math.floor(Math.random()*7)),1,7);
+  const list = LOC_BY_SCOPE[lv];
+  return list[Math.floor(Math.random()*list.length)];
+}
+
 const SCOPE_TIERS = [
   null,
   { fr:'Quartier', en:'Neighborhood' },
   { fr:'Ville', en:'City' },
-  { fr:'Pays', en:'Country' },
-  { fr:'Continent', en:'Continent' },
-  { fr:'Monde', en:'World' },
-  { fr:'Systeme', en:'System' },
-  { fr:'Cosmique', en:'Cosmic' },
+  { fr:'Nation', en:'Nation' },
+  { fr:'Terre-616', en:'Earth-616' },
+  { fr:'Midgard', en:'Midgard' },
+  { fr:'Neuf Royaumes', en:'Nine Realms' },
+  { fr:'Multivers', en:'Multiverse' },
 ];
 function scopeLabel(level){ const s = SCOPE_TIERS[clamp(level,1,7)]; return S.lang==='fr'?s.fr:s.en; }
 function locTypeLabel(level){ return scopeLabel(level); }
@@ -2085,7 +2100,7 @@ const PRESETS = [
   { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Cruhela', nameEn:'Cruhela', heroFr:'Cruhela', heroEn:'Cruhela', morphology:'elance', path:'psychique', powers:['telekinesie','projection'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#c8a13c', secondaryColor:'#16161c', symbol:'' },
     align:-25, stats:{courage:4, intelligence:14, popularity:14},
-    perkFr:'Fortune et influence : achete les medias, les proces et les silences.', perkEn:'Wealth and influence: buys media, trials and silence.',
+    perkFr:'Fortune et influence : achete le Daily Bugle, les proces et les silences.', perkEn:'Wealth and influence: buys media, trials and silence.',
     flawFr:'Courage faible : fuit les combats et perd ses alliances sous pression.', flawEn:'Low courage: flees fights and loses alliances under pressure.',
     descFr:'Financiere devenue arme. Le pouvoir est une monnaie qui s\'achete.', descEn:'Financier turned weapon. Power is a currency you buy.' },
   { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Mocki', nameEn:'Mocki', heroFr:'Mocki', heroEn:'Mocki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
@@ -2115,7 +2130,7 @@ const PRESETS = [
   { id:'mandate', charKey:'mandate', side:'villain', img:CHAR_IMG.char19, nameFr:'Bang', nameEn:'Bang', heroFr:'Bang', heroEn:'Bang', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#20242c', secondaryColor:'#d8dde6', symbol:'M' },
     align:-22, stats:{courage:2, intelligence:16, popularity:16},
-    perkFr:'Autorite officielle : la loi, les budgets et les medias jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
+    perkFr:'Autorite officielle : la loi, les budgets et le Daily Bugle jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
     flawFr:'Aucun talent de combat : sans son appareil, il ne vaut rien.', flawEn:'No combat skill: without his apparatus, he is nothing.',
     descFr:'Le visage propre du controle. Il signe les ordres, jamais les crimes.', descEn:'The clean face of control. He signs orders, never crimes.' },
   { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Le Fou Vert', nameEn:'Le Fou Vert', heroFr:'Le Fou Vert', heroEn:'Le Fou Vert', morphology:'humain', path:'psychique', powers:['telepathie','illusions'],
@@ -2129,7 +2144,7 @@ const PRESETS = [
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#0f5f6b', secondaryColor:'#ff7a2f', symbol:'' },
     align:26, stats:{courage:14, intelligence:12, popularity:8},
     perkFr:'Agilite hors norme : il esquive presque tout et sauve les civils en premier.', perkEn:'Freak agility: he dodges almost anything and saves civilians first.',
-    flawFr:'Trop jeune : les autorites et les sponsors le prennent rarement au serieux.', flawEn:'Too young: authorities and sponsors rarely take him seriously.',
+    flawFr:'Trop jeune : le S.H.I.E.L.D. et les sponsors le prennent rarement au serieux.', flawEn:'Too young: authorities and sponsors rarely take him seriously.',
     descFr:'Un ado en combinaison sarcelle et orange qui se balance entre les tours.', descEn:'A teen in a teal and orange suit swinging between towers.' },
   { id:'titanwolf', charKey:'titanwolf', side:'hero', img:CHAR_IMG.char22, nameFr:'Iron Boy', nameEn:'Iron Boy', heroFr:'Iron Boy', heroEn:'Iron Boy', morphology:'armure', path:'tech', powers:['armure','force'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'none', weapon:'none', suitColor:'#8e979d', secondaryColor:'#19c98a', symbol:'' },
@@ -2141,7 +2156,7 @@ const PRESETS = [
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'armored', aura:'electric', weapon:'hammer', suitColor:'#7a5a2a', secondaryColor:'#b06bff', symbol:'' },
     align:30, stats:{courage:22, intelligence:4, popularity:14},
     perkFr:'Marteau d\'orage : la foudre violette balaie les menaces massives.', perkEn:'Storm hammer: violet lightning sweeps away massive threats.',
-    flawFr:'Etranger a ce monde : il comprend mal la politique et les medias.', flawEn:'Alien to this world: he barely understands politics and media.',
+    flawFr:'Etranger a ce monde : il comprend mal la politique et le Daily Bugle.', flawEn:'Alien to this world: he barely understands politics and media.',
     descFr:'Guerrier d\'un autre royaume, armure de bronze et cape blanche.', descEn:'Warrior from another realm, bronze armor and white cape.' },
   { id:'kaito', charKey:'kaito', side:'hero', img:CHAR_IMG.char24, nameFr:'Le Colosse Ecarlate', nameEn:'The Crimson Brute', heroFr:'Colosse', heroEn:'Brute', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#8f1f1f', secondaryColor:'#3a3a3a', symbol:'' },
@@ -3501,7 +3516,7 @@ function pickIntrigueMission(){
   let pool = INTRIGUE_MISSIONS.filter(m=>!S.usedIntrigueIds.includes(m.id));
   if(!pool.length){ S.usedIntrigueIds = []; pool = INTRIGUE_MISSIONS; }
   const m = pick(pool); S.usedIntrigueIds.push(m.id);
-  return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+  return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(1), type: 1 } });
 }
 function pickMission(){
   const rank = computeStars();
@@ -3511,7 +3526,7 @@ function pickMission(){
     const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
     const m = PIVOTAL_MISSIONS[idx];
     S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
-    return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+    return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(1), type: 1 } });
   }
   /* Intrigues : enquetes, politique, presse, secrets... pour que le jeu avance sans combat. */
   if(Math.random() < 0.26){ return pickIntrigueMission(); }
@@ -3524,7 +3539,7 @@ function pickMission(){
   let pool = reachable.filter(m=>!S.usedIds.includes(m.id));
   if(pool.length===0){ pool = reachable; S.usedIds = S.usedIds.filter(id=>!reachable.some(m=>m.id===id)); }
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
-  return Object.assign({}, m, { location: { name: randLocationName(), type: m.scope||1 } });
+  return Object.assign({}, m, { location: { name: randLocationName(m.scope||1), type: m.scope||1 } });
 }
 /* ---------- Recrues : ce sont les figures historiques de Volt Industries / PERDITION ---------- */
 function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
@@ -3716,12 +3731,14 @@ const SKILLS = [
   { id:'venin_symbiote', fr:'Venin Symbiote', en:'Symbiote Venom', tags:['metamorphose','nanotech','force'], move:{fr:'Venin symbiote',en:'Symbiote venom',p:41,acc:.8}, bonus:{courage:2,popularity:-1,intelligence:1} },
 ];
 const SAGES = [
-  { fr:"Maitre Aranya, gardienne d'un sanctuaire cache dans l'Himalaya", en:"Master Aranya, keeper of a hidden Himalayan sanctum" },
-  { fr:"le Sorcier Sans Nom, dernier eleve d'une lignee eteinte", en:"the Nameless Sorcerer, last student of an extinct lineage" },
-  { fr:"Vashtar l'Exile, ancien champion d'une Terre effondree", en:"Vashtar the Exiled, former champion of a collapsed Earth" },
-  { fr:"la Doyenne du Sanctum de Kamar", en:"the Elder of the Kamar Sanctum" },
-  { fr:"Oldrik le Forgeron d'Etoiles", en:"Oldrik the Star-Smith" },
-  { fr:"Sister Kaal, moniale d'un ordre efface de la Chronologie Sacree", en:"Sister Kaal, nun of an order erased from the Sacred Timeline" },
+  { fr:"un Master of the Mystic Arts de Kamar-Taj", en:"a Master of the Mystic Arts from Kamar-Taj" },
+  { fr:"une gardienne de Ta Lo, au-dela du passage dimensionnel", en:"a guardian of Ta Lo, beyond the dimensional passage" },
+  { fr:"un variant de toi-meme rescape du Void", en:"a variant of yourself who survived the Void" },
+  { fr:"le gardien du Sanctum Sanctorum", en:"the keeper of the Sanctum Sanctorum" },
+  { fr:"un forgeron nain de Nidavellir", en:"a Dwarven smith of Nidavellir" },
+  { fr:"une analyste de la TVA effacee de la Timeline sacree", en:"a TVA analyst pruned from the Sacred Timeline" },
+  { fr:"une pretresse talokanil des profondeurs de Talokan", en:"a Talokanil priestess from the depths of Talokan" },
+  { fr:"un Eternal exile par le World Forge", en:"an Eternal exiled by the World Forge" },
 ];
 function learnedSkills(){ return (S.skills||[]).map(id=>SKILLS.find(x=>x.id===id)).filter(Boolean); }
 function skillCandidates(){
@@ -4716,7 +4733,7 @@ const CONV_CHOICE_POOL = {
     { fr:"Faire passer les civils avant ta reputation.", en:"Put civilians before your reputation.", eff:{align:8, popularity:-1, rel:3} },
     { fr:"Demander pardon pour une decision passee.", en:"Apologize for a past decision.", eff:{align:5, rel:6} },
     { fr:"Defendre un allie que tout le monde lache.", en:"Defend an ally everyone else is dropping.", eff:{align:6, courage:3, rel:4, popularity:-1} },
-    { fr:"Signaler l'affaire aux autorites, meme si ca te ralentit.", en:"Report the matter to the authorities, even if it slows you down.", eff:{align:7, rel:-1} },
+    { fr:"Signaler l'affaire aux autorites, meme si ca te ralentit.", en:"Report the matter to S.H.I.E.L.D., even if it slows you down.", eff:{align:7, rel:-1} },
     { fr:"Ecouter jusqu'au bout sans rien negocier.", en:"Listen all the way through without negotiating anything.", eff:{align:4, rel:5} },
     { fr:"Offrir une seconde chance a quelqu'un qui ne la merite pas.", en:"Offer a second chance to someone who doesn't deserve it.", eff:{align:6, rel:6, intelligence:-1} },
     { fr:"Refuser l'argent propose et l'expliquer sans agressivite.", en:"Turn down the money offered and explain without hostility.", eff:{align:7, rel:2} },
@@ -4735,7 +4752,7 @@ const CONV_CHOICE_POOL = {
     { fr:"Renvoyer la decision a ta hierarchie.", en:"Push the decision up to your chain of command.", eff:{intelligence:2, rel:-2, align:1} },
     { fr:"Negocier un delai contre une faveur mineure.", en:"Trade a delay for a minor favor.", eff:{intelligence:3, rel:3} },
     { fr:"Changer de sujet et sonder ses faiblesses.", en:"Change the subject and probe for weaknesses.", eff:{intelligence:4, rel:-1} },
-    { fr:"Faire jouer les medias en ta faveur.", en:"Work the media in your favor.", eff:{popularity:5, align:-1, rel:-1} },
+    { fr:"Faire jouer le Daily Bugle en ta faveur.", en:"Work the Daily Bugle in your favor.", eff:{popularity:5, align:-1, rel:-1} },
     { fr:"Ne rien promettre et partir le premier.", en:"Promise nothing and leave first.", eff:{intelligence:2, courage:1, rel:-2} },
   ],
   ruthless:[
@@ -4839,8 +4856,8 @@ const CONV_THEMES = {
     en:["\"How long this time? Three years? Four?\"","\"You've changed. Not better, not worse. Just changed.\"","\"I thought you were dead. I'd nearly grieved you.\"","\"Last time we saw each other, we didn't part well.\"","\"You remember that night? I do. Every detail.\"","\"Do we pick up where we left off, or pretend nothing happened?\"","\"I never thought I'd have this conversation with you again.\"","\"Time passed, but the question hasn't moved an inch.\""],
   },
   multivers: {
-    fr:["\"Il existe une version de toi qui a dit oui. Elle a fini bien pire que toi.\"","\"J'ai vu ta variante dans une autre ligne temporelle. Elle portait notre insigne.\"","\"Chaque choix que tu fais fait bourgeonner une realite entiere. Dors bien.\"","\"La breche s'elargit. Le multivers ne pardonne pas les improvisations.\"","\"On a mesure la divergence : on est deja hors de la ligne temporelle sacree.\"","\"Dans un autre univers, on est amis. Dans un autre, tu m'as tue.\"","\"Les incursions ont commence. Deux realites se touchent, une seule survit.\"","\"Ne cherche pas ta variante. Ce qu'elle est devenue te briserait.\"","\"L'agence temporelle a ouvert un dossier sur toi. Divergence critique.\"","\"Les portails ne sont pas des raccourcis. Ce sont des blessures.\"","\"J'ai un point d'ancrage. Une seule traversee, aller simple.\"","\"Si tu croises ton double, ne lui parle pas. Surtout pas de la fin.\""],
-    en:["\"There's a version of you who said yes. It ended far worse for them.\"","\"I saw your variant on another timeline. They wore our insignia.\"","\"Every choice you make branches a whole reality. Sleep well.\"","\"The breach is widening. The multiverse doesn't forgive improvisation.\"","\"We measured the divergence: we're already off the sacred timeline.\"","\"In another universe we're friends. In another, you killed me.\"","\"The incursions have started. Two realities touch, only one survives.\"","\"Don't look for your variant. What they became would break you.\"","\"The time agency opened a file on you. Critical divergence.\"","\"Portals aren't shortcuts. They're wounds.\"","\"I have an anchor point. One crossing, one way.\"","\"If you meet your double, don't talk to them. Especially not about the ending.\""],
+    fr:["\"Il existe une version de toi qui a dit oui. Elle a fini bien pire que toi.\"","\"J'ai vu ta variante dans une autre ligne temporelle. Elle portait notre insigne.\"","\"Chaque choix que tu fais fait bourgeonner une realite entiere. Dors bien.\"","\"La breche s'elargit. Le multivers ne pardonne pas les improvisations.\"","\"On a mesure la divergence : on est deja hors de la Timeline sacree.\"","\"Dans un autre univers, on est amis. Dans un autre, tu m'as tue.\"","\"Les incursions ont commence. Deux realites se touchent, une seule survit.\"","\"Ne cherche pas ta variante. Ce qu'elle est devenue te briserait.\"","\"L'agence temporelle a ouvert un dossier sur toi. Divergence critique.\"","\"Les portails ne sont pas des raccourcis. Ce sont des blessures.\"","\"J'ai un point d'ancrage. Une seule traversee, aller simple.\"","\"Si tu croises ton double, ne lui parle pas. Surtout pas de la fin.\""],
+    en:["\"There's a version of you who said yes. It ended far worse for them.\"","\"I saw your variant on another timeline. They wore our insignia.\"","\"Every choice you make branches a whole reality. Sleep well.\"","\"The breach is widening. The multiverse doesn't forgive improvisation.\"","\"We measured the divergence: we're already off the Sacred Timeline.\"","\"In another universe we're friends. In another, you killed me.\"","\"The incursions have started. Two realities touch, only one survives.\"","\"Don't look for your variant. What they became would break you.\"","\"The time agency opened a file on you. Critical divergence.\"","\"Portals aren't shortcuts. They're wounds.\"","\"I have an anchor point. One crossing, one way.\"","\"If you meet your double, don't talk to them. Especially not about the ending.\""],
   },
   artefacts: {
     fr:["\"Six artefacts cosmiques, un seul gantelet. Tu comprends l'urgence ?\"","\"Le sceptre chuchote. A moi aussi, il a chuchote.\"","\"Cette pierre n'obeit pas. Elle choisit.\"","\"Le cube contient plus d'energie que toute notre grille electrique.\"","\"Ce metal absorbe les vibrations. Il n'existe qu'un seul filon.\"","\"L'armure tient sur un reacteur gros comme mon poing. Ne le fais pas tomber.\"","\"Le marteau ne pese rien. Sauf pour ceux qui n'en sont pas dignes.\"","\"On a scelle la relique sous trois sanctuaires. Quelqu'un a ouvert le premier.\"","\"Le serum ne cree rien. Il amplifie ce que tu es deja.\"","\"Cet oeil abrite une pierre du temps. Tu ne l'utiliseras pas.\"","\"Le prototype d'armure numero neuf a disparu de l'inventaire.\"","\"Les radiations gamma ne se soignent pas. On apprend a vivre avec le monstre.\""],
