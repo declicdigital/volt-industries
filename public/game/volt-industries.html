@@ -361,6 +361,36 @@
     animation: voidShatterSpin 5s linear infinite, voidShatterFlash .5s ease-in-out infinite alternate; }
   @keyframes voidShatterSpin{ from{ transform:rotate(0deg) scale(1);} to{ transform:rotate(360deg) scale(1.15);} }
   @keyframes voidShatterFlash{ 0%{ opacity:.5;} 100%{ opacity:1;} }
+  /* --- Cinematique d'obtention d'un Eclat : identite visuelle propre a chacun des 6 --- */
+  .eclat-cine .cine-scope{ color:var(--eclat-col); text-shadow:0 0 18px var(--eclat-col); }
+  .eclat-cine .cine-title{ color:#fff; text-shadow:0 0 22px var(--eclat-col), 0 0 55px var(--eclat-col); }
+  .eclat-cine-icon{ color:var(--eclat-col); text-shadow:0 0 28px var(--eclat-col), 0 0 70px var(--eclat-col); }
+  .eclat-cine-fx{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+  /* Derive (Espace) : rayons qui tournent + debris qui derivent */
+  .eclat-bg-space .eclat-cine-fx{ background:repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--eclat-col) 12%, transparent) 0deg 3deg, transparent 3deg 16deg);
+    animation: raySpin 9s linear infinite; }
+  /* Murmure (Esprit) : anneaux concentriques qui pulsent comme une onde sonore */
+  .eclat-bg-mind .eclat-cine-fx{ background:radial-gradient(circle at 50% 42%, transparent 10%, color-mix(in srgb, var(--eclat-col) 14%, transparent) 11% 12%, transparent 13%),
+      radial-gradient(circle at 50% 42%, transparent 24%, color-mix(in srgb, var(--eclat-col) 12%, transparent) 25% 26%, transparent 27%),
+      radial-gradient(circle at 50% 42%, transparent 38%, color-mix(in srgb, var(--eclat-col) 10%, transparent) 39% 40%, transparent 41%);
+    animation: eclatMindPulse 2.2s ease-out infinite; }
+  @keyframes eclatMindPulse{ 0%{ transform:scale(.9); opacity:.4;} 100%{ transform:scale(1.25); opacity:1;} }
+  /* Fracture (Realite) : lignes de faille qui zebrent l'ecran */
+  .eclat-bg-reality .eclat-cine-fx{ background:repeating-linear-gradient(115deg, transparent 0 60px, color-mix(in srgb, var(--eclat-col) 14%, transparent) 60px 62px, transparent 62px 140px),
+      repeating-linear-gradient(65deg, transparent 0 90px, color-mix(in srgb, var(--eclat-col) 10%, transparent) 90px 92px, transparent 92px 180px);
+    animation: eclatCrackFlicker 1.1s ease-in-out infinite; }
+  @keyframes eclatCrackFlicker{ 0%,100%{ opacity:.5;} 50%{ opacity:1;} }
+  /* Fureur (Puissance) : eclat en pointes qui irradie */
+  .eclat-bg-power .eclat-cine-fx{ background:conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--eclat-col) 22%, transparent) 4deg, transparent 14deg, transparent 30deg, color-mix(in srgb, var(--eclat-col) 22%, transparent) 34deg, transparent 44deg, transparent 60deg, color-mix(in srgb, var(--eclat-col) 22%, transparent) 64deg, transparent 74deg);
+    animation: raySpin 3.5s linear infinite reverse; }
+  /* Attente (Temps) : aiguilles qui tournent lentement, comme une horloge */
+  .eclat-bg-time .eclat-cine-fx{ background:repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--eclat-col) 10%, transparent) 0deg 1deg, transparent 1deg 30deg);
+    animation: raySpin 14s linear infinite; }
+  /* Vestige (Ame) : volutes qui montent doucement */
+  .eclat-bg-soul .eclat-cine-fx{ background:radial-gradient(ellipse 60% 40% at 30% 85%, color-mix(in srgb, var(--eclat-col) 16%, transparent), transparent 65%),
+      radial-gradient(ellipse 55% 35% at 70% 90%, color-mix(in srgb, var(--eclat-col) 14%, transparent), transparent 65%);
+    animation: eclatSoulDrift 3.4s ease-in-out infinite; }
+  @keyframes eclatSoulDrift{ 0%,100%{ transform:translateY(0); opacity:.6;} 50%{ transform:translateY(-18px); opacity:1;} }
   .cine-overlay.cosmic .cine-scope{ color:var(--gold); text-shadow:0 0 22px var(--gold); font-size:14px; }
   .cine-overlay.cosmic .cine-title{ font-size: clamp(22px,5vw,42px); text-shadow:0 0 24px var(--gold), 0 0 60px var(--accent), 0 0 100px var(--gold); animation: cineZoomBig .9s cubic-bezier(.2,.8,.3,1); }
   .cine-rays{ position:absolute; inset:-20%; z-index:1; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.09) 0deg 4deg, transparent 4deg 16deg); animation: raySpin 6s linear infinite; opacity:.5; }
@@ -865,13 +895,13 @@ const T = {
     startSideTitle:"Ton point de depart", startSideLead:"Avant meme ta premiere mission, ou te situes-tu ?",
     startHero:"Heros", startHeroDesc:"Tu commences avec une reputation deja heroique.",
     startNeutral:"Ambigu", startNeutralDesc:"Tu n'as encore choisi aucun camp.",
-    startVillain:"Vilain", startVillainDesc:"Tu commences deja marque comme une menace.",
+    startVillain:"Villain", startVillainDesc:"Tu commences deja marque comme une menace.",
     modeTitle:"Ta carriere", modeLead:"Deux formats de partie sont possibles.",
     modeShort:"Carriere courte", modeShortDesc:"10 annees fixes, 3 missions par an, 3 choix par mission.",
     modeLong:"Carriere longue", modeLongDesc:"Jusqu'a 80 annees, 3 a 10 missions par an. Le niveau des missions proposees suit ton rang - de simples affaires de quartier jusqu'aux crises cosmiques. Formation de recrues, bascules multiples entre lumiere et ombre, risque de mort, discussions marquantes avec d'autres figures, bilan complet a la fin.",
     yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere", estTime:"Temps estime", estMission:"~20 s par mission (choix, combats, discussions)",
     summaryTitle:"Ton dossier VOLT INDUSTRIES", year:"Annee", mission:"Mission",
-    alignHero:"Heros", alignVillain:"Fleau", alignNeutral:"Equilibre",
+    alignHero:"Heros", alignVillain:"Villain", alignNeutral:"Equilibre",
     courage:"Courage", intelligence:"Intelligence", popularity:"Popularite", power:"Puissance",
     endTitle:"Fin de carriere", restart:"Recommencer une nouvelle carriere",
     relations:"Relations", logTitle:"Journal de carriere", continueMission:"Mission suivante",
@@ -887,7 +917,7 @@ const T = {
     turningPointsTitle:"Bascules majeures de la carriere", noTurning:"Un parcours d'une remarquable constance - aucune bascule majeure.",
     yearByYearTitle:"Detail annee par annee",
     combatOutcomeWin:"Victoire", combatOutcomeLose:"Defaite", rescueSaved:"Sauve", rescueLost:"Perdu",
-    mentorTag:"Formation", rankHero:"Rang heroique", rankVillain:"Rang fleau", rankNeutral:"Rang independant",
+    mentorTag:"Formation", rankHero:"Rang heroique", rankVillain:"Rang villain", rankNeutral:"Rang independant",
     convNext:"Suivant",
   },
   en: {
@@ -2666,7 +2696,7 @@ function freshState(lang){
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
-    voidCompletionDone:false, pendingVoidCompletion:false,
+    voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null,
   };
 }
 let S = freshState('fr');
@@ -4218,14 +4248,35 @@ function startEclatReclaimQuest(){
   S.lastEclatReclaimYear = S.currentYear;
   return true;
 }
-function showEclatToast(shard){
-  const old = document.getElementById('rankUpToast'); if(old) old.remove();
+/* Chaque eclat a sa propre identite visuelle de cinematique (icone + effet de fond), pour que les 6 se distinguent vraiment. */
+const ECLAT_CINE_CONFIG = {
+  derive:   { icon:'&#10022;', bgClass:'eclat-bg-space' },
+  murmure:  { icon:'&#10057;', bgClass:'eclat-bg-mind' },
+  fracture: { icon:'&#9672;',  bgClass:'eclat-bg-reality' },
+  fureur:   { icon:'&#10041;', bgClass:'eclat-bg-power' },
+  attente:  { icon:'&#10034;', bgClass:'eclat-bg-time' },
+  vestige:  { icon:'&#10053;', bgClass:'eclat-bg-soul' },
+};
+function showEclatCinematic(shard, cb){
   const isFr = S.lang==='fr';
-  const toast = document.createElement('div'); toast.id='rankUpToast'; toast.className='rankup-toast';
-  toast.style.setProperty('--toast-color', shard.col);
-  toast.innerHTML = `<div class="ru-title" style="color:${shard.col};">${isFr?'ECLAT OBTENU':'SHARD OBTAINED'}</div><div class="ru-sub">${isFr?shard.frName:shard.enName}</div>`;
-  document.body.appendChild(toast);
-  setTimeout(()=>{ toast.classList.add('fadeout'); setTimeout(()=>toast.remove(), 700); }, 3600);
+  const cfg = ECLAT_CINE_CONFIG[shard.id] || { icon:'&#9733;', bgClass:'' };
+  const name = isFr ? shard.frName : shard.enName;
+  const domain = isFr ? shard.domainFr : shard.domainEn;
+  const overlay = document.createElement('div');
+  overlay.className = 'cine-overlay eighth-star eclat-cine ' + cfg.bgClass;
+  overlay.style.setProperty('--eclat-col', shard.col);
+  overlay.innerHTML = `<div class="cine-flash"></div><div class="eclat-cine-fx"></div>
+    <div class="cine-content">
+      <div class="star8-icon eclat-cine-icon">${cfg.icon}</div>
+      <div class="cine-scope">${isFr?'ECLAT DU VIDE OBTENU':'VOID SHARD OBTAINED'}</div>
+      <div class="cine-title">${name.toUpperCase()}</div>
+      <p class="star8-sub">${isFr?`Domaine : ${domain}. Un nouveau pouvoir s'eveille en toi.`:`Domain: ${domain}. A new power awakens in you.`}</p>
+      <button class="btl-move" id="eclatCineContinue" style="min-width:160px; margin-top:14px; border-color:${shard.col};"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const advance = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
+  overlay.querySelector('#eclatCineContinue').onclick = advance;
+  if(S.careerAuto) setTimeout(advance, 1000);
 }
 /* Obtention mutualisee : detecte le moment ou les 6 eclats sont enfin tous reunis. */
 function grantEclatShard(shard){
@@ -4233,7 +4284,7 @@ function grantEclatShard(shard){
   if(S.eclats.includes(shard.id)) return;
   S.eclats.push(shard.id);
   if(S.eclatHolders) delete S.eclatHolders[shard.id];
-  showEclatToast(shard);
+  S.pendingEclatCinematic = shard.id;
   if(S.eclats.length >= ECLATS.length && !S.voidCompletionDone){
     S.voidCompletionDone = true;
     S.eighthStar = true;
@@ -5871,6 +5922,18 @@ function applyChoice(choice){
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
   }
+  if(S.pendingEclatCinematic){
+    const shardId = S.pendingEclatCinematic; S.pendingEclatCinematic = null;
+    const shard = ECLATS.find(e=>e.id===shardId);
+    if(shard){
+      showEclatCinematic(shard, ()=>{
+        if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
+        if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
+        handleZoneCheckAndContinue();
+      });
+      return;
+    }
+  }
   if(S.pendingVoidCompletion){
     S.pendingVoidCompletion = false;
     showVoidCompletionCinematic(()=>{ handleZoneCheckAndContinue(); });
@@ -7393,7 +7456,7 @@ function screenEnd(){
   if(S.retiredTriumphant){ endingFr = `${S.heroName} a choisi de s'arreter au sommet, la 8eme etoile encore chaude. ${topRel.fr} se souviendra de ce depart, pas d'un declin.${teamLineFr}`; endingEn = `${S.heroName} chose to stop at the summit, the 8th star still warm. ${topRel.en} will remember this departure, not a decline.${teamLineEn}`; }
   else if(S.dead){ endingFr = `${S.heroName} n'aura pas vu la fin de cette carriere. ${topRel.fr} se souvient neanmoins d'un destin marquant.`; endingEn = `${S.heroName} did not live to see the end of this career. ${topRel.en} still remembers a remarkable fate.`; }
   else if(S.align >= 40){ endingFr = `${S.heroName} est devenu(e) une legende protectrice apres ${S.missionsPlan.length} annees de service. ${topRel.fr} le/la considere comme un allie indefectible.${teamLineFr}`; endingEn = `${S.heroName} became a protective legend after ${S.missionsPlan.length} years of service. ${topRel.en} considers them an unshakeable ally.${teamLineEn}`; }
-  else if(S.align <= -40){ endingFr = `${S.heroName} a sombre du cote des fleaux au fil de ${S.missionsPlan.length} annees, semant la crainte partout ou il/elle passe. ${topRel.fr} salue cette ascension.${teamLineFr}`; endingEn = `${S.heroName} fell to the side of menace over ${S.missionsPlan.length} years, sowing fear wherever they go. ${topRel.en} welcomes this rise.${teamLineEn}`; }
+  else if(S.align <= -40){ endingFr = `${S.heroName} a sombre du cote des villains au fil de ${S.missionsPlan.length} annees, semant la crainte partout ou il/elle passe. ${topRel.fr} salue cette ascension.${teamLineFr}`; endingEn = `${S.heroName} fell to the side of menace over ${S.missionsPlan.length} years, sowing fear wherever they go. ${topRel.en} welcomes this rise.${teamLineEn}`; }
   else { endingFr = `Apres ${S.missionsPlan.length} annees, ${S.heroName} trace sa propre voie, entre ombre et lumiere. ${topRel.fr} reste la relation la plus marquante.${teamLineFr}`; endingEn = `After ${S.missionsPlan.length} years, ${S.heroName} walks their own path, between shadow and light. ${topRel.en} remains the most defining relationship.${teamLineEn}`; }
   const romLine = romanceLabel();
   if(romLine){ endingFr += ' ' + romLine.fr; endingEn += ' ' + romLine.en; }
