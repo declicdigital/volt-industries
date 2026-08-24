@@ -381,11 +381,35 @@
   .btl-epic-flash{ position:fixed; inset:0; z-index:330; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.55), rgba(255,178,32,.2) 40%, transparent 72%); }
   .btl-epic-flash.go{ animation: epicFlashGo .55s ease; }
   @keyframes epicFlashGo{ 0%{ opacity:0;} 12%{ opacity:1;} 100%{ opacity:0;} }
-  .btl-ambient-rays{ position:fixed; inset:-25%; z-index:1; pointer-events:none; background:repeating-conic-gradient(from 0deg, rgba(255,255,255,.05) 0deg 3deg, transparent 3deg 14deg); animation: raySpin 22s linear infinite; opacity:.4; }
-  .cosmic-battle .btl-ambient-rays{ animation-duration:16s; opacity:.55; }
-  .btl-ambient-pulse{ position:fixed; inset:0; z-index:1; pointer-events:none; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120,90,255,.14), transparent 65%); animation: ambientPulse 3.2s ease-in-out infinite; }
-  .cosmic-battle .btl-ambient-pulse{ background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,178,32,.16), transparent 65%); animation-duration:2.4s; }
-  @keyframes ambientPulse{ 0%,100%{ opacity:.5;} 50%{ opacity:1;} }
+  .btl-set{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+  /* --- Tour techno (niveau systeme) --- */
+  .tower-window{ position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(6,10,20,0) 0%, rgba(6,10,20,.55) 100%),
+      repeating-radial-gradient(circle at 15% 82%, rgba(0,194,255,.55) 0 1.5px, transparent 2.5px 46px),
+      repeating-radial-gradient(circle at 65% 88%, rgba(255,178,32,.4) 0 1.5px, transparent 2.5px 62px),
+      repeating-radial-gradient(circle at 88% 78%, rgba(120,90,255,.35) 0 1.5px, transparent 2.5px 54px);
+    background-size:100% 100%, 240px 240px, 320px 320px, 280px 280px;
+    animation: towerDrift 24s linear infinite; opacity:.8; }
+  @keyframes towerDrift{ 0%{ background-position:0 0, 0 0, 0 0, 0 0; } 100%{ background-position:0 0, -240px -70px, 320px -90px, -280px 60px; } }
+  .tower-cols{ position:absolute; inset:0; background: repeating-linear-gradient(90deg, rgba(0,194,255,.05) 0 2px, transparent 2px 150px); animation: towerColsMove 30s linear infinite; }
+  @keyframes towerColsMove{ from{ background-position:0 0; } to{ background-position:-1500px 0; } }
+  .tower-scan{ position:absolute; left:0; right:0; height:160px; top:-160px; background: linear-gradient(180deg, transparent, rgba(0,194,255,.14), transparent); animation: towerScan 6.5s ease-in-out infinite; }
+  @keyframes towerScan{ 0%{ top:-160px;} 100%{ top:100%; } }
+  /* --- Salle d'incubateurs (niveau cosmique) --- */
+  .incub-glow{ position:absolute; inset:0; background:radial-gradient(ellipse 90% 60% at 50% 15%, rgba(255,178,32,.12), transparent 65%); animation: ambientPulse 2.6s ease-in-out infinite; }
+  @keyframes ambientPulse{ 0%,100%{ opacity:.55;} 50%{ opacity:1;} }
+  .incub-floor{ position:absolute; left:0; right:0; bottom:0; height:35%; background:linear-gradient(180deg, transparent, rgba(255,178,32,.08)); }
+  .incub-col{ position:absolute; top:6%; bottom:6%; width:78px; display:flex; flex-direction:column; justify-content:space-around; opacity:.65; }
+  .incub-col.left{ left:2%; } .incub-col.right{ right:2%; }
+  .incub-tube{ width:52px; height:150px; margin:0 auto; border-radius:28px; border:2px solid rgba(255,210,63,.55);
+    background: linear-gradient(180deg, rgba(255,178,32,.22), rgba(0,194,255,.14));
+    box-shadow:0 0 22px rgba(255,178,32,.3), inset 0 0 18px rgba(255,255,255,.08);
+    position:relative; overflow:hidden; animation: tubeGlow 3.2s ease-in-out infinite; }
+  @keyframes tubeGlow{ 0%,100%{ box-shadow:0 0 22px rgba(255,178,32,.3), inset 0 0 18px rgba(255,255,255,.08);} 50%{ box-shadow:0 0 34px rgba(255,178,32,.55), inset 0 0 24px rgba(255,255,255,.14);} }
+  .incub-tube i{ position:absolute; left:8px; right:8px; bottom:-30px; height:30px; border-radius:50%; font-style:normal;
+    background: radial-gradient(circle, rgba(255,255,255,.55), transparent 70%); animation: tubeBubble 3.4s ease-in infinite; }
+  @keyframes tubeBubble{ 0%{ bottom:-30px; opacity:0;} 12%{ opacity:1;} 100%{ bottom:112%; opacity:0;} }
+  @media (max-width:700px){ .incub-col{ width:50px; } .incub-tube{ width:34px; height:100px; } }
   .btl-meta{ display:flex; flex-direction:column; gap:5px; }
   .btl-name{ font-size:12px; font-weight:900; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 12px currentColor; }
   .btl-hpbar{ height:11px; border-radius:8px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; }
@@ -3930,12 +3954,14 @@ function startGrandEvent(){
   const pool = otherCharKeys().filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
   const foeKey = pool.length ? pick(pool) : null;
   const villainSide = mySide==='villain';
+  // Un evenement majeur depasse toujours ton niveau habituel, mais reste cohesif avec ton rang actuel (pas un bond a l'aveugle vers le cosmique).
+  const eventScope = clamp(computeStars() + 2, 4, 7);
   const m = {
-    id:'grand_event', type:'combat', danger:3, scope:7, grandEvent:true, charKey:foeKey,
+    id:'grand_event', type:'combat', danger:3, scope:eventScope, grandEvent:true, charKey:foeKey,
     tagFr:'EVENEMENT MAJEUR', tagEn:'MAJOR EVENT',
     fr:"Une crise d'ampleur historique frappe plusieurs mondes a la fois. Ce qui se joue aujourd'hui restera dans les annales, quel que soit ton camp.",
     en:"A crisis of historic scale strikes several worlds at once. What happens today will be remembered, whichever side you're on.",
-    location: { name: randLocationName(7), type:7 },
+    location: { name: randLocationName(eventScope), type:eventScope },
     choices:[
       { fr:"Foncer au coeur de la crise, sans reserve.", en:"Charge straight into the crisis, holding nothing back.", eff:{courage:6, popularity:4, align: villainSide?-6:6} },
       { fr:"Coordonner la riposte avec sang-froid.", en:"Coordinate the response with cold precision.", eff:{intelligence:6, popularity:3, align: villainSide?-4:4} },
@@ -4734,10 +4760,18 @@ function startBattle(mission, done){
     .sort((a,b)=> b.ref.spd - a.ref.spd);
   const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0 };
 
+  function incubatorSetHTML(){
+    const tube = (delay)=>`<div class="incub-tube" style="animation-delay:${delay}s;"><i style="animation-delay:${delay+.4}s;"></i></div>`;
+    const col = (side)=>`<div class="incub-col ${side}">${[0,.7,1.4,2.1,2.8].map(d=>tube(d)).join('')}</div>`;
+    return `<div class="btl-set incub-set">${col('left')}${col('right')}<div class="incub-glow"></div><div class="incub-floor"></div></div>`;
+  }
+  function towerSetHTML(){
+    return `<div class="btl-set tower-set"><div class="tower-window"></div><div class="tower-cols"></div><div class="tower-scan"></div></div>`;
+  }
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
-    ${scope>=6 ? '<div class="btl-ambient-rays"></div><div class="btl-ambient-pulse"></div>' : ''}
+    ${scope>=7 ? incubatorSetHTML() : (scope>=6 ? towerSetHTML() : '')}
     <div class="btl-epic-flash"></div>
     <div class="btl-spotlight">
       <div class="btl-fighter me">
@@ -5253,10 +5287,11 @@ function resolveOutcome(mission){
   if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
     if(mission.grandEvent && win){
       // Un evenement historique remporte compte pour plusieurs victoires a la fois : un vrai tournant de carriere.
+      const evScope = mission.scope||6;
       S.combat.won += 2;
       S.cosmicWins = (S.cosmicWins||0) + 3;
-      S.trueCosmicWins = (S.trueCosmicWins||0) + 1;
-      for(let i=0;i<2;i++){ S.locations.push({ name: randLocationName(7)+' '+(i+2), type:7, kind: zoneOf(S.align)==='villain'?'destroyed':'saved' }); }
+      if(evScope>=7) S.trueCosmicWins = (S.trueCosmicWins||0) + 1;
+      for(let i=0;i<2;i++){ S.locations.push({ name: randLocationName(evScope)+' '+(i+2), type:evScope, kind: zoneOf(S.align)==='villain'?'destroyed':'saved' }); }
       S.stats.courage = clamp(S.stats.courage+6,0,100);
       S.stats.intelligence = clamp(S.stats.intelligence+6,0,100);
       S.stats.popularity = clamp(S.stats.popularity+6,0,100);
