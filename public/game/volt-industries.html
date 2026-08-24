@@ -367,6 +367,37 @@
   .btl-vs{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:5; font-size:clamp(30px,8vw,68px); font-weight:900; color:#fff;
     letter-spacing:2px; text-shadow:0 0 24px var(--accent), 0 0 60px var(--accent); animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
   .btl-vs.gone{ animation: cineOut .35s ease forwards; }
+  /* --- Arene en roster : chaque combattant est une carte avec ses propres PV visibles --- */
+  .btl-arena2{ position:relative; display:flex; align-items:flex-start; justify-content:center; gap:14px; padding:14px 12px 6px; max-width:760px; margin:0 auto; width:100%; }
+  .btl-side{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .btl-side-label{ font-size:10px; font-weight:900; letter-spacing:1.6px; text-transform:uppercase; text-align:center; opacity:.85; }
+  .btl-roster{ display:flex; flex-direction:column; gap:6px; }
+  .rcard{ display:flex; align-items:center; gap:8px; padding:6px; border-radius:12px; border:1.5px solid var(--line);
+    background:rgba(255,255,255,.03); transition:border-color .15s, box-shadow .15s, opacity .3s; position:relative; }
+  .rcard.pickable{ cursor:pointer; }
+  .rcard.pickable:hover{ border-color:var(--cp-color); }
+  .rcard.selected{ border-color:var(--cp-color); box-shadow:0 0 16px -4px var(--cp-color), inset 0 0 0 1px var(--cp-color); background:rgba(255,255,255,.06); }
+  .rcard.ko{ opacity:.4; filter:grayscale(1); }
+  .rcard-frame{ position:relative; width:42px; height:42px; flex:0 0 auto; border-radius:10px; overflow:hidden; border:1.5px solid var(--cp-color); background:rgba(0,0,0,.4); }
+  .rcard-frame img{ width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+  .rcard-frame .portrait-avatar, .rcard-frame svg{ width:100%; height:100%; }
+  .rcard-frame .cp-glyph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; color:#fff; opacity:.85; }
+  .rcard-frame.hit{ animation: btlHit .38s ease; }
+  .rcard-meta{ flex:1 1 0; min-width:0; }
+  .rcard-name{ font-size:10.5px; font-weight:800; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rcard-hpbar{ height:7px; border-radius:5px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; margin-top:3px; }
+  .rcard-hpfill{ height:100%; width:100%; transition:width .35s ease, background .35s ease; }
+  .rcard-hpnum{ font-size:9px; color:var(--muted); margin-top:1px; font-variant-numeric:tabular-nums; }
+  @media (max-width:560px){
+    .btl-arena2{ gap:8px; padding:10px 8px 4px; }
+    .rcard{ padding:5px; gap:6px; border-radius:10px; }
+    .rcard-frame{ width:34px; height:34px; border-radius:8px; }
+    .rcard-frame .cp-glyph{ font-size:14px; }
+    .rcard-name{ font-size:9.5px; }
+    .rcard-hpbar{ height:6px; }
+    .rcard-hpnum{ font-size:8px; }
+    .btl-side-label{ font-size:8.5px; }
+  }
   .btl-log{ width:100%; max-width:660px; margin:0 auto; min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
   .btl-moves{ width:100%; max-width:660px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
   .btl-move{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer;
@@ -375,8 +406,10 @@
   .btl-move:disabled{ opacity:.45; cursor:default; }
   .btl-move b{ display:block; font-size:13px; font-weight:900; letter-spacing:.3px; }
   .btl-move span{ display:block; font-size:10.5px; color:var(--muted); margin-top:2px; }
-  .btl-overlay.intro .btl-moves, .btl-overlay.intro .btl-log, .btl-overlay.intro .btl-meta{ opacity:0; }
-  .btl-moves, .btl-log, .btl-meta{ transition:opacity .4s ease; }
+  .btl-overlay.intro .btl-moves, .btl-overlay.intro .btl-log{ opacity:0; }
+  .btl-moves, .btl-log{ transition:opacity .4s ease; }
+  .btl-side:first-child{ animation: slideFromLeft .6s cubic-bezier(.2,.8,.3,1); }
+  .btl-side:last-child{ animation: slideFromRight .6s cubic-bezier(.2,.8,.3,1); }
   @media (max-width:560px){
     .btl-arena{ gap:8px; padding:10px 10px 4px; max-width:100%; }
     .btl-fighter{ max-width:none; }
@@ -4401,144 +4434,123 @@ function startBattle(mission, done){
   const playerZone = zoneOf(S.align);
   const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
   const foeCol = convBeamColor(foe.align);
-  const pl = computePowerLevel();
   const form = battleForm();
   const inj = injuryActive();
   const ps = playerStrength(), fs = foeStrength(foeKey, mission);
   const myMaxHP = Math.round(Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0)));
   const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
-  // L'adversaire est calibre sur son propre calibre (mouvements, danger, envergure), pas sur ta serie de victoires.
   const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
   const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
   const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
-
-  const st = {
-    myHP: myMaxHP, myMax: myMaxHP,
-    foeHP: 96 + foeTier,
-    busy:true
-  };
-  st.foeMax = st.foeHP;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend de l'ampleur du combat (scope 1 a 7). */
   const scope = squadCapForScope(mission && mission.scope);
   const squads = buildBattleSquads(foeKey, mission);
   const allyBonus = 1 + squads.allies.length * 0.03;
-  // Parfois ton equipe est deja engagee et en difficulte : tu arrives en renfort.
   const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
   const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
   const foeExtras = buildRosterExtras(squads.foes, false);
   const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
 
+  /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles. */
+  const allyRoster = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
+    .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
+  const foeRoster = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
+    .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false };
+
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
-    <div class="btl-arena">
-      <div class="btl-fighter me">
-        <div class="btl-frame" id="btlMeFrame" style="--cp-color:${myCol};">${avatarVisual()}</div>
-        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
-          <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
-          <div class="btl-hpnum" id="btlMeNum">${st.myHP} / ${st.myMax}</div></div>
-        ${squadHTML(allyExtras, 'ally')}
+    <div class="btl-arena2">
+      <div class="btl-side">
+        <div class="btl-side-label" style="color:${myCol};">${S.lang==='fr'?'TON EQUIPE':'YOUR TEAM'}</div>
+        <div class="btl-roster" id="allyRosterEl"></div>
       </div>
       <div class="btl-vs" id="btlVS">VS</div>
-      <div class="btl-fighter foe">
-        <div class="btl-frame" id="btlFoeFrame" style="--cp-color:${foeCol};">${battleFrameInner(foe)}</div>
-        <div class="btl-meta"><div class="btl-name" style="color:${foeCol};">${foeName}</div>
-          <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
-          <div class="btl-hpnum" id="btlFoeNum">${st.foeHP} / ${st.foeMax}</div></div>
-        ${squadHTML(foeExtras, 'foe')}
+      <div class="btl-side">
+        <div class="btl-side-label" style="color:${foeCol};">${S.lang==='fr'?'CIBLES - touche pour choisir':'TARGETS - tap to choose'}</div>
+        <div class="btl-roster" id="foeRosterEl"></div>
       </div>
-
     </div>
     <div class="btl-log" id="btlLog"></div>
     <div class="btl-moves" id="btlMoves"></div>`;
   document.body.appendChild(ov);
-  const meFrame = ov.querySelector('#btlMeFrame'), foeFrame = ov.querySelector('#btlFoeFrame');
   const logEl = ov.querySelector('#btlLog'), movesEl = ov.querySelector('#btlMoves');
+  const allyRosterEl = ov.querySelector('#allyRosterEl'), foeRosterEl = ov.querySelector('#foeRosterEl');
   const setLog = txt => { logEl.textContent = txt; };
-  allyExtras.forEach((e,i)=>refreshSquadBar('ally', i, e));
-  foeExtras.forEach((e,i)=>refreshSquadBar('foe', i, e));
-  /* Duels d'arriere-plan : chaque membre d'escouade affronte son vis-a-vis pendant que tu geres le combat principal. */
-  function tickBackgroundDuels(){
-    const n = Math.max(allyExtras.length, foeExtras.length);
-    for(let i=0;i<n;i++){
-      const a = allyExtras[i], f = foeExtras[i];
-      if(a && !a.ko && f && !f.ko){
-        const dToF = Math.round(6+Math.random()*11), dToA = Math.round(6+Math.random()*11);
-        f.hp = Math.max(0, f.hp-dToF); a.hp = Math.max(0, a.hp-dToA);
-        if(f.hp<=0){ f.ko=true; }
-        if(a.hp<=0){
-          a.ko=true;
-          if(scope>=6 && Math.random()<0.12){ a.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({key:a.key, name:a.name, year:S.currentYear}); }
-        }
-        refreshSquadBar('ally', i, a); refreshSquadBar('foe', i, f);
-      } else if(f && !f.ko && (!a || a.ko)){
-        // Cet adversaire n'a plus personne en face : il te met la pression.
-        st.myHP = Math.max(0, st.myHP - Math.round(2+Math.random()*4));
-      }
-    }
-    refreshBars();
+
+  function rosterCardHTML(entry, i, side){
+    const pct = clamp(entry.hp/entry.maxHp*100, 0, 100);
+    const inner = entry.isPlayer
+      ? (entry.transformedImg ? `<img src="${entry.transformedImg}" alt="${entry.name}">` : avatarVisual())
+      : (entry.img ? `<img src="${entry.img}" alt="${entry.name}">` : `<span class="cp-glyph">${entry.name.charAt(0).toUpperCase()}</span>`);
+    const selectable = side==='foe' && !entry.ko;
+    return `<div class="rcard${entry.ko?' ko':''}${side==='foe' && i===st.targetIdx && !entry.ko?' selected':''}${selectable?' pickable':''}" data-side="${side}" data-idx="${i}" style="--cp-color:${entry.col};">
+      <div class="rcard-frame" id="rframe-${side}-${i}">${inner}</div>
+      <div class="rcard-meta">
+        <div class="rcard-name">${entry.name}</div>
+        <div class="rcard-hpbar"><div class="rcard-hpfill" id="rhp-${side}-${i}" style="width:${pct}%; background:${hpColor(pct)};"></div></div>
+        <div class="rcard-hpnum" id="rhpnum-${side}-${i}">${Math.max(0,Math.round(entry.hp))}/${entry.maxHp}</div>
+      </div>
+    </div>`;
   }
-  function refreshBars(){
-    const mp = clamp(st.myHP/st.myMax*100,0,100), fp = clamp(st.foeHP/st.foeMax*100,0,100);
-    const mb = ov.querySelector('#btlMeHP'), fb = ov.querySelector('#btlFoeHP');
-    mb.style.width = mp+'%'; mb.style.background = hpColor(mp);
-    fb.style.width = fp+'%'; fb.style.background = hpColor(fp);
-    ov.querySelector('#btlMeNum').textContent = Math.max(0,Math.round(st.myHP))+' / '+st.myMax;
-    ov.querySelector('#btlFoeNum').textContent = Math.max(0,Math.round(st.foeHP))+' / '+st.foeMax;
+  function renderRoster(side){
+    const roster = side==='ally' ? allyRoster : foeRoster;
+    const el = side==='ally' ? allyRosterEl : foeRosterEl;
+    el.innerHTML = roster.map((e,i)=>rosterCardHTML(e,i,side)).join('');
+    if(side==='foe'){
+      el.querySelectorAll('.rcard.pickable').forEach(c=>{
+        c.onclick = ()=>{ if(st.busy) return; st.targetIdx = parseInt(c.dataset.idx,10); renderRoster('foe'); };
+      });
+    }
+  }
+  function refreshEntry(side, i){
+    const roster = side==='ally' ? allyRoster : foeRoster;
+    const e = roster[i];
+    const fill = document.getElementById(`rhp-${side}-${i}`), num = document.getElementById(`rhpnum-${side}-${i}`);
+    if(fill){ const pct = clamp(e.hp/e.maxHp*100, 0, 100); fill.style.width = pct+'%'; fill.style.background = hpColor(pct); }
+    if(num) num.textContent = Math.max(0,Math.round(e.hp))+'/'+e.maxHp;
+    const card = fill ? fill.closest('.rcard') : null;
+    if(card) card.classList.toggle('ko', e.ko);
+  }
+  function frameOf(side, i){ return document.getElementById(`rframe-${side}-${i}`); }
+  function livingIdx(roster){ const out=[]; roster.forEach((e,i)=>{ if(!e.ko) out.push(i); }); return out; }
+  function pickNextTarget(){
+    const alive = livingIdx(foeRoster);
+    if(!alive.includes(st.targetIdx)) st.targetIdx = alive.length ? alive[0] : -1;
   }
   function floatDmg(frame, val, col){
+    if(!frame) return;
     const el = document.createElement('div'); el.className='btl-dmg'; el.style.setProperty('--cp-color', col);
     el.textContent = (val>0? '-' : '+') + Math.abs(val);
     frame.appendChild(el); setTimeout(()=>el.remove(), 1000);
   }
-  function hit(frame){ frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
-  const meFrameDefault = meFrame.innerHTML, foeFrameDefault = foeFrame.innerHTML;
-  function swapFrame(frame, defaultHTML, e, col){
-    frame.innerHTML = e.img ? `<img src="${e.img}" alt="${e.name}">` : `<span class="cp-glyph">${e.name.charAt(0).toUpperCase()}</span>`;
-    frame.innerHTML += `<div class="btl-frame-tag" style="color:${col};">${S.lang==='fr'?'RENFORT':'BACKUP'}</div>`;
-    frame.classList.add('frame-swap');
-    setTimeout(()=>{ frame.classList.remove('frame-swap'); frame.innerHTML = defaultHTML; }, 1100);
+  function hit(frame){ if(!frame) return; frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit'); }
+  function dmgOf(move, atkPower, mult){
+    const scale = 0.75 + atkPower/220;
+    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
   }
-  function runAssist(side){
-    // side 'ally' : un de tes coequipiers prend ta place un instant pour frapper. side 'foe' : un de leurs renforts te touche.
-    const list = side==='ally' ? allyExtras : foeExtras;
-    const alive = list.filter(e=>!e.ko);
-    if(!alive.length) return 0;
-    const e = pick(alive);
-    const idx = list.indexOf(e);
-    const nm = e.name, col = e.col;
-    const chip = ov.querySelector((side==='ally'?'.btl-fighter.me':'.btl-fighter.foe')+' .sq[data-idx="'+idx+'"]');
-    const target = side==='ally' ? foeFrame : meFrame;
-    const tier = tierOfKey(e.key);
-    const d = Math.max(3, Math.round((5 + tier*1.6) * (0.8 + Math.random()*0.5)));
-    if(chip){ chip.classList.remove('assist'); void chip.offsetWidth; chip.classList.add('assist'); }
-    battleAssistName(chip || target, nm, col);
-    swapFrame(side==='ally'?meFrame:foeFrame, side==='ally'?meFrameDefault:foeFrameDefault, e, col);
-    setTimeout(()=>{
-      battleTracer(chip || (side==='ally'?meFrame:foeFrame), target, col);
-      setTimeout(()=>{
-        target.classList.remove('assisted'); void target.offsetWidth; target.classList.add('assisted');
-        hit(target); floatDmg(target, d, col);
-        if(side==='ally') st.foeHP = Math.max(0, st.foeHP - d); else st.myHP = Math.max(0, st.myHP - d);
-        refreshBars();
-        const tmpl = side==='ally' ? (S.lang==='fr'?pick(ASSIST_FR):pick(ASSIST_EN)) : (S.lang==='fr'?pick(FOEASSIST_FR):pick(FOEASSIST_EN));
-        setLog(tmpl.replace('{n}', nm) + ' : ' + d + (S.lang==='fr'?' degats.':' damage.'));
-      }, 240);
-    }, 120);
-    return d;
+  /* Un allie inflige des degats a la cible actuellement selectionnee. */
+  function dealToFoe(i, d, col){
+    const e = foeRoster[i]; if(!e || e.ko) return;
+    e.hp = Math.max(0, e.hp - d);
+    hit(frameOf('foe', i)); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
+    if(e.hp<=0){ e.ko = true; refreshEntry('foe', i); pickNextTarget(); }
   }
-  function assistChance(side){
-    const list = side==='ally' ? allyExtras : foeExtras;
-    const alive = list.filter(e=>!e.ko);
-    if(!alive.length) return false;
-    const base = side==='ally' ? 0.34 : 0.3;
-    return Math.random() < Math.min(0.6, base + alive.length*0.03);
+  /* Un adversaire inflige des degats a un allie (le joueur ou un membre de son escouade). */
+  function dealToAlly(i, d, col){
+    const e = allyRoster[i]; if(!e || e.ko) return;
+    e.hp = Math.max(0, e.hp - d);
+    hit(frameOf('ally', i)); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
+    if(e.hp<=0 && !e.isPlayer){
+      e.ko = true; refreshEntry('ally', i);
+      if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
+    }
   }
-  function setMovesEnabled(on){
-    movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on);
-  }
+  function allFoesDown(){ return foeRoster.every(f=>f.ko); }
+  function playerDown(){ return allyRoster[0].hp<=0; }
   function renderMoves(){
     movesEl.innerHTML = myMoves.map((m,i)=>{
       const label = S.lang==='fr'?m.fr:m.en;
@@ -4548,7 +4560,7 @@ function startBattle(mission, done){
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
-        <b>${S.lang==='fr'?`Se transformer en ${foeName}`:`Shapeshift into ${foeName}`}</b>
+        <b>${S.lang==='fr'?`Se transformer en ${foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : foeName}`:`Shapeshift into ${foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : foeName}`}</b>
         <span>${S.lang==='fr'?'Prends son apparence et ses attaques pour le reste du combat':"Take their appearance and attacks for the rest of the fight"}</span></button>`;
     }
     if(S.playerCharKey==='vipera' && !st.vanishUsed){
@@ -4560,54 +4572,49 @@ function startBattle(mission, done){
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
     const vBtn = movesEl.querySelector('#btlVanish'); if(vBtn) vBtn.onclick = vanishMove;
   }
-  function vanishMove(){
-    if(st.busy || st.vanishUsed) return;
-    st.busy = true; setMovesEnabled(false);
-    st.vanishUsed = true; st.dodgeNext = true;
-    const heal = Math.round(st.myMax*0.08);
-    st.myHP = Math.min(st.myMax, st.myHP + heal);
-    floatDmg(meFrame, -heal, myCol); refreshBars();
-    setLog(S.lang==='fr'?`${myName} disparait dans les ombres. La prochaine attaque frappera dans le vide.`:`${myName} vanishes into the shadows. The next attack will hit nothing but air.`);
-    renderMoves();
-    setTimeout(()=>{ foeTurn(); }, 1000);
-  }
+  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
     st.busy = true; setMovesEnabled(false);
     st.transformed = true;
-    meFrame.innerHTML = battleFrameInner(foe);
-    const nameEl = ov.querySelector('.btl-fighter.me .btl-name'); if(nameEl) nameEl.textContent = myName + ' (' + foeName + ')';
-    myMoves = foeMoves.slice();
-    setLog(S.lang==='fr'?`${myName} se change en ${foeName} - meme visage, memes coups.`:`${myName} shifts into ${foeName} - same face, same moves.`);
+    const targetFoe = foeRoster[st.targetIdx] || foeRoster[0];
+    allyRoster[0].transformedImg = targetFoe.img || foe.img;
+    renderRoster('ally');
+    myMoves = (targetFoe.key ? foeMovesFor(targetFoe.key) : foeMoves).slice();
+    setLog(S.lang==='fr'?`${myName} se change en ${targetFoe.name} - meme visage, memes coups.`:`${myName} shifts into ${targetFoe.name} - same face, same moves.`);
     renderMoves();
     setTimeout(()=>{ foeTurn(); }, 1000);
   }
-  function dmgOf(move, atkPower, mult){
-    const scale = 0.75 + atkPower/220;
-    return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
+  function vanishMove(){
+    if(st.busy || st.vanishUsed) return;
+    st.busy = true; setMovesEnabled(false);
+    st.vanishUsed = true; st.dodgeNext = true;
+    const heal = Math.round(allyRoster[0].maxHp*0.08);
+    allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + heal);
+    floatDmg(frameOf('ally',0), -heal, myCol); refreshEntry('ally', 0);
+    setLog(S.lang==='fr'?`${myName} disparait dans les ombres. La prochaine attaque frappera dans le vide.`:`${myName} vanishes into the shadows. The next attack will hit nothing but air.`);
+    renderMoves();
+    setTimeout(()=>{ foeTurn(); }, 1000);
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
-    (win?foeFrame:meFrame).classList.add('ko');
     let extraLine = '';
     if(fullSquadFight){
       if(win){
-        // Combat complet : le reste de l'escouade adverse tombe aussi, balaye par ton equipe.
-        const downed = foeExtras.filter(f=>!f.ko).length;
-        foeExtras.forEach((f,i)=>{ f.ko = true; refreshSquadBar('foe', i, f); });
-        if(downed>0) extraLine = S.lang==='fr' ? ` Ton equipe maitrise les ${downed} renfort(s) adverse(s).` : ` Your team handles the ${downed} enemy backup(s).`;
+        const downed = foeRoster.filter(f=>!f.ko).length;
+        foeRoster.forEach((f,i)=>{ if(!f.ko){ f.ko = true; refreshEntry('foe', i); } });
+        if(downed>0) extraLine = S.lang==='fr' ? ` Ton equipe maitrise le reste de l'escouade adverse.` : ` Your team handles the rest of the enemy squad.`;
       } else {
         const deadNow = (S.deadAllies||[]).filter(d=>d.year===S.currentYear);
         if(deadNow.length) extraLine = S.lang==='fr' ? ` ${deadNow.map(d=>d.name).join(', ')} ne se relevera pas.` : ` ${deadNow.map(d=>d.name).join(', ')} won't get back up.`;
       }
     }
-    setLog((win ? (S.lang==='fr'?`${foeName} est hors de combat. Tu tiens le terrain.`:`${foeName} is down. You hold the field.`)
+    setLog((win ? (S.lang==='fr'?`${foeName} et son escouade sont hors de combat. Tu tiens le terrain.`:`${foeName} and their squad are down. You hold the field.`)
                : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`)) + extraLine);
-    const hpPct = clamp(st.myHP/st.myMax*100, 0, 100);
-    // Mort permanente possible uniquement lors des tres grands combats perdus (systeme stellaire / cosmique).
+    const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
     let permaDeath = false;
     if(!win && scope>=6){
-      const deathChance = 0.10 + (scope-6)*0.06; // ~10% niveau systeme, ~16% niveau cosmique
+      const deathChance = 0.10 + (scope-6)*0.06;
       if(Math.random() < deathChance){
         permaDeath = true;
         const causeFr = `terrasse(e) par ${foeName} lors d'un affrontement d'ampleur ${scopeLabel(scope).toLowerCase()}`;
@@ -4623,75 +4630,83 @@ function startBattle(mission, done){
       }, 450);
     }, 1500);
   }
-  function foeAI(){
-    const lowSelf = st.foeHP/st.foeMax < 0.32;
-    const lowFoe = st.myHP/st.myMax < 0.3;
-    const healMove = foeMoves.find(m=>m.heal);
-    if(lowSelf && healMove && Math.random()<0.55) return healMove;
-    if(lowFoe){
-      const best = foeMoves.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0];
-      if(Math.random()<0.7) return best;
-    }
-    const weighted = foeMoves.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
-    return Math.random()<0.6 ? weighted[0] : pick(foeMoves);
+  function foeAIMoveFor(fk){
+    const fm = fk ? foeMovesFor(fk) : foeMoves;
+    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.3;
+    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.7) return best; }
+    const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
+    return Math.random()<0.6 ? weighted[0] : pick(fm);
+  }
+  function pickAllyTarget(){
+    const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
+    if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
+    return 0; // le joueur reste la cible privilegiee
   }
   function foeTurn(){
-    if(fullSquadFight) tickBackgroundDuels();
-    const m = foeAI();
+    const aliveFoes = livingIdx(foeRoster);
+    if(!aliveFoes.length){ finish(true); return; }
+    // 65% de chances que la cible actuellement engagee riposte, sinon un autre membre de l'escouade agit.
+    const actorIdx = (aliveFoes.includes(st.targetIdx) && Math.random()<0.65) ? st.targetIdx : pick(aliveFoes);
+    const actor = foeRoster[actorIdx];
+    const m = foeAIMoveFor(actor.key);
     const label = S.lang==='fr'?m.fr:m.en;
     if(st.dodgeNext || Math.random() > m.acc){
-      const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${foeName} frappe dans le vide - ${myName} a disparu.`:`${foeName} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${foeName} tente ${label}... et te manque.`:`${foeName} tries ${label}... and misses.`);
+      const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
       setTimeout(()=>{ st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.'); }, 900);
       return;
     }
-    const d = dmgOf(m, foePower, foeDmgMult);
-    st.myHP = Math.max(0, st.myHP - d);
-    if(m.heal){ st.foeHP = Math.min(st.foeMax, st.foeHP + m.heal); floatDmg(foeFrame, -m.heal, foeCol); }
-    hit(meFrame); floatDmg(meFrame, d, foeCol); refreshBars();
-    setLog(S.lang==='fr'?`${foeName} utilise ${label} : ${d} degats.`:`${foeName} uses ${label}: ${d} damage.`);
-
+    const power = actorIdx===0 ? foePower : (44 + tierOfKey(actor.key)*7);
+    const mult = actorIdx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
+    const d = dmgOf(m, power, mult);
+    const targetAllyIdx = pickAllyTarget();
+    dealToAlly(targetAllyIdx, d, actor.col);
+    if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', actorIdx); }
+    const targetName = allyRoster[targetAllyIdx].name;
+    setLog(S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`);
     setTimeout(()=>{
-      if(st.myHP<=0){ finish(false); return; }
-      if(assistChance('foe')){
-        runAssist('foe');
-        setTimeout(()=>{
-          if(st.myHP<=0){ finish(false); return; }
-          st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
-        }, 1250);
-        return;
-      }
+      if(playerDown()){ finish(false); return; }
       st.busy=false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
     }, 950);
   }
   function playerTurn(i){
     if(st.busy) return;
+    if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     st.busy = true; setMovesEnabled(false);
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
+    const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
-      if(assistChance('ally')){
-        setTimeout(()=>{ runAssist('ally'); setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250); }, 700);
-      } else setTimeout(foeTurn, 900);
+      setTimeout(foeTurn, 900);
       return;
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
-    st.foeHP = Math.max(0, st.foeHP - d);
-    if(m.heal){ st.myHP = Math.min(st.myMax, st.myHP + m.heal); floatDmg(meFrame, -m.heal, myCol); }
-    hit(foeFrame); floatDmg(foeFrame, d, myCol); refreshBars();
-    setLog(S.lang==='fr'?`${label} touche ${foeName} : ${d} degats.`:`${label} hits ${foeName}: ${d} damage.`);
+    if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
+    dealToFoe(targetIdx, d, myCol);
+    setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
     setTimeout(()=>{
-      if(st.foeHP<=0){ finish(true); return; }
-      if(assistChance('ally')){
-        runAssist('ally');
-        setTimeout(()=>{ if(st.foeHP<=0){ finish(true); return; } foeTurn(); }, 1250);
+      if(allFoesDown()){ finish(true); return; }
+      // Un allie vivant peut enchainer sur la meme cible.
+      const aliveAllies = allyRoster.map((e,idx)=>idx).filter(idx=>idx>0 && !allyRoster[idx].ko);
+      if(aliveAllies.length && Math.random()<0.32){
+        const aIdx = pick(aliveAllies); const ally = allyRoster[aIdx];
+        const tier = tierOfKey(ally.key);
+        const ad = Math.max(3, Math.round((5 + tier*1.6) * (0.8 + Math.random()*0.5)));
+        setTimeout(()=>{
+          if(!foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko) pickNextTarget();
+          if(st.targetIdx>=0){
+            dealToFoe(st.targetIdx, ad, ally.col);
+            setLog((S.lang==='fr'?`${ally.name} enchaine sur ${foeRoster[st.targetIdx]?foeRoster[st.targetIdx].name:targetName}`:`${ally.name} follows up on ${foeRoster[st.targetIdx]?foeRoster[st.targetIdx].name:targetName}`) + ' : ' + ad + (S.lang==='fr'?' degats.':' damage.'));
+          }
+          setTimeout(()=>{ if(allFoesDown()){ finish(true); return; } foeTurn(); }, 900);
+        }, 500);
         return;
       }
       foeTurn();
     }, 950);
   }
-  renderMoves(); refreshBars(); setMovesEnabled(false);
+  renderRoster('ally'); renderRoster('foe'); renderMoves(); setMovesEnabled(false);
   setTimeout(()=>{
     const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
     ov.classList.remove('intro');
@@ -4706,7 +4721,6 @@ function startBattle(mission, done){
       }
       delay = 1400;
     }
-    // Initiative : l'adversaire peut ouvrir les hostilites (plus souvent si tu es en serie de victoires).
     const foeFirst = Math.random() < clamp(0.30 + (fs-ps)*0.012, 0.1, 0.6);
     setTimeout(()=>{
       if(foeFirst){
@@ -4718,7 +4732,6 @@ function startBattle(mission, done){
       }
     }, delay);
   }, 1500);
-
 }
 function afterMissionRender(mission){
   if(mission && mission.pivotal){
