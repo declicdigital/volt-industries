@@ -551,6 +551,14 @@
     .btl-side-label{ font-size:8.5px; }
   }
   .btl-log{ width:100%; max-width:760px; margin:0 auto; min-height:46px; padding:6px 16px 8px; text-align:center; font-size:14.5px; line-height:1.45; color:var(--ink); }
+  .btl-controls{ width:100%; max-width:760px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 12px 8px; }
+  .btl-speed-group{ display:flex; gap:4px; background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:10px; padding:3px; }
+  .btl-ctrl-btn{ background:transparent; border:none; border-radius:7px; padding:6px 12px; font-size:11.5px; font-weight:800; letter-spacing:.5px;
+    color:var(--muted); cursor:pointer; transition:background .15s, color .15s; }
+  .btl-ctrl-btn:hover{ color:var(--ink); }
+  .btl-ctrl-btn.active{ background:var(--accent); color:#04070d; }
+  .btl-auto-btn{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:10px; padding:8px 16px; font-size:11.5px; font-weight:900; letter-spacing:1px; color:var(--muted); cursor:pointer; transition:.15s; }
+  .btl-auto-btn.active{ background:var(--gold); border-color:var(--gold); color:#241a02; box-shadow:0 0 16px -4px var(--gold); }
   .btl-moves{ width:100%; max-width:760px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px 14px; }
   .btl-move{ background:rgba(255,255,255,.04); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left; cursor:pointer;
     color:var(--ink); font:inherit; transition:border-color .15s, transform .15s, background .15s; }
@@ -4966,6 +4974,14 @@ function startBattle(mission, done){
       </div>
     </div>
     <div class="btl-log" id="btlLog"></div>
+    <div class="btl-controls" id="btlControls">
+      <div class="btl-speed-group">
+        <button class="btl-ctrl-btn active" data-speed="1">x1</button>
+        <button class="btl-ctrl-btn" data-speed="2">x2</button>
+        <button class="btl-ctrl-btn" data-speed="4">x4</button>
+      </div>
+      <button class="btl-ctrl-btn btl-auto-btn" id="btlAutoBtn">${S.lang==='fr'?'AUTO':'AUTO'}</button>
+    </div>
     <div class="btl-moves" id="btlMoves"></div>`;
   document.body.appendChild(ov);
   const logEl = ov.querySelector('#btlLog'), movesEl = ov.querySelector('#btlMoves');
@@ -4973,6 +4989,32 @@ function startBattle(mission, done){
   const meSpotFrame = ov.querySelector('#btlMeFrame'), foeSpotFrame = ov.querySelector('#btlFoeFrame');
   const meSpotFrameDefault = meSpotFrame.innerHTML;
   const setLog = txt => { logEl.textContent = txt; };
+  /* Vitesse (x1/x2/x4) et mode auto : reduisent les delais d'attente et peuvent jouer le tour du joueur automatiquement. */
+  st.speed = 1; st.auto = false;
+  function wait(ms){ return Math.max(60, Math.round(ms / st.speed)); }
+  ov.querySelectorAll('.btl-ctrl-btn[data-speed]').forEach(b=>{
+    b.onclick = ()=>{
+      st.speed = parseInt(b.dataset.speed, 10);
+      ov.querySelectorAll('.btl-ctrl-btn[data-speed]').forEach(x=>x.classList.toggle('active', x===b));
+    };
+  });
+  const autoBtn = ov.querySelector('#btlAutoBtn');
+  autoBtn.onclick = ()=>{
+    st.auto = !st.auto;
+    autoBtn.classList.toggle('active', st.auto);
+    if(st.auto && !st.busy) maybeAutoPlay();
+  };
+  function autoChooseMoveIdx(){
+    const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < 0.35;
+    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal); if(healIdx>=0) return healIdx; }
+    let best = 0, bestScore = -1;
+    myMoves.forEach((m,i)=>{ if(m.heal) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
+    return best;
+  }
+  function maybeAutoPlay(){
+    if(!st.auto || st.busy) return;
+    setTimeout(()=>{ if(st.auto && !st.busy) playerTurn(autoChooseMoveIdx()); }, wait(500));
+  }
 
   function refreshSpotlight(){
     const p = allyRoster[0];
@@ -4996,7 +5038,7 @@ function startBattle(mission, done){
     frame.innerHTML = entry.img ? `<img src="${entry.img}" alt="${entry.name}">` : `<span class="cp-glyph">${entry.name.charAt(0).toUpperCase()}</span>`;
     frame.innerHTML += `<div class="btl-frame-tag" style="color:${entry.col};">${S.lang==='fr'?'RENFORT':'BACKUP'}</div>`;
     frame.classList.add('frame-swap');
-    setTimeout(()=>{ frame.classList.remove('frame-swap'); if(side==='foe') refreshSpotlight(); else frame.innerHTML = revertHTML; }, 1100);
+    setTimeout(()=>{ frame.classList.remove('frame-swap'); if(side==='foe') refreshSpotlight(); else frame.innerHTML = revertHTML; }, wait(1100));
   }
 
   function rosterCardHTML(entry, i, side){
@@ -5043,17 +5085,19 @@ function startBattle(mission, done){
     if(!frame) return;
     const el = document.createElement('div'); el.className='btl-dmg'+(big&&scope>=6?' epic':''); el.style.setProperty('--cp-color', col);
     el.textContent = (val>0? '-' : '+') + Math.abs(val);
-    frame.appendChild(el); setTimeout(()=>el.remove(), big&&scope>=6?1400:1000);
+    frame.appendChild(el); setTimeout(()=>el.remove(), wait(big&&scope>=6?1400:1000));
   }
-  function hit(frame, big){
+  function hit(frame, big, dmg){
     if(!frame) return;
     frame.classList.remove('hit'); void frame.offsetWidth; frame.classList.add('hit');
     flashBattleOverlay(big ? 'big' : 'small');
     if(big){
       frame.classList.remove('hit-epic'); void frame.offsetWidth; frame.classList.add('hit-epic');
+    }
+    if((dmg||0) >= 40){
       const shakeClass = scope>=7 ? 'shake-cosmic' : (scope>=6 ? 'shake-system' : 'shake');
       document.body.classList.remove(shakeClass); void document.body.offsetWidth; document.body.classList.add(shakeClass);
-      setTimeout(()=>{ document.body.classList.remove(shakeClass); }, 650);
+      setTimeout(()=>{ document.body.classList.remove(shakeClass); }, wait(650));
     }
   }
   function flashBattleOverlay(size){
@@ -5071,8 +5115,8 @@ function startBattle(mission, done){
   function dealToFoe(i, d, col){
     const e = foeRoster[i]; if(!e || e.ko) return;
     e.hp = Math.max(0, e.hp - d);
-    hit(frameOf('foe', i)); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
-    if(i===st.targetIdx){ hit(foeSpotFrame, true); floatDmg(foeSpotFrame, d, col, true); }
+    hit(frameOf('foe', i), false, d); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
+    if(i===st.targetIdx){ hit(foeSpotFrame, true, d); floatDmg(foeSpotFrame, d, col, true); }
     if(e.hp<=0){ e.ko = true; refreshEntry('foe', i); pickNextTarget(); }
     refreshSpotlight();
   }
@@ -5080,8 +5124,8 @@ function startBattle(mission, done){
   function dealToAlly(i, d, col){
     const e = allyRoster[i]; if(!e || e.ko) return;
     e.hp = Math.max(0, e.hp - d);
-    hit(frameOf('ally', i)); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
-    if(i===0){ hit(meSpotFrame, true); floatDmg(meSpotFrame, d, col, true); }
+    hit(frameOf('ally', i), false, d); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
+    if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
     if(e.hp<=0 && !e.isPlayer){
       e.ko = true; refreshEntry('ally', i);
       if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
@@ -5127,7 +5171,7 @@ function startBattle(mission, done){
     myMoves = (targetFoe.key ? foeMovesFor(targetFoe.key) : foeMoves).slice();
     setLog(S.lang==='fr'?`${myName} se change en ${targetFoe.name} - meme visage, memes coups.`:`${myName} shifts into ${targetFoe.name} - same face, same moves.`);
     renderMoves();
-    setTimeout(()=>{ runTurn(); }, 1000);
+    setTimeout(()=>{ runTurn(); }, wait(1000));
   }
   function vanishMove(){
     if(st.busy || st.vanishUsed) return;
@@ -5138,7 +5182,7 @@ function startBattle(mission, done){
     floatDmg(frameOf('ally',0), -heal, myCol); refreshEntry('ally', 0);
     setLog(S.lang==='fr'?`${myName} disparait dans les ombres. La prochaine attaque frappera dans le vide.`:`${myName} vanishes into the shadows. The next attack will hit nothing but air.`);
     renderMoves();
-    setTimeout(()=>{ runTurn(); }, 1000);
+    setTimeout(()=>{ runTurn(); }, wait(1000));
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
@@ -5171,8 +5215,8 @@ function startBattle(mission, done){
       setTimeout(()=>{
         ov.remove();
         applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey, permaDeath); });
-      }, 450);
-    }, 1500);
+      }, wait(450));
+    }, wait(1500));
   }
   function foeAIMoveFor(fk){
     const fm = fk ? foeMovesFor(fk) : foeMoves;
@@ -5199,9 +5243,10 @@ function startBattle(mission, done){
     if(allFoesDown()){ finish(true); return; }
     if(playerDown()){ finish(false); return; }
     const actor = nextActor();
-    if(!actor){ setTimeout(runTurn, 50); return; }
+    if(!actor){ setTimeout(runTurn, wait(50)); return; }
     if(actor.side==='ally' && actor.ref.isPlayer){
       st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+      maybeAutoPlay();
       return;
     }
     st.busy = true; setMovesEnabled(false);
@@ -5223,8 +5268,8 @@ function startBattle(mission, done){
           if(tIdx===0){ floatDmg(meSpotFrame, -healAmt, ally.col); refreshSpotlight(); }
           else { floatDmg(frameOf('ally', tIdx), -healAmt, ally.col); }
           setLog(S.lang==='fr'?`${ally.name} canalise une magie de soin sur ${target.name} : +${healAmt} PV.`:`${ally.name} channels healing magic on ${target.name}: +${healAmt} HP.`);
-          setTimeout(runTurn, 850);
-        }, 500);
+          setTimeout(runTurn, wait(850));
+        }, wait(500));
         return;
       }
     }
@@ -5237,8 +5282,8 @@ function startBattle(mission, done){
       const tName = foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : '';
       dealToFoe(st.targetIdx, d, ally.col);
       setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + d + (S.lang==='fr'?' degats.':' damage.'));
-      setTimeout(runTurn, 850);
-    }, 500);
+      setTimeout(runTurn, wait(850));
+    }, wait(500));
   }
   function foeAIMoveFor(fk){
     const fm = fk ? foeMovesFor(fk) : foeMoves;
@@ -5262,7 +5307,7 @@ function startBattle(mission, done){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
-      setTimeout(runTurn, 900);
+      setTimeout(runTurn, wait(900));
       return;
     }
     const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*7);
@@ -5273,7 +5318,7 @@ function startBattle(mission, done){
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
     const targetName = allyRoster[targetAllyIdx].name;
     setLog(S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`);
-    setTimeout(runTurn, 950);
+    setTimeout(runTurn, wait(950));
   }
   function playerTurn(i){
     if(st.busy) return;
@@ -5283,18 +5328,18 @@ function startBattle(mission, done){
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
     if(Math.random() > m.acc){
       setLog(S.lang==='fr'?`${label} echoue de peu.`:`${label} narrowly fails.`);
-      setTimeout(runTurn, 900);
+      setTimeout(runTurn, wait(900));
       return;
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     dealToFoe(targetIdx, d, myCol);
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
-    setTimeout(runTurn, 950);
+    setTimeout(runTurn, wait(950));
   }
   renderRoster('ally'); renderRoster('foe'); refreshSpotlight(); renderMoves(); setMovesEnabled(false);
   setTimeout(()=>{
-    const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), 350); }
+    const vs = ov.querySelector('#btlVS'); if(vs){ vs.classList.add('gone'); setTimeout(()=>vs.remove(), wait(350)); }
     ov.classList.remove('intro');
     const fl = formLabel();
     let delay = 0;
@@ -5319,8 +5364,8 @@ function startBattle(mission, done){
         setLog((S.lang==='fr'?`${firstName} est le/la plus rapide et ouvre le combat a tes cotes.`:`${firstName} is fastest and opens the fight at your side.`) + fl2);
       }
       runTurn();
-    }, delay);
-  }, 1500);
+    }, wait(delay));
+  }, wait(1500));
 }
 function afterMissionRender(mission){
   if(mission && mission.pivotal){
@@ -5473,7 +5518,10 @@ function resolveOutcome(mission){
     S.locations.push(Object.assign({}, mission.location, { kind }));
     if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1;
     if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
-  if(!hadEighthBefore && tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
+  if(!hadEighthBefore){
+    if(S.currentYear>=40){ S.eighthStar = true; S.pendingEighthStarCinematic = true; }
+    else if(tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
+  }
   return { type, outcome };
 }
 function checkDeath(mission){
