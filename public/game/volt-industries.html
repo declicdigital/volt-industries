@@ -1252,7 +1252,7 @@ function generateProceduralMission(rank){
   const danger = dangerForScope(scope, type);
   const threat = pickNoRepeat('threats', THREATS);
   const stakes = pickNoRepeat('stakes', STAKES);
-  const locName = randLocationName();
+  const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
@@ -1362,7 +1362,7 @@ function generateVillainMission(rank){
   const danger = dangerForScope(scope, type);
   const threat = pickNoRepeat('threats', THREATS);
   const stakes = pickNoRepeat('stakes', STAKES);
-  const locName = randLocationName();
+  const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
   const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
@@ -1421,8 +1421,9 @@ function generateSignatureMission(rank){
   const charKey = type==='combat' ? pickOpponentKey() : pick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
-  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES), locName = randLocationName();
+  const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES); let locName = null;
   const scope = pickScopeForRank(rank);
+  locName = randLocationName(scope);
   const danger = dangerForScope(scope, type);
   const fr = roleT.fr(c.fr, threat.fr, stakes.fr, locName);
   const en = roleT.en(c.en, threat.en, stakes.en, locName);
