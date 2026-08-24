@@ -3515,7 +3515,7 @@ function pickIntrigueMission(){
   let pool = INTRIGUE_MISSIONS.filter(m=>!S.usedIntrigueIds.includes(m.id));
   if(!pool.length){ S.usedIntrigueIds = []; pool = INTRIGUE_MISSIONS; }
   const m = pick(pool); S.usedIntrigueIds.push(m.id);
-  return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+  return Object.assign({}, m, { intrigue:true, type:'social', danger:0, scope:1, location: { name: randLocationName(1), type: 1 } });
 }
 function pickMission(){
   const rank = computeStars();
@@ -3525,7 +3525,7 @@ function pickMission(){
     const idx = PIVOTAL_MISSIONS.indexOf(pick(pPool)); S.usedPivotalIds.push(idx);
     const m = PIVOTAL_MISSIONS[idx];
     S.orientationCount = (S.orientationCount||0) + 1; S.lastOrientationYear = S.currentYear;
-    return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(), type: 1 } });
+    return Object.assign({}, m, { pivotal:true, type:'social', danger:0, scope:1, location: { name: randLocationName(1), type: 1 } });
   }
   /* Intrigues : enquetes, politique, presse, secrets... pour que le jeu avance sans combat. */
   if(Math.random() < 0.26){ return pickIntrigueMission(); }
@@ -3538,7 +3538,7 @@ function pickMission(){
   let pool = reachable.filter(m=>!S.usedIds.includes(m.id));
   if(pool.length===0){ pool = reachable; S.usedIds = S.usedIds.filter(id=>!reachable.some(m=>m.id===id)); }
   pool = shuffle(pool); const m = pool[0]; S.usedIds.push(m.id);
-  return Object.assign({}, m, { location: { name: randLocationName(), type: m.scope||1 } });
+  return Object.assign({}, m, { location: { name: randLocationName(m.scope||1), type: m.scope||1 } });
 }
 /* ---------- Recrues : ce sont les figures historiques de Volt Industries / PERDITION ---------- */
 function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
