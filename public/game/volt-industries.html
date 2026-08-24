@@ -828,22 +828,22 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
 /* ============================ FACTIONS (7 tiers per side) ============================ */
 const FACTIONS = {
   hero: [ null,
-    { fr:'Garde de Quartier', en:'Neighborhood Watch', icon:'house' },
-    { fr:'Sentinelles Urbaines', en:'Urban Sentinels', icon:'skyline' },
-    { fr:'Legion Nationale', en:'National Legion', icon:'flag' },
-    { fr:'Alliance Continentale', en:'Continental Alliance', icon:'globe-segment' },
-    { fr:'VANGUARD', en:'VANGUARD', icon:'globe' },
-    { fr:'Concorde Stellaire', en:'Stellar Concord', icon:'rings' },
-    { fr:'AEGIS ETERNEL', en:'ETERNAL AEGIS', icon:'galaxy' },
+    { fr:'Defenders', en:'Defenders', icon:'house' },
+    { fr:'Damage Control', en:'Damage Control', icon:'skyline' },
+    { fr:'S.H.I.E.L.D.', en:'S.H.I.E.L.D.', icon:'flag' },
+    { fr:'X-Men', en:'X-Men', icon:'globe-segment' },
+    { fr:'AVENGERS', en:'AVENGERS', icon:'globe' },
+    { fr:'Nova Corps', en:'Nova Corps', icon:'rings' },
+    { fr:'ETERNALS', en:'ETERNALS', icon:'galaxy' },
   ],
   villain: [ null,
-    { fr:"Bande de l'Ombre", en:'Shadow Gang', icon:'fist' },
-    { fr:'Cartel Urbain', en:'Urban Cartel', icon:'chain' },
-    { fr:'LE MANDAT', en:'THE MANDATE', icon:'gauntlet' },
-    { fr:'Les Sinistres', en:'The Afflicted', icon:'crack' },
-    { fr:'PERDITION', en:'PERDITION', icon:'coil' },
-    { fr:"L'Ordre Fracture", en:'The Fractured Order', icon:'comet' },
-    { fr:'MENACE COSMIQUE', en:'COSMIC MENACE', icon:'void' },
+    { fr:'Red Room', en:'Red Room', icon:'fist' },
+    { fr:'Roxxon', en:'Roxxon', icon:'chain' },
+    { fr:'TEN RINGS', en:'TEN RINGS', icon:'gauntlet' },
+    { fr:'A.I.M.', en:'A.I.M.', icon:'crack' },
+    { fr:'HYDRA', en:'HYDRA', icon:'coil' },
+    { fr:'Brotherhood of Mutants', en:'Brotherhood of Mutants', icon:'comet' },
+    { fr:'CHITAURI ARMADA', en:'CHITAURI ARMADA', icon:'void' },
   ],
 };
 function factionEmblemSVG(side, tier, size){
@@ -1998,11 +1998,11 @@ const SCOPE_TIERS = [
   null,
   { fr:'Quartier', en:'Neighborhood' },
   { fr:'Ville', en:'City' },
-  { fr:'Pays', en:'Country' },
-  { fr:'Continent', en:'Continent' },
-  { fr:'Monde', en:'World' },
-  { fr:'Systeme', en:'System' },
-  { fr:'Cosmique', en:'Cosmic' },
+  { fr:'Nation', en:'Nation' },
+  { fr:'Terre-616', en:'Earth-616' },
+  { fr:'Midgard', en:'Midgard' },
+  { fr:'Neuf Royaumes', en:'Nine Realms' },
+  { fr:'Multivers', en:'Multiverse' },
 ];
 function scopeLabel(level){ const s = SCOPE_TIERS[clamp(level,1,7)]; return S.lang==='fr'?s.fr:s.en; }
 function locTypeLabel(level){ return scopeLabel(level); }
@@ -3731,12 +3731,14 @@ const SKILLS = [
   { id:'venin_symbiote', fr:'Venin Symbiote', en:'Symbiote Venom', tags:['metamorphose','nanotech','force'], move:{fr:'Venin symbiote',en:'Symbiote venom',p:41,acc:.8}, bonus:{courage:2,popularity:-1,intelligence:1} },
 ];
 const SAGES = [
-  { fr:"Maitre Aranya, gardienne d'un sanctuaire cache dans l'Himalaya", en:"Master Aranya, keeper of a hidden Himalayan sanctum" },
-  { fr:"le Sorcier Sans Nom, dernier eleve d'une lignee eteinte", en:"the Nameless Sorcerer, last student of an extinct lineage" },
-  { fr:"Vashtar l'Exile, ancien champion d'une Terre effondree", en:"Vashtar the Exiled, former champion of a collapsed Earth" },
-  { fr:"la Doyenne du Sanctum de Kamar", en:"the Elder of the Kamar Sanctum" },
-  { fr:"Oldrik le Forgeron d'Etoiles", en:"Oldrik the Star-Smith" },
-  { fr:"Sister Kaal, moniale d'un ordre efface de la Chronologie Sacree", en:"Sister Kaal, nun of an order erased from the Sacred Timeline" },
+  { fr:"un Master of the Mystic Arts de Kamar-Taj", en:"a Master of the Mystic Arts from Kamar-Taj" },
+  { fr:"une gardienne de Ta Lo, au-dela du passage dimensionnel", en:"a guardian of Ta Lo, beyond the dimensional passage" },
+  { fr:"un variant de toi-meme rescape du Void", en:"a variant of yourself who survived the Void" },
+  { fr:"le gardien du Sanctum Sanctorum", en:"the keeper of the Sanctum Sanctorum" },
+  { fr:"un forgeron nain de Nidavellir", en:"a Dwarven smith of Nidavellir" },
+  { fr:"une analyste de la TVA effacee de la Timeline sacree", en:"a TVA analyst pruned from the Sacred Timeline" },
+  { fr:"une pretresse talokanil des profondeurs de Talokan", en:"a Talokanil priestess from the depths of Talokan" },
+  { fr:"un Eternal exile par le World Forge", en:"an Eternal exiled by the World Forge" },
 ];
 function learnedSkills(){ return (S.skills||[]).map(id=>SKILLS.find(x=>x.id===id)).filter(Boolean); }
 function skillCandidates(){
