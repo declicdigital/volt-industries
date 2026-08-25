@@ -3661,9 +3661,26 @@ const UNLOCK_TIERS = [
     condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star',
     check:(m)=>!!m.got8thStar },
 ];
-function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
+/* Deblocage strictement sequentiel : un palier ne compte que si TOUS les paliers precedents sont deja
+   debloques. Meme une carriere a 8 etoiles ne saute jamais par-dessus les paliers du dessous. */
+function unlockedPresetIds(){
+  const out=[];
+  for(const t of UNLOCK_TIERS){
+    if(!t.check(META)) break;
+    out.push(...t.ids);
+  }
+  return out;
+}
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
-function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
+function tierConditionFor(id){
+  const idx = UNLOCK_TIERS.findIndex(t=>t.ids.includes(id));
+  if(idx<0) return '';
+  for(let i=0;i<=idx;i++){
+    if(!UNLOCK_TIERS[i].check(META)) return S.lang==='fr' ? UNLOCK_TIERS[i].condFr : UNLOCK_TIERS[i].condEn;
+  }
+  const t = UNLOCK_TIERS[idx];
+  return S.lang==='fr' ? t.condFr : t.condEn;
+}
 /* Ordre d'affichage du carrousel : 11 ecrans de 2 personnages, classes de la puissance la plus
    faible a la plus forte (Thor et Doctor Doom, les 2 plus puissants du jeu, tout a la fin). */
 const PAIR_HEROES   = ['marsh','kidspider','theg','aegis','sable','volt','valkyr','ferrum','nyx','solen','vaelor'];
