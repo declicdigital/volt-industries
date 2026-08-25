@@ -928,7 +928,7 @@ const T = {
     powersTitle:"Tes pouvoirs", powersLead:"Choisis jusqu'a 3 pouvoirs parmi 6. Personne ne peut tout avoir - chaque choix ferme une autre porte.",
     startSideTitle:"Ton point de depart", startSideLead:"Avant meme ta premiere mission, ou te situes-tu ?",
     startHero:"Heros", startHeroDesc:"Tu commences avec une reputation deja heroique.",
-    startNeutral:"Ambigu", startNeutralDesc:"Tu n'as encore choisi aucun camp.",
+    startNeutral:"Independant", startNeutralDesc:"Tu n'as encore choisi aucun camp.",
     startVillain:"Villain", startVillainDesc:"Tu commences deja marque comme une menace.",
     modeTitle:"Ta carriere", modeLead:"Deux formats de partie sont possibles.",
     modeShort:"Carriere courte", modeShortDesc:"10 annees fixes, 3 missions par an, 3 choix par mission.",
@@ -979,7 +979,7 @@ const T = {
     powersTitle:"Your powers", powersLead:"Pick up to 3 powers out of 6. No one gets everything - each choice closes another door.",
     startSideTitle:"Your starting point", startSideLead:"Even before your first mission, where do you stand?",
     startHero:"Hero", startHeroDesc:"You start with an already heroic reputation.",
-    startNeutral:"Ambiguous", startNeutralDesc:"You haven't picked a side yet.",
+    startNeutral:"Independent", startNeutralDesc:"You haven't picked a side yet.",
     startVillain:"Villain", startVillainDesc:"You already start marked as a menace.",
     modeTitle:"Your career", modeLead:"Two game formats are available.",
     modeShort:"Short career", modeShortDesc:"Fixed 10 years, 3 missions per year, 3 choices per mission.",
@@ -4209,7 +4209,7 @@ function screenStartSide(){
   function refresh(){
     d.querySelector('#sideOpt').innerHTML = `
       <div class="opt ${S.startSide==='hero'?'selected':''}" data-s="hero"><div class="oname" style="color:#00c2ff;">${t('startHero')}</div><div class="odesc">${t('startHeroDesc')}</div></div>
-      <div class="opt ${S.startSide==='neutral'?'selected':''}" data-s="neutral"><div class="oname">${t('startNeutral')}</div><div class="odesc">${t('startNeutralDesc')}</div></div>
+      <div class="opt ${S.startSide==='neutral'?'selected':''}" data-s="neutral" style="${S.startSide==='neutral'?'border-color:#b98bff; background:rgba(185,139,255,.1); box-shadow:0 0 0 3px rgba(185,139,255,.15);':''}"><div class="oname" style="color:#b98bff;">${t('startNeutral')}</div><div class="odesc">${t('startNeutralDesc')}</div></div>
       <div class="opt ${S.startSide==='villain'?'selected':''}" data-s="villain"><div class="oname" style="color:var(--red);">${t('startVillain')}</div><div class="odesc">${t('startVillainDesc')}</div></div>`;
     d.querySelectorAll('#sideOpt .opt').forEach(el=>{ el.onclick=()=>{ S.startSide = el.dataset.s; refresh(); }; });
   }
