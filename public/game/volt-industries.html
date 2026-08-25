@@ -204,13 +204,15 @@
   .pstats{ margin-top:8px; font-size:10.5px; font-weight:900; letter-spacing:1px; color:var(--pc-color); }
   .ptrait{ margin-top:6px; font-size:11.5px; line-height:1.45; color:var(--muted); }
   .ptrait.good{ color:#7ef0c0; } .ptrait.bad{ color:#ff9aa8; }
-  /* ---- Carrousel de selection de personnage : une carte a la fois, fleches gauche/droite ---- */
-  .cc-wrap{ display:flex; align-items:center; gap:10px; margin-top:16px; max-width:340px; margin-left:auto; margin-right:auto; }
-  .cc-card{ flex:1; min-width:0; }
-  .cc-arrow{ flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:1.5px solid var(--line); background:rgba(255,255,255,.03);
-    color:var(--ink); font-size:15px; cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; }
+  /* ---- Carrousel de selection de personnage : un heros + un villain du meme palier, cote a cote ---- */
+  .cc-wrap{ display:flex; align-items:center; gap:8px; margin-top:16px; max-width:560px; margin-left:auto; margin-right:auto; }
+  .cc-pair{ flex:1; min-width:0; display:flex; gap:8px; }
+  .cc-pair .preset-card{ flex:1; min-width:0; }
+  .cc-pair .preset-photo{ height:140px; }
+  .cc-arrow{ flex:0 0 auto; width:36px; height:36px; border-radius:50%; border:1.5px solid var(--line); background:rgba(255,255,255,.03);
+    color:var(--ink); font-size:14px; cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; }
   .cc-arrow:hover{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 16px -6px var(--accent); }
-  .cc-dots{ display:flex; justify-content:center; gap:6px; margin-top:14px; flex-wrap:wrap; max-width:340px; margin-left:auto; margin-right:auto; }
+  .cc-dots{ display:flex; justify-content:center; gap:6px; margin-top:14px; flex-wrap:wrap; max-width:560px; margin-left:auto; margin-right:auto; }
   .cc-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
   .cc-dot.on{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
   .cc-dot.lk{ background:rgba(255,255,255,.08); }
@@ -218,17 +220,23 @@
   .preset-card.locked:hover{ transform:none; box-shadow:none; }
   .preset-card.locked .preset-photo img{ filter:grayscale(1) brightness(.35); }
   .preset-card.locked .pname, .preset-card.locked .pdesc, .preset-card.locked .pstats, .preset-card.locked .ptrait, .preset-card.locked .pmoves{ opacity:.35; }
-  .pc-lock{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-    background:rgba(4,6,12,.55); text-align:center; padding:0 14px; }
-  .pc-lock-icon{ font-size:30px; filter:drop-shadow(0 0 10px rgba(0,0,0,.8)); }
-  .pc-lock-cond{ font-size:10.5px; font-weight:800; letter-spacing:.4px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.9); line-height:1.4; }
-  .pmoves{ display:flex; gap:10px; margin-top:12px; padding:0 12px; text-align:left; }
+  .pc-lock{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:rgba(4,6,12,.6); text-align:center; padding:0 8px; }
+  .pc-lock-icon{ font-size:22px; filter:drop-shadow(0 0 10px rgba(0,0,0,.8)); }
+  .pc-lock-cond{ font-size:9px; font-weight:800; letter-spacing:.3px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.9); line-height:1.35; }
+  .pmoves{ display:flex; gap:6px; margin-top:10px; padding:0 10px; text-align:left; }
   .pmove-col{ flex:1; min-width:0; }
-  .pmove-h{ font-size:9px; font-weight:900; letter-spacing:1.4px; color:var(--dim); margin-bottom:4px; }
-  .pmove-line{ font-size:11px; color:var(--muted); line-height:1.5; }
-  @media (max-width:480px){
-    .cc-wrap{ max-width:280px; gap:6px; }
-    .cc-arrow{ width:34px; height:34px; font-size:13px; }
+  .pmove-h{ font-size:8px; font-weight:900; letter-spacing:1px; color:var(--dim); margin-bottom:3px; }
+  .pmove-line{ font-size:9.5px; color:var(--muted); line-height:1.4; }
+  @media (max-width:600px){
+    .cc-wrap{ max-width:100%; gap:4px; }
+    .cc-pair{ gap:6px; }
+    .cc-pair .preset-photo{ height:110px; }
+    .cc-arrow{ width:28px; height:28px; font-size:11px; }
+    .preset-card .pname{ font-size:11.5px; margin-top:6px; padding:0 8px; }
+    .preset-card .pdesc{ display:none; }
+    .pstats{ font-size:9px; }
+    .ptrait{ font-size:9.5px; }
   }
   .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
   .pgal{ grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); }
@@ -3526,6 +3534,9 @@ const UNLOCK_TIERS = [
 function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
 function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
+/* Ordre d'affichage du carrousel : un heros + un villain du meme palier, cote a cote, sur le meme ecran. */
+const PAIR_HEROES   = ['valkyr','aegis','theg','vaelor','marsh','nyx','ferrum','solen','sable','kidspider','volt'];
+const PAIR_VILLAINS = ['fuchsia','vipera','siddartha','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','boomnpc','malachar'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
@@ -3537,7 +3548,7 @@ function screenProfileChoice(){
     <h3 style="margin-top:26px;">${S.lang==='fr'?'Ou incarne un personnage du roster':'Or play as a roster character'}</h3>
     <div class="cc-wrap" id="ccWrap">
       <button class="cc-arrow cc-prev" id="ccPrev" aria-label="${S.lang==='fr'?'Precedent':'Previous'}">&#10094;</button>
-      <div class="cc-card" id="ccCard"></div>
+      <div class="cc-pair" id="ccCard"></div>
       <button class="cc-arrow cc-next" id="ccNext" aria-label="${S.lang==='fr'?'Suivant':'Next'}">&#10095;</button>
     </div>
     <div class="cc-dots" id="ccDots"></div>`;
@@ -3570,7 +3581,7 @@ function screenProfileChoice(){
     box.onclick = ()=>{ applyCustomCharacter(saved); S.heroName = saved.name || ''; S.screen='name'; render(); };
     d.insertBefore(box, d.querySelector('#ccWrap'));
   }
-  /* Carrousel : un personnage a la fois, verrouille tant que le palier de deblocage n'est pas atteint. */
+  /* Carrousel : un heros + un villain du meme palier, cote a cote sur le meme ecran, dans l'ordre de deblocage. */
   if(!S.profileCarouselIdx) S.profileCarouselIdx = 0;
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
@@ -3582,13 +3593,8 @@ function screenProfileChoice(){
     const def = powers.map(k=> (DEFENSE_MOVES_BY_POWER[k]||[])[0]).filter(Boolean);
     return { atk, def };
   }
-  function renderCard(){
-    const idx = clamp(S.profileCarouselIdx, 0, SELECTABLE_PRESETS.length-1);
-    S.profileCarouselIdx = idx;
-    const p = SELECTABLE_PRESETS[idx];
-    const cardEl = d.querySelector('#ccCard');
-    const dotsEl = d.querySelector('#ccDots');
-    if(!p){ cardEl.innerHTML = ''; dotsEl.innerHTML=''; return; }
+  function miniCardHtml(p){
+    if(!p) return '';
     const unlocked = isPresetUnlocked(p.id);
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
     const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HEROS':'HERO');
@@ -3599,7 +3605,7 @@ function screenProfileChoice(){
         <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'ATTAQUES':'ATTACKS'}</div>${mv.atk.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
         <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'DEFENSES':'DEFENSE'}</div>${mv.def.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
       </div>`;
-    cardEl.innerHTML = `<div class="preset-card ${p.side} ${unlocked?'':'locked'}" style="--pc-color:${col};">
+    return `<div class="preset-card ${p.side} ${unlocked?'':'locked'}" data-pid="${p.id}" style="--pc-color:${col};">
       <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span>
         ${unlocked?'':`<div class="pc-lock"><span class="pc-lock-icon">&#128274;</span><div class="pc-lock-cond">${tierConditionFor(p.id)}</div></div>`}</div>
       <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
@@ -3607,14 +3613,27 @@ function screenProfileChoice(){
       <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
       <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div>
       ${mvHtml}
-      <button class="btn cyan" id="ccPick" style="margin-top:14px; width:100%;" ${unlocked?'':'disabled'}>${unlocked?(S.lang==='fr'?'CHOISIR':'PICK'):(S.lang==='fr'?'VERROUILLE':'LOCKED')}</button>
+      <button class="btn cyan" data-pick="${p.id}" style="margin-top:14px; width:100%;" ${unlocked?'':'disabled'}>${unlocked?(S.lang==='fr'?'CHOISIR':'PICK'):(S.lang==='fr'?'VERROUILLE':'LOCKED')}</button>
     </div>`;
-    dotsEl.innerHTML = SELECTABLE_PRESETS.map((pp,i)=>`<span class="cc-dot ${i===idx?'on':''} ${isPresetUnlocked(pp.id)?'':'lk'}"></span>`).join('');
-    const pickBtn = d.querySelector('#ccPick');
-    if(pickBtn && unlocked){ pickBtn.onclick = ()=>{ applyPreset(p); S.screen='name'; render(); }; }
   }
-  d.querySelector('#ccPrev').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx - 1 + SELECTABLE_PRESETS.length) % SELECTABLE_PRESETS.length; renderCard(); };
-  d.querySelector('#ccNext').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx + 1) % SELECTABLE_PRESETS.length; renderCard(); };
+  function renderCard(){
+    const idx = clamp(S.profileCarouselIdx, 0, PAIR_HEROES.length-1);
+    S.profileCarouselIdx = idx;
+    const heroP = SELECTABLE_PRESETS.find(x=>x.id===PAIR_HEROES[idx]);
+    const villP = SELECTABLE_PRESETS.find(x=>x.id===PAIR_VILLAINS[idx]);
+    const cardEl = d.querySelector('#ccCard');
+    const dotsEl = d.querySelector('#ccDots');
+    cardEl.innerHTML = miniCardHtml(heroP) + miniCardHtml(villP);
+    dotsEl.innerHTML = PAIR_HEROES.map((hid,i)=>{
+      const bothUnlocked = isPresetUnlocked(PAIR_HEROES[i]) && isPresetUnlocked(PAIR_VILLAINS[i]);
+      return `<span class="cc-dot ${i===idx?'on':''} ${bothUnlocked?'':'lk'}"></span>`;
+    }).join('');
+    cardEl.querySelectorAll('[data-pick]').forEach(btn=>{
+      btn.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===btn.dataset.pick); if(p){ applyPreset(p); S.screen='name'; render(); } };
+    });
+  }
+  d.querySelector('#ccPrev').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx - 1 + PAIR_HEROES.length) % PAIR_HEROES.length; renderCard(); };
+  d.querySelector('#ccNext').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx + 1) % PAIR_HEROES.length; renderCard(); };
   renderCard();
   if(!META.loaded){ loadMetaProgress().then(()=>renderCard()); }
   return d;
