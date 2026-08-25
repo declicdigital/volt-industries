@@ -1180,6 +1180,38 @@ function factionsOfChar(key){ const n = canonName(key); return baseFactionsOf(n)
 function attributesOfChar(key){ const n = canonName(key); return ATTRIBUTES.filter(a=>a.members.indexOf(n)>=0); }
 function isIndependent(key){ return factionsOfChar(key).length===0; }
 
+/* ============================ PONDERATION DE FACTION ============================
+   Une fois S.team rejoint, le joueur doit croiser en priorite les membres de SA faction
+   (combats, conversations, missions), sans que ce soit jamais exclusif : d'autres
+   factions du meme camp (hero ou villain) restent presentes en renfort/second plan. */
+/* Cles-personnages appartenant a la faction actuelle du joueur (vide si aucune faction rejointe). */
+function myFactionMemberKeys(){
+  if(!S.team) return [];
+  const fac = FACTIONS[S.team.side] && FACTIONS[S.team.side][S.team.tier];
+  if(!fac) return [];
+  return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
+}
+/* Reordonne deux groupes (primary = ta faction, secondary = le reste du camp) en tirant au sort,
+   a chaque position, dans primary avec la probabilite donnee ; le reste comble les trous.
+   Utilise pour composer escouades et castings sans jamais exclure totalement le secondary. */
+function weightedFactionOrder(primary, secondary, primaryChance){
+  const p = shuffle((primary||[]).slice()), s = shuffle((secondary||[]).slice());
+  const out = [];
+  while(p.length || s.length){
+    const takePrimary = p.length && (!s.length || Math.random() < primaryChance);
+    out.push(takePrimary ? p.shift() : s.shift());
+  }
+  return out;
+}
+/* Pioche 1 personnage dans pool, avec un biais de 55% (50-60%) vers un membre de ta faction
+   quand celle-ci est representee dans ce pool ; sinon comportement inchange (pioche normale). */
+function factionWeightedPick(pool){
+  if(!pool || !pool.length) return null;
+  const mates = myFactionMemberKeys().filter(k=>pool.includes(k));
+  if(mates.length && Math.random() < 0.55) return pick(mates);
+  return pick(pool);
+}
+
 function factionEmblemSVG(side, tier, size){
   const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return '';
   const uid = 'fe'+Math.random().toString(36).slice(2,7);
@@ -1596,7 +1628,7 @@ function generateProceduralMission(rank){
   const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_hero', MISSION_SENTENCE_PATTERNS);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
+  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : factionWeightedPick(otherCharKeys())) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -1706,7 +1738,7 @@ function generateVillainMission(rank){
   const locName = randLocationName(scope);
   const pattern = pickNoRepeat('pat_villain', MISSION_SENTENCE_PATTERNS_VILLAIN);
   const useChar = Math.random() < 0.3;
-  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : pick(otherCharKeys())) : null;
+  const charKey = useChar ? (type==='combat' ? pickOpponentKey() : factionWeightedPick(otherCharKeys())) : null;
   let fr = pattern.fr(threat.fr, stakes.fr, locName);
   let en = pattern.en(threat.en, stakes.en, locName);
   if(charKey){
@@ -1759,7 +1791,7 @@ const SIGNATURE_ROLE_TEMPLATES = [
 ];
 function generateSignatureMission(rank){
   const type = pick(['combat','combat','rescue','social']);
-  const charKey = type==='combat' ? pickOpponentKey() : pick(otherCharKeys());
+  const charKey = type==='combat' ? pickOpponentKey() : factionWeightedPick(otherCharKeys());
   const c = CHARACTERS[charKey];
   const roleT = pickNoRepeat('sigrole', SIGNATURE_ROLE_TEMPLATES);
   const threat = pickNoRepeat('threats', THREATS), stakes = pickNoRepeat('stakes', STAKES); let locName = null;
@@ -2886,7 +2918,7 @@ function careerScore(){
     { label: fr?'Envergure cosmique':'Cosmic scale', value: cosmicBonus, max:12 },
     { label: fr?'Sanctions et pertes':'Setbacks', value: -malus, max:0 },
   ];
-  const total = clamp(Math.round(combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
+  let total = clamp(Math.round(combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
   let grade, gradeLabelFr, gradeLabelEn;
   if(total>=92){ grade='S'; gradeLabelFr='Legende du multivers'; gradeLabelEn='Multiverse legend'; }
   else if(total>=82){ grade='A'; gradeLabelFr='Carriere majeure'; gradeLabelEn='Major career'; }
@@ -2895,8 +2927,15 @@ function careerScore(){
   else if(total>=40){ grade='D'; gradeLabelFr='Carriere en dents de scie'; gradeLabelEn='Uneven career'; }
   else if(total>=25){ grade='E'; gradeLabelFr='Carriere difficile'; gradeLabelEn='Rough career'; }
   else { grade='F'; gradeLabelFr='Carriere ratee'; gradeLabelEn='Failed career'; }
+  /* Les 6 Eclats du Vide reunis = victoire totale et definitive : score et grade au maximum, quoi qu'il arrive. */
+  if(S.voidCompletionDone){
+    total = 100;
+    parts.forEach(p=>{ p.value = p.max>0 ? p.max : 0; });
+    grade='S'; gradeLabelFr='Maitre du Vide'; gradeLabelEn='Master of the Void';
+  }
   return { total, parts, grade, gradeLabel: fr?gradeLabelFr:gradeLabelEn, winRate, fights, locWeight };
 }
+
 function reputationCap(){ return clamp((S.reputationFloor||0) + S.totalMissionsDone * 6, 0, 100); }
 /* Plafond de conviction : une carriere faite de contradictions et de defaites ne finit jamais a 100%. */
 function convictionCap(){
@@ -3065,7 +3104,7 @@ function renderRankBadge(){
     loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
   }
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${factionHtml}${loveHtml}`;
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${loveHtml}`;
   if(stars > S.lastStars){ showRankUpToast(stars, zone); }
   S.lastStars = stars;
 }
@@ -4296,6 +4335,20 @@ const ECLAT_CINE_CONFIG = {
   attente:  { icon:'&#10034;', bgClass:'eclat-bg-time' },
   vestige:  { icon:'&#10053;', bgClass:'eclat-bg-soul' },
 };
+/* Rangee persistante des eclats obtenus, affichee en haut a droite (dans le badge de rang) :
+   un icone par eclat, cote a cote dans l'ordre d'obtention, jusqu'a 6. Un eclat perdu/vole
+   disparait immediatement de cette rangee puisqu'elle se recalcule a chaque rendu depuis S.eclats. */
+function eclatBadgeRowHTML(){
+  const owned = S.eclats || [];
+  if(!owned.length) return '';
+  const chips = owned.map(id=>{
+    const shard = ECLATS.find(e=>e.id===id); const cfg = ECLAT_CINE_CONFIG[id];
+    if(!shard || !cfg) return '';
+    const name = S.lang==='fr' ? shard.frName : shard.enName;
+    return `<span title="${name}" style="display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:${shard.col}22; border:1px solid ${shard.col}; color:${shard.col}; font-size:11px; line-height:1; text-shadow:0 0 6px ${shard.col};">${cfg.icon}</span>`;
+  }).join('');
+  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:6px;">${chips}</div>`;
+}
 function showEclatCinematic(shard, cb){
   const isFr = S.lang==='fr';
   const cfg = ECLAT_CINE_CONFIG[shard.id] || { icon:'&#9733;', bgClass:'' };
@@ -4600,6 +4653,124 @@ function downloadTrophyCard(){
     }, 'image/png');
   });
 }
+/* Glyphes reels (canvas fillText n'interprete pas les entites HTML) associes a chaque eclat, dans l'ordre de ECLATS. */
+const ECLAT_CANVAS_GLYPH = { derive:'\u2726', murmure:'\u2749', fracture:'\u25C8', fureur:'\u2739', attente:'\u2732', vestige:'\u2745' };
+/* ---------- Carte-trophee dediee : les 6 Eclats du Vide reunis, score et 8 etoiles toujours au maximum ---------- */
+function generateVoidTrophyCardCanvas(cb){
+  const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
+  const W = 1080, H = 1350, cx = W/2;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const heroCol = villain ? '#ff5c6e' : '#4fd3ff';
+  const voidCol = villain ? '#c04dff' : '#ff5fa8';
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  if(villain){ bg.addColorStop(0,'#12030c'); bg.addColorStop(.5,'#220619'); bg.addColorStop(1,'#08020a'); }
+  else { bg.addColorStop(0,'#050914'); bg.addColorStop(.5,'#10142e'); bg.addColorStop(1,'#05060f'); }
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  const glow = ctx.createRadialGradient(cx, H*0.3, 40, cx, H*0.3, W*0.8);
+  glow.addColorStop(0, `${voidCol}55`); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.globalAlpha = .12; ctx.strokeStyle = voidCol; ctx.lineWidth = 2;
+  for(let a=0;a<360;a+=12){ const r1=140, r2=W*0.8; const rad=a*Math.PI/180;
+    ctx.beginPath(); ctx.moveTo(cx+Math.cos(rad)*r1, H*0.3+Math.sin(rad)*r1); ctx.lineTo(cx+Math.cos(rad)*r2, H*0.3+Math.sin(rad)*r2); ctx.stroke(); }
+  ctx.restore();
+  const pad = 34;
+  ctx.strokeStyle = voidCol; ctx.lineWidth = 7; ctx.strokeRect(pad,pad,W-pad*2,H-pad*2);
+  ctx.strokeStyle = `${voidCol}73`; ctx.lineWidth = 1.5; ctx.strokeRect(pad+16,pad+16,W-(pad+16)*2,H-(pad+16)*2);
+  [[pad+16,pad+16,1,1],[W-pad-16,pad+16,-1,1],[pad+16,H-pad-16,1,-1],[W-pad-16,H-pad-16,-1,-1]].forEach(([x,y,sx,sy])=>{
+    ctx.strokeStyle = voidCol; ctx.lineWidth = 4; ctx.beginPath();
+    ctx.moveTo(x, y+34*sy); ctx.lineTo(x, y); ctx.lineTo(x+34*sx, y); ctx.stroke();
+  });
+  ctx.textAlign = 'center';
+  ctx.shadowColor = voidCol; ctx.shadowBlur = 45;
+  const starGrad = ctx.createRadialGradient(cx,108,6,cx,108,58);
+  starGrad.addColorStop(0,'#ffffff'); starGrad.addColorStop(.45, voidCol); starGrad.addColorStop(1, '#1a0620');
+  ctx.fillStyle = starGrad;
+  drawStarPath(ctx, cx, 108, 8, 52, 23); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = voidCol; ctx.font = '900 24px Arial, sans-serif';
+  ctx.fillText((isFr?'LES 6 ECLATS DU VIDE REUNIS':'ALL 6 VOID SHARDS UNITED'), cx, 192);
+  const pW = 380, pH = 440, pX = cx-pW/2, pY = 216;
+  ctx.save();
+  ctx.shadowColor = heroCol; ctx.shadowBlur = 26;
+  ctx.strokeStyle = heroCol; ctx.lineWidth = 3;
+  roundRectPath(ctx, pX, pY, pW, pH, 18); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1;
+  roundRectPath(ctx, pX+9, pY+9, pW-18, pH-18, 12); ctx.stroke();
+  [[pX+5,pY+5,1,1],[pX+pW-5,pY+5,-1,1],[pX+5,pY+pH-5,1,-1],[pX+pW-5,pY+pH-5,-1,-1]].forEach(([x,y,sx,sy])=>{
+    ctx.strokeStyle = heroCol; ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(x, y+22*sy); ctx.lineTo(x, y); ctx.lineTo(x+22*sx, y); ctx.stroke();
+  });
+  function finalize(){
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 40px Arial, sans-serif';
+    const mainLine = villain ? (isFr?'LE CHAOS EST TOTAL':'TOTAL CHAOS') : (isFr?'TU AS GAGNE LE JEU':'YOU WON THE GAME');
+    const nLines = wrapCenteredText(ctx, mainLine, cx, pY+pH+64, W-150, 50);
+    /* Rangee des 6 eclats, cote a cote, chacun dans sa propre couleur. */
+    const shardsY = pY+pH+64 + (nLines*24) + 40;
+    const shardR = 26, gap = 68, startX = cx - gap*2.5;
+    ECLATS.forEach((shard,i)=>{
+      const sx = startX + i*gap;
+      ctx.save();
+      ctx.shadowColor = shard.col; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(sx, shardsY, shardR, 0, Math.PI*2);
+      ctx.fillStyle = `${shard.col}26`; ctx.fill();
+      ctx.lineWidth = 2.4; ctx.strokeStyle = shard.col; ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = shard.col; ctx.font = '700 22px Arial, sans-serif';
+      ctx.fillText(ECLAT_CANVAS_GLYPH[shard.id] || '\u2726', sx, shardsY+8);
+    });
+    const nameY = shardsY + 70;
+    ctx.font = '700 32px Arial, sans-serif'; ctx.fillStyle = heroCol;
+    ctx.fillText((S.heroName||'').toUpperCase(), cx, nameY);
+    ctx.font = '400 20px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.fillText(villain ? (isFr?'MAITRE DU VIDE':'MASTER OF THE VOID') : (isFr?'MAITRE DU VIDE':'MASTER OF THE VOID'), cx, nameY+32);
+    /* Score et etoiles toujours au maximum : les 6 eclats valent une victoire totale et definitive. */
+    ctx.font = '600 23px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText(`${isFr?'Score':'Score'} 100/100  \u2022  ${isFr?'Annee':'Year'} ${S.currentYear}`, cx, nameY+86);
+    ctx.fillStyle = voidCol; ctx.font = '600 26px Arial, sans-serif';
+    ctx.fillText('\u2605'.repeat(8), cx, nameY+128);
+    ctx.font = '400 16px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+    const dateStr = new Date().toLocaleDateString(isFr?'fr-FR':'en-US');
+    ctx.fillText(`VOLT INDUSTRIES \u2014 ${dateStr}`, cx, H-50);
+    cb(canvas);
+  }
+  try{
+    const svgStr = avatarSVG();
+    const svgBlob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = ()=>{
+      ctx.save();
+      roundRectPath(ctx, pX+4, pY+4, pW-8, pH-8, 14); ctx.clip();
+      const pg = ctx.createRadialGradient(cx, pY+pH*0.4, 20, cx, pY+pH*0.4, pW*0.75);
+      pg.addColorStop(0, `${voidCol}28`); pg.addColorStop(1,'transparent');
+      ctx.fillStyle = pg; ctx.fillRect(pX, pY, pW, pH);
+      const iw = img.width || 280, ih = img.height || 380;
+      const scale = Math.min((pW-40)/iw, (pH-40)/ih);
+      const dw = iw*scale, dh = ih*scale;
+      ctx.drawImage(img, cx-dw/2, pY+pH-dh-14, dw, dh);
+      ctx.restore();
+      URL.revokeObjectURL(url);
+      finalize();
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); finalize(); };
+    img.src = url;
+  }catch(e){ finalize(); }
+}
+function downloadVoidCard(){
+  generateVoidTrophyCardCanvas((canvas)=>{
+    canvas.toBlob(blob=>{
+      if(!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `6-eclats-du-vide-${(S.heroName||'heros').replace(/[^a-z0-9]+/gi,'_')}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }, 'image/png');
+  });
+}
 function showEighthStarCinematic(cb){
   const isFr = S.lang==='fr'; const zone = zoneOf(S.align);
   const villain = zone==='villain';
@@ -4641,13 +4812,13 @@ function showVoidCompletionCinematic(cb){
       <p class="star8-sub">${sub}</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px;">
         <button class="btl-move" id="voidDownload" style="min-width:220px; border-color:${villain?'#c04dff':'#ff5fa8'}; background:${villain?'rgba(192,77,255,.12)':'rgba(255,95,168,.12)'};"><b>${isFr?'TELECHARGER LA CARTE':'DOWNLOAD THE CARD'}</b></button>
-        <button class="btl-move" id="voidContinue" style="min-width:160px;"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
+        <button class="btl-move" id="voidContinue" style="min-width:160px;"><b>${isFr?'VOIR LE BILAN FINAL':'SEE THE FINAL DEBRIEF'}</b></button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
   document.body.classList.add('shake-cosmic');
   setTimeout(()=>{ document.body.classList.remove('shake-cosmic'); }, villain?3200:2200);
-  overlay.querySelector('#voidDownload').onclick = downloadTrophyCard;
+  overlay.querySelector('#voidDownload').onclick = downloadVoidCard;
   const advanceV = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
   overlay.querySelector('#voidContinue').onclick = advanceV;
   if(S.careerAuto) setTimeout(advanceV, 1400);
@@ -5109,7 +5280,13 @@ function buildBattleSquads(foeKey, mission){
   const keys = otherCharKeys().filter(k=>k!==foeKey);
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
-  let allyPool = shuffle(keys.filter(k=>CHARACTERS[k].align===mySide));
+  const sidePool = keys.filter(k=>CHARACTERS[k].align===mySide);
+  /* Faction : une fois S.team rejoint, tes allies au front sont a 80% des membres de ta propre
+     faction ; les 20% restants viennent d'autres factions du meme camp (hero ou villain), qui
+     te preteront main-forte si vous n'etes pas assez nombreux. */
+  const facMates = myFactionMemberKeys().filter(k=>sidePool.includes(k));
+  const facOthers = sidePool.filter(k=>facMates.indexOf(k)<0);
+  let allyPool = facMates.length ? weightedFactionOrder(facMates, facOthers, 0.8) : shuffle(sidePool);
   const mine = menteeKeys().filter(k=>allyPool.includes(k));
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
@@ -5966,7 +6143,7 @@ function applyChoice(choice){
     const shard = ECLATS.find(e=>e.id===shardId);
     if(shard){
       showEclatCinematic(shard, ()=>{
-        if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
+        if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); }); return; }
         if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
         handleZoneCheckAndContinue();
       });
@@ -5975,7 +6152,7 @@ function applyChoice(choice){
   }
   if(S.pendingVoidCompletion){
     S.pendingVoidCompletion = false;
-    showVoidCompletionCinematic(()=>{ handleZoneCheckAndContinue(); });
+    showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); });
     return;
   }
   if(S.pendingEighthStarCinematic){
@@ -6849,7 +7026,12 @@ function generateGroupConversation(){
   const same = base.filter(k=>CHARACTERS[k].align === (myZone==='villain'?'villain':'hero'));
   const other = base.filter(k=>CHARACTERS[k].align !== (myZone==='villain'?'villain':'hero'));
   const count = 3 + Math.floor(Math.random()*3); // 3 a 5 intervenants
-  let cast = shuffle(same.slice()).slice(0, count);
+  /* Faction : le casting de ton propre camp privilegie tes coequipiers de faction (~55-60%),
+     sans jamais exclure completement les autres personnages du meme camp. */
+  const sameFacMates = myFactionMemberKeys().filter(k=>same.indexOf(k)>=0);
+  const sameOthers = same.filter(k=>sameFacMates.indexOf(k)<0);
+  const sameOrdered = sameFacMates.length ? weightedFactionOrder(sameFacMates, sameOthers, 0.58) : shuffle(same.slice());
+  let cast = sameOrdered.slice(0, count);
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
   if(cast.length < 3) cast = shuffle(base.slice()).slice(0,3);
   /* Tes eleves apparaissent dans les discussions de groupe */
@@ -7369,7 +7551,8 @@ function maybeTriggerConversation(){
     if(!conv){
       const recurring = keys.filter(k=>NPC_ONLY_KEYS.includes(k));
       const pool = (recurring.length && Math.random() < 0.75) ? recurring : keys;
-      const charKey = pool[Math.floor(Math.random()*pool.length)];
+      /* Faction : ~55% de chances de discuter avec un membre de ta faction si le pool en contient. */
+      const charKey = factionWeightedPick(pool);
       conv = generateConversation(charKey);
     }
     if(!conv) return;
@@ -7601,6 +7784,13 @@ function screenEnd(){
         <button class="btn cyan" id="dlTrophy" style="border-color:var(--gold);">${isFr?'Telecharger la carte':'Download the card'}</button>
       </div>
     </div>` : ''}
+    ${S.voidCompletionDone ? `<div class="dl-box" style="margin-top:14px; border-color:#c04dff; background:rgba(192,77,255,.08);">
+      <div class="dl-title" style="color:#c04dff;">${isFr?'Carte-trophee : 6 Eclats du Vide':'Trophy card: 6 Void Shards'}</div>
+      <p class="dl-sub">${isFr?'Score 100/100, 8 etoiles : la victoire totale et definitive, prete a garder ou partager.':'100/100 score, 8 stars: the total, definitive victory, ready to keep or share.'}</p>
+      <div class="dl-actions">
+        <button class="btn cyan" id="dlVoidTrophy" style="border-color:#c04dff;">${isFr?'Telecharger la carte':'Download the card'}</button>
+      </div>
+    </div>` : ''}
     <div class="dl-box">
       <div class="dl-title">${isFr?'Emporte ton dossier':'Take your file'}</div>
       <p class="dl-sub">${isFr?'Une carte de carriere signee Volt Industries, prete a partager.':'A Volt Industries career card, ready to share.'}</p>
@@ -7609,7 +7799,7 @@ function screenEnd(){
         <button class="btn ghost" id="dlJpg">${isFr?'Telecharger en JPG':'Download JPG'}</button>
       </div>
     </div>
-    ${S.dead ? '' : `<div class="dl-box" style="margin-top:14px;">
+    ${(S.dead || S.voidCompletionDone) ? '' : `<div class="dl-box" style="margin-top:14px;">
       <div class="dl-title">${isFr?'Prolonger la carriere':'Extend the career'}</div>
       <p class="dl-sub">${isFr?`Ajoute 5 annees de service, autant de fois que tu veux. Ton personnage vieillit : ${agingLabel()}.`:`Add 5 years of service, as many times as you want. Your character ages: ${agingLabel()}.`}</p>
       <div class="dl-actions"><button class="btn cyan" id="extend5">${isFr?'+5 ans':'+5 years'}</button></div>
@@ -7627,6 +7817,7 @@ function screenEnd(){
       { v:S.turningPoints.length, l:isFr?'Basculements':'Side switches' },
     ], verdicts, alignLabel, faction:(S.team?factionName(S.team.side,S.team.tier):null), gradeCol };
   const extBtn = d.querySelector('#extend5'); if(extBtn) extBtn.onclick=()=>extendCareer(5);
+  const voidTrophyBtn = d.querySelector('#dlVoidTrophy'); if(voidTrophyBtn) voidTrophyBtn.onclick = downloadVoidCard;
   d.querySelector('#dlPng').onclick=()=>downloadRecapCard('png', recapData);
   const dlTrophyBtn = d.querySelector('#dlTrophy'); if(dlTrophyBtn) dlTrophyBtn.onclick = downloadTrophyCard;
   d.querySelector('#dlJpg').onclick=()=>downloadRecapCard('jpg', recapData);
@@ -7990,13 +8181,14 @@ function jvAttachAdvice(cbox, choices){
   const adv = jvAdviceFor(choices);
   if(!adv) return;
   const btns = Array.from(cbox.querySelectorAll('.choice'));
+  /* Seul le badge "CONSEIL JARVIS" sur le bouton recommande est conserve : la boite de texte
+     separee au-dessus des choix a ete retiree (elle faisait doublon et passait par-dessus le texte). */
   if(adv.idx >= 0 && btns[adv.idx]){
     const b = btns[adv.idx];
     b.classList.add('jv-reco');
     b.style.setProperty('--jvc', jvColor());
     b.setAttribute('data-reco', (S.lang==='fr'?'CONSEIL ':'ADVICE ') + jvName());
   }
-  cbox.insertBefore(jvTipEl(adv.text), cbox.firstChild);
 }
 /* Conseil libre (ecrans sans .eff exploitables : entrainement, invitation). */
 function jvAttachTip(cbox, text){
