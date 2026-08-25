@@ -2806,16 +2806,22 @@ function agingLabel(){
 }
 /* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
 const CHAR_TIER = {
-  /* Sommet absolu : les deux plus puissants du jeu, personne d'autre ne les egale */
+  /* Sommet absolu : Doctor Doom et Thor, personne d'autre ne les egale */
   vaelor:10, boomnpc:10,
+  /* Juste derriere : Kang, maitre du temps a l'echelle multiversale */
+  mandate:9,
   /* Poids lourds cosmiques */
-  theg:9, siddartha:9, malachar:9, nihil:9, sepulcre:9, ferrum:9, nyx:9, solen:9,
-  /* Elite : Vision (IA quasi-omnipotente) et Hela (deesse de la mort) appartiennent ici, pas en bas de classement */
-  volt:8, obsidian:8, lorelei:8, aurelia:8,
-  /* Menaces majeures sans etre cosmiques : dieux/conquerants formidables mais pas au niveau des poids lourds ci-dessus */
-  aegis:7, sable:7, vipera:7, mandate:7, requiem:7, precheur:7,
-  /* Solides : forts mais sans pouvoir veritablement surhumain de premier plan (Crane Rouge n'a aucun pouvoir propre) */
-  kaerus:6, kidspider:6, fuchsia:6, umbra:6,
+  theg:9, siddartha:9, malachar:8, ferrum:9, nyx:9, solen:9,
+  /* Menaces cosmiques fortes mais sous Thanos : Annihilus, puis Galactus */
+  nihil:7, sepulcre:6,
+  /* Elite technologique/divine : Ultron et Hela, sous Galactus */
+  volt:8, obsidian:5, lorelei:8, aurelia:5,
+  /* Rusés plutot que bruts : Loki, sous Ultron/Hela */
+  vipera:4,
+  /* Menaces majeures sans etre cosmiques */
+  aegis:7, sable:7, requiem:7, precheur:7,
+  /* Solides : forts mais sans pouvoir veritablement surhumain de premier plan (Crane Rouge et Bouffon Vert n'ont aucun pouvoir propre) */
+  kaerus:3, kidspider:6, fuchsia:3, umbra:6,
   courtier:5, zeroday:5,
   /* Specialistes humains : aucun pouvoir, misent sur l'entrainement et la technologie */
   marsh:4
@@ -3621,19 +3627,31 @@ function recordCareerForMeta(){
   saveMetaProgress();
 }
 const UNLOCK_TIERS = [
-  { ids:['valkyr','aegis','fuchsia','vipera'],
+  { ids:['marsh','kidspider','kaerus','fuchsia'],
     condFr:'Disponible des le debut', condEn:'Available from the start',
     check:(m)=>true },
-  { ids:['theg','volt','mandate','malachar'],
+  { ids:['theg','siddartha'],
     condFr:'Terminer 1 carriere', condEn:'Complete 1 career',
     check:(m)=>(m.careersCompleted||0)>=1 },
-  { ids:['marsh','nyx','obsidian','kaerus'],
-    condFr:'Terminer 5 carrieres au total', condEn:'Complete 5 careers total',
-    check:(m)=>(m.careersCompleted||0)>=5 },
-  { ids:['ferrum','solen','aurelia','sepulcre'],
-    condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years',
-    check:(m)=>(m.longestCareerYears||0)>=20 },
-  { ids:['sable','kidspider','nihil','siddartha'],
+  { ids:['aegis','vipera'],
+    condFr:'Terminer 2 carrieres au total', condEn:'Complete 2 careers total',
+    check:(m)=>(m.careersCompleted||0)>=2 },
+  { ids:['sable','obsidian'],
+    condFr:'Terminer 4 carrieres au total', condEn:'Complete 4 careers total',
+    check:(m)=>(m.careersCompleted||0)>=4 },
+  { ids:['volt','aurelia'],
+    condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years',
+    check:(m)=>(m.longestCareerYears||0)>=15 },
+  { ids:['valkyr','sepulcre'],
+    condFr:'Terminer une carriere d\'au moins 25 ans', condEn:'Complete a career of at least 25 years',
+    check:(m)=>(m.longestCareerYears||0)>=25 },
+  { ids:['ferrum','nihil'],
+    condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career',
+    check:(m)=>(m.bestStars||0)>=3 },
+  { ids:['nyx','malachar'],
+    condFr:'Atteindre 4 etoiles dans une carriere', condEn:'Reach 4 stars in a career',
+    check:(m)=>(m.bestStars||0)>=4 },
+  { ids:['solen','mandate'],
     condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career',
     check:(m)=>(m.bestStars||0)>=5 },
   { ids:['vaelor','boomnpc'],
@@ -3643,10 +3661,10 @@ const UNLOCK_TIERS = [
 function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
 function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
-/* Ordre d'affichage du carrousel : un heros + un villain du meme palier, cote a cote, sur le meme ecran.
-   Thor et Doctor Doom (les 2 plus puissants du jeu) sont volontairement les tout derniers a se debloquer. */
-const PAIR_HEROES   = ['valkyr','aegis','volt','theg','marsh','nyx','ferrum','solen','sable','kidspider','vaelor'];
-const PAIR_VILLAINS = ['fuchsia','vipera','malachar','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','siddartha','boomnpc'];
+/* Ordre d'affichage du carrousel : 11 ecrans de 2 personnages, classes de la puissance la plus
+   faible a la plus forte (Thor et Doctor Doom, les 2 plus puissants du jeu, tout a la fin). */
+const PAIR_HEROES   = ['marsh','kidspider','theg','aegis','sable','volt','valkyr','ferrum','nyx','solen','vaelor'];
+const PAIR_VILLAINS = ['kaerus','fuchsia','siddartha','vipera','obsidian','aurelia','sepulcre','nihil','malachar','mandate','boomnpc'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
@@ -4288,6 +4306,29 @@ function findPowerById(id){
   for(const k in POWERS){ const f = POWERS[k].find(x=>x.id===id); if(f) return f; }
   return null;
 }
+/* Accueil de debut de carriere : Iron Man pour les heros, Thanos pour les villains, Loki pour les
+   neutres. A chaque carriere, quel que soit le personnage joue. */
+const CAREER_WELCOME_LINES = {
+  hero: { key:'volt', fr:"Content de voir un nouveau visage. Ici, on essaie de rendre le monde un peu moins pire. Bienvenue chez les heros.", en:"Good to see a new face. Around here, we try to make the world a little less awful. Welcome to the heroes." },
+  villain: { key:'malachar', fr:"Un(e) nouveau/nouvelle venu(e)... Le monde n'a pas besoin d'un heros de plus. Voyons ce que tu vaux vraiment.", en:"A newcomer... The world doesn't need another hero. Let's see what you're really worth." },
+  neutral: { key:'vipera', fr:"Ni heros, ni villain ? Interessant. Les etiquettes sont pour ceux qui n'ont pas le courage de choisir eux-memes.", en:"Neither hero nor villain? Interesting. Labels are for those who lack the courage to choose for themselves." },
+};
+function showCareerWelcome(cb){
+  const isFr = S.lang==='fr';
+  const zone = zoneOf(S.align)==='villain' ? 'villain' : (zoneOf(S.align)==='hero' ? 'hero' : 'neutral');
+  const info = CAREER_WELCOME_LINES[zone];
+  if(S.playerCharKey === info.key){ cb(); return; }
+  const c = CHARACTERS[info.key];
+  const col = charColor(zone);
+  const name = c ? (isFr?c.fr:c.en) : '';
+  const html = `<div class="ru-title" style="color:${col}; font-size:11px; letter-spacing:2px;">${isFr?'MESSAGE DE BIENVENUE':'WELCOME MESSAGE'}</div>
+    <div style="display:flex; align-items:center; gap:14px; margin:14px 0 4px; text-align:left;">
+      <div style="width:118px; flex:0 0 118px;">${c ? characterPortraitHTML(c, true) : ''}</div>
+      <div style="flex:1; min-width:0;"><div style="font-size:19px; font-weight:900;">${name}</div></div>
+    </div>
+    <p style="margin-top:10px; line-height:1.6; text-align:left;">"${isFr?info.fr:info.en}"</p>`;
+  showBattleAftermath(html, col, cb);
+}
 function screenSummary(){
   const d = document.createElement('div');
   const totalMissions = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -4300,7 +4341,7 @@ function screenSummary(){
     <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 20)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
-  d.querySelector('#go').onclick=()=>{ nextMission(); };
+  d.querySelector('#go').onclick=()=>{ showCareerWelcome(()=>{ nextMission(); }); };
   return d;
 }
 
@@ -5266,26 +5307,28 @@ function impactFromEff(eff, alignDelta){
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
 const FOE_MOVES = {
-  theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut final',en:'Finishing uppercut',p:38,acc:.68}],
-  volt:[{fr:'Repulseur',en:'Repulsor',p:27,acc:.9},{fr:'Drone de soutien',en:'Support drone',p:20,acc:.95},{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1,heal:15},{fr:'Surcharge du reacteur',en:'Reactor overload',p:36,acc:.7}],
-  vaelor:[{fr:'Lame runique',en:'Runic blade',p:30,acc:.85},{fr:'Cri de guerre',en:'War cry',p:18,acc:1},{fr:'Tempete du nord',en:'Northern storm',p:34,acc:.74},{fr:'Souffle de veteran',en:'Veteran breath',p:10,acc:1,heal:14}],
-  marsh:[{fr:'Serum instable',en:'Unstable serum',p:25,acc:.88},{fr:'Analyse des failles',en:'Weakness analysis',p:19,acc:1},{fr:'Injection gamma',en:'Gamma injection',p:33,acc:.72},{fr:'Protocole de soin',en:'Healing protocol',p:8,acc:1,heal:18}],
-  nyx:[{fr:'Frappe de l\'ombre',en:'Shadow strike',p:26,acc:.93},{fr:'Fumigene',en:'Smoke screen',p:14,acc:1,heal:12},{fr:'Lames jumelles',en:'Twin blades',p:30,acc:.82},{fr:'Coup dans le dos',en:'Backstab',p:36,acc:.68}],
-  aegis:[{fr:'Mur de bouclier',en:'Shield wall',p:16,acc:1,heal:14},{fr:'Ricochet',en:'Ricochet',p:27,acc:.9},{fr:'Charge du sentinelle',en:'Sentinel charge',p:31,acc:.8},{fr:'Verdict d\'acier',en:'Steel verdict',p:37,acc:.67}],
-  ferrum:[{fr:'Poing de fer',en:'Iron fist',p:29,acc:.87},{fr:'Blindage renforce',en:'Reinforced plating',p:12,acc:1,heal:15},{fr:'Canon a rail',en:'Railgun',p:35,acc:.71},{fr:'Ecrasement metallique',en:'Metal slam',p:25,acc:.93}],
-  solen:[{fr:'Combo eclair',en:'Lightning combo',p:24,acc:.96},{fr:'Feinte de rue',en:'Street feint',p:19,acc:1},{fr:'Percee determinee',en:'Determined breach',p:31,acc:.8},{fr:'Dernier round',en:'Final round',p:36,acc:.68}],
-  sable:[{fr:'Vent de sable',en:'Sandstorm',p:23,acc:.94},{fr:'Danse evasive',en:'Evasive dance',p:13,acc:1,heal:13},{fr:'Fouet de poussiere',en:'Dust whip',p:29,acc:.85},{fr:'Enterrement',en:'Burial',p:35,acc:.7}],
-  siddartha:[{fr:'Verbe du prophete',en:'Prophet\'s word',p:28,acc:.92},{fr:'Emprise mentale',en:'Mind hold',p:33,acc:.78},{fr:'Cercle de disciples',en:'Circle of disciples',p:16,acc:1,heal:18},{fr:'Sentence eternelle',en:'Eternal sentence',p:40,acc:.63}],
-  malachar:[{fr:'Lame sans-dieu',en:'Godless blade',p:34,acc:.8},{fr:'Malediction',en:'Curse',p:26,acc:.9},{fr:'Vol de vie',en:'Life drain',p:22,acc:.9,heal:14},{fr:'Extinction',en:'Extinction',p:41,acc:.6}],
-  mandate:[{fr:'Decret d\'acier',en:'Steel decree',p:29,acc:.88},{fr:'Barrage de garde',en:'Guard barrage',p:24,acc:.94},{fr:'Loi martiale',en:'Martial law',p:35,acc:.72},{fr:'Reforme forcee',en:'Forced reform',p:14,acc:1,heal:15}],
-  obsidian:[{fr:'Eclat obsidien',en:'Gigatron shard',p:27,acc:.9},{fr:'Carapace noire',en:'Black carapace',p:12,acc:1,heal:16},{fr:'Taillade sombre',en:'Dark slash',p:32,acc:.8},{fr:'Fracture',en:'Fracture',p:38,acc:.66}],
-  kaerus:[{fr:'Fauche du vide',en:'Void scythe',p:31,acc:.83},{fr:'Silence',en:'Silence',p:21,acc:.97},{fr:'Effondrement',en:'Collapse',p:37,acc:.68},{fr:'Absorption',en:'Absorption',p:18,acc:.9,heal:13}],
-  aurelia:[{fr:'Regard dore',en:'Golden gaze',p:26,acc:.92},{fr:'Couronne brulante',en:'Burning crown',p:33,acc:.76},{fr:'Grace impose',en:'Imposed grace',p:14,acc:1,heal:17},{fr:'Sceptre d\'or',en:'Golden scepter',p:29,acc:.86}],
-  vipera:[{fr:'Venin paralysant',en:'Paralytic venom',p:25,acc:.94},{fr:'Morsure eclair',en:'Flash bite',p:30,acc:.84},{fr:'Mue',en:'Molt',p:12,acc:1,heal:15},{fr:'Etreinte mortelle',en:'Deadly coil',p:37,acc:.67}],
-  sepulcre:[{fr:'Chaines funebres',en:'Funeral chains',p:29,acc:.87},{fr:'Requiem',en:'Requiem',p:34,acc:.74},{fr:'Terre gelee',en:'Frozen earth',p:23,acc:.95},{fr:'Tombeau',en:'Tomb',p:40,acc:.62}],
-  nihil:[{fr:'Negation',en:'Negation',p:28,acc:.9},{fr:'Neant rampant',en:'Creeping void',p:33,acc:.77},{fr:'Rien ne subsiste',en:'Nothing remains',p:41,acc:.6},{fr:'Vide restaurateur',en:'Restoring void',p:16,acc:1,heal:16}],
-  fuchsia:[{fr:'Rire toxique',en:'Toxic laughter',p:26,acc:.92},{fr:'Bombe farceuse',en:'Prank bomb',p:32,acc:.78},{fr:'Cabriole',en:'Cartwheel',p:13,acc:1,heal:13},{fr:'Grand final',en:'Grand finale',p:39,acc:.64}],
-  lorelei:[{fr:'Chant trompeur',en:'Deceiving song',p:24,acc:.95},{fr:'Pacte truque',en:'Rigged pact',p:30,acc:.82},{fr:'Volte-face',en:'About-face',p:15,acc:1,heal:14},{fr:'Prix du silence',en:'Price of silence',p:36,acc:.68}],
+  theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:.87},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Poigne increvable',en:'Unbreakable grip',p:38,acc:.68},{fr:'Second souffle',en:'Second wind',p:10,acc:1,heal:20}],
+  volt:[{fr:'Repulseur',en:'Repulsor',p:27,acc:.9},{fr:'Salve energetique',en:'Energy volley',p:24,acc:.95},{fr:'Frappe calculee',en:'Calculated strike',p:29,acc:.87},{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1,heal:15},{fr:'Surcharge du reacteur',en:'Reactor overload',p:36,acc:.7},{fr:'Bouclier photonique',en:'Photon shield',p:15,acc:1,heal:15}],
+  vaelor:[{fr:'Marteau tournoyant',en:'Whirling hammer',p:30,acc:.85},{fr:'Foudre canalisee',en:'Channelled lightning',p:31,acc:.82},{fr:'Tempete du nord',en:'Northern storm',p:34,acc:.74},{fr:'Souffle du guerrier',en:'Warrior breath',p:10,acc:1,heal:14},{fr:'Eclair devastateur',en:'Devastating bolt',p:38,acc:.68},{fr:'Peau d\'Asgard',en:'Asgardian hide',p:14,acc:1,heal:18}],
+  marsh:[{fr:'Rafale de coups',en:'Blitz combo',p:22,acc:.97},{fr:'Lecture des failles',en:'Weak-point read',p:21,acc:1},{fr:'Frappe supersonique',en:'Supersonic strike',p:32,acc:.78},{fr:'Riposte anticipee',en:'Preempted riposte',p:14,acc:1,heal:15},{fr:'Combo d\'elite',en:'Elite combo',p:36,acc:.7},{fr:'Esquive chronometree',en:'Timed evasion',p:9,acc:1,heal:21}],
+  nyx:[{fr:'Sorts hexes',en:'Hex bolts',p:26,acc:.9},{fr:'Leurre miroir',en:'Mirror decoy',p:21,acc:.95},{fr:'Champ de distorsion',en:'Distortion field',p:15,acc:1,heal:15},{fr:'Rafale chaotique',en:'Chaos burst',p:31,acc:.82},{fr:'Realite dechiree',en:'Torn reality',p:39,acc:.65},{fr:'Bulle de chaos protectrice',en:'Protective chaos bubble',p:9,acc:1,heal:21}],
+  aegis:[{fr:'Ricochet',en:'Ricochet',p:27,acc:.9},{fr:'Coup de bouclier',en:'Shield bash',p:29,acc:.87},{fr:'Charge du sentinelle',en:'Sentinel charge',p:24,acc:.94},{fr:'Mur de bouclier',en:'Shield wall',p:16,acc:1,heal:14},{fr:'Verdict d\'acier',en:'Steel verdict',p:37,acc:.67},{fr:'Encaissement inebranlable',en:'Unshakeable block',p:12,acc:1,heal:20}],
+  ferrum:[{fr:'Poing devastateur',en:'Devastating fist',p:33,acc:.8},{fr:'Ecrasement au sol',en:'Ground smash',p:29,acc:.87},{fr:'Bond rageur',en:'Furious leap',p:25,acc:.92},{fr:'Rage stabilisee',en:'Stabilized rage',p:14,acc:1,heal:18},{fr:'Battement sismique',en:'Seismic clap',p:38,acc:.68},{fr:'Regeneration furieuse',en:'Furious regeneration',p:10,acc:1,heal:22}],
+  solen:[{fr:'Lame d\'Agamotto',en:'Blade of Agamotto',p:27,acc:.9},{fr:'Illusion dimensionnelle',en:'Dimensional illusion',p:21,acc:.95},{fr:'Bouclier des Vishanti',en:'Vishanti shield',p:15,acc:1,heal:16},{fr:'Portail d\'assaut',en:'Assault portal',p:33,acc:.76},{fr:'Oeil d\'Agamotto : ultimatum',en:'Eye of Agamotto: ultimatum',p:44,acc:.55},{fr:'Retour dimensionnel',en:'Dimensional retreat',p:10,acc:1,heal:19}],
+  sable:[{fr:'Griffes de vibranium',en:'Vibranium claws',p:28,acc:.88},{fr:'Sens felins',en:'Feline senses',p:21,acc:1},{fr:'Charge du protecteur',en:'Protector\'s charge',p:25,acc:.92},{fr:'Combinaison absorbante',en:'Kinetic-absorbing suit',p:14,acc:1,heal:16},{fr:'Rage de Bast',en:'Rage of Bast',p:37,acc:.69},{fr:'Reflexes felins',en:'Feline reflexes',p:9,acc:1,heal:20}],
+  siddartha:[{fr:'Verbe du prophete',en:'Prophet\'s word',p:28,acc:.92},{fr:'Emprise mentale',en:'Mind hold',p:26,acc:.9},{fr:'Cercle de disciples',en:'Circle of disciples',p:16,acc:1,heal:18},{fr:'Vision de siecles',en:'Vision of centuries',p:22,acc:.95},{fr:'Sentence eternelle',en:'Eternal sentence',p:40,acc:.63},{fr:'Serenite du prophete',en:'Prophet\'s serenity',p:11,acc:1,heal:20}],
+  malachar:[{fr:'Lame sans-dieu',en:'Godless blade',p:34,acc:.8},{fr:'Frappe titanesque',en:'Titan strike',p:31,acc:.83},{fr:'Endurance de Titan',en:'Titan endurance',p:14,acc:1,heal:16},{fr:'Malediction',en:'Curse',p:26,acc:.9},{fr:'Extinction',en:'Extinction',p:41,acc:.6},{fr:'Regeneration titanesque',en:'Titan regeneration',p:10,acc:1,heal:22}],
+  mandate:[{fr:'Rayon chronal',en:'Chronal beam',p:29,acc:.88},{fr:'Barrage de garde',en:'Guard barrage',p:24,acc:.94},{fr:'Bouclier temporel',en:'Temporal shield',p:14,acc:1,heal:15},{fr:'Decret d\'acier',en:'Steel decree',p:31,acc:.8},{fr:'Effacement chronal',en:'Chronal erasure',p:35,acc:.72},{fr:'Reforme forcee',en:'Forced reform',p:9,acc:1,heal:20}],
+  obsidian:[{fr:'Eclat obsidien',en:'Obsidian shard',p:27,acc:.9},{fr:'Rayon adamantium',en:'Adamantium beam',p:31,acc:.83},{fr:'Carapace noire',en:'Black carapace',p:12,acc:1,heal:16},{fr:'Essaim de drones',en:'Drone swarm',p:24,acc:.94},{fr:'Fracture',en:'Fracture',p:38,acc:.66},{fr:'Auto-reparation',en:'Self-repair',p:9,acc:1,heal:21}],
+  kaerus:[{fr:'Rayon du crane',en:'Skull ray',p:29,acc:.88},{fr:'Frappe tactique',en:'Tactical strike',p:24,acc:.94},{fr:'Armure blindee',en:'Armored plating',p:16,acc:1,heal:15},{fr:'Barrage HYDRA',en:'HYDRA barrage',p:33,acc:.76},{fr:'Loi martiale',en:'Martial law',p:37,acc:.68},{fr:'Diagnostic reparateur',en:'Repair diagnostic',p:10,acc:1,heal:19}],
+  aurelia:[{fr:'Lame d\'outre-tombe',en:'Blade from beyond',p:26,acc:.92},{fr:'Rites necromantiques',en:'Necromantic rites',p:29,acc:.86},{fr:'Voile des morts',en:'Veil of the dead',p:14,acc:1,heal:17},{fr:'Legion de Hel',en:'Legion of Hel',p:31,acc:.82},{fr:'Couronne funeste',en:'Baleful crown',p:39,acc:.64},{fr:'Regeneration divine',en:'Divine regeneration',p:10,acc:1,heal:21}],
+  vipera:[{fr:'Venin paralysant',en:'Paralytic venom',p:25,acc:.94},{fr:'Morsure eclair',en:'Flash bite',p:30,acc:.84},{fr:'Mue',en:'Molt',p:12,acc:1,heal:15},{fr:'Illusions jumelles',en:'Twin illusions',p:22,acc:.95},{fr:'Etreinte mortelle',en:'Deadly coil',p:37,acc:.67},{fr:'Double du dieu rusé',en:'Trickster\'s double',p:9,acc:1,heal:21}],
+  sepulcre:[{fr:'Sceptre cosmique',en:'Cosmic scepter',p:29,acc:.87},{fr:'Requiem des mondes',en:'Requiem of worlds',p:34,acc:.74},{fr:'Densite cosmique',en:'Cosmic density',p:16,acc:1,heal:18},{fr:'Devoreur d\'energie',en:'Energy devourer',p:23,acc:.95},{fr:'Fin d\'un monde',en:'End of a world',p:42,acc:.6},{fr:'Regeneration stellaire',en:'Stellar regeneration',p:11,acc:1,heal:20}],
+  nihil:[{fr:'Rayon du sceptre cosmique',en:'Cosmic scepter beam',p:28,acc:.9},{fr:'Neant rampant',en:'Creeping void',p:33,acc:.77},{fr:'Carapace insectoide',en:'Insectoid carapace',p:16,acc:1,heal:16},{fr:'Vol devastateur',en:'Devastating flight',p:23,acc:.95},{fr:'Rien ne subsiste',en:'Nothing remains',p:41,acc:.6},{fr:'Regeneration exosquelette',en:'Exoskeleton regeneration',p:10,acc:1,heal:20}],
+  fuchsia:[{fr:'Bombes citrouilles',en:'Pumpkin bombs',p:28,acc:.88},{fr:'Rire toxique',en:'Toxic laughter',p:24,acc:.94},{fr:'Planeur defensif',en:'Defensive glider',p:14,acc:1,heal:15},{fr:'Rafale du glider',en:'Glider strafe',p:32,acc:.78},{fr:'Grand final',en:'Grand finale',p:39,acc:.64},{fr:'Cabriole esquive',en:'Dodge cartwheel',p:9,acc:1,heal:19}],
+  lorelei:[{fr:'Rayon du plexus solaire',en:'Solar plexus beam',p:29,acc:.88},{fr:'Frappe densifiee',en:'Density strike',p:26,acc:.92},{fr:'Traversee dephasee',en:'Phase-through strike',p:33,acc:.78},{fr:'Densite blindee',en:'Armored density',p:14,acc:1,heal:16},{fr:'Rayon devastateur',en:'Devastating beam',p:38,acc:.66},{fr:'Densite variable',en:'Variable density',p:10,acc:1,heal:20}],
+  kidspider:[{fr:'Toile immobilisante',en:'Web trap',p:22,acc:1},{fr:'Combo acrobatique',en:'Acrobatic combo',p:26,acc:.93},{fr:'Bond mural',en:'Wall leap',p:31,acc:.8},{fr:'Sens d\'araignee',en:'Spider-sense',p:14,acc:1,heal:15},{fr:'Frappe supersonique',en:'Supersonic strike',p:35,acc:.71},{fr:'Souplesse increvable',en:'Unbreakable agility',p:9,acc:1,heal:19}],
+  boomnpc:[{fr:'Rayon d\'armure',en:'Armor beam',p:28,acc:.89},{fr:'Sortileges de Latveria',en:'Latverian spells',p:31,acc:.82},{fr:'Champ de force du trone',en:'Throne force field',p:16,acc:1,heal:16},{fr:'Foudre arcanique',en:'Arcane lightning',p:26,acc:.9},{fr:'Decret du monarque',en:'Monarch\'s decree',p:40,acc:.62},{fr:'Auto-reparation blindee',en:'Armored self-repair',p:10,acc:1,heal:20}],
 };
 function foeMovesFor(key){
   if(FOE_MOVES[key]) return FOE_MOVES[key];
@@ -5303,13 +5346,22 @@ function playerMoves(){
     const d = DEFENSE_MOVES_BY_POWER[id]; if(d) def.push(d[0], d[1]);
   });
   // Les competences apprises (Vibranium, foudre, etc.) remplacent en priorite les attaques : ce sont tes coups les plus forts.
-  const skillMoves = learnedSkills().slice(-2).map(sk=>sk.move);
+  const skillMoves = learnedSkills().map(sk=>sk.move);
   atk = skillMoves.concat(atk);
-  const atkOut = []; atk.forEach(m=>{ if(atkOut.length<2 && !atkOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
-  while(atkOut.length<2) atkOut.push(BASIC_MOVES[atkOut.length%2]);
-  const defOut = []; def.forEach(m=>{ if(defOut.length<2 && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
-  while(defOut.length<2) defOut.push(DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
-  // Les Eclats du Vide obtenus ajoutent chacun un pouvoir special supplementaire, au-dela des 4 coups habituels.
+  /* Gabarit de base : 3 attaques + 1 defense (2+2 pour les sorciers/mystiques, qui misent plus sur la
+     protection). Chaque technique apprise en formation debloque un emplacement supplementaire, jusqu'a
+     6 coups au total : 4 attaques + 2 defenses (3 attaques + 3 defenses pour les mystiques). */
+  const isMystic = S.path === 'mystique';
+  const baseAtk = isMystic ? 2 : 3, baseDef = isMystic ? 2 : 1;
+  const maxAtk = isMystic ? 3 : 4, maxDef = isMystic ? 3 : 2;
+  const learnedCount = learnedSkills().length;
+  const atkCount = clamp(baseAtk + (learnedCount>=1?1:0), baseAtk, maxAtk);
+  const defCount = clamp(baseDef + (learnedCount>=2?1:0), baseDef, maxDef);
+  const atkOut = []; atk.forEach(m=>{ if(atkOut.length<atkCount && !atkOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
+  while(atkOut.length<atkCount) atkOut.push(BASIC_MOVES[atkOut.length%2]);
+  const defOut = []; def.forEach(m=>{ if(defOut.length<defCount && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
+  while(defOut.length<defCount) defOut.push(DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
+  // Les Eclats du Vide obtenus ajoutent chacun un pouvoir special supplementaire, au-dela des coups habituels.
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
     return Object.assign({ shard:true, shardCol:s.col, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
@@ -5956,6 +6008,13 @@ function startBattle(mission, done){
         <b>${S.lang==='fr'?`Proteger ${menteeName}`:`Protect ${menteeName}`}</b>
         <span>${S.lang==='fr'?'Le prochain coup adverse te vise a sa place':'The next enemy hit targets you instead of them'}</span></button>`;
     }
+    /* Doctor Strange : portail vers l'inconnu. Ecarte l'adversaire d'un coup, mais 5% de chance que
+       le portail se retourne contre toi et t'engloutisse pour de bon - fin de carriere definitive. */
+    if(S.playerCharKey==='solen' && !st.multiverseUsed){
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlMultiverse" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+        <b>${S.lang==='fr'?'Portail vers l\'inconnu':'Portal into the unknown'}</b>
+        <span>${S.lang==='fr'?'Bannit l\'adversaire d\'un coup - mais 5% de chance que le portail t\'engloutisse a jamais':'Banishes the enemy in one strike - but a 5% chance the portal swallows you forever'}</span></button>`;
+    }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
     const vBtn = movesEl.querySelector('#btlVanish'); if(vBtn) vBtn.onclick = vanishMove;
@@ -5963,6 +6022,21 @@ function startBattle(mission, done){
       if(st.busy) return; st.busy = true; setMovesEnabled(false); st.protectIdx = protectIdx;
       setLog(S.lang==='fr'?`Tu te places devant ${allyRoster[protectIdx].name}, pret(e) a encaisser.`:`You step in front of ${allyRoster[protectIdx].name}, ready to take the hit.`);
       setTimeout(runTurn, wait(700));
+    };
+    const mBtn = movesEl.querySelector('#btlMultiverse'); if(mBtn) mBtn.onclick = ()=>{
+      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.multiverseUsed = true;
+      if(Math.random() < 0.05){
+        const causeFr = 'aspire(e) par son propre portail, perdu(e) a jamais dans les plis du Multivers';
+        const causeEn = 'pulled through their own portal, lost forever in the folds of the Multiverse';
+        S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
+        setLog(S.lang==='fr'?'Le portail se retourne. Tu disparais entre les plis de la realite.':'The portal turns. You vanish between the folds of reality.');
+        setTimeout(()=>{ finish(false); }, wait(1200));
+        return;
+      }
+      const tName = foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : foeName;
+      setLog(S.lang==='fr'?`Un portail s'ouvre sous ${tName}, qui disparait, hors de combat.`:`A portal opens beneath ${tName}, who vanishes, taken out of the fight.`);
+      dealToFoe(st.targetIdx, 999, '#9a6bff');
+      setTimeout(runTurn, wait(900));
     };
   }
   function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on); }
