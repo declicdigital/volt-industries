@@ -4473,6 +4473,9 @@ function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 10) return false;
   const tier = computeStars();
+  /* FACTIONS n'a des factions definies qu'a partir du palier 4 (Continent) : en dessous, l'invitation
+     afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
+  if(tier < 4) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
   if(tier <= S[key]) return false;
   if(Math.abs(S.align) < 55) return false;
