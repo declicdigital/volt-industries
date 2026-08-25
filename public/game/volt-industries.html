@@ -1101,24 +1101,24 @@ const CHAR_IMG = {
   nv7:"/game/villains/v7.png", nv8:"/game/villains/v8.png", nv9:"/game/villains/v9.png",
 };
 const CHARACTERS = {
-  theg:{fr:"The G",en:"The G",canon:"The G",align:'hero', sex:'m', img:CHAR_IMG.char10},
+  theg:{fr:"The G",en:"The G",canon:"The G",align:'neutral', sex:'m', img:CHAR_IMG.char10},
   volt:{fr:"Iron Man",en:"Iron Man",canon:"Iron Man",align:'hero', sex:'m', img:CHAR_IMG.char1}, vaelor:{fr:"Thor",en:"Thor",canon:"Thor",align:'hero', sex:'m', img:CHAR_IMG.char5},
   marsh:{fr:"Black Widow",en:"Black Widow",canon:"Black Widow",align:'hero', sex:'f', img:CHAR_IMG.char7}, nyx:{fr:"Scarlet Witch",en:"Scarlet Witch",canon:"Scarlet Witch",align:'hero', sex:'f', img:CHAR_IMG.char6},
   aegis:{fr:"Captain America",en:"Captain America",canon:"Captain America",align:'hero', sex:'m', img:CHAR_IMG.char3},
   ferrum:{fr:"Hulk",en:"Hulk",canon:"Hulk",align:'hero', sex:'m', img:CHAR_IMG.char4},
   solen:{fr:"Doctor Strange",en:"Doctor Strange",canon:"Doctor Strange",align:'hero', sex:'m', img:CHAR_IMG.char9},
   sable:{fr:"Black Panther",en:"Black Panther",canon:"Black Panther",align:'hero', sex:'m', img:CHAR_IMG.char2},
-  siddartha:{fr:"Siddharta",en:"Siddharta",canon:"Siddharta",align:'villain', sex:'m', img:CHAR_IMG.char11},
+  siddartha:{fr:"Siddharta",en:"Siddharta",canon:"Siddharta",align:'neutral', sex:'m', img:CHAR_IMG.char11},
   malachar:{fr:"Thanos",en:"Thanos",canon:"Thanos",align:'villain', sex:'m', img:CHAR_IMG.char12},
   mandate:{fr:"Kang",en:"Kang",canon:"Kang",align:'villain', sex:'m', img:CHAR_IMG.char19},
   obsidian:{fr:"Ultron",en:"Ultron",canon:"Ultron",align:'villain', sex:'m', img:CHAR_IMG.char17},
   kaerus:{fr:"Red Skull",en:"Red Skull",canon:"Red Skull",align:'villain', sex:'m', img:CHAR_IMG.char13},
   aurelia:{fr:"Hela",en:"Hela",canon:"Hela",align:'villain', sex:'f', img:CHAR_IMG.char14},
-  vipera:{fr:"Loki",en:"Loki",canon:"Loki",align:'villain', sex:'m', img:CHAR_IMG.char15},
-  sepulcre:{fr:"Galactus",en:"Galactus",canon:"Galactus",align:'villain', sex:'m', img:CHAR_IMG.char16},
+  vipera:{fr:"Loki",en:"Loki",canon:"Loki",align:'neutral', sex:'m', img:CHAR_IMG.char15},
+  sepulcre:{fr:"Galactus",en:"Galactus",canon:"Galactus",align:'neutral', sex:'m', img:CHAR_IMG.char16},
   nihil:{fr:"Annihilus",en:"Annihilus",canon:"Annihilus",align:'villain', sex:'m', img:CHAR_IMG.char18},
   fuchsia:{fr:"Green Goblin",en:"Green Goblin",canon:"Green Goblin",align:'villain', sex:'m', img:CHAR_IMG.char20},
-  boomnpc:{fr:"Doctor Doom",en:"Doctor Doom",canon:"Doctor Doom",align:'villain', sex:'m', img:CHAR_IMG.char42},
+  boomnpc:{fr:"Doctor Doom",en:"Doctor Doom",canon:"Doctor Doom",align:'neutral', sex:'m', img:CHAR_IMG.char42},
   lorelei:{fr:"Vision",en:"Vision",canon:"Vision",align:'hero', sex:'m', img:CHAR_IMG.char8},
   kidspider:{fr:"Spider-Man",en:"Spider-Man",canon:"Spider-Man",align:'hero', sex:'m', img:CHAR_IMG.char41},
 
@@ -1177,7 +1177,7 @@ const FACTIONS = {
   ],
 };
 /* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
-const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','The G','Siddharta'];
+const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','The G','Siddharta','Doctor Doom'];
 
 /* ============================ ATTRIBUTS (caracteristiques, sans camp) ============================
    Un attribut n'a pas de camp, peut melanger heros et villains, et se cumule. */
@@ -2723,8 +2723,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
   'siddartha','malachar','kaerus','aurelia','vipera','sepulcre','obsidian','nihil','mandate','fuchsia','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
-const NEW_HERO_IMGS = ['nh1','nh2','nh3','nh4','nh5','nh6','nh7','nh8','nh9','nv1','nv2','nv3','nv4','nv5','nv6','nv7','nv8','nv9'].map(k=>CHAR_IMG[k]);
-const ROOKIE_IMGS = new Set(NEW_HERO_IMGS.filter(Boolean));
+const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
 const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
@@ -2825,10 +2824,12 @@ const CHAR_UNLOCK_TIER = {
   kaerus:1, fuchsia:1, kidspider:1,
   obsidian:2, marsh:2, sable:2,
   vipera:3, ferrum:3,
-  nihil:4, aegis:4, volt:4, titanwolf:4,
-  aurelia:5, sepulcre:5, nyx:5, theg:5, mandate:5, siddartha:5, solen:5, warlock:5, malachar:5, baronvex:5, lorelei:5,
+  nihil:4, aegis:4, volt:4,
+  aurelia:5, sepulcre:5, nyx:5, theg:5, mandate:5, siddartha:5, solen:5, malachar:5, lorelei:5,
   /* Les deux plus puissants du jeu : on ne les rencontre qu'a partir du niveau 6, et jamais avant. */
   vaelor:6, boomnpc:6
+  /* Les 20 recrues (titanwolf, warlock, baronvex compris) n'ont volontairement aucun palier : une
+     recrue que TU as formee doit toujours pouvoir apparaitre a tes cotes, quel que soit ton niveau. */
 };
 /* Une fois debloque, un personnage le reste (on peut toujours le recroiser/combattre apres). */
 function charUnlocked(key){
@@ -2846,9 +2847,12 @@ function charUnlocked(key){
    Thanos (-10) l'absolu opposé, Loki (-3) est un fauteur de troubles plus que veritablement malfaisant. */
 const CHAR_MORALITY = {
   /* Heros */
-  theg:8, volt:6, vaelor:8, aegis:10, ferrum:5, marsh:6, nyx:3, solen:7, lorelei:9, sable:9, kidspider:9,
-  /* Villains / independants */
-  siddartha:-6, malachar:-10, kaerus:-9, aurelia:-7, vipera:-3, sepulcre:-4, obsidian:-8, nihil:-8, mandate:-5, fuchsia:-6, boomnpc:-5,
+  volt:6, vaelor:8, aegis:10, ferrum:5, marsh:6, nyx:3, solen:7, lorelei:9, sable:9, kidspider:9,
+  /* Villains */
+  malachar:-10, kaerus:-9, aurelia:-7, obsidian:-8, nihil:-8, mandate:-5, fuchsia:-6,
+  /* Independants (Doctor Doom, The G, Siddharta, Loki, Galactus) : ni heros ni villain,
+     leur moralite reste donc resserree pres du neutre, jamais aussi tranchee que les camps engages. */
+  theg:2, siddartha:-1, vipera:0, sepulcre:-1, boomnpc:-2,
 };
 function moralityOf(key){
   if(CHAR_MORALITY[key]!==undefined) return CHAR_MORALITY[key];
@@ -4220,8 +4224,10 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  /* Mentorat plus present : 2 recrues mini, jusqu'a 5 sur une tres longue carriere. */
-  S.mentorCap = Math.min(5, Math.max(2, Math.floor(S.years/6)));
+  /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, 2 a 3 recrues par tranche
+     de 10 ans de carriere (pas de plafond fixe universel). */
+  S.mentorEligible = Math.random() < 0.70;
+  S.mentorCap = S.mentorEligible ? Math.max(1, Math.round((S.years/10) * (2 + Math.random()))) : 0;
   S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -4305,8 +4311,9 @@ function recruitCandidates(){
   });
 }
 function shouldTriggerMentor(){
-  if(S.currentYear < 4) return false;
-  if(S.mentorCount >= (S.mentorCap||1)) return false;
+  if(!S.mentorEligible) return false;
+  if(S.currentYear < 5) return false;
+  if(S.mentorCount >= (S.mentorCap!=null ? S.mentorCap : 1)) return false;
   if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 2) return false;
   if(!recruitCandidates().length) return false;
   return Math.random() < 0.46;
@@ -4326,7 +4333,8 @@ function startMentorScene(){
   const m = pick(pool); S.usedMentorIds.push(m.id);
   S.mentorCount += 1; S.lastMentorYear = S.currentYear;
   S.currentMission = Object.assign({}, m, { recruitKey:key, recruitName:(S.lang==='fr'?c.fr:c.en), arc:false });
-  S.screen='mentor'; render(); maybeTriggerConversation(); return true;
+  showRecruitAnnouncement(key, ()=>{ S.screen='mentor'; render(); maybeTriggerConversation(); });
+  return true;
 }
 function startRecruitArc(){
   const live = livingMentees(); if(!live.length) return false;
@@ -4581,7 +4589,9 @@ function checkFactionCreationOffer(){
   if(candidates.length < 2) return false;
   if(Math.random() > 0.22) return false; /* reste rare, comme les invitations de faction */
   S.factionCreationOffered = true;
-  S.factionFounders = candidates.slice(0,2);
+  /* La faction proposee reunit tous les allies avec qui tu as un lien assez fort, jusqu'a 7 au total :
+     plus tu as construit de relations solides, plus la faction que le jeu te propose peut etre grande. */
+  S.factionFounders = candidates.slice(0, Math.min(7, candidates.length));
   S.factionFounderSide = mySide;
   S.pendingReturnScreen = S.screen; S.screen = 'factionCreate';
   return true;
@@ -5273,6 +5283,10 @@ function pickOpponentKey(){
   const crossed = crossedMentees();
   if(crossed.length && Math.random()<0.22) return pick(crossed).charKey;
   const pool = otherCharKeys().filter(charUnlocked);
+  /* Les independants (violet, ni heros ni villain) peuvent se dresser contre toi a tout moment,
+     quel que soit ton camp du moment. */
+  const neutral = pool.filter(k=>CHARACTERS[k].align==='neutral');
+  if(neutral.length && Math.random() < 0.14) return pick(neutral);
   const cross = pool.filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
   const same = pool.filter(k=>CHARACTERS[k].align===mySide);
   if(Math.random() < 0.9){ if(cross.length) return pick(cross); }
@@ -5426,6 +5440,17 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
 /* Plafond d'escouade base sur le niveau (etoiles) du joueur, pas sur l'ampleur geographique de la mission :
    1 etoile = 2 combattants max au total, 2* = 3, 3* = 4, 4* = 5, 5* = 6, 6 et 7* = 7 max. */
 function squadCapForStars(){ return clamp(computeStars()+1, 1, 7); }
+/* Les personnages que tu ne joues pas peuvent aussi avoir leur propre recrue : une par tranche de
+   10 ans, attribuee de facon stable (mais pas systematique - tout le monde n'en a pas forcement une
+   en meme temps) pour toute la decennie en cours. */
+function npcRecruitFor(charKey){
+  const c = CHARACTERS[charKey]; if(!c || c.align==='neutral') return null;
+  const decade = Math.floor((S.currentYear-1)/10);
+  let seed = 0; for(const ch of (charKey+'_'+decade)) seed += ch.charCodeAt(0);
+  const pool = ROOKIE_KEYS.filter(k=>CHARACTERS[k].align===c.align && k!==S.playerCharKey && !menteeKeys().includes(k));
+  if(!pool.length || seed % 5 !== 0) return null;
+  return pool[seed % pool.length];
+}
 function buildBattleSquads(foeKey, mission){
   const empty = { allies:[], foes:[] };
   const cap = squadCapForStars();
@@ -5436,7 +5461,12 @@ function buildBattleSquads(foeKey, mission){
   const keys = otherCharKeys().filter(k=>k!==foeKey && charUnlocked(k));
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
-  const sidePool = keys.filter(k=>CHARACTERS[k].align===mySide);
+  const oppSide = mySide==='villain' ? 'hero' : 'villain';
+  /* Independants (violet, ni heros ni villain) : chaque rencontre, ils tirent leur camp du jour au
+     hasard, parfois avec toi, parfois contre - meme quand ils ne sont pas joues par toi. */
+  const neutralSideThisFight = {};
+  keys.forEach(k=>{ if(CHARACTERS[k].align==='neutral') neutralSideThisFight[k] = Math.random()<0.5 ? mySide : oppSide; });
+  const sidePool = keys.filter(k=> CHARACTERS[k].align==='neutral' ? neutralSideThisFight[k]===mySide : CHARACTERS[k].align===mySide);
   /* Faction : une fois S.team rejoint, tes allies au front sont a 80% des membres de ta propre
      faction ; les 20% restants viennent d'autres factions du meme camp (hero ou villain), qui
      te preteront main-forte si vous n'etes pas assez nombreux.
@@ -5449,7 +5479,13 @@ function buildBattleSquads(foeKey, mission){
   let allyPool = (facMates.length || attrMates.length) ? weightedTripleOrder(facMates, attrMates, attrOthers, 0.8, 0.6) : shuffle(sidePool);
   const mine = menteeKeys().filter(k=>allyPool.includes(k));
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
-  const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
+  let foePool = shuffle(keys.filter(k=> CHARACTERS[k].align==='neutral' ? neutralSideThisFight[k]===oppSide : CHARACTERS[k].align===oppSide));
+  /* Si l'adversaire principal a sa propre recrue cette decennie, elle a de bonnes chances d'etre a
+     ses cotes - sans jamais depasser le plafond d'escouade lie au niveau. */
+  const foeRecruit = npcRecruitFor(foeKey);
+  if(foeRecruit && foePool.includes(foeRecruit)){
+    foePool = [foeRecruit].concat(foePool.filter(k=>k!==foeRecruit));
+  }
   if(maxExtra<=0) return empty;
   // Un seul tirage, partage par les deux camps : les deux equipes ont toujours le meme effectif.
   const r = Math.pow(Math.random(), 0.55);
@@ -5560,7 +5596,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0 };
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null };
 
   /* Une photo par niveau de combat (quartier, ville, pays...), animee par-dessus. Pas encore d'image = decor par defaut. */
   const SCOPE_BG_IMAGES = {
@@ -5741,10 +5777,11 @@ function startBattle(mission, done){
       ? (entry.transformedImg ? `<img src="${entry.transformedImg}" alt="${entry.name}">` : avatarVisual())
       : (entry.img ? `<img src="${entry.img}" alt="${entry.name}">` : `<span class="cp-glyph">${entry.name.charAt(0).toUpperCase()}</span>`);
     const selectable = side==='foe' && !entry.ko;
+    const isMentee = side==='ally' && !entry.isPlayer && entry.key && menteeKeys().includes(entry.key);
     return `<div class="rcard${entry.ko?' ko':''}${side==='foe' && i===st.targetIdx && !entry.ko?' selected':''}${selectable?' pickable':''}" data-side="${side}" data-idx="${i}" style="--cp-color:${entry.col};">
       <div class="rcard-frame" id="rframe-${side}-${i}">${inner}</div>
       <div class="rcard-meta">
-        <div class="rcard-name">${entry.name}</div>
+        <div class="rcard-name">${entry.name}${isMentee?`<span style="display:inline-block; margin-left:5px; font-size:8px; font-weight:900; letter-spacing:.5px; color:#7ef0c0; border:1px solid #7ef0c0; border-radius:5px; padding:0 4px; vertical-align:middle;">${S.lang==='fr'?'TA RECRUE':'YOUR RECRUIT'}</span>`:''}</div>
         <div class="rcard-hpbar"><div class="rcard-hpfill" id="rhp-${side}-${i}" style="width:${pct}%; background:${hpColor(pct)};"></div></div>
         <div class="rcard-hpnum" id="rhpnum-${side}-${i}">${Math.max(0,Math.round(entry.hp))}/${entry.maxHp}</div>
       </div>
@@ -5849,9 +5886,23 @@ function startBattle(mission, done){
         <b>${S.lang==='fr'?'Disparaitre':'Vanish'}</b>
         <span>${S.lang==='fr'?'Esquive garantie la prochaine attaque, petit soin':'Guaranteed dodge on the next attack, small heal'}</span></button>`;
     }
+    /* Ta recrue est presente au front : tu peux sacrifier ton tour pour encaisser a sa place. */
+    const mineKeys = menteeKeys();
+    const protectIdx = allyRoster.findIndex((e,i)=>i>0 && !e.ko && mineKeys.includes(e.key));
+    if(protectIdx>0){
+      const menteeName = allyRoster[protectIdx].name;
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlProtect" style="grid-column:1 / -1; border-color:#7ef0c0; background:rgba(126,240,192,.08);">
+        <b>${S.lang==='fr'?`Proteger ${menteeName}`:`Protect ${menteeName}`}</b>
+        <span>${S.lang==='fr'?'Le prochain coup adverse te vise a sa place':'The next enemy hit targets you instead of them'}</span></button>`;
+    }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
     const vBtn = movesEl.querySelector('#btlVanish'); if(vBtn) vBtn.onclick = vanishMove;
+    const pBtn = movesEl.querySelector('#btlProtect'); if(pBtn) pBtn.onclick = ()=>{
+      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.protectIdx = protectIdx;
+      setLog(S.lang==='fr'?`Tu te places devant ${allyRoster[protectIdx].name}, pret(e) a encaisser.`:`You step in front of ${allyRoster[protectIdx].name}, ready to take the hit.`);
+      setTimeout(runTurn, wait(700));
+    };
   }
   function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on); }
   function transformIntoFoe(){
@@ -5921,6 +5972,7 @@ function startBattle(mission, done){
     return Math.random()<0.6 ? weighted[0] : pick(fm);
   }
   function pickAllyTarget(){
+    if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
     const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
     if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
     return 0; // le joueur reste la cible privilegiee
@@ -5988,6 +6040,7 @@ function startBattle(mission, done){
     return Math.random()<0.6 ? weighted[0] : pick(fm);
   }
   function pickAllyTarget(){
+    if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
     const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
     if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
     return 0; // le joueur reste la cible privilegiee
@@ -6103,6 +6156,39 @@ function screenMission(){
   m.choices.forEach((c)=>{ const btn = document.createElement('button'); btn.className='choice'; btn.style.setProperty('--cp-color', choiceColorFor(c)); btn.textContent = S.lang==='fr'?c.fr:c.en; btn.onclick=()=> applyChoice(c); cbox.appendChild(btn); });
   jvAttachAdvice(cbox, m.choices);
   return d;
+}
+/* Petites raisons variees, pour eviter la repetition sur plusieurs recrues dans la meme carriere. */
+const RECRUIT_REASON_LINES_FR = [
+  h=>`Il/elle a suivi tes exploits de loin, et a fini par se dire que ${h} etait la seule personne assez solide pour lui apprendre le reste.`,
+  h=>`Personne d'autre n'a voulu prendre le risque. ${h} si.`,
+  h=>`Il/elle cherchait un modele, pas un sauveur. Le nom de ${h} est revenu partout ou il/elle a demande.`,
+  h=>`Un premier echec l'a convaincu(e) : sans mentor comme ${h}, la prochaine fois pourrait etre la derniere.`,
+  h=>`Il/elle n'a pas choisi au hasard : ${h} est exactement le genre de reputation qu'il/elle veut un jour porter.`,
+];
+const RECRUIT_REASON_LINES_EN = [
+  h=>`They followed your exploits from a distance, and decided ${h} was the only one solid enough to teach them the rest.`,
+  h=>`Nobody else wanted to take the risk. ${h} did.`,
+  h=>`They wanted a role model, not a savior. The name ${h} kept coming up wherever they asked.`,
+  h=>`A first failure convinced them: without a mentor like ${h}, next time could be the last.`,
+  h=>`It wasn't random - ${h} is exactly the kind of reputation they hope to carry one day.`,
+];
+function showRecruitAnnouncement(key, cb){
+  const isFr = S.lang==='fr';
+  const c = CHARACTERS[key]; if(!c){ cb(); return; }
+  const preset = PRESETS.find(p=>p.charKey===key);
+  const name = isFr?c.fr:c.en;
+  const col = charColor(c.align);
+  const reasonFn = pick(isFr?RECRUIT_REASON_LINES_FR:RECRUIT_REASON_LINES_EN);
+  const reason = reasonFn(S.heroName||'').replace(/il\/elle/g, c.sex==='f'?(isFr?'elle':'she'):(isFr?'il':'he'));
+  const backstory = preset ? (isFr?preset.descFr:preset.descEn) : '';
+  const html = `<div class="ru-title" style="color:${col}; font-size:11px; letter-spacing:2px;">${isFr?'NOUVELLE RECRUE':'NEW RECRUIT'}</div>
+    <div style="display:flex; align-items:center; gap:14px; margin:14px 0 4px; text-align:left;">
+      <div style="width:80px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
+      <div><div style="font-size:19px; font-weight:900;">${name}</div>
+        ${backstory?`<div style="font-size:12px; color:var(--dim); margin-top:4px;">${backstory}</div>`:''}</div>
+    </div>
+    <p style="margin-top:10px; line-height:1.6; text-align:left;">${reason}</p>`;
+  showBattleAftermath(html, col, cb);
 }
 function screenMentor(){
   const d = document.createElement('div'); const m = S.currentMission; const name = m.recruitName;
@@ -7863,7 +7949,7 @@ function extendCareer(extra){
   for(let i=0;i<extra;i++) S.missionsPlan.push(3);
   S.years = S.missionsPlan.length;
   S.mode = S.years <= 12 ? 'short' : 'long';
-  S.mentorCap = (S.mentorCap||1) + 1;
+  S.mentorCap = (S.mentorCap||0) + (S.mentorEligible ? 1 : 0);
   if(S.battlePlan) S.battlePlan.target += battleTargetForYears(extra);
   S.currentYear += 1; S.currentMissionInYear = 0;
   showImpact([{ label:(S.lang==='fr'?'Annees de service':'Years of service'), delta:extra }, { label:(S.lang==='fr'?'Age':'Age'), delta:extra }],
@@ -7948,7 +8034,15 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${statAvg}</div><div class="klabel">${isFr?'Moyenne des stats':'Average stats'}</div></div>
     <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?"Histoires d'amour":'Romances'}</div></div></div>
     <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
-  const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>` : '';
+  const outcomeLabelFr = { hero:'devenu(e) heros', villain:'devenu(e) villain', died:'mort(e) au combat', neutral:'reste independant(e)' };
+  const outcomeLabelEn = { hero:'became a hero', villain:'became a villain', died:'died in action', neutral:'stayed independent' };
+  const menteeList = S.mentees.length ? `<p class="lead" style="margin-top:6px; font-size:12px; color:var(--dim);">${S.mentees.map(m=>{
+      const c = CHARACTERS[m.charKey]; const cname = c ? (isFr?c.fr:c.en) : '';
+      const lvl = Math.min(100, (m.xp||0)*7);
+      const outc = isFr ? (outcomeLabelFr[m.outcome]||m.outcome) : (outcomeLabelEn[m.outcome]||m.outcome);
+      return `${m.name}${cname?` (${cname})`:''} — ${outc}, ${isFr?'niveau':'level'} ${lvl}%`;
+    }).join(' &middot; ')}</p>` : '';
+  const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
   const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const eclatsOwned = S.eclats || [];
   const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Eclats du Vide obtenus':'Void Shards obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
