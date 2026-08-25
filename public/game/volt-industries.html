@@ -3532,7 +3532,10 @@ function applyPreset(p){
   S.initialAlignMagnitude = Math.abs(p.align||0);
   S.reputationFloor = S.initialAlignMagnitude;
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
-  S.heroName = S.lang==='fr'?p.heroFr:p.heroEn;
+  /* On incarne le personnage tel qu'il est : pas de pseudo/nom civil invente, le nom du personnage suffit. */
+  const canonC = p.charKey && CHARACTERS[p.charKey];
+  const canonName = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.heroFr:p.heroEn);
+  S.heroName = canonName; S.civilName = canonName;
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
@@ -3696,7 +3699,7 @@ function screenProfileChoice(){
       return `<span class="cc-dot ${i===idx?'on':''} ${bothUnlocked?'':'lk'}"></span>`;
     }).join('');
     cardEl.querySelectorAll('[data-pick]').forEach(btn=>{
-      btn.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===btn.dataset.pick); if(p){ applyPreset(p); S.screen='name'; render(); } };
+      btn.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===btn.dataset.pick); if(p){ applyPreset(p); S.screen='startside'; render(); } };
     });
   }
   d.querySelector('#ccPrev').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx - 1 + PAIR_HEROES.length) % PAIR_HEROES.length; renderCard(); };
@@ -4146,7 +4149,7 @@ function screenStartSide(){
     d.querySelectorAll('#sideOpt .opt').forEach(el=>{ el.onclick=()=>{ S.startSide = el.dataset.s; refresh(); }; });
   }
   refresh();
-  d.querySelector('#back').onclick=()=>{ S.screen = S.usingPreset ? 'name' : 'powers'; render(); };
+  d.querySelector('#back').onclick=()=>{ S.screen = S.usingPreset ? 'profileChoice' : 'powers'; render(); };
   d.querySelector('#next').onclick=()=>{
     S.align = S.startSide==='hero' ? 25 : (S.startSide==='villain' ? -25 : 0);
     S.initialAlignMagnitude = Math.abs(S.align);
