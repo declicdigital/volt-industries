@@ -3581,6 +3581,9 @@ function applyPreset(p){
   S.initialAlignMagnitude = Math.abs(p.align||0);
   S.reputationFloor = S.initialAlignMagnitude;
   S.startSide = (p.align||0) > 5 ? 'hero' : ((p.align||0) < -5 ? 'villain' : 'neutral');
+  /* Les personnages independants (The G, Doctor Doom, Siddharta, Loki, Galactus) se voient proposer
+     une carriere independante par defaut - le joueur reste libre de choisir un autre camp ensuite. */
+  if(p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].align==='neutral') S.startSide = 'neutral';
   /* On incarne le personnage tel qu'il est : pas de pseudo/nom civil invente, le nom du personnage suffit. */
   const canonC = p.charKey && CHARACTERS[p.charKey];
   const canonName = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.heroFr:p.heroEn);
@@ -3655,8 +3658,8 @@ const UNLOCK_TIERS = [
     condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career',
     check:(m)=>(m.bestStars||0)>=5 },
   { ids:['vaelor','boomnpc'],
-    condFr:'Atteindre le niveau 6 dans une carriere', condEn:'Reach level 6 in a career',
-    check:(m)=>(m.bestStars||0)>=6 },
+    condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star',
+    check:(m)=>!!m.got8thStar },
 ];
 function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
@@ -6380,8 +6383,8 @@ function applyMentorChoice(choice, name){
     convertMsgFr = success ? `${name} accepte de revenir de ton cote.` : `${name} refuse. "C'est trop tard pour moi."`;
     convertMsgEn = success ? `${name} agrees to come back to your side.` : `${name} refuses. "It's too late for me."`;
   }
-  /* Un mentor independant ne fait jamais officiellement basculer sa recrue d'un cote ou de l'autre. */
-  if(playerIsIndependent() && (finalRecruit==='hero' || finalRecruit==='villain')) finalRecruit = 'neutral';
+  /* Les recrues peuvent basculer de bord au fil des seances, quel que soit ton propre camp
+     (heros, villain ou independant) : chaque choix de formation peut faire pencher la balance. */
   S.align = clampToReputation(clamp(S.align + (eff.align||0), -100, 100));
   S.stats.courage = clamp(S.stats.courage + (eff.courage||0), 0, 100);
   S.stats.intelligence = clamp(S.stats.intelligence + (eff.intelligence||0), 0, 100);
@@ -8179,7 +8182,7 @@ function screenEnd(){
       const outc = isFr ? (outcomeLabelFr[m.outcome]||m.outcome) : (outcomeLabelEn[m.outcome]||m.outcome);
       return `${m.name}${cname?` (${cname})`:''} — ${outc}, ${isFr?'niveau':'level'} ${lvl}%`;
     }).join(' &middot; ')}</p>` : '';
-  const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:10px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
+  const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase; font-size:12px; color:var(--accent);">${isFr?'Tes recrues':'Your recruits'}</p><p class="lead" style="margin-top:4px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
   const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const eclatsOwned = S.eclats || [];
   const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Eclats du Vide obtenus':'Void Shards obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
@@ -8477,8 +8480,9 @@ function initParticles(){
 const JV = { on:true, typing:null, lastKey:null, lastAt:0, idleTimer:null, muted:false };
 function jvL(fr,en){ return S.lang==='fr' ? fr : en; }
 function jvIsUltron(){ return zoneOf(S.align) === 'villain'; }
-function jvName(){ return jvIsUltron() ? 'ULTRON' : 'JARVIS'; }
-function jvColor(){ return jvIsUltron() ? '#ff2d55' : '#00c2ff'; }
+function jvIsFriday(){ return zoneOf(S.align) === 'neutral'; }
+function jvName(){ return jvIsUltron() ? 'ULTRON' : (jvIsFriday() ? 'FRIDAY' : 'JARVIS'); }
+function jvColor(){ return jvIsUltron() ? '#ff2d55' : (jvIsFriday() ? '#b98bff' : '#00c2ff'); }
 function jvSkin(el){
   if(!el) return;
   const ult = jvIsUltron();
