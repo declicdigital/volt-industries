@@ -2296,13 +2296,13 @@ const CONVERSATIONS = [
 /* Lieux : vocabulaire MCU officiel (Terre-616, Neuf Royaumes, dimensions). */
 const LOC_BY_SCOPE = [
   null,
-  ['Hell\u2019s Kitchen','Queens','Brooklyn','Manhattan','Birnin Zana','Westview','Novi Grad','Camp Lehigh','Kamar-Taj','Ta Lo'],
-  ['New York City','Madripoor','Westview','Novi Grad','Birnin Zana','Manhattan','Hell\u2019s Kitchen','Talokan'],
-  ['Wakanda','Sokovia','Latveria','Madripoor','Talokan','Ta Lo','New Asgard'],
-  ['Terre-616','Midgard','New Asgard','Counter-Earth','Terre-838'],
-  ['Xandar','Sakaar','Titan','Morag','Vormir','Hala','Contraxia','Lamentis-1','Knowhere','Berhert'],
-  ['Nidavellir','Jotunheim','Svartalfheim','Vanaheim','Muspelheim','Alfheim','Asgard','Nine Realms'],
-  ['Quantum Realm','Mirror Dimension','Dark Dimension','The Void','Citadel at the End of Time','Soul World','Astral Plane','Yggdrasil','Noor Dimension','World Forge'],
+  ['Hell\u2019s Kitchen','Harlem','Chinatown','Greenwich Village','SoHo','Little Italy','Upper East Side','Lower East Side','Financial District','Midtown','Tribeca','Chelsea','Lowtown','Hightown','Mutant Town'],
+  ['New York','Manhattan','Brooklyn','Queens','Westview','Novi Grad','Madripoor','New Asgard','Talokan','Birnin Zana','Knowhere','Kamar-Taj','Ta Lo','Attilan','Genosha','Krakoa'],
+  ['Wakanda','Sokovia','Latveria','Symkaria','Transia','Madripoor','Genosha','Krakoa','Atlantis','Talokan'],
+  ['Afrique','Europe','Asie','Am\u00e9rique du Nord','Am\u00e9rique du Sud','Antarctique','Terre Sauvage'],
+  ['Terre','Asgard','Midgard','Jotunheim','Vanaheim','Svartalfheim','Alfheim','Nidavellir','Muspelheim'],
+  ['Xandar','Morag','Vormir','Titan','Sakaar','Hala','Knowhere','Ego','Contraxia','Berhert','Lamentis-1','Counter-Earth','Talokan','Ta Lo','Zenn-La','Aladna','Tarnax','Klyntar','Battleworld','Weirdworld','Mojoworld','Savage Land'],
+  ['Multivers','Terre-616','Terre-838','Terre-1610','Terre-65','Terre-42','Terre-928','Terre-10005','Terre-90214','Terre-2149','Terre-295'],
 ];
 function randLocationName(level){
   const lv = clamp(Number(level)||(1+Math.floor(Math.random()*7)),1,7);
@@ -2314,9 +2314,9 @@ const SCOPE_TIERS = [
   null,
   { fr:'Quartier', en:'Neighborhood' },
   { fr:'Ville', en:'City' },
-  { fr:'Nation', en:'Nation' },
-  { fr:'Terre-616', en:'Earth-616' },
-  { fr:'Midgard', en:'Midgard' },
+  { fr:'Pays', en:'Country' },
+  { fr:'Continent', en:'Continent' },
+  { fr:'Monde', en:'World' },
   { fr:'Univers', en:'Universe' },
   { fr:'Multivers', en:'Multiverse' },
 ];
