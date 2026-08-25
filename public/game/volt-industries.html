@@ -204,6 +204,32 @@
   .pstats{ margin-top:8px; font-size:10.5px; font-weight:900; letter-spacing:1px; color:var(--pc-color); }
   .ptrait{ margin-top:6px; font-size:11.5px; line-height:1.45; color:var(--muted); }
   .ptrait.good{ color:#7ef0c0; } .ptrait.bad{ color:#ff9aa8; }
+  /* ---- Carrousel de selection de personnage : une carte a la fois, fleches gauche/droite ---- */
+  .cc-wrap{ display:flex; align-items:center; gap:10px; margin-top:16px; max-width:340px; margin-left:auto; margin-right:auto; }
+  .cc-card{ flex:1; min-width:0; }
+  .cc-arrow{ flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:1.5px solid var(--line); background:rgba(255,255,255,.03);
+    color:var(--ink); font-size:15px; cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; }
+  .cc-arrow:hover{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 16px -6px var(--accent); }
+  .cc-dots{ display:flex; justify-content:center; gap:6px; margin-top:14px; flex-wrap:wrap; max-width:340px; margin-left:auto; margin-right:auto; }
+  .cc-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .cc-dot.on{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .cc-dot.lk{ background:rgba(255,255,255,.08); }
+  .preset-card.locked{ cursor:default; }
+  .preset-card.locked:hover{ transform:none; box-shadow:none; }
+  .preset-card.locked .preset-photo img{ filter:grayscale(1) brightness(.35); }
+  .preset-card.locked .pname, .preset-card.locked .pdesc, .preset-card.locked .pstats, .preset-card.locked .ptrait, .preset-card.locked .pmoves{ opacity:.35; }
+  .pc-lock{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    background:rgba(4,6,12,.55); text-align:center; padding:0 14px; }
+  .pc-lock-icon{ font-size:30px; filter:drop-shadow(0 0 10px rgba(0,0,0,.8)); }
+  .pc-lock-cond{ font-size:10.5px; font-weight:800; letter-spacing:.4px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.9); line-height:1.4; }
+  .pmoves{ display:flex; gap:10px; margin-top:12px; padding:0 12px; text-align:left; }
+  .pmove-col{ flex:1; min-width:0; }
+  .pmove-h{ font-size:9px; font-weight:900; letter-spacing:1.4px; color:var(--dim); margin-bottom:4px; }
+  .pmove-line{ font-size:11px; color:var(--muted); line-height:1.5; }
+  @media (max-width:480px){
+    .cc-wrap{ max-width:280px; gap:6px; }
+    .cc-arrow{ width:34px; height:34px; font-size:13px; }
+  }
   .pgal{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; margin-top:10px; }
   .pgal{ grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); }
   .pgal .pitem{ position:relative; border:2px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; height:126px; background:rgba(255,255,255,.03); transition:.15s; }
@@ -1065,13 +1091,13 @@ const CHARACTERS = {
   aegis:{fr:"Captain America",en:"Captain America",canon:"Captain America",align:'hero', sex:'m', img:CHAR_IMG.char3},
   ferrum:{fr:"Hulk",en:"Hulk",canon:"Hulk",align:'hero', sex:'m', img:CHAR_IMG.char4},
   solen:{fr:"Doctor Strange",en:"Doctor Strange",canon:"Doctor Strange",align:'hero', sex:'m', img:CHAR_IMG.char9},
-  sable:{fr:"Daredevil",en:"Daredevil",canon:"Daredevil",align:'hero', sex:'m', img:CHAR_IMG.char2},
+  sable:{fr:"Black Panther",en:"Black Panther",canon:"Black Panther",align:'hero', sex:'m', img:CHAR_IMG.char2},
   siddartha:{fr:"Siddharta",en:"Siddharta",canon:"Siddharta",align:'villain', sex:'m', img:CHAR_IMG.char11},
   malachar:{fr:"Thanos",en:"Thanos",canon:"Thanos",align:'villain', sex:'m', img:CHAR_IMG.char12},
-  mandate:{fr:"Corvus Glaive",en:"Corvus Glaive",canon:"Corvus Glaive",align:'villain', sex:'m', img:CHAR_IMG.char19},
+  mandate:{fr:"Kang",en:"Kang",canon:"Kang",align:'villain', sex:'m', img:CHAR_IMG.char19},
   obsidian:{fr:"Ultron",en:"Ultron",canon:"Ultron",align:'villain', sex:'m', img:CHAR_IMG.char17},
   kaerus:{fr:"Red Skull",en:"Red Skull",canon:"Red Skull",align:'villain', sex:'m', img:CHAR_IMG.char13},
-  aurelia:{fr:"Mystique",en:"Mystique",canon:"Mystique",align:'villain', sex:'f', img:CHAR_IMG.char14},
+  aurelia:{fr:"Hela",en:"Hela",canon:"Hela",align:'villain', sex:'f', img:CHAR_IMG.char14},
   vipera:{fr:"Loki",en:"Loki",canon:"Loki",align:'villain', sex:'m', img:CHAR_IMG.char15},
   sepulcre:{fr:"Galactus",en:"Galactus",canon:"Galactus",align:'villain', sex:'m', img:CHAR_IMG.char16},
   nihil:{fr:"Annihilus",en:"Annihilus",canon:"Annihilus",align:'villain', sex:'m', img:CHAR_IMG.char18},
@@ -1080,6 +1106,7 @@ const CHARACTERS = {
   lorelei:{fr:"Vision",en:"Vision",canon:"Vision",align:'hero', sex:'m', img:CHAR_IMG.char8},
   kidspider:{fr:"Spider-Man",en:"Spider-Man",canon:"Spider-Man",align:'hero', sex:'m', img:CHAR_IMG.char41},
 
+  /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Arachno Kid",en:"Arachno Kid",align:'hero', sex:'m', img:CHAR_IMG.char21},
   titanwolf:{fr:"Iron Boy",en:"Iron Boy",align:'hero', sex:'m', img:CHAR_IMG.char22},
   solaris:{fr:"Thunor",en:"Thunor",align:'hero', sex:'m', img:CHAR_IMG.char23},
@@ -1100,20 +1127,6 @@ const CHARACTERS = {
   umbra:{fr:"Venoma",en:"Venoma",align:'villain', sex:'m', img:CHAR_IMG.char38},
   precheur:{fr:"Crane Cendre",en:"Ash Skull",align:'villain', sex:'m', img:CHAR_IMG.char39},
   zeroday:{fr:"Helka",en:"Helka",align:'villain', sex:'f', img:CHAR_IMG.char40},
-
-  /* --- Nouveaux heros jouables & mentorables --- */
-  faucon:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.nh2},
-  rocktan:{fr:"Rocktan",en:"Rocktan",align:'hero', sex:'m', img:CHAR_IMG.nh4},
-  arcania:{fr:"Arcania",en:"Arcania",align:'hero', sex:'f', img:CHAR_IMG.nh6},
-  veuvebleue:{fr:"Veuve Bleue",en:"Blue Widow",align:'hero', sex:'f', img:CHAR_IMG.nh7},
-  vizor:{fr:"Vizor",en:"Vizor",align:'hero', sex:'m', img:CHAR_IMG.nh9},
-
-  /* --- Nouveaux villains jouables & mentorables --- */
-  malvorax:{fr:"Malvorax",en:"Malvorax",align:'villain', sex:'m', img:CHAR_IMG.nv1},
-  aurelys:{fr:"Aurelys",en:"Aurelys",align:'villain', sex:'f', img:CHAR_IMG.nv3},
-  medusia:{fr:"Medusia",en:"Medusia",align:'villain', sex:'f', img:CHAR_IMG.nv4},
-  vantar:{fr:"Vantar",en:"Vantar",align:'villain', sex:'m', img:CHAR_IMG.nv6},
-  fourose:{fr:"Le Fou Rose",en:"The Pink Fool",align:'villain', sex:'m', img:CHAR_IMG.nv9},
 
 };
 
@@ -2660,73 +2673,11 @@ const PRESETS = [
     perkFr:'Genie souverain : ses machines de siege brisent les defenses.', perkEn:'Sovereign genius: his siege machines break defenses.',
     flawFr:'Arrogance imperiale : refuse toute retraite, meme perdue.', flawEn:'Imperial arrogance: never retreats, even when lost.',
     descFr:'Monarque masque en armure verte, ingenieur de la conquete.', descEn:'Masked monarch in green armor, engineer of conquest.' },
-  /* ---------- NOUVEAUX HEROS JOUABLES ---------- */
-  { id:'faucon', charKey:'faucon', side:'hero', img:CHAR_IMG.nh2, nameFr:'Faucon Pourpre', nameEn:'Purple Falcon', heroFr:'Faucon Pourpre', heroEn:'Purple Falcon', morphology:'elance', path:'physique', powers:['vitesse','saut'],
-    look:{ helmet:'half', cape:false, glasses:'visor', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#3b1d6b', secondaryColor:'#c9a227', symbol:'' },
-    align:24, stats:{courage:18, intelligence:12, popularity:14},
-    perkFr:'Tir parfait : il neutralise une cible avant meme le contact.', perkEn:'Perfect shot: he neutralizes a target before contact.',
-    flawFr:'Sans pouvoir reel : chaque combat cosmique le met en danger de mort.', flawEn:'No real powers: every cosmic fight risks his life.',
-    descFr:'Tireur d\'elite en combinaison pourpre, calme absolu sous pression.', descEn:'Marksman in a purple suit, absolute calm under pressure.' },
-  { id:'rocktan', charKey:'rocktan', side:'hero', img:CHAR_IMG.nh4, nameFr:'Rocktan', nameEn:'Rocktan', heroFr:'Rocktan', heroEn:'Rocktan', morphology:'colosse', path:'physique', powers:['force','invulnerabilite'],
-    look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#b6551f', secondaryColor:'#3b2a1e', symbol:'' },
-    align:30, stats:{courage:24, intelligence:8, popularity:10},
-    perkFr:'Peau de roche : il encaisse ce qui tuerait n\'importe qui.', perkEn:'Rock skin: he absorbs what would kill anyone else.',
-    flawFr:'Lourd et lent : les cibles rapides le ridiculisent.', flawEn:'Heavy and slow: fast targets humiliate him.',
-    descFr:'Colosse a la peau minerale orange, coeur tendre et poings enormes.', descEn:'Colossus with orange mineral skin, soft heart and huge fists.' },
-  { id:'arcania', charKey:'arcania', side:'hero', img:CHAR_IMG.nh6, nameFr:'Arcania', nameEn:'Arcania', heroFr:'Arcania', heroEn:'Arcania', morphology:'elance', path:'mystique', powers:['illusions','telepathie'],
-    look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#5a1230', secondaryColor:'#e8b23a', symbol:'' },
-    align:20, stats:{courage:14, intelligence:23, popularity:14},
-    perkFr:'Chaos dore : ses sorts plient la realite en sa faveur.', perkEn:'Golden chaos: her spells bend reality in her favor.',
-    flawFr:'Instabilite emotionnelle : ses pouvoirs debordent sous stress.', flawEn:'Emotional instability: her powers overflow under stress.',
-    descFr:'Sorciere aux cercles d\'or, puissance immense mal contenue.', descEn:'Sorceress of golden circles, immense barely-contained power.' },
-  { id:'veuvebleue', charKey:'veuvebleue', side:'hero', img:CHAR_IMG.nh7, nameFr:'Veuve Bleue', nameEn:'Blue Widow', heroFr:'Veuve Bleue', heroEn:'Blue Widow', morphology:'elance', path:'physique', powers:['vitesse','furtivite'],
-    look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#182a52', secondaryColor:'#d4a02a', symbol:'' },
-    align:18, stats:{courage:18, intelligence:18, popularity:12},
-    perkFr:'Espionne d\'elite : infiltration sans alarme, renseignement parfait.', perkEn:'Elite spy: alarm-free infiltration, perfect intel.',
-    flawFr:'Passe trouble : ses anciens employeurs reviennent la hanter.', flawEn:'Murky past: her former handlers come back to haunt her.',
-    descFr:'Agente en combinaison marine et or, precision chirurgicale.', descEn:'Agent in a navy and gold suit, surgical precision.' },
-  { id:'vizor', charKey:'vizor', side:'hero', img:CHAR_IMG.nh9, nameFr:'Vizor', nameEn:'Vizor', heroFr:'Vizor', heroEn:'Vizor', morphology:'humain', path:'tech', powers:['ia','vitesse'],
-    look:{ helmet:'none', cape:false, glasses:'visor', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#2b3a2f', secondaryColor:'#3ad1ff', symbol:'' },
-    align:24, stats:{courage:16, intelligence:20, popularity:14},
-    perkFr:'Visiere tactique : il lit le champ de bataille en temps reel.', perkEn:'Tactical visor: he reads the battlefield in real time.',
-    flawFr:'Trop confiant dans ses donnees : l\'imprevisible le desarme.', flawEn:'Too confident in his data: the unpredictable disarms him.',
-    descFr:'Operateur en veste tactique, visiere lumineuse et brassard energetique.', descEn:'Operator in a tactical jacket with a glowing visor and energy armband.' },
-  /* ---------- NOUVEAUX VILLAINS JOUABLES ---------- */
-  { id:'malvorax', charKey:'malvorax', side:'villain', img:CHAR_IMG.nv1, nameFr:'Malvorax', nameEn:'Malvorax', heroFr:'Malvorax', heroEn:'Malvorax', morphology:'colosse', path:'mystique', powers:['force','invulnerabilite'],
-    look:{ helmet:'full', cape:true, glasses:'none', gloves:'claws', boots:'armored', aura:'dark', weapon:'none', suitColor:'#120c1e', secondaryColor:'#8b2ff5', symbol:'' },
-    align:-40, stats:{courage:25, intelligence:10, popularity:-12},
-    perkFr:'Chair d\'obsidienne : presque rien ne perce son armure vivante.', perkEn:'Obsidian flesh: almost nothing pierces his living armor.',
-    flawFr:'Monstre absolu : chaque camp envoie ses meilleurs elements le tuer.', flawEn:'Absolute monster: every faction sends its best to kill him.',
-    descFr:'Titan demoniaque d\'ecailles noires, foudre violette dans les poings.', descEn:'Demonic titan of black scales with violet lightning in his fists.' },
-  { id:'aurelys', charKey:'aurelys', side:'villain', img:CHAR_IMG.nv3, nameFr:'Aurelys', nameEn:'Aurelys', heroFr:'Aurelys', heroEn:'Aurelys', morphology:'elance', path:'mystique', powers:['elementaire','illusions'],
-    look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'armored', aura:'flame', weapon:'none', suitColor:'#141208', secondaryColor:'#f2c400', symbol:'' },
-    align:-26, stats:{courage:16, intelligence:22, popularity:14},
-    perkFr:'Sphere solaire : ses sorts d\'or brulent les defenses les plus solides.', perkEn:'Solar sphere: her golden spells burn the toughest defenses.',
-    flawFr:'Vanite : elle joue avec ses proies au lieu de finir le travail.', flawEn:'Vanity: she toys with her prey instead of finishing the job.',
-    descFr:'Sorciere ambre et noir, sphere de runes dorees au bout des doigts.', descEn:'Amber and black sorceress with a sphere of golden runes at her fingertips.' },
-  { id:'medusia', charKey:'medusia', side:'villain', img:CHAR_IMG.nv4, nameFr:'Medusia', nameEn:'Medusia', heroFr:'Medusia', heroEn:'Medusia', morphology:'elance', path:'mystique', powers:['illusions','regen'],
-    look:{ helmet:'none', cape:true, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#15121c', secondaryColor:'#9b7a2a', symbol:'' },
-    align:-34, stats:{courage:18, intelligence:20, popularity:-6},
-    perkFr:'Regard petrifiant : elle neutralise un adversaire sans combattre.', perkEn:'Petrifying gaze: she neutralizes an opponent without fighting.',
-    flawFr:'Malediction ancienne : les allies refusent de la regarder en face.', flawEn:'Ancient curse: allies refuse to look her in the eye.',
-    descFr:'Reine aux serpents noirs, robe d\'ecailles et d\'or ancien.', descEn:'Queen of black serpents in a gown of scales and old gold.' },
-  { id:'vantar', charKey:'vantar', side:'villain', img:CHAR_IMG.nv6, nameFr:'Vantar', nameEn:'Vantar', heroFr:'Vantar', heroEn:'Vantar', morphology:'armure', path:'tech', powers:['armure','ia'],
-    look:{ helmet:'full', cape:true, glasses:'visor', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#16171b', secondaryColor:'#ff2a2a', symbol:'' },
-    align:-36, stats:{courage:20, intelligence:24, popularity:-4},
-    perkFr:'Reacteur ecarlate : puissance de frappe superieure a tout blindage connu.', perkEn:'Scarlet reactor: firepower beyond any known armor.',
-    flawFr:'Machine froide : aucune population ne le soutiendra jamais.', flawEn:'Cold machine: no population will ever back him.',
-    descFr:'Armure noire aux circuits rouges, cape lourde de conquerant.', descEn:'Black armor with red circuits and a conqueror cape.' },
-  { id:'fourose', charKey:'fourose', side:'villain', img:CHAR_IMG.nv9, nameFr:'Le Fou Rose', nameEn:'The Pink Fool', heroFr:'Le Fou Rose', heroEn:'The Pink Fool', morphology:'elance', path:'psychique', powers:['illusions','vitesse'],
-    look:{ helmet:'none', cape:true, glasses:'glasses', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#c2246e', secondaryColor:'#ff8fd0', symbol:'' },
-    align:-30, stats:{courage:18, intelligence:20, popularity:12},
-    perkFr:'Chaos elegant : personne ne devine jamais son prochain coup.', perkEn:'Elegant chaos: nobody ever guesses his next move.',
-    flawFr:'Instable : ses alliances se retournent aussi vite qu\'elles se forment.', flawEn:'Unstable: his alliances flip as fast as they form.',
-    descFr:'Dandy en costume rose et canne sertie, sourire de predateur.', descEn:'Dandy in a pink suit with a jeweled cane and a predator smile.' },
 ];
 
-/* Personnages jouables : les nouveaux heros et villains. */
-const SELECTABLE_IDS = ['faucon','rocktan','arcania','veuvebleue','vizor',
-  'malvorax','aurelys','medusia','vantar','fourose'];
+/* Personnages jouables : les 22 personnages canon (11 heros, 11 villains). Deblocage progressif, voir UNLOCK_TIERS. */
+const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','solen','valkyr','sable','kidspider',
+  'siddartha','malachar','kaerus','aurelia','vipera','sepulcre','obsidian','nihil','mandate','fuchsia','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const NEW_HERO_IMGS = ['nh1','nh2','nh3','nh4','nh5','nh6','nh7','nh8','nh9','nv1','nv2','nv3','nv4','nv5','nv6','nv7','nv8','nv9'].map(k=>CHAR_IMG[k]);
@@ -3523,6 +3474,58 @@ function applyPreset(p){
   S.presetPerk = S.lang==='fr'?p.perkFr:p.perkEn;
   S.presetFlaw = S.lang==='fr'?p.flawFr:p.flawEn;
 }
+/* ============================ DEBLOCAGE DES PERSONNAGES (persiste entre les parties) ============================
+   4 personnages au depart (2 heros, 2 villains), puis 4 de plus a chaque palier jusqu'aux 22 canon.
+   Base sur une progression meta stockee a part de la partie en cours : elle ne se reinitialise jamais. */
+const META_KEY = 'meta:unlockProgress';
+let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:false, gotVoidCompletion:false, loaded:false };
+async function loadMetaProgress(){
+  if(!window.storage){ META.loaded = true; return META; }
+  try{
+    const r = await window.storage.get(META_KEY, false);
+    if(r && r.value) Object.assign(META, JSON.parse(r.value));
+  }catch(e){ /* aucune progression enregistree pour l'instant */ }
+  META.loaded = true;
+  return META;
+}
+async function saveMetaProgress(){
+  if(!window.storage) return;
+  try{ await window.storage.set(META_KEY, JSON.stringify(META), false); }catch(e){}
+}
+/* Appele une seule fois par carriere terminee, depuis screenEnd. */
+function recordCareerForMeta(){
+  if(S.metaRecorded) return; S.metaRecorded = true;
+  META.careersCompleted = (META.careersCompleted||0) + 1;
+  const years = S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear);
+  META.longestCareerYears = Math.max(META.longestCareerYears||0, years||0);
+  META.bestStars = Math.max(META.bestStars||0, computeStars());
+  if(S.eighthStar) META.got8thStar = true;
+  if(S.voidCompletionDone) META.gotVoidCompletion = true;
+  saveMetaProgress();
+}
+const UNLOCK_TIERS = [
+  { ids:['valkyr','aegis','fuchsia','vipera'],
+    condFr:'Disponible des le debut', condEn:'Available from the start',
+    check:(m)=>true },
+  { ids:['theg','vaelor','siddartha','mandate'],
+    condFr:'Terminer 1 carriere', condEn:'Complete 1 career',
+    check:(m)=>(m.careersCompleted||0)>=1 },
+  { ids:['marsh','nyx','obsidian','kaerus'],
+    condFr:'Terminer 5 carrieres au total', condEn:'Complete 5 careers total',
+    check:(m)=>(m.careersCompleted||0)>=5 },
+  { ids:['ferrum','solen','aurelia','sepulcre'],
+    condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years',
+    check:(m)=>(m.longestCareerYears||0)>=20 },
+  { ids:['sable','kidspider','nihil','boomnpc'],
+    condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career',
+    check:(m)=>(m.bestStars||0)>=7 },
+  { ids:['volt','malachar'],
+    condFr:'Obtenir la 8eme etoile ou reunir les 6 Eclats du Vide', condEn:'Get the 8th star or reunite the 6 Void Shards',
+    check:(m)=>!!m.got8thStar || !!m.gotVoidCompletion },
+];
+function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
+function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
+function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
@@ -3531,7 +3534,13 @@ function screenProfileChoice(){
       <p>${S.lang==='fr'?"Prends une photo avec ta camera ou importe une image : Volt Industries fabrique un super-heros (ou un villain) photo-realiste avec ton visage, puis tu personnalises son costume, son aura et ses pouvoirs."
         :"Take a selfie or upload a photo: Volt Industries forges a photoreal hero (or villain) with your own face, then you customize suit, aura and powers."}</p>
     </div>
-    <div class="optgrid" id="presetGrid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));"></div>`;
+    <h3 style="margin-top:26px;">${S.lang==='fr'?'Ou incarne un personnage du roster':'Or play as a roster character'}</h3>
+    <div class="cc-wrap" id="ccWrap">
+      <button class="cc-arrow cc-prev" id="ccPrev" aria-label="${S.lang==='fr'?'Precedent':'Previous'}">&#10094;</button>
+      <div class="cc-card" id="ccCard"></div>
+      <button class="cc-arrow cc-next" id="ccNext" aria-label="${S.lang==='fr'?'Suivant':'Next'}">&#10095;</button>
+    </div>
+    <div class="cc-dots" id="ccDots"></div>`;
   d.querySelector('#ffOpen').onclick = ()=>{ S.screen='faceforge'; render(); };
   /* Personnage perso deja forge : on le garde d'une partie a l'autre */
   const saved = ffLoadCustom();
@@ -3559,26 +3568,55 @@ function screenProfileChoice(){
       if(ch.dataset.sx === saved.sex) ch.classList.add('on');
     });
     box.onclick = ()=>{ applyCustomCharacter(saved); S.heroName = saved.name || ''; S.screen='name'; render(); };
-    d.insertBefore(box, d.querySelector('#presetGrid'));
+    d.insertBefore(box, d.querySelector('#ccWrap'));
   }
-  const grid = d.querySelector('#presetGrid');
+  /* Carrousel : un personnage a la fois, verrouille tant que le palier de deblocage n'est pas atteint. */
+  if(!S.profileCarouselIdx) S.profileCarouselIdx = 0;
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
     return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
   };
-  grid.innerHTML = SELECTABLE_PRESETS.map(p=>{
+  function movePreview(p){
+    const powers = p.powers || [];
+    const atk = powers.map(k=> (MOVES_BY_POWER[k]||[])[0]).filter(Boolean);
+    const def = powers.map(k=> (DEFENSE_MOVES_BY_POWER[k]||[])[0]).filter(Boolean);
+    return { atk, def };
+  }
+  function renderCard(){
+    const idx = clamp(S.profileCarouselIdx, 0, SELECTABLE_PRESETS.length-1);
+    S.profileCarouselIdx = idx;
+    const p = SELECTABLE_PRESETS[idx];
+    const cardEl = d.querySelector('#ccCard');
+    const dotsEl = d.querySelector('#ccDots');
+    if(!p){ cardEl.innerHTML = ''; dotsEl.innerHTML=''; return; }
+    const unlocked = isPresetUnlocked(p.id);
     const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
-    const badge = p.side==='villain' ? 'VILLAIN' : 'HERO';
-    const nm = S.lang==='fr'?p.nameFr:p.nameEn;
-    return `<div class="preset-card ${p.side}" data-id="${p.id}" style="--pc-color:${col};">
-      <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span></div>
+    const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HEROS':'HERO');
+    const canonC = CHARACTERS[p.charKey];
+    const nm = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.nameFr:p.nameEn);
+    const mv = movePreview(p);
+    const mvHtml = `<div class="pmoves">
+        <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'ATTAQUES':'ATTACKS'}</div>${mv.atk.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
+        <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'DEFENSES':'DEFENSE'}</div>${mv.def.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
+      </div>`;
+    cardEl.innerHTML = `<div class="preset-card ${p.side} ${unlocked?'':'locked'}" style="--pc-color:${col};">
+      <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span>
+        ${unlocked?'':`<div class="pc-lock"><span class="pc-lock-icon">&#128274;</span><div class="pc-lock-cond">${tierConditionFor(p.id)}</div></div>`}</div>
       <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
       ${statLine(p.stats||{})}
       <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
-      <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div></div>`;
-  }).join('');
-
-  grid.querySelectorAll('.preset-card').forEach(el=>{ el.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===el.dataset.id); applyPreset(p); S.screen='name'; render(); }; });
+      <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div>
+      ${mvHtml}
+      <button class="btn cyan" id="ccPick" style="margin-top:14px; width:100%;" ${unlocked?'':'disabled'}>${unlocked?(S.lang==='fr'?'CHOISIR':'PICK'):(S.lang==='fr'?'VERROUILLE':'LOCKED')}</button>
+    </div>`;
+    dotsEl.innerHTML = SELECTABLE_PRESETS.map((pp,i)=>`<span class="cc-dot ${i===idx?'on':''} ${isPresetUnlocked(pp.id)?'':'lk'}"></span>`).join('');
+    const pickBtn = d.querySelector('#ccPick');
+    if(pickBtn && unlocked){ pickBtn.onclick = ()=>{ applyPreset(p); S.screen='name'; render(); }; }
+  }
+  d.querySelector('#ccPrev').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx - 1 + SELECTABLE_PRESETS.length) % SELECTABLE_PRESETS.length; renderCard(); };
+  d.querySelector('#ccNext').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx + 1) % SELECTABLE_PRESETS.length; renderCard(); };
+  renderCard();
+  if(!META.loaded){ loadMetaProgress().then(()=>renderCard()); }
   return d;
 }
 
@@ -7668,6 +7706,7 @@ function extendCareer(extra){
 }
 function screenEnd(){
   saveCareerToHistory();
+  recordCareerForMeta();
   clearGameState();
   const d = document.createElement('div');
   const topRelKey = Object.keys(S.rel).reduce((a,b)=> (S.rel[b]>S.rel[a] ? b : a), Object.keys(S.rel)[0]);
@@ -8247,6 +8286,7 @@ function jarvisAuto(force){
 }
 
 initParticles();
+loadMetaProgress().then(()=>{ if(S.screen==='profileChoice') render(); });
 render();
 </script>
 </body>
