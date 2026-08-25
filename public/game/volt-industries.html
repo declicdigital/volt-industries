@@ -2320,9 +2320,17 @@ const CONVERSATIONS = [
       { fr:"Le defier ouvertement sur le terrain de l'innovation.", en:"Openly challenge him on innovation.", eff:{intelligence:4, rel:{obsidian:-2}} },
       { fr:"Detruire publiquement sa credibilite.", en:"Publicly destroy his credibility.", eff:{align:-6, popularity:3, rel:{obsidian:-7}} },
     ]},
+  { id:'conv_boomnpc', charKey:'boomnpc',
+    linesFr:["Doctor Doom t'observe depuis son trone de fer, impassible. \"Les heros me haissent. Les villains me craignent trop pour vraiment me suivre. Peu m'importe : je ne reponds qu'a ma propre couronne.\"","\"Je peux t'apprendre plus qu'aucun camp ne le pourra jamais. Reste a savoir si tu es pret(e) a l'entendre.\""],
+    linesEn:["Doctor Doom watches you from his iron throne, impassive. \"Heroes hate me. Villains fear me too much to truly follow me. It matters little: I answer only to my own crown.\"","\"I can teach you more than any camp ever will. The question is whether you're ready to hear it.\""],
+    choices:[
+      { fr:"Ecouter, tout en gardant tes distances.", en:"Listen, while keeping your distance.", eff:{intelligence:4, rel:{boomnpc:3}} },
+      { fr:"Lui dire qu'une couronne sans peuple libre ne vaut rien.", en:"Tell him a crown over no free people is worth nothing.", eff:{align:6, rel:{boomnpc:-4}} },
+      { fr:"Admettre que le pouvoir sans etiquette t'attire aussi.", en:"Admit that power without a label tempts you too.", eff:{align:-6, rel:{boomnpc:6}} },
+    ]},
   { id:'conv_theg', charKey:'theg',
-    linesFr:["The G t'attend, l'interface holographique de son bras encore allumee. \"Tout le monde ici parle de toi. Moi, je prefere juger sur le terrain.\"","\"Si tu veux marcher a mes cotes, il faudra tenir la ligne meme quand personne ne regarde.\""],
-    linesEn:["The G waits for you, the holo interface on his arm still lit. \"Everyone here talks about you. I'd rather judge you in the field.\"","\"If you want to walk beside me, you'll hold the line even when nobody's watching.\""],
+    linesFr:["The G t'attend, l'interface holographique de son bras encore allumee. \"Tout le monde ici parle de toi. Moi, je prefere juger sur le terrain.\"","\"Je ne porte ni le bleu ni le rouge. Si tu veux marcher a mes cotes, il faudra tenir ta propre ligne, meme quand personne ne regarde.\""],
+    linesEn:["The G waits for you, the holo interface on his arm still lit. \"Everyone here talks about you. I'd rather judge you in the field.\"","\"I don't wear blue or red. If you want to walk beside me, you'll hold your own line, even when nobody's watching.\""],
     choices:[
       { fr:"Accepter son alliance et jurer de tenir la ligne.", en:"Accept his alliance and swear to hold the line.", eff:{align:7, courage:3, rel:{theg:6}} },
       { fr:"Lui demander de prouver d'abord ce qu'il vaut.", en:"Ask him to prove his own worth first.", eff:{courage:3, rel:{theg:-2}} },
@@ -2361,8 +2369,8 @@ const CONVERSATIONS = [
       { fr:"Refuser de travailler avec un electron libre.", en:"Refuse to work with a loose cannon.", eff:{courage:2, rel:{sable:-5}} },
     ]},
   { id:'conv_siddartha', charKey:'siddartha',
-    linesFr:["Siddharta t'accueille avec un sourire desarmant, son armure verte pulsant doucement. \"Je ne suis pas ton ennemi. Je suis simplement celui qui a cesse de mentir.\"","\"Rejoins-moi, et je te montrerai ce que ce monde cache derriere ses heros.\""],
-    linesEn:["Siddharta greets you with a disarming smile, his green armor pulsing softly. \"I'm not your enemy. I'm simply the one who stopped lying.\"","\"Join me, and I'll show you what this world hides behind its heroes.\""],
+    linesFr:["Siddharta t'accueille avec un sourire desarmant, son armure verte pulsant doucement. \"Je ne suis pas ton ennemi. Je ne suis pas ton allie non plus. Je suis simplement celui qui a cesse de mentir.\"","\"Rejoins-moi, et je te montrerai ce que ce monde cache derriere ses heros.\""],
+    linesEn:["Siddharta greets you with a disarming smile, his green armor pulsing softly. \"I'm not your enemy. I'm not your ally either. I'm simply the one who stopped lying.\"","\"Join me, and I'll show you what this world hides behind its heroes.\""],
     choices:[
       { fr:"Rejeter son offre sans hesiter une seconde.", en:"Reject his offer without a second's hesitation.", eff:{align:8, courage:4, rel:{siddartha:-6}} },
       { fr:"Ecouter jusqu'au bout, par pure curiosite.", en:"Hear him out fully, out of pure curiosity.", eff:{intelligence:4, rel:{siddartha:2}} },
@@ -2385,16 +2393,16 @@ const CONVERSATIONS = [
       { fr:"Payer son prix, quel qu'il soit.", en:"Pay her price, whatever it is.", eff:{align:-9, popularity:4, rel:{aurelia:7}} },
     ]},
   { id:'conv_vipera', charKey:'vipera',
-    linesFr:["Loki avance, ses serpents sifflant autour d'elle. \"On m'a chassee, maudite, exhibee. Alors j'ai appris a mordre.\"","\"Toi aussi ils te lacheront. La seule question, c'est quand.\""],
-    linesEn:["Loki steps forward, serpents hissing around her. \"They hunted me, cursed me, paraded me. So I learned to bite.\"","\"They'll drop you too. The only question is when.\""],
+    linesFr:["Loki avance, ses serpents sifflant autour de lui. \"On m'a chasse, maudit, exhibe - tantot en heros, tantot en monstre. Aucun des deux camps ne m'a jamais vraiment voulu.\"","\"Toi aussi ils te lacheront des que tu ne rentreras plus dans leurs cases. La seule question, c'est quand.\""],
+    linesEn:["Loki steps forward, serpents hissing around him. \"They hunted me, cursed me, paraded me - sometimes as a hero, sometimes as a monster. Neither side ever truly wanted me.\"","\"They'll drop you too, the moment you stop fitting their boxes. The only question is when.\""],
     choices:[
-      { fr:"Lui promettre que tu ne l'abandonneras pas.", en:"Promise her you won't abandon her.", eff:{align:6, rel:{vipera:6}} },
-      { fr:"Lui dire que la morsure ne guerit rien.", en:"Tell her biting heals nothing.", eff:{courage:3, rel:{vipera:-3}} },
+      { fr:"Lui promettre que tu ne l'abandonneras pas.", en:"Promise him you won't abandon him.", eff:{align:6, rel:{vipera:6}} },
+      { fr:"Lui dire que la morsure ne guerit rien.", en:"Tell him biting heals nothing.", eff:{courage:3, rel:{vipera:-3}} },
       { fr:"Reconnaitre que tu mordrais aussi.", en:"Admit you would bite too.", eff:{align:-8, rel:{vipera:7}} },
     ]},
   { id:'conv_sepulcre', charKey:'sepulcre',
-    linesFr:["Galactus tend une main blanche, sans un bruit. \"La paix parfaite est le silence. Je peux l'offrir a ce monde.\"","\"Il suffit d'accepter que rien ne bouge plus jamais.\""],
-    linesEn:["Galactus extends a white hand, soundlessly. \"Perfect peace is silence. I can give this world that.\"","\"You need only accept that nothing ever moves again.\""],
+    linesFr:["Galactus tend une main blanche, sans un bruit. \"Heros, villain - ces mots n'ont aucun sens a mon echelle. Je ne sers ni l'un ni l'autre.\"","\"La paix parfaite est le silence. Il suffit d'accepter que rien ne bouge plus jamais.\""],
+    linesEn:["Galactus extends a white hand, soundlessly. \"Hero, villain - those words mean nothing at my scale. I serve neither.\"","\"Perfect peace is silence. You need only accept that nothing ever moves again.\""],
     choices:[
       { fr:"Refuser cette paix de tombeau.", en:"Refuse that graveyard peace.", eff:{align:7, courage:4, rel:{sepulcre:-5}} },
       { fr:"Chercher la faille dans son raisonnement.", en:"Look for the flaw in his reasoning.", eff:{intelligence:5, rel:{sepulcre:1}} },
@@ -3616,7 +3624,7 @@ const UNLOCK_TIERS = [
   { ids:['valkyr','aegis','fuchsia','vipera'],
     condFr:'Disponible des le debut', condEn:'Available from the start',
     check:(m)=>true },
-  { ids:['theg','volt','siddartha','mandate'],
+  { ids:['theg','volt','mandate','malachar'],
     condFr:'Terminer 1 carriere', condEn:'Complete 1 career',
     check:(m)=>(m.careersCompleted||0)>=1 },
   { ids:['marsh','nyx','obsidian','kaerus'],
@@ -3625,7 +3633,7 @@ const UNLOCK_TIERS = [
   { ids:['ferrum','solen','aurelia','sepulcre'],
     condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years',
     check:(m)=>(m.longestCareerYears||0)>=20 },
-  { ids:['sable','kidspider','nihil','malachar'],
+  { ids:['sable','kidspider','nihil','siddartha'],
     condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career',
     check:(m)=>(m.bestStars||0)>=5 },
   { ids:['vaelor','boomnpc'],
@@ -3637,8 +3645,8 @@ function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
 function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
 /* Ordre d'affichage du carrousel : un heros + un villain du meme palier, cote a cote, sur le meme ecran.
    Thor et Doctor Doom (les 2 plus puissants du jeu) sont volontairement les tout derniers a se debloquer. */
-const PAIR_HEROES   = ['valkyr','aegis','theg','volt','marsh','nyx','ferrum','solen','sable','kidspider','vaelor'];
-const PAIR_VILLAINS = ['fuchsia','vipera','siddartha','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','malachar','boomnpc'];
+const PAIR_HEROES   = ['valkyr','aegis','volt','theg','marsh','nyx','ferrum','solen','sable','kidspider','vaelor'];
+const PAIR_VILLAINS = ['fuchsia','vipera','malachar','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','siddartha','boomnpc'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
@@ -4256,10 +4264,10 @@ function buildCareerPlan(){
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
   S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
-  /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, 2 a 3 recrues par tranche
-     de 10 ans de carriere (pas de plafond fixe universel). */
+  /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, exactement 2 recrues
+     par tranche de 10 ans de carriere pour le joueur (pas plus). */
   S.mentorEligible = Math.random() < 0.70;
-  S.mentorCap = S.mentorEligible ? Math.max(1, Math.round((S.years/10) * (2 + Math.random()))) : 0;
+  S.mentorCap = S.mentorEligible ? Math.max(1, Math.round((S.years/10) * 2)) : 0;
   S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -7380,7 +7388,7 @@ function generateGroupConversation(){
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
   if(cast.length < 3) cast = shuffle(base.slice()).slice(0,3);
   /* Tes eleves apparaissent dans les discussions de groupe */
-  const mk = menteeKeys().filter(k=>keys.includes(k) && !cast.includes(k));
+  const mk = livingMentees().map(m=>m.charKey).filter(k=>k && !cast.includes(k));
   if(mk.length){ cast[cast.length-1] = pick(mk); }
   /* Un seul sujet pour toute la tablee : chacun ajoute sa replique sur CE sujet,
      et les reponses proposees repondent au sujet. */
@@ -7890,7 +7898,7 @@ function maybeTriggerConversation(){
     if(!conv && Math.random() < 0.45){ conv = generateGroupConversation(); }
     /* 35% des echanges solo se font avec une recrue que tu as formee */
     if(!conv){
-      const mine = menteeKeys().filter(k=>keys.includes(k));
+      const mine = livingMentees().map(m=>m.charKey).filter(Boolean);
       if(mine.length && Math.random() < 0.35) conv = generateConversation(pick(mine));
     }
     if(!conv){
