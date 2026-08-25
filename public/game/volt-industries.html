@@ -2469,12 +2469,12 @@ const DEATH_CAUSES = {
 /* ============================ PRESETS ============================ */
 const PRESETS = [
   /* ---------- 10 HEROES ---------- */
-  { id:'theg', charKey:'theg', side:'hero', img:CHAR_IMG.char10, nameFr:'The G', nameEn:'The G', heroFr:'The G', heroEn:'The G', morphology:'colosse', path:'physique', powers:['force','regen'],
+  { id:'theg', charKey:'theg', side:'hero', img:CHAR_IMG.char10, nameFr:'The G', nameEn:'The G', heroFr:'The G', heroEn:'The G', morphology:'colosse', path:'physique', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#101623', secondaryColor:'#ffd23c', symbol:'G' },
     align:40, stats:{courage:16, intelligence:4, popularity:16},
-    perkFr:'Icone absolue : popularite et courage d\'entree, les alliances se signent vite.', perkEn:'Absolute icon: high courage and fame from day one, alliances come easy.',
+    perkFr:'Maitrise de l\'electricite : la foudre repond a son appel, en plus d\'une force colossale.', perkEn:'Electricity mastery: lightning answers his call, on top of colossal strength.',
     flawFr:'Tout le monde l\'attend au tournant : la moindre faute coute double en reputation.', flawEn:'Everyone watches him: every mistake costs double reputation.',
-    descFr:'Le heros de reference de Volt Industries. Le monde entier connait son nom.', descEn:'Volt Industries\' flagship hero. The whole world knows his name.' },
+    descFr:'Le heros de reference de Volt Industries, l\'electricite dans les poings. Le monde entier connait son nom.', descEn:'Volt Industries\' flagship hero, lightning in his fists. The whole world knows his name.' },
   { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Iron Boy', nameEn:'Iron Boy', heroFr:'Volt', heroEn:'Volt', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#0f2a4a', secondaryColor:'#39d0ff', symbol:'V' },
     align:28, stats:{courage:12, intelligence:20, popularity:18},
@@ -5327,7 +5327,7 @@ function impactFromEff(eff, alignDelta){
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
 const FOE_MOVES = {
-  theg:[{fr:'Poing de Volt',en:'Volt punch',p:32,acc:.85},{fr:'Charge symbolique',en:'Symbol charge',p:26,acc:.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:.87},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Poigne increvable',en:'Unbreakable grip',p:38,acc:.68},{fr:'Second souffle',en:'Second wind',p:10,acc:1,heal:20}],
+  theg:[{fr:'Decharge de Volt',en:'Volt discharge',p:31,acc:.83},{fr:'Poing electrique',en:'Electric punch',p:26,acc:.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:.87},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Tempete electrique',en:'Electric storm',p:38,acc:.68},{fr:'Second souffle',en:'Second wind',p:10,acc:1,heal:20}],
   volt:[{fr:'Repulseur',en:'Repulsor',p:27,acc:.9},{fr:'Salve energetique',en:'Energy volley',p:24,acc:.95},{fr:'Frappe calculee',en:'Calculated strike',p:29,acc:.87},{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1,heal:15},{fr:'Surcharge du reacteur',en:'Reactor overload',p:36,acc:.7},{fr:'Bouclier photonique',en:'Photon shield',p:15,acc:1,heal:15}],
   vaelor:[{fr:'Marteau tournoyant',en:'Whirling hammer',p:30,acc:.85},{fr:'Foudre canalisee',en:'Channelled lightning',p:31,acc:.82},{fr:'Tempete du nord',en:'Northern storm',p:34,acc:.74},{fr:'Souffle du guerrier',en:'Warrior breath',p:10,acc:1,heal:14},{fr:'Eclair devastateur',en:'Devastating bolt',p:38,acc:.68},{fr:'Peau d\'Asgard',en:'Asgardian hide',p:14,acc:1,heal:18}],
   marsh:[{fr:'Rafale de coups',en:'Blitz combo',p:22,acc:.97},{fr:'Lecture des failles',en:'Weak-point read',p:21,acc:1},{fr:'Frappe supersonique',en:'Supersonic strike',p:32,acc:.78},{fr:'Riposte anticipee',en:'Preempted riposte',p:14,acc:1,heal:15},{fr:'Combo d\'elite',en:'Elite combo',p:36,acc:.7},{fr:'Esquive chronometree',en:'Timed evasion',p:9,acc:1,heal:21}],
