@@ -3438,7 +3438,10 @@ function avatarSVG(){
 }
 function otherCharKeys(){ return NPC_KEYS.filter(k=>k!==S.playerCharKey); }
 function avatarVisual(){
-  if(S.portrait) return `<div class="portrait-avatar"><img src="${S.portrait}" alt="${S.heroName||''}"></div>`;
+  if(S.portrait){
+    const fallback = avatarSVG();
+    return `<div class="portrait-avatar"><img src="${S.portrait}" alt="${S.heroName||''}" onerror="this.parentElement.innerHTML=${JSON.stringify(fallback)};"></div>`;
+  }
   return avatarSVG();
 }
 function avatarBoxInner(){
@@ -3695,9 +3698,10 @@ function screenProfileChoice(){
   function miniCardHtml(p){
     if(!p) return '';
     const unlocked = isPresetUnlocked(p.id);
-    const col = p.side==='villain' ? '#ff2d55' : '#00e5ff';
-    const badge = p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HEROS':'HERO');
     const canonC = CHARACTERS[p.charKey];
+    const isIndependentChar = canonC && canonC.align==='neutral';
+    const col = isIndependentChar ? '#b98bff' : (p.side==='villain' ? '#ff2d55' : '#00e5ff');
+    const badge = isIndependentChar ? (S.lang==='fr'?'INDEPENDANT':'INDEPENDENT') : (p.side==='villain' ? (S.lang==='fr'?'VILLAIN':'VILLAIN') : (S.lang==='fr'?'HEROS':'HERO'));
     const nm = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.nameFr:p.nameEn);
     const mv = movePreview(p);
     const morality = moralityOf(p.charKey);
@@ -6232,8 +6236,8 @@ function showRecruitAnnouncement(key, cb){
   const backstory = preset ? (isFr?preset.descFr:preset.descEn) : '';
   const html = `<div class="ru-title" style="color:${col}; font-size:11px; letter-spacing:2px;">${isFr?'NOUVELLE RECRUE':'NEW RECRUIT'}</div>
     <div style="display:flex; align-items:center; gap:14px; margin:14px 0 4px; text-align:left;">
-      <div style="width:80px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
-      <div><div style="font-size:19px; font-weight:900;">${name}</div>
+      <div style="width:118px; flex:0 0 118px;">${characterPortraitHTML(c, true)}</div>
+      <div style="flex:1; min-width:0;"><div style="font-size:19px; font-weight:900;">${name}</div>
         ${backstory?`<div style="font-size:12px; color:var(--dim); margin-top:4px;">${backstory}</div>`:''}</div>
     </div>
     <p style="margin-top:10px; line-height:1.6; text-align:left;">${reason}</p>`;
@@ -6246,8 +6250,8 @@ function screenMentor(){
   const col = c ? convBeamColor(c.align) : 'var(--accent)';
   const roleLabel = m.crossed ? (S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT') : (S.lang==='fr'?'RECRUE':'RECRUIT');
   const portrait = c ? `<div style="display:flex; align-items:center; gap:14px; margin:10px 0 4px;">
-      <div style="width:96px; flex:0 0 auto;">${characterPortraitHTML(c, true)}</div>
-      <div>
+      <div style="width:118px; flex:0 0 118px;">${characterPortraitHTML(c, true)}</div>
+      <div style="flex:1; min-width:0;">
         <div style="font-size:10px; letter-spacing:2px; color:${col}; font-weight:800;">${roleLabel}</div>
         <div style="font-size:18px; font-weight:900;">${name}</div>
         ${(function(){ const mt = (S.mentees||[]).find(x=>x.charKey===m.recruitKey); if(!mt) return ''; const lvl = Math.min(100, (mt.xp||0)*7);
