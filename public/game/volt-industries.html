@@ -1120,27 +1120,65 @@ const CHARACTERS = {
 
 const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKey: Object.keys(CHARACTERS).find(c=>CHARACTERS[c].img===CHAR_IMG[k]) || null }));
 
-/* ============================ FACTIONS (7 tiers per side) ============================ */
+/* ============================ FACTIONS (equipes reelles, jamais neutres) ============================
+   Une faction = une equipe / organisation avec un camp obligatoire (hero ou villain).
+   On ne peut integrer une faction qu'a partir de la 4e etoile : les index 1-3 sont donc vides. */
+const FACTION_MIN_STARS = 4;
 const FACTIONS = {
-  hero: [ null,
-    { fr:'Defenders', en:'Defenders', icon:'house' },
-    { fr:'Damage Control', en:'Damage Control', icon:'skyline' },
-    { fr:'S.H.I.E.L.D.', en:'S.H.I.E.L.D.', icon:'flag' },
-    { fr:'X-Men', en:'X-Men', icon:'globe-segment' },
-    { fr:'AVENGERS', en:'AVENGERS', icon:'globe' },
-    { fr:'Nova Corps', en:'Nova Corps', icon:'rings' },
-    { fr:'ETERNALS', en:'ETERNALS', icon:'galaxy' },
+  hero: [ null, null, null, null,
+    { id:'xmen', fr:'X-MEN', en:'X-MEN', icon:'globe-segment',
+      members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X'] },
+    { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'rings',
+      members:['Mister Fantastic','Invisible Woman','Human Torch','The Thing'] },
+    { id:'guardians', fr:'GUARDIANS OF THE GALAXY', en:'GUARDIANS OF THE GALAXY', icon:'galaxy',
+      members:['Star-Lord','Rocket','Groot','Gamora','Nebula'] },
+    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe',
+      members:['Spider-Man','Iron Man','Captain America','Thor','Hulk','Black Widow','Black Panther','Scarlet Witch','Vision','Ant-Man','Doctor Strange'] },
   ],
-  villain: [ null,
-    { fr:'Red Room', en:'Red Room', icon:'fist' },
-    { fr:'Roxxon', en:'Roxxon', icon:'chain' },
-    { fr:'TEN RINGS', en:'TEN RINGS', icon:'gauntlet' },
-    { fr:'A.I.M.', en:'A.I.M.', icon:'crack' },
-    { fr:'HYDRA', en:'HYDRA', icon:'coil' },
-    { fr:'Brotherhood of Mutants', en:'Brotherhood of Mutants', icon:'comet' },
-    { fr:'CHITAURI ARMADA', en:'CHITAURI ARMADA', icon:'void' },
+  villain: [ null, null, null, null,
+    { id:'sinister6', fr:'SINISTER SIX', en:'SINISTER SIX', icon:'crack',
+      members:['Green Goblin','Doctor Octopus','Mysterio','Electro'] },
+    { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet',
+      members:['Magneto','Mystique','Pyro'] },
+    { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'coil',
+      members:['Doctor Doom','Red Skull'] },
+    { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'void',
+      members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian'] },
   ],
 };
+/* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
+const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','The G','Siddharta'];
+
+/* ============================ ATTRIBUTS (caracteristiques, sans camp) ============================
+   Un attribut n'a pas de camp, peut melanger heros et villains, et se cumule. */
+const ATTRIBUTES = [
+  { id:'mystique', icon:'\u{1FA84}', fr:'\u00CAtres mystiques', en:'Mystic beings',
+    members:['Doctor Strange','Scarlet Witch','Doctor Doom','Loki','Hela','Gorr'] },
+  { id:'mutant', icon:'\u{1F9EC}', fr:'Mutants', en:'Mutants',
+    members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X','Magneto','Mystique','Pyro','Apocalypse'] },
+  { id:'cosmique', icon:'\u{1F30C}', fr:'\u00CAtres cosmiques', en:'Cosmic beings',
+    members:['Thanos','Galactus','Gorr','Annihilus'] },
+  { id:'asgardien', icon:'\u26A1', fr:'Asgardiens', en:'Asgardians',
+    members:['Thor','Loki','Hela'] },
+  { id:'genie', icon:'\u{1F9E0}', fr:'G\u00E9nies / Scientifiques', en:'Geniuses / Scientists',
+    members:['Iron Man','Mister Fantastic','Doctor Doom','Hulk','Ultron'] },
+];
+/* Nom canonique d'un personnage du jeu (sert de cle pour factions et attributs). */
+function canonName(key){ const c = CHARACTERS[key]; return c ? (c.canon || c.en || c.fr) : ''; }
+function baseFactionsOf(name){
+  const out = [];
+  ['hero','villain'].forEach(side=>{
+    (FACTIONS[side]||[]).forEach((f,tier)=>{ if(f && f.members.indexOf(name)>=0) out.push({ side, tier, id:f.id, name:(S.lang==='fr'?f.fr:f.en) }); });
+  });
+  return out;
+}
+function customFactionsOf(name){
+  return (S.customFactions||[]).filter(f=>f.members.indexOf(name)>=0).map(f=>({ side:f.side, tier:null, id:f.id, name:f.name, custom:true }));
+}
+function factionsOfChar(key){ const n = canonName(key); return baseFactionsOf(n).concat(customFactionsOf(n)); }
+function attributesOfChar(key){ const n = canonName(key); return ATTRIBUTES.filter(a=>a.members.indexOf(n)>=0); }
+function isIndependent(key){ return factionsOfChar(key).length===0; }
+
 function factionEmblemSVG(side, tier, size){
   const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return '';
   const uid = 'fe'+Math.random().toString(36).slice(2,7);
