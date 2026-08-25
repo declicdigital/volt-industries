@@ -5423,13 +5423,17 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
 /* ---------- Escouades visuelles : des allies (et des adversaires) au coude a coude ---------- */
 /* Taille d'equipe plafonnee par l'ampleur du combat (scope) : 1=quartier (solo), 2=ville, 3=pays,
    4=continent, 5=monde, 6=systeme, 7=cosmique. On peut toujours tomber en dessous du plafond. */
-function squadCapForScope(scope){ return clamp(scope||1, 1, 7); }
+/* Plafond d'escouade base sur le niveau (etoiles) du joueur, pas sur l'ampleur geographique de la mission :
+   1 etoile = 2 combattants max au total, 2* = 3, 3* = 4, 4* = 5, 5* = 6, 6 et 7* = 7 max. */
+function squadCapForStars(){ return clamp(computeStars()+1, 1, 7); }
 function buildBattleSquads(foeKey, mission){
   const empty = { allies:[], foes:[] };
-  const cap = squadCapForScope(mission && mission.scope);
+  const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
-  const keys = otherCharKeys().filter(k=>k!==foeKey);
+  /* Chaque personnage a son propre niveau minimum (charUnlocked) : un allie ou adversaire d'escouade
+     ne peut jamais apparaitre avant son propre palier de deblocage, meme si la taille d'escouade le permettrait. */
+  const keys = otherCharKeys().filter(k=>k!==foeKey && charUnlocked(k));
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
   const sidePool = keys.filter(k=>CHARACTERS[k].align===mySide);
@@ -5532,8 +5536,8 @@ function startBattle(mission, done){
   const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
-  /* Escouades : la taille de l'equipe depend de l'ampleur du combat (scope 1 a 7). */
-  const scope = squadCapForScope(mission && mission.scope);
+  /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
+  const scope = squadCapForStars();
   const squads = buildBattleSquads(foeKey, mission);
   const allyBonus = 1 + squads.allies.length * 0.03;
   const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
