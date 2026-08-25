@@ -1012,6 +1012,7 @@ const PATHS = [
   { id:'mystique', fr:'Mystique', en:'Mystic', color:'mystique', descFr:"Magie, illusions, portails dimensionnels.", descEn:"Magic, illusions, dimensional rifts." },
   { id:'physique', fr:'Physique', en:'Physical', color:'physique', descFr:"Force brute, regeneration, vitesse.", descEn:"Raw strength, regeneration, speed." },
   { id:'psychique', fr:'Psychique', en:'Psychic', color:'psychique', descFr:"Telepathie, telekinesie, projection mentale.", descEn:"Telepathy, telekinesis, mental projection." },
+  { id:'divin', fr:'Divin', en:'Divine', color:'divin', descFr:"Puissance des dieux : foudre, elements et force innee, sans incantation.", descEn:"Power of the gods: lightning, elements and innate might, no spellcasting." },
 ];
 const POWERS = {
   tech: [
@@ -1045,6 +1046,12 @@ const POWERS = {
     {id:'illusion_mentale', fr:'Illusions mentales', en:'Mental illusions', descFr:"Faire voir ce qui n'existe pas.", descEn:"Make others see what isn't there."},
     {id:'controle_emotionnel', fr:'Controle emotionnel', en:'Emotion control', descFr:"Apaiser ou attiser les emotions d'autrui.", descEn:"Calm or inflame others' emotions."},
     {id:'precognition', fr:'Precognition', en:'Precognition', descFr:"Entrevoir des bribes du futur proche.", descEn:"Glimpse fragments of the near future."},
+  ],
+  divin:[
+    {id:'elementaire', fr:'Foudre et elements', en:'Lightning and elements', descFr:"Puissance divine sur la foudre et les elements.", descEn:"Divine power over lightning and the elements."},
+    {id:'force', fr:'Force divine', en:'Divine strength', descFr:"Une puissance qui n'a rien d'humain.", descEn:"A strength that is nothing human."},
+    {id:'invulnerabilite', fr:'Chair immortelle', en:'Immortal flesh', descFr:"Un corps qui resiste a ce qui tuerait un mortel.", descEn:"A body that survives what would kill a mortal."},
+    {id:'invocation', fr:"Rites d'outre-monde", en:'Otherworldly rites', descFr:"Appeler la puissance d'un royaume divin.", descEn:"Call upon the power of a divine realm."},
   ]
 };
 const MORPHOLOGIES = [
@@ -1053,6 +1060,7 @@ const MORPHOLOGIES = [
   { id:'armure', fr:'Armure lourde', en:'Heavy armor', descFr:'Exosquelette blinde complet, plaques metalliques et reacteurs integres.', descEn:'Full armored exosuit, metal plating and built-in thrusters.' },
   { id:'spectral', fr:'Spectral', en:'Spectral', descFr:'Forme translucide et immaterielle, a peine ancree dans le reel.', descEn:'Translucent, immaterial form, barely anchored in reality.' },
   { id:'elance', fr:'Elance', en:'Lithe', descFr:'Silhouette fine, rapide et acrobatique.', descEn:'Slim, fast and acrobatic silhouette.' },
+  { id:'divin', fr:'Divin', en:'Divine', descFr:'Stature imposante et rayonnante, presence clairement immortelle.', descEn:'Imposing, radiant stature — a clearly immortal presence.' },
 ];
 const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none','standard','thruster','armored'];
 const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
@@ -1212,6 +1220,20 @@ function myFactionMemberKeys(){
   if(!fac) return [];
   return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
 }
+/* Personnages partageant au moins un attribut (Etres mystiques, Mutants, Etres cosmiques, Asgardiens,
+   Genies/Scientifiques) avec le joueur : les attributs n'ont pas de camp mais creent une affinite de
+   terrain (allies preferentiels en escouade), independamment des factions. */
+function myAttributeMemberKeys(){
+  if(!S.playerCharKey) return [];
+  const myName = canonName(S.playerCharKey);
+  const myAttrs = ATTRIBUTES.filter(a=>a.members.indexOf(myName)>=0);
+  if(!myAttrs.length) return [];
+  return Object.keys(CHARACTERS).filter(k=>{
+    if(k===S.playerCharKey) return false;
+    const n = canonName(k);
+    return myAttrs.some(a=>a.members.indexOf(n)>=0);
+  });
+}
 /* Reordonne deux groupes (primary = ta faction, secondary = le reste du camp) en tirant au sort,
    a chaque position, dans primary avec la probabilite donnee ; le reste comble les trous.
    Utilise pour composer escouades et castings sans jamais exclure totalement le secondary. */
@@ -1221,6 +1243,19 @@ function weightedFactionOrder(primary, secondary, primaryChance){
   while(p.length || s.length){
     const takePrimary = p.length && (!s.length || Math.random() < primaryChance);
     out.push(takePrimary ? p.shift() : s.shift());
+  }
+  return out;
+}
+/* Meme principe a 3 niveaux : faction (a, priorite pa) > affinite d'attribut (b, priorite pb parmi le reste) > le reste (c). */
+function weightedTripleOrder(a, b, c, pa, pb){
+  const A = shuffle((a||[]).slice()), B = shuffle((b||[]).slice()), C = shuffle((c||[]).slice());
+  const out = [];
+  while(A.length || B.length || C.length){
+    if(A.length && Math.random() < pa){ out.push(A.shift()); continue; }
+    if(B.length && Math.random() < pb){ out.push(B.shift()); continue; }
+    if(C.length) out.push(C.shift());
+    else if(A.length) out.push(A.shift());
+    else out.push(B.shift());
   }
   return out;
 }
@@ -2438,54 +2473,54 @@ const PRESETS = [
     perkFr:'Moyens illimites : intelligence tres haute, budgets et technologies sans limite.', perkEn:'Unlimited means: very high intelligence, endless budget and tech.',
     flawFr:'Courage moyen sur le terrain et suspicion permanente sur ses interets.', flawEn:'Average field courage and constant suspicion about his interests.',
     descFr:'Industriel milliardaire, cerveau derriere la moitie des armures du monde.', descEn:'Billionaire industrialist, mind behind half the world\'s armors.' },
-  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Fhor', nameEn:'Fhor', heroFr:'Fhor', heroEn:'Fhor', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
+  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Fhor', nameEn:'Fhor', heroFr:'Fhor', heroEn:'Fhor', morphology:'divin', path:'divin', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#2b3242', secondaryColor:'#c94b2c', symbol:'' },
     align:30, stats:{courage:18, intelligence:6, popularity:2},
-    perkFr:'Veteran de guerre : encaisse les missions les plus dures sans reculer.', perkEn:'War veteran: takes the hardest missions without flinching.',
+    perkFr:'Puissance divine : la foudre repond a son appel, aucune arme mortelle ne l\'arrete.', perkEn:'Divine might: lightning answers his call, no mortal weapon stops him.',
     flawFr:'Peu populaire, mauvaise image mediatique, alliances difficiles.', flawEn:'Unpopular, poor media image, alliances are hard to build.',
-    descFr:'Soldat mystique revenu de trop de fronts. Il se bat, il ne parle pas.', descEn:'Mystic soldier back from too many fronts. He fights, he does not talk.' },
-  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Captain Americain', nameEn:'Captain Americain', heroFr:'Captain Americain', heroEn:'Captain Americain', morphology:'armure', path:'tech', powers:['armure','rayons'],
+    descFr:'Dieu du tonnerre revenu de trop de fronts. Il se bat, il ne parle pas.', descEn:'God of thunder back from too many fronts. He fights, he does not talk.' },
+  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Captain Americain', nameEn:'Captain Americain', heroFr:'Captain Americain', heroEn:'Captain Americain', morphology:'humain', path:'physique', powers:['force','invulnerabilite'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'shield', suitColor:'#e8eef7', secondaryColor:'#1a6cff', symbol:'AGS' },
     align:35, stats:{courage:14, intelligence:10, popularity:4},
-    perkFr:'Exosquelette defensif : tres resistant, protege les civils et les allies.', perkEn:'Defensive exosuit: very resilient, shields civilians and allies.',
-    flawFr:'Lourd et lent : peu efficace sur les missions d\'infiltration ou de vitesse.', flawEn:'Heavy and slow: weak on stealth or speed missions.',
-    descFr:'Exosquelette de premiere ligne. Il encaisse pour que personne d\'autre ne tombe.', descEn:'Front-line exosuit. He takes the hits so nobody else falls.' },
+    perkFr:'Bouclier incassable : absorbe et renvoie les coups les plus lourds.', perkEn:'Unbreakable shield: absorbs and returns the heaviest blows.',
+    flawFr:'Sans arsenal high-tech : desavantage face aux ennemis blindes ou a distance.', flawEn:'No high-tech arsenal: at a disadvantage against armored or ranged foes.',
+    descFr:'Soldat de premiere ligne, bouclier au poing. Il encaisse pour que personne d\'autre ne tombe.', descEn:'Front-line soldier, shield in hand. He takes the hits so nobody else falls.' },
   { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Muskl', nameEn:'Muskl', heroFr:'Muskl', heroEn:'Muskl', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3a3f47', secondaryColor:'#c8763c', symbol:'' },
     align:25, stats:{courage:20, intelligence:-6, popularity:2},
     perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
     flawFr:'Intelligence faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low intelligence: easily manipulated, fails strategic missions.',
     descFr:'Ancien docker devenu montagne humaine.', descEn:'Former dockworker turned human mountain.' },
-  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Red Widow', nameEn:'Red Widow', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'tech', powers:['ia','vitesse'],
+  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Red Widow', nameEn:'Red Widow', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#123c78', secondaryColor:'#ffc63f', symbol:'MRD' },
     align:30, stats:{courage:6, intelligence:18, popularity:8},
-    perkFr:'Assistee par IA : lit le terrain, resout les crises complexes.', perkEn:'AI-assisted: reads the field, solves complex crises.',
-    flawFr:'Fragile physiquement : les affrontements bruts la mettent en danger.', flawEn:'Physically fragile: raw brawls put her in danger.',
-    descFr:'Officier de terrain assistee par IA.', descEn:'AI-assisted field officer.' },
-  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Purple Witch', nameEn:'Purple Witch', heroFr:'Purple Witch', heroEn:'Purple Witch', morphology:'elance', path:'psychique', powers:['illusions','vitesse'],
+    perkFr:'Instincts aiguises : lit le terrain, anticipe chaque embuscade.', perkEn:'Sharp instincts: reads the field, anticipates every ambush.',
+    flawFr:'Sans super-pouvoirs : chaque combat contre un colosse est un pari.', flawEn:'No superpowers: every fight against a heavyweight is a gamble.',
+    descFr:'Officier de terrain aux reflexes d\'exception, formee au combat rapproche.', descEn:'Field officer with exceptional reflexes, trained in close combat.' },
+  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Purple Witch', nameEn:'Purple Witch', heroFr:'Purple Witch', heroEn:'Purple Witch', morphology:'elance', path:'mystique', powers:['illusions','elementaire'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1b1b26', secondaryColor:'#8a7bff', symbol:'' },
     align:14, stats:{courage:10, intelligence:14, popularity:-4},
-    perkFr:'Reine de l\'ombre : infiltration, informations, coups impossibles a tracer.', perkEn:'Queen of shadows: infiltration, intel, untraceable strikes.',
+    perkFr:'Magie du chaos : ses sorts reecrivent les probabilites en sa faveur.', perkEn:'Chaos magic: her spells rewrite the odds in her favor.',
     flawFr:'Reputation trouble : le public se mefie, l\'alignement glisse facilement.', flawEn:'Murky reputation: the public distrusts her, alignment slips easily.',
-    descFr:'Espionne devenue heroine par accident. Elle joue sur toutes les lignes.', descEn:'Spy turned hero by accident. She plays every line.' },
-  { id:'solen', charKey:'solen', side:'hero', img:CHAR_IMG.char9, nameFr:'Docteur Etrange', nameEn:'Docteur Etrange', heroFr:'Solen', heroEn:'Solen', morphology:'humain', path:'psychique', powers:['telepathie','projection'],
+    descFr:'Sorciere du chaos. La realite plie quand elle le decide.', descEn:'Witch of chaos. Reality bends when she decides it should.' },
+  { id:'solen', charKey:'solen', side:'hero', img:CHAR_IMG.char9, nameFr:'Docteur Etrange', nameEn:'Docteur Etrange', heroFr:'Solen', heroEn:'Solen', morphology:'humain', path:'mystique', powers:['portails','illusions'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'standard', aura:'none', weapon:'none', suitColor:'#25405c', secondaryColor:'#ffe9b0', symbol:'' },
     align:22, stats:{courage:4, intelligence:12, popularity:16},
-    perkFr:'Charisme naturel : negocie, calme les foules, gagne les proces d\'opinion.', perkEn:'Natural charisma: negotiates, calms crowds, wins public opinion.',
+    perkFr:'Maitrise des arcanes : portails et illusions renversent le cours d\'un combat.', perkEn:'Mastery of the arcane: portals and illusions turn the tide of any fight.',
     flawFr:'Peu de puissance offensive : depend beaucoup de ses allies.', flawEn:'Little offensive power: depends heavily on allies.',
-    descFr:'Porte-parole telepathe. Sa vraie arme, c\'est la parole.', descEn:'Telepathic spokesperson. His real weapon is his voice.' },
-  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Audition', nameEn:'Audition', heroFr:'Audition', heroEn:'Audition', morphology:'colosse', path:'mystique', powers:['elementaire','force'],
-    look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'spear', suitColor:'#d8a63c', secondaryColor:'#2b2f38', symbol:'' },
+    descFr:'Sorcier Supreme retire du monde. Sa vraie arme, ce sont les arcanes.', descEn:'Sorcerer Supreme withdrawn from the world. His real weapon is the arcane.' },
+  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Audition', nameEn:'Audition', heroFr:'Audition', heroEn:'Audition', morphology:'armure', path:'tech', powers:['rayons','invulnerabilite'],
+    look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#d8a63c', secondaryColor:'#2b2f38', symbol:'' },
     align:20, stats:{courage:16, intelligence:2, popularity:8},
-    perkFr:'Frappe mystique devastatrice, tres suivie par les foules.', perkEn:'Devastating mystic strikes, crowds follow her.',
+    perkFr:'Corps synthetique : rayons solaires devastateurs, densite modulable a volonte.', perkEn:'Synthetic body: devastating solar beams, density he can shift at will.',
     flawFr:'Orgueil : refuse les ordres, provoque des conflits avec ses allies.', flawEn:'Pride: refuses orders, creates conflicts with allies.',
-    descFr:'Heritiere d\'un marteau de siege. Frappe droit, ne recule jamais.', descEn:'Heir to a siege hammer. Strikes straight, never retreats.' },
-  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Black Cat', nameEn:'Black Cat', heroFr:'Black Cat', heroEn:'Black Cat', morphology:'elance', path:'psychique', powers:['telepathie','vitesse'],
+    descFr:'Etre synthetique a l\'esprit affute. Frappe droit, ne recule jamais.', descEn:'Sharp-minded synthetic being. Strikes straight, never retreats.' },
+  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Panthera', nameEn:'Panthera', heroFr:'Panthera', heroEn:'Panthera', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#4b2a7a', secondaryColor:'#1a1a22', symbol:'' },
     align:12, stats:{courage:12, intelligence:12, popularity:-2},
-    perkFr:'Polyvalente : bonne sur presque toutes les missions, jamais prise au piege.', perkEn:'Versatile: solid on almost any mission, never cornered.',
-    flawFr:'Passe masquee : difficile de construire une legende publique.', flawEn:'Masked past: hard to build a public legend.',
-    descFr:'Infiltratrice masquee. Elle travaille dans l\'ombre mais choisit son camp.', descEn:'Masked infiltrator. Works in the dark but picks a side.' },
+    perkFr:'Guerrier-roi : reflexes et sens surhumains, jamais pris au piege.', perkEn:'Warrior-king: superhuman reflexes and senses, never cornered.',
+    flawFr:'Fardeau du trone : chaque decision engage plus que lui seul.', flawEn:'Weight of the throne: every decision carries more than himself.',
+    descFr:'Protecteur masque d\'une nation entiere. Il choisit son camp, jamais son devoir.', descEn:'Masked protector of an entire nation. He picks his side, never his duty.' },
   /* ---------- 10 VILLAINS ---------- */
   { id:'siddartha', charKey:'siddartha', side:'villain', img:CHAR_IMG.char11, nameFr:'Siddartha', nameEn:'Siddartha', heroFr:'Siddartha', heroEn:'Siddartha', morphology:'humain', path:'mystique', powers:['telekinesie','illusions'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'none', boots:'none', aura:'dark', weapon:'none', suitColor:'#1a1024', secondaryColor:'#c03cff', symbol:'S' },
@@ -2493,7 +2528,7 @@ const PRESETS = [
     perkFr:'Le grand adversaire : puissance mystique et esprit superieur, tres peu d\'echecs.', perkEn:'The great adversary: mystic power and superior mind, very few failures.',
     flawFr:'Cible numero un : les heros s\'allient contre lui, aucune redemption facile.', flawEn:'Target number one: heroes unite against him, redemption is nearly impossible.',
     descFr:'L\'antagoniste central. Il pense en siecles, pas en missions.', descEn:'The central antagonist. He thinks in centuries, not missions.' },
-  { id:'malachar', charKey:'malachar', side:'villain', img:CHAR_IMG.char12, nameFr:'Ghamos', nameEn:'Ghamos', heroFr:'Ghamos', heroEn:'Ghamos', morphology:'colosse', path:'mystique', powers:['elementaire','regen'],
+  { id:'malachar', charKey:'malachar', side:'villain', img:CHAR_IMG.char12, nameFr:'Ghamos', nameEn:'Ghamos', heroFr:'Ghamos', heroEn:'Ghamos', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#221830', secondaryColor:'#a13cff', symbol:'' },
     align:-50, stats:{courage:20, intelligence:0, popularity:-6},
     perkFr:'Destruction pure : quasi invincible en combat frontal.', perkEn:'Pure destruction: nearly unbeatable in a frontal fight.',
@@ -2505,12 +2540,12 @@ const PRESETS = [
     perkFr:'Ingenieur du chaos : plans imparables, technologie volee de pointe.', perkEn:'Engineer of chaos: unstoppable plans, stolen cutting-edge tech.',
     flawFr:'Physiquement vulnerable hors de son armure.', flawEn:'Physically vulnerable outside his armor.',
     descFr:'Genie renegat qui vend la guerre au plus offrant.', descEn:'Renegade genius selling war to the highest bidder.' },
-  { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Cruhela', nameEn:'Cruhela', heroFr:'Cruhela', heroEn:'Cruhela', morphology:'elance', path:'psychique', powers:['telekinesie','projection'],
+  { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Cruhela', nameEn:'Cruhela', heroFr:'Cruhela', heroEn:'Cruhela', morphology:'elance', path:'mystique', powers:['invocation','elementaire'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#c8a13c', secondaryColor:'#16161c', symbol:'' },
     align:-25, stats:{courage:4, intelligence:14, popularity:14},
-    perkFr:'Fortune et influence : achete le Daily Bugle, les proces et les silences.', perkEn:'Wealth and influence: buys media, trials and silence.',
-    flawFr:'Courage faible : fuit les combats et perd ses alliances sous pression.', flawEn:'Low courage: flees fights and loses alliances under pressure.',
-    descFr:'Financiere devenue arme. Le pouvoir est une monnaie qui s\'achete.', descEn:'Financier turned weapon. Power is a currency you buy.' },
+    perkFr:'Legions d\'outre-tombe : convoque des allies morts pour submerger l\'ennemi.', perkEn:'Legion of the dead: summons fallen allies to overwhelm the enemy.',
+    flawFr:'Bannie des siens : aucune allegeance ne lui fait confiance longtemps.', flawEn:'Exiled by her own: no allegiance trusts her for long.',
+    descFr:'Deesse dechue venue reclamer ce qu\'on lui a vole. Le pouvoir est un heritage.', descEn:'Fallen goddess come to reclaim what was stolen from her. Power is an inheritance.' },
   { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Moki', nameEn:'Moki', heroFr:'Moki', heroEn:'Moki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'claws', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1c2b24', secondaryColor:'#7ad14f', symbol:'' },
     align:-35, stats:{courage:12, intelligence:10, popularity:2},
@@ -2529,11 +2564,11 @@ const PRESETS = [
     perkFr:'Machine de guerre : blindage et puissance de feu superieurs.', perkEn:'War machine: superior armor and firepower.',
     flawFr:'Aucune emotion : impossible de creer des liens, relations toujours froides.', flawEn:'No emotion: cannot bond, relationships stay cold.',
     descFr:'Machine de guerre autonome. Aucune negociation.', descEn:'Autonomous war machine. No negotiation.' },
-  { id:'nihil', charKey:'nihil', side:'villain', img:CHAR_IMG.char18, nameFr:'Anusilus', nameEn:'Anusilus', heroFr:'Anusilus', heroEn:'Anusilus', morphology:'elance', path:'psychique', powers:['projection','telekinesie'],
+  { id:'nihil', charKey:'nihil', side:'villain', img:CHAR_IMG.char18, nameFr:'Anusilus', nameEn:'Anusilus', heroFr:'Anusilus', heroEn:'Anusilus', morphology:'colosse', path:'tech', powers:['rayons','invulnerabilite'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'none', aura:'dark', weapon:'none', suitColor:'#0b0b10', secondaryColor:'#9aa0ff', symbol:'' },
     align:-38, stats:{courage:10, intelligence:16, popularity:-2},
-    perkFr:'Pouvoirs psychiques immenses : plie les volontes et les batailles.', perkEn:'Immense psychic power: bends wills and battles.',
-    flawFr:'Corps fragile et esprit ronge : les echecs le detruisent vite.', flawEn:'Fragile body, eroded mind: failures break him fast.',
+    perkFr:'Sceptre cosmique : rayons devastateurs et carapace quasi indestructible.', perkEn:'Cosmic scepter: devastating blasts and near-indestructible carapace.',
+    flawFr:'Rage devorante : aucune retenue, ne negocie jamais.', flawEn:'Devouring rage: no restraint, never negotiates.',
     descFr:'Il veut moins gouverner le monde que le vider.', descEn:'He wants less to rule the world than to empty it.' },
   { id:'mandate', charKey:'mandate', side:'villain', img:CHAR_IMG.char19, nameFr:'Bang', nameEn:'Bang', heroFr:'Bang', heroEn:'Bang', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#20242c', secondaryColor:'#d8dde6', symbol:'M' },
@@ -2541,12 +2576,12 @@ const PRESETS = [
     perkFr:'Autorite officielle : la loi, les budgets et le Daily Bugle jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
     flawFr:'Aucun talent de combat : sans son appareil, il ne vaut rien.', flawEn:'No combat skill: without his apparatus, he is nothing.',
     descFr:'Le visage propre du controle. Il signe les ordres, jamais les crimes.', descEn:'The clean face of control. He signs orders, never crimes.' },
-  { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Le Fou Vert', nameEn:'Le Fou Vert', heroFr:'Le Fou Vert', heroEn:'Le Fou Vert', morphology:'humain', path:'psychique', powers:['telepathie','illusions'],
+  { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Le Fou Vert', nameEn:'Le Fou Vert', heroFr:'Le Fou Vert', heroEn:'Le Fou Vert', morphology:'humain', path:'tech', powers:['armure','rayons'],
     look:{ helmet:'none', cape:true, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#e0409a', secondaryColor:'#f5d7e8', symbol:'' },
     align:-20, stats:{courage:0, intelligence:10, popularity:20},
-    perkFr:'Mondain redoutable : popularite enorme, il detruit par la rumeur.', perkEn:'Formidable socialite: huge fame, he destroys through rumor.',
-    flawFr:'Lache au combat : chaque affrontement direct peut finir sa carriere.', flawEn:'Coward in a fight: every direct clash could end his career.',
-    descFr:'Mondain toxique. Il ruine des reputations entieres en une soiree.', descEn:'Toxic socialite. He ruins entire reputations in one evening.' },
+    perkFr:'Planeur de guerre : bombes et tirs d\'assaut depuis les airs.', perkEn:'War glider: bombs and assault fire from the air.',
+    flawFr:'Lache au combat rapproche : chaque affrontement direct peut finir sa carriere.', flawEn:'Coward up close: every direct clash could end his career.',
+    descFr:'Industriel bascule en terroriste masque. Il seme le chaos depuis le ciel.', descEn:'Industrialist turned masked terrorist. He spreads chaos from the sky.' },
   /* ---------- 10 HEROS (inspirations libres, costumes et couleurs originaux) ---------- */
   { id:'nightlark', charKey:'nightlark', side:'hero', img:CHAR_IMG.char21, nameFr:'Arachno Kid', nameEn:'Arachno Kid', heroFr:'Arachno Kid', heroEn:'Arachno Kid', morphology:'elance', path:'physique', powers:['vitesse','saut'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#0f5f6b', secondaryColor:'#ff7a2f', symbol:'' },
@@ -2675,7 +2710,7 @@ const PRESETS = [
     perkFr:'Reflexes arachneens : esquive et contre-attaque quasi automatiques.', perkEn:'Arachnid reflexes: near-automatic dodge and counter.',
     flawFr:'Trop jeune : la presse et les mentors le sous-estiment.', flawEn:'Too young: press and mentors underestimate him.',
     descFr:'Gamin du quartier devenu acrobate masque, toujours en mouvement.', descEn:'A neighborhood kid turned masked acrobat, always moving.' },
-  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Dr Boom', nameEn:'Dr Boom', heroFr:'Dr Boom', heroEn:'Dr Boom', morphology:'colosse', path:'tech', powers:['technologie','elementaire'],
+  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Dr Boom', nameEn:'Dr Boom', heroFr:'Dr Boom', heroEn:'Dr Boom', morphology:'armure', path:'tech', powers:['armure','elementaire'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#2f6b4a', secondaryColor:'#8c8f96', symbol:'' },
     align:-30, stats:{courage:13, intelligence:18, popularity:3},
     perkFr:'Genie souverain : ses machines de siege brisent les defenses.', perkEn:'Sovereign genius: his siege machines break defenses.',
@@ -2764,12 +2799,12 @@ function agingLabel(){
 }
 /* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
 const CHAR_TIER = {
-  /* Sommet absolu */
-  theg:10, siddartha:10, malachar:10,
+  /* Sommet absolu : les deux plus puissants du jeu, personne d'autre ne les egale */
+  vaelor:10, boomnpc:10,
   /* Poids lourds cosmiques */
-  nihil:9, sepulcre:9, vaelor:9, ferrum:9, nyx:9, solen:9, kaerus:8,
+  theg:9, siddartha:9, malachar:9, nihil:9, sepulcre:9, ferrum:9, nyx:9, solen:9,
   /* Elite */
-  volt:8, obsidian:8, boomnpc:8, aegis:7, requiem:7, precheur:7,
+  kaerus:8, volt:8, obsidian:8, aegis:7, requiem:7, precheur:7,
   /* Solides */
   kidspider:6, vipera:6, mandate:6, fuchsia:6, umbra:6, courtier:5, zeroday:5, aurelia:5,
   /* Specialistes humains */
@@ -2788,9 +2823,9 @@ const CHAR_UNLOCK_TIER = {
   obsidian:2, marsh:2, sable:2,
   vipera:3, ferrum:3,
   nihil:4, aegis:4, volt:4, titanwolf:4,
-  aurelia:5, sepulcre:5, nyx:5, theg:5,
-  mandate:6, siddartha:6, solen:6,
-  boomnpc:7, warlock:7, malachar:7, baronvex:7, lorelei:7, vaelor:7
+  aurelia:5, sepulcre:5, nyx:5, theg:5, mandate:5, siddartha:5, solen:5, warlock:5, malachar:5, baronvex:5, lorelei:5,
+  /* Les deux plus puissants du jeu : on ne les rencontre qu'a partir du niveau 6, et jamais avant. */
+  vaelor:6, boomnpc:6
 };
 /* Une fois debloque, un personnage le reste (on peut toujours le recroiser/combattre apres). */
 function charUnlocked(key){
@@ -3230,7 +3265,7 @@ function topbar(){
 function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
-    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, training:screenTraining, end:screenEnd };
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -3265,7 +3300,7 @@ function avatarSVG(){
   const primary = L.suitColor, secondary = L.secondaryColor;
   const rgb = hexToRgb(primary);
   const light = rgbToHex(rgb[0]+45, rgb[1]+45, rgb[2]+45), dark = rgbToHex(rgb[0]*0.42, rgb[1]*0.42, rgb[2]*0.42);
-  const pathColor = { tech:'#00e5ff', mystique:'#b98bff', physique:'#ffb020', psychique:'#37e6a8' }[S.path] || '#00e5ff';
+  const pathColor = { tech:'#00e5ff', mystique:'#b98bff', physique:'#ffb020', psychique:'#37e6a8', divin:'#ffd23c' }[S.path] || '#00e5ff';
   const uid = 'g'+Math.random().toString(36).slice(2,7);
   const cx=140, torsoTop=76, torsoBottom=torsoTop+cfg.torsoH;
   const isArmure = L.morphology==='armure';
@@ -3515,7 +3550,7 @@ const UNLOCK_TIERS = [
   { ids:['valkyr','aegis','fuchsia','vipera'],
     condFr:'Disponible des le debut', condEn:'Available from the start',
     check:(m)=>true },
-  { ids:['theg','vaelor','siddartha','mandate'],
+  { ids:['theg','volt','siddartha','mandate'],
     condFr:'Terminer 1 carriere', condEn:'Complete 1 career',
     check:(m)=>(m.careersCompleted||0)>=1 },
   { ids:['marsh','nyx','obsidian','kaerus'],
@@ -3524,19 +3559,20 @@ const UNLOCK_TIERS = [
   { ids:['ferrum','solen','aurelia','sepulcre'],
     condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years',
     check:(m)=>(m.longestCareerYears||0)>=20 },
-  { ids:['sable','kidspider','nihil','boomnpc'],
-    condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career',
-    check:(m)=>(m.bestStars||0)>=7 },
-  { ids:['volt','malachar'],
-    condFr:'Obtenir la 8eme etoile ou reunir les 6 Eclats du Vide', condEn:'Get the 8th star or reunite the 6 Void Shards',
-    check:(m)=>!!m.got8thStar || !!m.gotVoidCompletion },
+  { ids:['sable','kidspider','nihil','malachar'],
+    condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career',
+    check:(m)=>(m.bestStars||0)>=5 },
+  { ids:['vaelor','boomnpc'],
+    condFr:'Atteindre le niveau 6 dans une carriere', condEn:'Reach level 6 in a career',
+    check:(m)=>(m.bestStars||0)>=6 },
 ];
 function unlockedPresetIds(){ const out=[]; UNLOCK_TIERS.forEach(t=>{ if(t.check(META)) out.push(...t.ids); }); return out; }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
 function tierConditionFor(id){ const t = UNLOCK_TIERS.find(t=>t.ids.includes(id)); return t ? (S.lang==='fr'?t.condFr:t.condEn) : ''; }
-/* Ordre d'affichage du carrousel : un heros + un villain du meme palier, cote a cote, sur le meme ecran. */
-const PAIR_HEROES   = ['valkyr','aegis','theg','vaelor','marsh','nyx','ferrum','solen','sable','kidspider','volt'];
-const PAIR_VILLAINS = ['fuchsia','vipera','siddartha','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','boomnpc','malachar'];
+/* Ordre d'affichage du carrousel : un heros + un villain du meme palier, cote a cote, sur le meme ecran.
+   Thor et Doctor Doom (les 2 plus puissants du jeu) sont volontairement les tout derniers a se debloquer. */
+const PAIR_HEROES   = ['valkyr','aegis','theg','volt','marsh','nyx','ferrum','solen','sable','kidspider','vaelor'];
+const PAIR_VILLAINS = ['fuchsia','vipera','siddartha','mandate','obsidian','kaerus','aurelia','sepulcre','nihil','malachar','boomnpc'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
@@ -4494,6 +4530,28 @@ function checkTeamInvite(){
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
 }
+/* ============================ CREATION DE FACTION PAR LE JOUEUR ============================
+   Le joueur ne construit pas une faction de toutes pieces : c'est le jeu qui la lui propose, batie
+   a partir de ses propres choix (les allies avec qui il a tisse les meilleurs liens). Le joueur ne
+   fait que choisir un nom. Ne peut jamais se produire avant l'annee 7, et reste rare. */
+function checkFactionCreationOffer(){
+  if(S.currentYear < 7) return false;
+  if(S.factionCreationOffered) return false;
+  const zone = zoneOf(S.align);
+  if(zone==='neutral') return false;
+  const mySide = zone==='hero' ? 'hero' : 'villain';
+  const candidates = Object.keys(CHARACTERS)
+    .filter(k=>CHARACTERS[k].align===mySide && k!==S.playerCharKey)
+    .filter(k=>(S.rel[k]||0) >= 8)
+    .sort((a,b)=>(S.rel[b]||0)-(S.rel[a]||0));
+  if(candidates.length < 2) return false;
+  if(Math.random() > 0.22) return false; /* reste rare, comme les invitations de faction */
+  S.factionCreationOffered = true;
+  S.factionFounders = candidates.slice(0,2);
+  S.factionFounderSide = mySide;
+  S.pendingReturnScreen = S.screen; S.screen = 'factionCreate';
+  return true;
+}
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
@@ -5343,10 +5401,14 @@ function buildBattleSquads(foeKey, mission){
   const sidePool = keys.filter(k=>CHARACTERS[k].align===mySide);
   /* Faction : une fois S.team rejoint, tes allies au front sont a 80% des membres de ta propre
      faction ; les 20% restants viennent d'autres factions du meme camp (hero ou villain), qui
-     te preteront main-forte si vous n'etes pas assez nombreux. */
+     te preteront main-forte si vous n'etes pas assez nombreux.
+     Attribut : a defaut d'un compagnon de faction, un personnage qui partage un de tes attributs
+     (Etre mystique, Mutant, Etre cosmique, Asgardien, Genie/Scientifique) est prefere au hasard pur. */
   const facMates = myFactionMemberKeys().filter(k=>sidePool.includes(k));
-  const facOthers = sidePool.filter(k=>facMates.indexOf(k)<0);
-  let allyPool = facMates.length ? weightedFactionOrder(facMates, facOthers, 0.8) : shuffle(sidePool);
+  const rest = sidePool.filter(k=>facMates.indexOf(k)<0);
+  const attrMates = myAttributeMemberKeys().filter(k=>rest.includes(k));
+  const attrOthers = rest.filter(k=>attrMates.indexOf(k)<0);
+  let allyPool = (facMates.length || attrMates.length) ? weightedTripleOrder(facMates, attrMates, attrOthers, 0.8, 0.6) : shuffle(sidePool);
   const mine = menteeKeys().filter(k=>allyPool.includes(k));
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   const foePool = shuffle(keys.filter(k=>CHARACTERS[k].align!==mySide));
@@ -6087,12 +6149,14 @@ function handleZoneCheckAndContinue(){
     showSwitchAnnouncement(oldZone, newZone, ()=>{
       if(checkFactionExpulsion()){ nextMission(); return; }
       if(checkTeamInvite()){ render(); return; }
+      if(checkFactionCreationOffer()){ render(); return; }
       nextMission();
     });
     return;
   }
   if(checkFactionExpulsion()){ nextMission(); return; }
   if(checkTeamInvite()){ render(); return; }
+  if(checkFactionCreationOffer()){ render(); return; }
   nextMission();
 }
 function resolveOutcome(mission){
@@ -6221,6 +6285,48 @@ function applyChoice(choice){
     return;
   }
   handleZoneCheckAndContinue();
+}
+/* Le joueur ne choisit qu'un nom : les fondateurs et le camp sont deja fixes par checkFactionCreationOffer. */
+function screenFactionCreate(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const side = S.factionFounderSide;
+  const founders = (S.factionFounders||[]).map(k=>CHARACTERS[k]).filter(Boolean);
+  const sideLab = side==='villain' ? (fr?'VILLAIN':'VILLAIN') : (fr?'HEROS':'HERO');
+  const sideCol = charColor(side);
+  const namesTxt = founders.map(c=>fr?c.fr:c.en).join(fr?' et ':' and ');
+  d.innerHTML = `<span class="eyebrow" style="color:${sideCol};">${sideLab}</span><h2>${fr?'Fonder une faction':'Found a faction'}</h2>
+    <p class="lead">${fr?`${namesTxt} proposent de s'unir formellement sous ta banniere. Il ne manque plus qu'un nom.`
+      :`${namesTxt} propose to formally unite under your banner. All that's missing is a name.`}</p>
+    <div class="team-hero-banner" style="border-color:${sideCol};">
+      <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+        ${founders.map(c=>`<div style="text-align:center;">
+          <div style="width:56px; height:56px; border-radius:12px; overflow:hidden; border:1.5px solid ${sideCol}; margin:0 auto; background:rgba(0,0,0,.4);">
+            ${c.img?`<img src="${c.img}" alt="${fr?c.fr:c.en}" style="width:100%; height:100%; object-fit:cover; object-position:50% 8%;">`:`<span style="display:flex; align-items:center; justify-content:center; height:100%; font-weight:900; color:#fff;">${(fr?c.fr:c.en).charAt(0)}</span>`}
+          </div>
+          <div style="font-size:11px; margin-top:4px;">${fr?c.fr:c.en}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <input type="text" id="facNameInput" maxlength="30" placeholder="${fr?'Nom de la faction...':'Faction name...'}"
+      style="width:100%; margin-top:16px; padding:12px 14px; border-radius:12px; border:1.5px solid var(--line); background:rgba(255,255,255,.03); color:var(--ink); font-size:15px;">
+    <div class="actions"><button class="btn ghost" id="skipFac">${fr?'Pas maintenant':'Not now'}</button><button class="btn cyan" id="confirmFac" disabled>${fr?'Fonder':'Found it'}</button></div>`;
+  const input = d.querySelector('#facNameInput'), confirmBtn = d.querySelector('#confirmFac');
+  input.oninput = ()=>{ confirmBtn.disabled = input.value.trim().length < 2; };
+  d.querySelector('#skipFac').onclick = ()=>{ nextMission(); };
+  confirmBtn.onclick = ()=>{
+    const name = input.value.trim(); if(name.length < 2) return;
+    const id = 'custom_'+Date.now();
+    S.customFactions = S.customFactions || [];
+    S.customFactions.push({ id, name, side, members: founders.map(c=>c.canon||c.en||c.fr) });
+    founders.forEach(c=>{ const k = Object.keys(CHARACTERS).find(kk=>CHARACTERS[kk]===c); if(k) S.rel[k] = clamp((S.rel[k]||0)+3, -20, 20); });
+    const label = fr ? `Tu as fonde ${name}.` : `You founded ${name}.`;
+    S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: side==='villain' });
+    jarvisSay(`${name} est officiellement sur les radars. Le monde va en prendre note.`,
+      `${name} is officially on the radar. The world will take note.`,
+      fr?'nouvelle faction':'new faction');
+    nextMission();
+  };
+  return d;
 }
 function screenInvite(){
   const d = document.createElement('div'); const isHero = S.inviteSide==='hero'; const tier = S.inviteTier;
@@ -8288,6 +8394,9 @@ function jarvisAuto(force){
   } else if(S.screen==='invite'){
     fr = "Offre d'organisation interceptee. Rien ne t'oblige a signer, "+name+".";
     en = "Organization offer intercepted. Nothing forces you to sign, "+name+"."; tag = jvL('offre externe','external offer');
+  } else if(S.screen==='factionCreate'){
+    fr = "Tes allies veulent une banniere commune. Le nom, c'est toi qui le choisis.";
+    en = "Your allies want a shared banner. The name is yours to choose."; tag = jvL('fondation','founding');
   } else if(S.screen==='mentor'){
     fr = "Transmission privee. Ce genre de conversation change des trajectoires.";
     en = "Private transmission. This kind of talk changes trajectories."; tag = jvL('canal prive','private channel');
