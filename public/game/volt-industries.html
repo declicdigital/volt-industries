@@ -3082,7 +3082,7 @@ function agingProfile(){
   const tier = (typeof charTier==='function') ? 0 : 0;
   let h = 0; for(let i=0;i<key.length;i++) h = (h*31 + key.charCodeAt(i)) % 9973;
   const t2 = (typeof CHAR_TIER!=='undefined' && S.playerCharKey && CHAR_TIER[S.playerCharKey]) ? CHAR_TIER[S.playerCharKey] : 5;
-  if(t2 >= 9) return 'late';
+  if(t2 >= 88) return 'late';
   const m = h % 3;
   return m===0 ? 'late' : (m===1 ? 'early' : 'stable');
 }
@@ -3100,23 +3100,74 @@ function agingLabel(){
 }
 /* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
 const CHAR_TIER = {
-  /* Nouveau classement, base sur le tableau de puissance fourni (100=Doctor Doom). */
-  boomnpc:10, malachar:10, jeangrey:10, sepulcre:10, nyx:10, vipera:10, solen:10, vaelor:10,
-  ferrum:9, mandate:9, gorr:9, apocalypse:9, magneto:9, obsidian:9, capmarvel:9, profx:9, lorelei:9, aurelia:9, nihil:9,
-  storm:8, invisiblewoman:8, humantorch:8, volt:8, mrfantastic:8,
-  electro:7, siddartha:7, theg:7, kidspider:7, antman:7, thething:7,
-  fuchsia:6, ebonymaw:6, sable:6, gamora:6, groot:6, cyclops:6,
-  nebula:5, mysterio:5, docock:5, corvus:5, proxima:5, cull:5, pyro:5,
-  mystique:4, aegis:4, kaerus:4, starlord:4, deadpool:4,
-  marsh:3, daredevil:3, rocket:3,
+  /* Puissance exacte sur 100, fournie par l'utilisateur. Une variance de +/-10 s'applique
+     ensuite par carriere (voir charPower ci-dessous) : les valeurs ci-dessous sont la base fixe. */
+  boomnpc:100,
+  malachar:99,
+  jeangrey:99,
+  sepulcre:98,
+  nyx:97,
+  vipera:96,
+  solen:96,
+  vaelor:95,
+  ferrum:94,
+  mandate:94,
+  gorr:93,
+  apocalypse:92,
+  magneto:91,
+  obsidian:90,
+  capmarvel:90,
+  profx:89,
+  lorelei:88,
+  aurelia:88,
+  nihil:87,
+  storm:86,
+  invisiblewoman:85,
+  humantorch:84,
+  volt:84,
+  mrfantastic:83,
+  electro:81,
+  siddartha:80,
+  theg:79,
+  kidspider:79,
+  antman:78,
+  thething:77,
+  fuchsia:73,
+  ebonymaw:72,
+  sable:71,
+  gamora:70,
+  groot:69,
+  cyclops:68,
+  nebula:66,
+  mysterio:65,
+  docock:64,
+  corvus:63,
+  proxima:62,
+  cull:61,
+  pyro:60,
+  mystique:59,
+  aegis:58,
+  starlord:53,
+  marsh:48,
+  daredevil:46,
+  rocket:45,
+  kaerus:54,
+  deadpool:74,
 
 };
+/* Puissance sur 100, avec une marge de +/-10 qui varie d'une carriere a l'autre (les personnages
+   ne sont jamais figes : Iron Man peut etre un peu plus fort ou plus faible selon la partie). */
+function charPowerVariance(key){
+  if(!S.powerVariance) S.powerVariance = {};
+  if(S.powerVariance[key]===undefined) S.powerVariance[key] = Math.round((Math.random()*2-1)*10);
+  return S.powerVariance[key];
+}
 function charTier(key){
-  if(!key) return 5;
-  if(CHAR_TIER[key]!==undefined) return CHAR_TIER[key];
+  if(!key) return 50;
+  if(CHAR_TIER[key]!==undefined) return clamp(CHAR_TIER[key] + charPowerVariance(key), 1, 100);
   const c = CHARACTERS[key];
-  if(!c) return 5;
-  return 4; /* recrues et personnages jouables : encore en construction */
+  if(!c) return 50;
+  return clamp(40 + charPowerVariance(key), 1, 100); /* recrues et personnages jouables : encore en construction */
 }
 /* ---------- Niveau minimum d'apparition (echelle de rang 1-7, comme les combats) ---------- */
 const CHAR_UNLOCK_TIER = {
@@ -3225,7 +3276,7 @@ function foeStrength(foeKey, mission){
   const scope = (mission && mission.scope) || 1;
   /* Le rival grandit avec toi : plus tu progresses, plus il progresse aussi. */
   const rivalBonus = (foeKey===S.rivalKey) ? computeStars()*5 : 0;
-  return Math.round(30 + danger*7 + scope*1.6 + (tier-24)*1.4 + (charTier(foeKey)-5)*6 + rivalBonus);
+  return Math.round(30 + danger*7 + scope*1.6 + (tier-24)*1.4 + (charTier(foeKey)-50)*0.65 + rivalBonus);
 }
 function winOdds(foeKey, mission){
   const diff = playerStrength() - foeStrength(foeKey, mission);
@@ -3899,7 +3950,7 @@ function duelPickerCardHTML(slot, key){
   return `<div class="duel-pick" data-slot="${slot}" style="--pc:${col};">
     <div class="duel-pick-frame">${c.img?`<img src="${c.img}" alt="${name}" style="width:100%;height:100%;object-fit:cover;object-position:50% 10%;" onerror="this.style.display='none';">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:${col};">${name.charAt(0)}</div>`}</div>
     <div class="duel-pick-name">${name}</div>
-    <div class="duel-pick-tier">${fr?'Puissance':'Power'} ${charTier(key)}</div>
+    <div class="duel-pick-tier">${fr?'Puissance':'Power'} ${charTier(key)}/100</div>
   </div>`;
 }
 function duelPickerListHTML(slot, keys){
@@ -3954,8 +4005,8 @@ function screenDuelSimulator(){
     const movesA = foeMovesFor(a), movesB = foeMovesFor(b);
     const avgA = movesA.reduce((s,m)=>s+m.p*(m.acc||1),0)/movesA.length;
     const avgB = movesB.reduce((s,m)=>s+m.p*(m.acc||1),0)/movesB.length;
-    const scoreA = ta*8 + avgA + Math.random()*18;
-    const scoreB = tb*8 + avgB + Math.random()*18;
+    const scoreA = ta*0.8 + avgA + Math.random()*18;
+    const scoreB = tb*0.8 + avgB + Math.random()*18;
     const winner = scoreA >= scoreB ? a : b; const wc = winner===a?ca:cb;
     const loser = winner===a?b:a; const lc = winner===a?cb:ca;
     const margin = Math.abs(scoreA-scoreB);
@@ -3992,6 +4043,47 @@ function screenTrophies(){
   d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'welcome'; render(); };
   return d;
 }
+/* Reinitialisation complete de la progression : personnages a nouveau tous verrouilles sauf les
+   premiers, trophees et artefacts remis a zero. La partie en cours et le journal des carrieres
+   precedentes ne sont pas touches. */
+async function resetMetaProgress(){
+  META.careersCompleted = 0;
+  META.longestCareerYears = 0;
+  META.bestStars = 0;
+  META.got8thStar = false;
+  META.gotVoidCompletion = false;
+  META.achievements = {};
+  META.ngPlusBonus = null;
+  META.totalFightsWon = 0;
+  META.totalCivilsSaved = 0;
+  META.totalBetrayals = 0;
+  META.artifactsFoundEver = [];
+  await saveMetaProgress();
+}
+function showResetConfirm(){
+  const fr = S.lang==='fr';
+  const wrap = document.createElement('div');
+  wrap.className = 'duel-list-overlay';
+  wrap.innerHTML = `<div class="duel-list-box" style="max-width:380px;">
+    <div class="duel-list-head" style="color:#ff5c6e;">${fr?'Reinitialiser la progression ?':'Reset progress?'}</div>
+    <div style="padding:16px;">
+      <p class="lead" style="margin:0;">${fr?'Tous les personnages redeviendront verrouilles (sauf les tout premiers), et tes trophees/artefacts decouverts seront remis a zero. Cette action est irreversible.':'All characters will be locked again (except the very first ones), and your discovered trophies/artifacts will be reset. This cannot be undone.'}</p>
+      <p class="lead" style="margin-top:8px; font-size:12px; color:var(--dim);">${fr?'Ta carriere en cours et le journal des carrieres precedentes ne sont pas touches.':'Your ongoing career and the previous careers log are not affected.'}</p>
+      <div class="actions" style="margin-top:14px; justify-content:flex-end; gap:8px;">
+        <button class="btn ghost" id="resetCancel">${fr?'Annuler':'Cancel'}</button>
+        <button class="btn cyan" id="resetConfirm" style="background:#ff5c6e; border-color:#ff5c6e;">${fr?'Reinitialiser':'Reset'}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.onclick = (e)=>{ if(e.target===wrap) wrap.remove(); };
+  wrap.querySelector('#resetCancel').onclick = ()=>wrap.remove();
+  wrap.querySelector('#resetConfirm').onclick = async ()=>{
+    await resetMetaProgress();
+    wrap.remove();
+    render();
+  };
+}
 function screenWelcome(){
   const d = document.createElement('div');
   d.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
@@ -4004,12 +4096,16 @@ function screenWelcome(){
       <button class="btn ghost" id="goDuel" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Simulateur de duel':'Duel simulator'}</button>
       <button class="btn ghost" id="goTrophies" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Trophees':'Trophies'}</button>
     </div>
+    <div class="actions" style="justify-content:center; margin-top:4px;">
+      <button class="btn ghost" id="goReset" style="font-size:11px; padding:6px 12px; color:#ff5c6e; border-color:rgba(255,92,110,.35);">${S.lang==='fr'?'Reinitialiser la progression':'Reset progress'}</button>
+    </div>
     <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
     <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>`;
   d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
   d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
   d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
   d.querySelector('#goTrophies').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='trophies'; render(); };
+  d.querySelector('#goReset').onclick = ()=>{ showResetConfirm(); };
   loadCareerHistory(d.querySelector('#historyBox'));
   loadGameState().then(saved=>{
     if(!saved || !saved.heroName || !saved.missionsPlan || !saved.missionsPlan.length) return;
@@ -6422,7 +6518,7 @@ function menteeEffectiveTier(charKey){
   const mentee = (S.mentees||[]).find(m=>m.charKey===charKey && !m.graduated);
   if(!mentee) return null;
   const yearsIn = Math.max(0, (S.currentYear||1) - (mentee.since||S.currentYear));
-  return Math.min(6, 2 + yearsIn);
+  return Math.min(60, 20 + yearsIn*8);
 }
 function tierOfKey(k){
   const mt = menteeEffectiveTier(k);
@@ -6436,7 +6532,7 @@ function buildRosterExtras(keys, weakened){
   return keys.map(k=>{
     const c = CHARACTERS[k]; if(!c) return null;
     const tier = tierOfKey(k);
-    let maxHp = Math.round(58 + tier*9);
+    let maxHp = Math.round(58 + tier*0.9);
     let hp = maxHp;
     if(weakened) hp = Math.round(maxHp * (0.3 + Math.random()*0.35)); // deja au front, en difficulte
     return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp, ko:false, dead:false };
@@ -6535,7 +6631,7 @@ function startBattle(mission, done){
   /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
   function spdFor(entry){
     if(entry.isPlayer) return 46 + Math.round(S.stats.courage*0.18) + Math.round(Math.random()*10);
-    return 26 + tierOfKey(entry.key)*4 + Math.round(Math.random()*12);
+    return 26 + tierOfKey(entry.key)*0.4 + Math.round(Math.random()*12);
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
@@ -6987,7 +7083,7 @@ function startBattle(mission, done){
         const target = wounded.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp))[0];
         const tIdx = allyRoster.indexOf(target);
         flashSpotlight('ally', ally);
-        const healAmt = Math.max(8, Math.round(14 + tierOfKey(ally.key)*1.4));
+        const healAmt = Math.max(8, Math.round(14 + tierOfKey(ally.key)*0.14));
         setTimeout(()=>{
           target.hp = Math.min(target.maxHp, target.hp + healAmt);
           refreshEntry('ally', tIdx);
@@ -7003,7 +7099,7 @@ function startBattle(mission, done){
     if(st.targetIdx<0){ finish(true); return; }
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*1.7) * (0.8 + Math.random()*0.5)));
+    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5)));
     setTimeout(()=>{
       const tName = foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : '';
       dealToFoe(st.targetIdx, d, ally.col);
@@ -7038,7 +7134,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*7);
+    const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*0.7);
     const mult = idx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget();
