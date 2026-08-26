@@ -380,7 +380,7 @@
   .cine-overlay.villain-8 .cine-title{ text-shadow:0 0 24px var(--red), 0 0 60px var(--gold); }
   .cine-overlay.villain-8 .star8-burst{ background:radial-gradient(circle at 50% 50%, rgba(255,59,92,.35), rgba(255,210,63,.2) 55%, transparent 75%); }
   .star8-sub{ margin-top:10px; font-size:14.5px; color:var(--ink); opacity:.88; max-width:440px; margin-left:auto; margin-right:auto; }
-  /* --- Fin speciale : les 6 Eclats du Vide reunis --- */
+  /* --- Fin speciale : les 6 Gemmes d'Infinite reunis --- */
   .void-icon{ color:#ff5fa8; text-shadow:0 0 30px #ff5fa8, 0 0 80px #4fd3ff; animation: star8Spin 2.4s ease-in-out infinite; }
   .void-hero .cine-scope{ color:#4fd3ff; text-shadow:0 0 20px #4fd3ff; }
   .void-hero .cine-title{ text-shadow:0 0 26px #ff5fa8, 0 0 60px #4fd3ff, 0 0 100px #ff5fa8; }
@@ -3275,11 +3275,11 @@ function careerScore(){
   else if(total>=40){ grade='D'; gradeLabelFr='Carriere en dents de scie'; gradeLabelEn='Uneven career'; }
   else if(total>=25){ grade='E'; gradeLabelFr='Carriere difficile'; gradeLabelEn='Rough career'; }
   else { grade='F'; gradeLabelFr='Carriere ratee'; gradeLabelEn='Failed career'; }
-  /* Les 6 Eclats du Vide reunis = victoire totale et definitive : score et grade au maximum, quoi qu'il arrive. */
+  /* Les 6 Gemmes d'Infinite reunis = victoire totale et definitive : score et grade au maximum, quoi qu'il arrive. */
   if(S.voidCompletionDone){
     total = 100;
     parts.forEach(p=>{ p.value = p.max>0 ? p.max : 0; });
-    grade='S'; gradeLabelFr='Maitre du Vide'; gradeLabelEn='Master of the Void';
+    grade='S'; gradeLabelFr='Maitre de l\'Infini'; gradeLabelEn='Master of Infinity';
   }
   return { total, parts, grade, gradeLabel: fr?gradeLabelFr:gradeLabelEn, winRate, fights, locWeight };
 }
@@ -4114,7 +4114,7 @@ const TROPHIES = [
   { id:'five_careers', fr:'Ca devient une habitude', en:'Becoming a habit', descFr:'Termine 5 carrieres.', descEn:'Complete 5 careers.', check:(m)=>(m.careersCompleted||0)>=5 },
   { id:'long_life', fr:'Toute une vie', en:'A whole life', descFr:'Termine une carriere de 30 ans ou plus.', descEn:'Complete a career of 30+ years.', check:(m)=>(m.longestCareerYears||0)>=30 },
   { id:'eighth_star', fr:'Legende absolue', en:'Absolute legend', descFr:'Obtiens la 8eme etoile.', descEn:'Get the 8th star.', check:(m)=>!!m.got8thStar },
-  { id:'void_master', fr:'Maitre du Vide', en:'Master of the Void', descFr:'Reunis les 6 Eclats du Vide.', descEn:'Reunite the 6 Void Shards.', check:(m)=>!!m.gotVoidCompletion },
+  { id:'void_master', fr:'Maitre de l\'Infini', en:'Master of Infinity', descFr:'Reunis les 6 Gemmes d\'Infinite.', descEn:'Reunite the 6 Infinity Gems.', check:(m)=>!!m.gotVoidCompletion },
   { id:'turncoat', fr:'Retournement de veste', en:'Turncoat', descFr:'Change de camp au moins 3 fois au total.', descEn:'Switch sides at least 3 times total.', check:(m)=>(m.totalBetrayals||0)>=3 },
   { id:'artifact_hunter', fr:'Chasseur de reliques', en:'Relic hunter', descFr:'Trouve 3 artefacts differents au fil de tes carrieres.', descEn:'Find 3 different artifacts across your careers.', check:(m)=>(m.artifactsFoundEver||[]).length>=3 },
   { id:'all_artifacts', fr:'Collection complete', en:'Complete collection', descFr:'Trouve tous les artefacts existants.', descEn:'Find every existing artifact.', check:(m)=>(m.artifactsFoundEver||[]).length>=ARTIFACTS.length },
@@ -5032,26 +5032,26 @@ function startCrossedMenteeArc(){
   S.screen='mentor'; render(); maybeTriggerConversation(); return true;
 }
 /* ---------- Evenement Majeur : rare, mais capable de faire bondir le score d'un seul coup si tu le remportes ---------- */
-/* ---------- Les Eclats du Vide : 6 fragments originaux, chacun avec sa propre quete et son pouvoir special. Jamais garanti de tous les obtenir. ---------- */
+/* ---------- Les Gemmes d'Infinite : 6 fragments originaux, chacun avec sa propre quete et son pouvoir special. Jamais garanti de tous les obtenir. ---------- */
 const ECLATS = [
-  { id:'derive', frName:"Eclat de la Derive", enName:"Shard of Drift", domainFr:'Espace', domainEn:'Space', col:'#4fd3ff',
+  { id:'derive', frName:"Gemme de l'Espace", enName:"Space Gem", domainFr:'Espace', domainEn:'Space', col:'#4fd3ff',
     move:{ fr:'Rupture spatiale', en:'Spatial rupture', p:46, acc:.74 } },
-  { id:'murmure', frName:"Eclat du Murmure", enName:"Shard of the Murmur", domainFr:'Esprit', domainEn:'Mind', col:'#b98bff',
+  { id:'murmure', frName:"Gemme de l'Esprit", enName:"Mind Gem", domainFr:'Esprit', domainEn:'Mind', col:'#b98bff',
     move:{ fr:'Cri silencieux', en:'Silent scream', p:44, acc:.78 } },
-  { id:'fracture', frName:"Eclat de la Fracture", enName:"Shard of Fracture", domainFr:'Realite', domainEn:'Reality', col:'#ff8a3d',
+  { id:'fracture', frName:"Gemme de la Realite", enName:"Reality Gem", domainFr:'Realite', domainEn:'Reality', col:'#ff8a3d',
     move:{ fr:'Faille reelle', en:'Real rift', p:48, acc:.7 } },
-  { id:'fureur', frName:"Eclat de la Fureur", enName:"Shard of Fury", domainFr:'Puissance', domainEn:'Power', col:'#ff3b5c',
+  { id:'fureur', frName:"Gemme du Pouvoir", enName:"Power Gem", domainFr:'Puissance', domainEn:'Power', col:'#ff3b5c',
     move:{ fr:'Deferlante', en:'Onslaught', p:50, acc:.68 } },
-  { id:'attente', frName:"Eclat de l'Attente", enName:"Shard of Waiting", domainFr:'Temps', domainEn:'Time', col:'#37e6a8',
+  { id:'attente', frName:"Gemme du Temps", enName:"Time Gem", domainFr:'Temps', domainEn:'Time', col:'#37e6a8',
     move:{ fr:'Boucle figee', en:'Frozen loop', p:20, acc:1, heal:24 } },
-  { id:'vestige', frName:"Eclat du Vestige", enName:"Shard of the Vestige", domainFr:'Ame', domainEn:'Soul', col:'#ffd23f',
+  { id:'vestige', frName:"Gemme de l'Ame", enName:"Soul Gem", domainFr:'Ame', domainEn:'Soul', col:'#ffd23f',
     move:{ fr:"Ecrin d'ames", en:'Soul casket', p:24, acc:.95, heal:18 } },
 ];
 function shouldTriggerEclatQuest(){
-  if(S.currentYear < 6) return false;
+  if(S.currentYear < 10) return false;
   if((S.eclats||[]).length >= ECLATS.length) return false;
-  if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 4) return false;
-  return Math.random() < 0.14;
+  if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 7) return false;
+  return Math.random() < 0.08;
 }
 function startEclatQuest(){
   const owned = S.eclats||[];
@@ -5069,7 +5069,7 @@ function startEclatQuest(){
   const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'une presence hostile':'a hostile presence');
   const m = {
     id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey,
-    tagFr:'Quete du Vide', tagEn:'Void Quest',
+    tagFr:'Quete d\'Infinite', tagEn:'Infinity Quest',
     fr:`Une resonance venue du Vide te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} le garde farouchement.`,
     en:`A resonance from the Void leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`,
     location:{ name: randLocationName(scope), type:scope },
@@ -5087,8 +5087,8 @@ function startEclatQuest(){
 function shouldTriggerEclatReclaim(){
   const held = Object.keys(S.eclatHolders||{});
   if(!held.length) return false;
-  if(S.lastEclatReclaimYear!=null && (S.currentYear - S.lastEclatReclaimYear) < 3) return false;
-  return Math.random() < 0.22;
+  if(S.lastEclatReclaimYear!=null && (S.currentYear - S.lastEclatReclaimYear) < 5) return false;
+  return Math.random() < 0.14;
 }
 function startEclatReclaimQuest(){
   const holders = S.eclatHolders || {};
@@ -5105,7 +5105,7 @@ function startEclatReclaimQuest(){
   const scope = clamp(computeStars(), 2, 7);
   const m = {
     id:'eclat_reclaim', type:'combat', danger:3, scope, eclatReclaim:shard.id, charKey:holderKey,
-    tagFr:'Reprise du Vide', tagEn:'Void Reclaim',
+    tagFr:'Reprise d\'Infinite', tagEn:'Infinity Reclaim',
     fr:`${holderName} detient toujours ${shardName}. Tu as une occasion de le lui reprendre.`,
     en:`${holderName} still holds ${shardName}. You have a chance to take it back.`,
     location:{ name: randLocationName(scope), type:scope },
@@ -5153,7 +5153,7 @@ function showEclatCinematic(shard, cb){
   overlay.innerHTML = `<div class="cine-flash"></div><div class="eclat-cine-fx"></div>
     <div class="cine-content">
       <div class="star8-icon eclat-cine-icon">${cfg.icon}</div>
-      <div class="cine-scope">${isFr?'ECLAT DU VIDE OBTENU':'VOID SHARD OBTAINED'}</div>
+      <div class="cine-scope">${isFr?'GEMME D\'INFINITE OBTENUE':'INFINITY GEM OBTAINED'}</div>
       <div class="cine-title">${name.toUpperCase()}</div>
       <p class="star8-sub">${isFr?`Domaine : ${domain}. Un nouveau pouvoir s'eveille en toi.`:`Domain: ${domain}. A new power awakens in you.`}</p>
       <button class="btl-move" id="eclatCineContinue" style="min-width:160px; margin-top:14px; border-color:${shard.col};"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
@@ -5525,7 +5525,7 @@ function downloadTrophyCard(){
 }
 /* Glyphes reels (canvas fillText n'interprete pas les entites HTML) associes a chaque eclat, dans l'ordre de ECLATS. */
 const ECLAT_CANVAS_GLYPH = { derive:'\u2726', murmure:'\u2749', fracture:'\u25C8', fureur:'\u2739', attente:'\u2732', vestige:'\u2745' };
-/* ---------- Carte-trophee dediee : les 6 Eclats du Vide reunis, score et 8 etoiles toujours au maximum ---------- */
+/* ---------- Carte-trophee dediee : les 6 Gemmes d'Infinite reunis, score et 8 etoiles toujours au maximum ---------- */
 function generateVoidTrophyCardCanvas(cb){
   const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
   const W = 1080, H = 1350, cx = W/2;
@@ -5666,13 +5666,13 @@ function showEighthStarCinematic(cb){
   overlay.querySelector('#star8Continue').onclick = advance8;
   if(S.careerAuto) setTimeout(advance8, 1200);
 }
-/* ---------- Les 6 Eclats du Vide reunis : fin speciale dediee, bleu/rose en heros, rouge/violet explosif en villain ---------- */
+/* ---------- Les 6 Gemmes d'Infinite reunis : fin speciale dediee, bleu/rose en heros, rouge/violet explosif en villain ---------- */
 function showVoidCompletionCinematic(cb){
   const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
   const title = villain ? (isFr?'LE CHAOS EST TOTAL':'TOTAL CHAOS') : (isFr?'TU AS GAGNE LE JEU':'YOU WON THE GAME');
   const sub = villain
-    ? (isFr?"Les 6 Eclats du Vide sont a toi. Tout ce qui tenait encore debout s'effondre dans la lumiere violette.":"All 6 Void Shards are yours. Everything still standing collapses in violet light.")
-    : (isFr?"Les 6 Eclats du Vide sont reunis. L'equilibre tient enfin, grace a toi.":"All 6 Void Shards are united. Balance finally holds, because of you.");
+    ? (isFr?"Les 6 Gemmes d'Infinite sont a toi. Tout ce qui tenait encore debout s'effondre dans la lumiere violette.":"All 6 Infinity Gems are yours. Everything still standing collapses in violet light.")
+    : (isFr?"Les 6 Gemmes d'Infinite sont reunis. L'equilibre tient enfin, grace a toi.":"All 6 Infinity Gems are united. Balance finally holds, because of you.");
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay eighth-star void-complete ' + (villain?'void-villain':'void-hero');
   overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-rays"></div><div class="star8-burst"></div>${villain?'<div class="void-shatter"></div>':''}
     <div class="cine-content">
@@ -5996,7 +5996,7 @@ function playerMoves(){
   while(atkOut.length<atkCount) atkOut.push(BASIC_MOVES[atkOut.length%2]);
   const defOut = []; def.forEach(m=>{ if(defOut.length<defCount && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<defCount) defOut.push(DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
-  // Les Eclats du Vide obtenus ajoutent chacun un pouvoir special supplementaire, au-dela des coups habituels.
+  // Les Gemmes d'Infinite obtenues ajoutent chacun un pouvoir special supplementaire, au-dela des coups habituels.
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
     return Object.assign({ shard:true, shardCol:s.col, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
@@ -7230,7 +7230,7 @@ function resolveOutcome(mission){
     if(mission.eclatQuest){
       const shard = ECLATS.find(e=>e.id===mission.eclatQuest);
       const guardianKey = mission.charKey || S.lastBattleFoeKey;
-      if(shard && win && Math.random() < 0.65){
+      if(shard && win && Math.random() < 0.42){
         grantEclatShard(shard);
       } else if(shard){
         S.eclatHolders = S.eclatHolders || {};
@@ -7243,7 +7243,7 @@ function resolveOutcome(mission){
     } else if(mission.eclatReclaim){
       const shard = ECLATS.find(e=>e.id===mission.eclatReclaim);
       const holderKey = mission.charKey;
-      if(shard && win && Math.random() < 0.55){
+      if(shard && win && Math.random() < 0.35){
         grantEclatShard(shard);
       } else if(shard){
         const holderName = holderKey && CHARACTERS[holderKey] ? (S.lang==='fr'?CHARACTERS[holderKey].fr:CHARACTERS[holderKey].en) : '';
@@ -7261,7 +7261,7 @@ function resolveOutcome(mission){
         if(thief) S.eclatHolders[stolenId] = thief;
         const thiefName = thief && CHARACTERS[thief] ? (S.lang==='fr'?CHARACTERS[thief].fr:CHARACTERS[thief].en) : (S.lang==='fr'?"l'adversaire":'the enemy');
         jarvisSay(S.lang==='fr'?`${thiefName} t'arrache ${stolenShard.frName} pendant que tu es a terre.`:`${thiefName} rips ${stolenShard.enName} from you while you're down.`,
-                  S.lang==='fr'?`${thiefName} t'arrache ${stolenShard.frName} pendant que tu es a terre.`:`${thiefName} rips ${stolenShard.enName} from you while you're down.`, S.lang==='fr'?'eclat vole':'shard stolen');
+                  S.lang==='fr'?`${thiefName} t'arrache ${stolenShard.frName} pendant que tu es a terre.`:`${thiefName} rips ${stolenShard.enName} from you while you're down.`, S.lang==='fr'?'gemme volee':'gem stolen');
       }
     }
   }
@@ -8977,7 +8977,7 @@ function screenEnd(){
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase; font-size:12px; color:var(--accent);">${isFr?'Tes recrues':'Your recruits'}</p><p class="lead" style="margin-top:4px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
   const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const eclatsOwned = S.eclats || [];
-  const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Eclats du Vide obtenus':'Void Shards obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
+  const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Gemmes d\'Infinite obtenues':'Infinity Gems obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
   const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
   const turningHtml = S.turningPoints.length ? S.turningPoints.map(tp=>{ const fromL = tp.from==='hero'?t('alignHero'):(tp.from==='villain'?t('alignVillain'):t('alignNeutral')); const toL = tp.to==='hero'?t('alignHero'):(tp.to==='villain'?t('alignVillain'):t('alignNeutral'));
     return `<div class="turn-item">${t('year')} ${tp.year}: ${fromL} -> ${toL}</div>`; }).join('') : `<p class="lead">${t('noTurning')}</p>`;
@@ -9016,7 +9016,7 @@ function screenEnd(){
       </div>
     </div>` : ''}
     ${S.voidCompletionDone ? `<div class="dl-box" style="margin-top:14px; border-color:#c04dff; background:rgba(192,77,255,.08);">
-      <div class="dl-title" style="color:#c04dff;">${isFr?'Carte-trophee : 6 Eclats du Vide':'Trophy card: 6 Void Shards'}</div>
+      <div class="dl-title" style="color:#c04dff;">${isFr?'Carte-trophee : 6 Gemmes d\'Infinite':'Trophy card: 6 Infinity Gems'}</div>
       <p class="dl-sub">${isFr?'Score 100/100, 8 etoiles : la victoire totale et definitive, prete a garder ou partager.':'100/100 score, 8 stars: the total, definitive victory, ready to keep or share.'}</p>
       <div class="dl-actions">
         <button class="btn cyan" id="dlVoidTrophy" style="border-color:#c04dff;">${isFr?'Telecharger la carte':'Download the card'}</button>
