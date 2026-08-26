@@ -1107,6 +1107,16 @@ const CHAR_IMG = {
   char59:"/__l5e/assets-v1/96a858cd-cd8a-4a04-83b3-6bbedc04f65d/Femme_invisible.png",
   char60:"/__l5e/assets-v1/567fc8c7-1c5b-4673-83d7-c8d2a1d33c5f/Gamora.png",
   char61:"/__l5e/assets-v1/cf0e42c8-e457-47e3-bcb7-ba62638ab5aa/Gorr.png",
+  char62:"/__l5e/assets-v1/edcf3546-e468-4285-89c1-1cf6d451c4b3/Torche_humaine.png",
+  char63:"/__l5e/assets-v1/3eea7fd7-b87c-4769-a9ea-a24072da21dd/Tornade.png",
+  char64:"/__l5e/assets-v1/754d74a9-a585-4194-9282-6f1da6eb3811/Mr_Fantastique.png",
+  char65:"/__l5e/assets-v1/8ce9ccae-56a9-4e82-a05f-f8e07d1d1109/Mysterio.png",
+  char66:"/__l5e/assets-v1/1b781874-4728-49c3-8239-0ea19f279622/Mystique.png",
+  char67:"/__l5e/assets-v1/c08e5027-a715-429f-bf0d-6434ee6eb49a/Nebula.png",
+  char68:"/__l5e/assets-v1/908ec468-eac1-4ea3-b285-3832812172f7/Professeur_X.png",
+  char69:"/__l5e/assets-v1/e0bc70cc-dd3d-4f38-9356-3303441c2652/Proxima_Midnight.png",
+  char70:"/__l5e/assets-v1/528fdcd1-cad8-4285-8bda-c4a02513b7af/Rocket.png",
+  char71:"/__l5e/assets-v1/a6f9874b-d5bf-43c0-b305-581c2c55fcda/Star-Lord.png",
   char21:"/game/chars/21.png", char22:"/game/chars/22.png", char23:"/game/chars/23.png", char24:"/game/chars/24.png",
   char25:"/game/chars/25.png", char26:"/game/chars/26.png", char27:"/game/chars/27.png", char28:"/game/chars/28.png",
   char29:"/game/chars/29.png", char30:"/game/chars/30.png", char31:"/game/chars/31.png", char32:"/game/chars/32.png",
@@ -1159,6 +1169,16 @@ const CHARACTERS = {
   invisiblewoman:{fr:"Invisible Woman",en:"Invisible Woman",canon:"Invisible Woman",align:'hero', sex:'f', img:CHAR_IMG.char59},
   gamora:{fr:"Gamora",en:"Gamora",canon:"Gamora",align:'hero', sex:'f', img:CHAR_IMG.char60},
   gorr:{fr:"Gorr",en:"Gorr",canon:"Gorr",align:'villain', sex:'m', img:CHAR_IMG.char61},
+  humantorch:{fr:"Human Torch",en:"Human Torch",canon:"Human Torch",align:'hero', sex:'m', img:CHAR_IMG.char62},
+  storm:{fr:"Storm",en:"Storm",canon:"Storm",align:'hero', sex:'f', img:CHAR_IMG.char63},
+  mrfantastic:{fr:"Mister Fantastic",en:"Mister Fantastic",canon:"Mister Fantastic",align:'hero', sex:'m', img:CHAR_IMG.char64},
+  mysterio:{fr:"Mysterio",en:"Mysterio",canon:"Mysterio",align:'villain', sex:'m', img:CHAR_IMG.char65},
+  mystique:{fr:"Mystique",en:"Mystique",canon:"Mystique",align:'villain', sex:'f', img:CHAR_IMG.char66},
+  nebula:{fr:"Nebula",en:"Nebula",canon:"Nebula",align:'hero', sex:'f', img:CHAR_IMG.char67},
+  profx:{fr:"Professor X",en:"Professor X",canon:"Professor X",align:'hero', sex:'m', img:CHAR_IMG.char68},
+  proxima:{fr:"Proxima Midnight",en:"Proxima Midnight",canon:"Proxima Midnight",align:'villain', sex:'f', img:CHAR_IMG.char69},
+  rocket:{fr:"Rocket",en:"Rocket",canon:"Rocket",align:'hero', sex:'m', img:CHAR_IMG.char70},
+  starlord:{fr:"Star-Lord",en:"Star-Lord",canon:"Star-Lord",align:'hero', sex:'m', img:CHAR_IMG.char71},
 
   /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -2770,7 +2790,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:19},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:29},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
@@ -2865,7 +2885,8 @@ const CHAR_TIER = {
   marsh:4,
   /* Nouveaux venus : coherence MCU */
   apocalypse:9, capmarvel:8, cyclops:6, corvus:6, cull:6, docock:5, antman:5, deadpool:5, pyro:4, daredevil:4,
-  gorr:8, magneto:8, jeangrey:9, invisiblewoman:7, thething:6, groot:5, gamora:5, ebonymaw:6, electro:4
+  gorr:8, magneto:8, jeangrey:9, invisiblewoman:7, thething:6, groot:5, gamora:5, ebonymaw:6, electro:4,
+  profx:9, storm:8, mrfantastic:7, humantorch:6, nebula:6, starlord:5, rocket:4, mystique:6, proxima:6, mysterio:4
 };
 function charTier(key){
   if(!key) return 5;
