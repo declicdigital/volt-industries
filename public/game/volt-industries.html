@@ -202,13 +202,27 @@
     .preset-badge{ width:14px; height:14px; padding:0; font-size:0; overflow:hidden; }
   }
   .preset-mini{ width:100%; display:flex; justify-content:center; }
-  /* --- Bande d'incubateur de l'ecran d'accueil : purement decoratif, non cliquable --- */
-  .incubator-strip{ width:100%; overflow:hidden; margin:6px 0 22px; mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); pointer-events:none; user-select:none; }
-  .incubator-track{ display:flex; gap:14px; width:max-content; animation: incubatorScroll 46s linear infinite; }
-  .incubator-pod{ width:64px; height:64px; flex:0 0 auto; border-radius:14px; overflow:hidden; background:#0a0d18; border:1.5px solid var(--pc); box-shadow:0 0 14px -2px var(--pc), inset 0 0 10px -4px var(--pc); }
+  /* --- Ecran d'accueil : grande colonne d'incubateur a gauche sur PC, bande compacte sur mobile --- */
+  .welcome-layout{ display:flex; gap:28px; align-items:stretch; }
+  .welcome-main{ flex:1; min-width:0; }
+  .welcome-incubator-desktop{ width:180px; flex:0 0 auto; }
+  .welcome-incubator-mobile{ display:none; }
+  @media (max-width:920px){
+    .welcome-layout{ flex-direction:column; }
+    .welcome-incubator-desktop{ display:none; }
+    .welcome-incubator-mobile{ display:block; }
+  }
+  .incubator-col, .incubator-strip{ overflow:hidden; pointer-events:none; user-select:none; }
+  .incubator-col{ height:520px; position:sticky; top:20px; mask-image:linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image:linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent); }
+  .incubator-col-track{ display:flex; flex-direction:column; gap:16px; height:max-content; animation: incubatorScrollV 50s linear infinite; }
+  .incubator-strip{ width:100%; margin:6px 0 18px; mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .incubator-track{ display:flex; gap:12px; width:max-content; animation: incubatorScroll 46s linear infinite; }
+  .incubator-pod{ border-radius:14px; overflow:hidden; background:#0a0d18; border:1.5px solid var(--pc); box-shadow:0 0 16px -2px var(--pc), inset 0 0 10px -4px var(--pc); }
   .incubator-pod img{ width:100%; height:100%; object-fit:cover; object-position:50% 10%; opacity:.92; }
+  .incubator-pod-v{ width:100%; aspect-ratio:1; flex:0 0 auto; }
+  .incubator-pod-h{ width:52px; height:52px; flex:0 0 auto; }
   @keyframes incubatorScroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
-  @media (max-width:560px){ .incubator-pod{ width:48px; height:48px; border-radius:11px; } .incubator-track{ gap:10px; } }
+  @keyframes incubatorScrollV{ from{ transform:translateY(0); } to{ transform:translateY(-50%); } }
   /* --- Simulateur de duel : fiches cliquables + liste personnalisee (remplace les <select> natifs illisibles) --- */
   .duel-pick{ cursor:pointer; border:1.5px solid var(--pc, var(--line)); border-radius:14px; padding:10px; text-align:center; background:rgba(255,255,255,.02); transition:.15s; }
   .duel-pick:hover{ border-color:var(--pc, var(--accent)); box-shadow:0 0 16px -6px var(--pc, var(--accent)); }
@@ -4091,22 +4105,31 @@ function showResetConfirm(){
     render();
   };
 }
-/* Bande d'incubateur : simple vitrine decorative sur l'ecran d'accueil, aucun clic possible. */
-function incubatorStripHTML(){
+/* Bande d'incubateur : simple vitrine decorative, aucun clic possible.
+   'vertical' = grande colonne a gauche sur PC. 'horizontal' = bande compacte sur mobile. */
+function incubatorPodsHTML(orientation){
   const keys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].img);
   const shuffled = shuffle(keys.slice());
   const doubled = shuffled.concat(shuffled); // boucle infinie sans coupure visible
-  const cards = doubled.map(k=>{
+  return doubled.map(k=>{
     const c = CHARACTERS[k];
     const col = c.align==='neutral' ? '#b98bff' : (c.align==='villain' ? '#ff2d55' : '#00e5ff');
-    return `<div class="incubator-pod" style="--pc:${col};"><img src="${c.img}" alt="" loading="lazy" onerror="this.parentElement.style.display='none';"></div>`;
+    return `<div class="incubator-pod incubator-pod-${orientation}" style="--pc:${col};"><img src="${c.img}" alt="" loading="lazy" onerror="this.parentElement.style.display='none';"></div>`;
   }).join('');
-  return `<div class="incubator-strip"><div class="incubator-track">${cards}</div></div>`;
+}
+function incubatorColumnHTML(){
+  return `<div class="incubator-col"><div class="incubator-col-track">${incubatorPodsHTML('v')}</div></div>`;
+}
+function incubatorStripHTML(){
+  return `<div class="incubator-strip"><div class="incubator-track">${incubatorPodsHTML('h')}</div></div>`;
 }
 function screenWelcome(){
   const d = document.createElement('div');
-  d.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
-    ${incubatorStripHTML()}
+  d.innerHTML = `<div class="welcome-layout">
+    <div class="welcome-incubator-desktop">${incubatorColumnHTML()}</div>
+    <div class="welcome-main">
+    <div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
+    <div class="welcome-incubator-mobile">${incubatorStripHTML()}</div>
     <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
     <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
     <div id="resumeBox"></div>
@@ -4120,7 +4143,8 @@ function screenWelcome(){
       <button class="btn ghost" id="goReset" style="font-size:11px; padding:6px 12px; color:#ff5c6e; border-color:rgba(255,92,110,.35);">${S.lang==='fr'?'Reinitialiser la progression':'Reset progress'}</button>
     </div>
     <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
-    <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>`;
+    <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>
+    </div></div>`;
   d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
   d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
   d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
