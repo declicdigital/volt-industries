@@ -3516,8 +3516,27 @@ const RIVAL_ALTERC_EN = [
   n=>`You receive a barely-disguised challenge, signed ${n}.`,
   n=>`${n} swoops in on a case that concerned you, just to rub it in afterward.`,
 ];
+/* Au bout de 5 ans, une recrue n'est plus une recrue : elle a fait son chemin, avec ou sans toi.
+   Son camp devient definitif (elle ne bascule plus au gre des seances), elle perd la priorite
+   d'escouade et sa progression de puissance liee au mentorat, et redevient un PNJ comme un autre
+   de son cote - y compris pour te faire face si elle a fini de l'autre bord. */
+function checkMenteeGraduations(){
+  (S.mentees||[]).forEach(m=>{
+    if(m.graduated || !m.charKey) return;
+    const yearsIn = (S.currentYear||1) - (m.since||S.currentYear);
+    if(yearsIn >= 5){
+      m.graduated = true;
+      if(m.outcome!=='died' && m.outcome!=='neutral'){
+        const c = CHARACTERS[m.charKey];
+        const name = S.lang==='fr' ? (c?c.fr:m.name) : (c?c.en:m.name);
+        const sideLab = m.outcome==='hero' ? (S.lang==='fr'?'heros':'hero') : (S.lang==='fr'?'villain':'villain');
+        const lineFr = `${name} n'est plus ta recrue : ${S.lang==='fr'?'il/elle':'they'} trace sa propre route, du cote ${sideLab==='heros'?'des heros':'des villains'} desormais.`;
+        jarvisSay(lineFr.replace('il/elle', (c&&c.sex==='f')?'elle':'il'), `${name} is no longer your recruit: they're forging their own path, on the ${sideLab} side now.`, S.lang==='fr'?'fin de mentorat':'end of mentorship');
+      }
+    }
+  });
+}
 function maybeRivalAltercation(){
-  if(!S.rivalKey || S.currentYear < 2) return;
   if(S.lastRivalAltercYear!=null && (S.currentYear - S.lastRivalAltercYear) < 1) return;
   if(Math.random() >= 0.35) return;
   const c = CHARACTERS[S.rivalKey]; if(!c) return;
@@ -5702,6 +5721,46 @@ function applyCrossedMenteeBond(foeKey){
     S.rel[foeKey] = clamp((S.rel[foeKey]||0) + (warm ? 2 : -5), -20, 20);
   }
 }
+/* ============================ HISTOIRES ENTRE PERSONNAGES ============================
+   Vraies relations issues du canon Marvel : rivalites, fratries, familles, amities, idylles.
+   'rival' -> plus de chances de s'affronter ; 'lien' (famille/amis/couple) -> plus de chances
+   de se retrouver du meme cote en escouade. */
+const LORE_LINKS = [
+  { keys:['vaelor','vipera','aurelia'], type:'fratrie', fr:'Thor, Loki et Hela : trois enfants d\'Odin, trois destins qui ne cessent de se percuter.', en:'Thor, Loki and Hela: three children of Odin, three fates that keep colliding.' },
+  { keys:['profx','magneto'], type:'rival', fr:'Charles Xavier et Magneto : deux vieux amis que la meme guerre a fini par separer.', en:'Charles Xavier and Magneto: two old friends the same war eventually tore apart.' },
+  { keys:['mrfantastic','boomnpc'], type:'rival', fr:'Reed Richards et Doctor Doom : une rivalite scientifique nee sur les bancs de la fac.', en:'Reed Richards and Doctor Doom: a scientific rivalry born back in college.' },
+  { keys:['volt','boomnpc'], type:'rival', fr:'Iron Man et Doctor Doom : deux genies, deux egos, aucune place pour un troisieme.', en:'Iron Man and Doctor Doom: two geniuses, two egos, no room for a third.' },
+  { keys:['gamora','nebula'], type:'fratrie', fr:'Gamora et Nebula : soeurs adoptives, elevees dans la meme cruaute par le meme pere.', en:'Gamora and Nebula: adoptive sisters, raised in the same cruelty by the same father.' },
+  { keys:['gamora','nebula','malachar'], type:'famille', fr:'Thanos a fait de ses filles des armes. L\'une l\'a fui, l\'autre s\'y est brisee.', en:'Thanos turned his daughters into weapons. One fled him, the other broke under it.' },
+  { keys:['humantorch','thething'], type:'lien', fr:'Johnny Storm et Ben Grimm : une famille de coeur, meme quand ils s\'insultent.', en:'Johnny Storm and Ben Grimm: found family, even when they\'re trading insults.' },
+  { keys:['starlord','gamora'], type:'lien', fr:'Peter Quill et Gamora : une histoire qui refuse de rester simple.', en:'Peter Quill and Gamora: a story that refuses to stay simple.' },
+  { keys:['rocket','groot'], type:'lien', fr:'Rocket et Groot : le duo le plus loyal de toute la galaxie.', en:'Rocket and Groot: the most loyal duo in the whole galaxy.' },
+  { keys:['nyx','lorelei'], type:'lien', fr:'Scarlet Witch et Vision : une histoire d\'amour que la realite elle-meme a essaye d\'effacer.', en:'Scarlet Witch and Vision: a love story reality itself once tried to erase.' },
+  { keys:['cyclops','jeangrey'], type:'lien', fr:'Cyclope et Jean Grey : le couple fondateur des X-Men, pour le meilleur et pour le pire.', en:'Cyclops and Jean Grey: the founding X-Men couple, for better and for worse.' },
+  { keys:['profx','jeangrey'], type:'lien', fr:'Charles Xavier a forme Jean Grey depuis l\'enfance - et redoute ce qu\'elle pourrait devenir.', en:'Charles Xavier trained Jean Grey since childhood - and dreads what she could become.' },
+  { keys:['aegis','kaerus'], type:'rival', fr:'Captain America et Red Skull : la meme guerre, deux camps qui ne se sont jamais pardonnes.', en:'Captain America and Red Skull: the same war, two sides that never forgave each other.' },
+  { keys:['kidspider','fuchsia'], type:'rival', fr:'Spider-Man et Green Goblin : le pire ennemi de Peter Parker porte aussi son masque le plus proche.', en:'Spider-Man and Green Goblin: Peter Parker\'s worst enemy also wears his closest mask.' },
+  { keys:['kidspider','docock'], type:'rival', fr:'Spider-Man et Doctor Octopus : un genie dechu contre l\'araignee qui refuse de le laisser gagner.', en:'Spider-Man and Doctor Octopus: a fallen genius against the spider who refuses to let him win.' },
+  { keys:['kidspider','mysterio'], type:'rival', fr:'Spider-Man et Mysterio : rien de ce qu\'il montre n\'est jamais vrai.', en:'Spider-Man and Mysterio: nothing he shows you is ever real.' },
+  { keys:['kidspider','electro'], type:'rival', fr:'Spider-Man et Electro : un homme oublie devenu court-circuit vivant, rancunier envers celui qui brille.', en:'Spider-Man and Electro: a forgotten man turned living short-circuit, bitter at the one who shines.' },
+  { keys:['malachar','ebonymaw','corvus','proxima','cull'], type:'famille', fr:'L\'Ordre Noir : des enfants d\'adoption qui appellent Thanos leur pere, et le suivent sans jamais douter.', en:'The Black Order: adopted children who call Thanos their father, and follow him without ever doubting.' },
+  { keys:['mystique','profx','magneto'], type:'lien', fr:'Mystique a grandi aux cotes de Charles et Erik, avant que leurs chemins ne divergent pour de bon.', en:'Mystique grew up alongside Charles and Erik, before their paths diverged for good.' },
+];
+function loreLinksFor(charKey){ return LORE_LINKS.filter(l=>l.keys.includes(charKey)); }
+/* Deux personnages lies par une rivalite canonique ont plus de chances de se retrouver face a face. */
+function loreRivalOf(charKey){
+  const links = loreLinksFor(charKey).filter(l=>l.type==='rival');
+  const rivals = [];
+  links.forEach(l=>l.keys.forEach(k=>{ if(k!==charKey) rivals.push(k); }));
+  return rivals;
+}
+/* Famille/amis/couple canoniques : plus de chances de se battre du meme cote que toi. */
+function loreAllyOf(charKey){
+  const links = loreLinksFor(charKey).filter(l=>l.type==='lien' || l.type==='famille' || l.type==='fratrie');
+  const allies = [];
+  links.forEach(l=>l.keys.forEach(k=>{ if(k!==charKey) allies.push(k); }));
+  return allies;
+}
 function pickOpponentKey(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   if(S.traitorKey && CHARACTERS[S.traitorKey] && Math.random()<0.18) return S.traitorKey;
@@ -5710,6 +5769,12 @@ function pickOpponentKey(){
   const pool = otherCharKeys().filter(charUnlocked);
   /* Le rival revient plus souvent que n'importe quel autre adversaire. */
   if(S.rivalKey && pool.includes(S.rivalKey) && Math.random() < 0.35) return S.rivalKey;
+  /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
+     dresser face a toi si tu incarnes l'un des deux. */
+  if(S.playerCharKey){
+    const canonRivals = loreRivalOf(S.playerCharKey).filter(k=>pool.includes(k));
+    if(canonRivals.length && Math.random() < 0.3) return pick(canonRivals);
+  }
   /* Les independants (violet, ni heros ni villain) peuvent se dresser contre toi a tout moment,
      quel que soit ton camp du moment. */
   const neutral = pool.filter(k=>CHARACTERS[k].align==='neutral');
@@ -5886,17 +5951,32 @@ function buildBattleSquads(foeKey, mission){
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
+  /* L'alignement effectif d'un personnage : pour une recrue (active ou diplomee) qui a bascule de
+     camp, c'est son nouveau camp (outcome) qui compte pour l'escouade/l'adversite, pas son camp
+     d'origine fige dans CHARACTERS. */
+  function effectiveAlignOf(k){
+    const mentee = (S.mentees||[]).find(m=>m.charKey===k);
+    if(mentee && (mentee.outcome==='hero' || mentee.outcome==='villain')) return mentee.outcome;
+    return CHARACTERS[k] ? CHARACTERS[k].align : 'neutral';
+  }
   /* Chaque personnage a son propre niveau minimum (charUnlocked) : un allie ou adversaire d'escouade
-     ne peut jamais apparaitre avant son propre palier de deblocage, meme si la taille d'escouade le permettrait. */
-  const keys = otherCharKeys().filter(k=>k!==foeKey && charUnlocked(k));
+     ne peut jamais apparaitre avant son propre palier de deblocage, meme si la taille d'escouade le permettrait.
+     Bug corrige : les recrues actives (menteeKeys) utilisent des images hors du bassin "PNJ canon" et en
+     etaient donc totalement exclues jusqu'ici, meme si la priorite plus bas ne demandait qu'a les inclure. */
+  const canonKeys = otherCharKeys().filter(k=>k!==foeKey && charUnlocked(k));
+  /* Toutes tes recrues (actives ou diplomees) existent comme personnages a part entiere ; seules
+     les actives beneficient de la priorite/progression speciale plus bas. */
+  const allMenteeKeys = livingMentees().map(m=>m.charKey).filter(k=>k && k!==foeKey);
+  const activeMenteeKeys = livingMentees().filter(m=>!m.graduated).map(m=>m.charKey).filter(k=>k && k!==foeKey);
+  const keys = Array.from(new Set(canonKeys.concat(allMenteeKeys)));
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
   const oppSide = mySide==='villain' ? 'hero' : 'villain';
   /* Independants (violet, ni heros ni villain) : chaque rencontre, ils tirent leur camp du jour au
      hasard, parfois avec toi, parfois contre - meme quand ils ne sont pas joues par toi. */
   const neutralSideThisFight = {};
-  keys.forEach(k=>{ if(CHARACTERS[k].align==='neutral') neutralSideThisFight[k] = Math.random()<0.5 ? mySide : oppSide; });
-  const sidePool = keys.filter(k=> CHARACTERS[k].align==='neutral' ? neutralSideThisFight[k]===mySide : CHARACTERS[k].align===mySide);
+  keys.forEach(k=>{ if(effectiveAlignOf(k)==='neutral') neutralSideThisFight[k] = Math.random()<0.5 ? mySide : oppSide; });
+  const sidePool = keys.filter(k=> effectiveAlignOf(k)==='neutral' ? neutralSideThisFight[k]===mySide : effectiveAlignOf(k)===mySide);
   /* Faction : une fois S.team rejoint, tes allies au front sont a 80% des membres de ta propre
      faction ; les 20% restants viennent d'autres factions du meme camp (hero ou villain), qui
      te preteront main-forte si vous n'etes pas assez nombreux.
@@ -5906,14 +5986,19 @@ function buildBattleSquads(foeKey, mission){
   const rest = sidePool.filter(k=>facMates.indexOf(k)<0);
   const attrMates = myAttributeMemberKeys().filter(k=>rest.includes(k));
   const attrOthers = rest.filter(k=>attrMates.indexOf(k)<0);
-  let allyPool = (facMates.length || attrMates.length) ? weightedTripleOrder(facMates, attrMates, attrOthers, 0.8, 0.6) : shuffle(sidePool);
+  /* Famille/amis/couple canoniques : a defaut de faction ou d'attribut partage, une histoire connue
+     (freres et soeurs, duo iconique, couple) rapproche encore un peu plus le tirage. */
+  const loreMates = S.playerCharKey ? loreAllyOf(S.playerCharKey).filter(k=>attrOthers.includes(k)) : [];
+  const loreRest = attrOthers.filter(k=>loreMates.indexOf(k)<0);
+  const attrOrLore = loreMates.length ? weightedFactionOrder(loreMates, loreRest, 0.7) : attrOthers;
+  let allyPool = (facMates.length || attrMates.length || loreMates.length) ? weightedTripleOrder(facMates, attrMates, attrOrLore, 0.8, 0.6) : shuffle(sidePool);
   /* Le chef de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
      a ses cotes qu'avec n'importe quel autre membre de l'equipe. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && allyPool.includes(leaderKey)) allyPool = [leaderKey].concat(allyPool.filter(k=>k!==leaderKey));
-  const mine = menteeKeys().filter(k=>allyPool.includes(k));
+  const mine = activeMenteeKeys.filter(k=>allyPool.includes(k));
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
-  let foePool = shuffle(keys.filter(k=> CHARACTERS[k].align==='neutral' ? neutralSideThisFight[k]===oppSide : CHARACTERS[k].align===oppSide));
+  let foePool = shuffle(keys.filter(k=> effectiveAlignOf(k)==='neutral' ? neutralSideThisFight[k]===oppSide : effectiveAlignOf(k)===oppSide));
   /* Si l'adversaire principal a sa propre recrue cette decennie, elle a de bonnes chances d'etre a
      ses cotes - sans jamais depasser le plafond d'escouade lie au niveau. */
   const foeRecruit = npcRecruitFor(foeKey);
@@ -5921,14 +6006,35 @@ function buildBattleSquads(foeKey, mission){
     foePool = [foeRecruit].concat(foePool.filter(k=>k!==foeRecruit));
   }
   if(maxExtra<=0) return empty;
-  // Un seul tirage, partage par les deux camps : les deux equipes ont toujours le meme effectif.
-  const r = Math.pow(Math.random(), 0.55);
-  const n = clamp(Math.round(maxExtra*r), 0, Math.min(maxExtra, allyPool.length, foePool.length));
-  const allies = allyPool.slice(0, n);
+  /* Ta recrue active doit etre a tes cotes dans environ 65% des combats : un tirage dedie avant
+     le tirage normal de la taille d'escouade, pour garantir ce taux independamment du reste. */
+  const menteeGuaranteed = mine.length>0 && Math.random() < 0.65;
+  let allyPoolForFight = allyPool;
+  if(mine.length>0 && !menteeGuaranteed) allyPoolForFight = allyPool.filter(k=>!mine.includes(k));
+  const capForRoll = Math.min(maxExtra, allyPoolForFight.length, foePool.length);
+  let n;
+  if(menteeGuaranteed && capForRoll>=1){
+    n = clamp(1 + Math.round((capForRoll-1)*Math.pow(Math.random(),0.55)), 1, capForRoll);
+  } else {
+    n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
+  }
+  const allies = allyPoolForFight.slice(0, n);
   const foes = foePool.slice(0, n);
   return { allies, foes };
 }
-function tierOfKey(k){ return (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5; }
+/* Une recrue active grandit annee apres annee depuis son recrutement : faible au debut, elle plafonne
+   avant les poids lourds du jeu (elle n'est jamais un heros/villain confirme tant qu'elle est recrue). */
+function menteeEffectiveTier(charKey){
+  const mentee = (S.mentees||[]).find(m=>m.charKey===charKey && !m.graduated);
+  if(!mentee) return null;
+  const yearsIn = Math.max(0, (S.currentYear||1) - (mentee.since||S.currentYear));
+  return Math.min(6, 2 + yearsIn);
+}
+function tierOfKey(k){
+  const mt = menteeEffectiveTier(k);
+  if(mt!=null) return mt;
+  return (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5;
+}
 /* Personnages a affinite mystique/magique : en escouade, ils peuvent soigner un allie blesse au lieu d'attaquer. */
 const WIZARD_KEYS = ['solen','nyx','siddartha','sepulcre','aurelia','kaerus','lorelei','vaelor'];
 function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
@@ -6010,6 +6116,21 @@ function startBattle(mission, done){
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
   const squads = buildBattleSquads(foeKey, mission);
+  /* Histoires entre personnages : si une fratrie/famille/rivalite canonique se retrouve reunie dans
+     ce combat (Thor/Loki/Hela, Gamora/Nebula, Reed/Doom, etc.), une ligne dediee le souligne. */
+  (function surfaceLoreClash(){
+    const present = [foeKey].concat(squads.allies, squads.foes).filter(Boolean);
+    if(S.playerCharKey) present.push(S.playerCharKey);
+    const seen = new Set();
+    for(const link of LORE_LINKS){
+      const here = link.keys.filter(k=>present.includes(k));
+      if(here.length >= 2 && !seen.has(link.fr)){
+        seen.add(link.fr);
+        jarvisSay(link.fr, link.en, S.lang==='fr'?'histoire connue':'known history');
+        break; // une seule mention par combat, pour ne pas saturer
+      }
+    }
+  })();
   const allyBonus = 1 + squads.allies.length * 0.03;
   const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
   const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
@@ -6432,8 +6553,9 @@ function startBattle(mission, done){
   function pickAllyTarget(){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
     const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
-    if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
-    return 0; // le joueur reste la cible privilegiee
+    /* Cible equilibree : 50% toi, 50% un autre membre de l'escouade au hasard - pas que toi systematiquement. */
+    if(aliveExtras.length && Math.random()<0.5) return pick(aliveExtras);
+    return 0;
   }
   function nextActor(){
     const n = turnOrder.length;
@@ -6500,8 +6622,9 @@ function startBattle(mission, done){
   function pickAllyTarget(){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
     const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
-    if(aliveExtras.length && Math.random()<0.28) return pick(aliveExtras);
-    return 0; // le joueur reste la cible privilegiee
+    /* Cible equilibree : 50% toi, 50% un autre membre de l'escouade au hasard - pas que toi systematiquement. */
+    if(aliveExtras.length && Math.random()<0.5) return pick(aliveExtras);
+    return 0;
   }
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
@@ -7025,7 +7148,7 @@ function screenYearBreak(){
     ${rec.slice(1).map(x=>`<p class="lead" style="opacity:.82; font-size:.95em;">${x}</p>`).join('')}
     <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
   d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
-    maybeOldSideReminder(); maybeTeamBetrayal(); maybeRivalAltercation();
+    maybeOldSideReminder(); maybeTeamBetrayal(); maybeRivalAltercation(); checkMenteeGraduations();
     if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
   return d;
 }
