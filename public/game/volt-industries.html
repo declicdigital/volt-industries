@@ -1088,6 +1088,16 @@ const CHAR_IMG = {
   char20:"/__l5e/assets-v1/60d0557f-fab4-4805-84da-b0dfd97df1c9/npc_fouvert.png",
   char42:"/__l5e/assets-v1/f9902ee1-7d56-4e7f-ba73-6c50d4ea19cc/npc_doctorboom.png",
   char41:"/__l5e/assets-v1/2e37f364-3c1f-4714-9d9c-4056ea37290f/npc_kidspider.png",
+  char43:"/__l5e/assets-v1/c0a12cab-ed87-453b-a3e5-387d97594a60/Cyclope.png",
+  char44:"/__l5e/assets-v1/f746b1cb-710e-40ca-8dc0-325b0e8064aa/Daredevil.png",
+  char45:"/__l5e/assets-v1/c4743226-dfad-4384-90a2-ebc0084527e3/Deadpool.png",
+  char46:"/__l5e/assets-v1/63c48ee7-64e3-434e-b1d0-7b0723fe07d9/Dr_Octopus.png",
+  char47:"/__l5e/assets-v1/50226cb9-1562-4305-b80a-5a250b7fd43f/Pyro.png",
+  char48:"/__l5e/assets-v1/90b23b2a-4a2c-44fe-8e71-35668126e7cd/Ant_Man.png",
+  char49:"/__l5e/assets-v1/9e3668c8-2398-4e99-a217-edcbe4a571de/Apocalypse.png",
+  char50:"/__l5e/assets-v1/27f1ff48-50d6-464f-b2a9-da3c05def2b7/Captain_Marvel.webp",
+  char51:"/__l5e/assets-v1/2618e960-b842-4ad3-9583-bd9c9f1895f9/Corvus_Glaive.png",
+  char52:"/__l5e/assets-v1/5aa5a43d-d57a-4e26-82f5-03183f05e17f/Cull_Obsidian.png",
   char21:"/game/chars/21.png", char22:"/game/chars/22.png", char23:"/game/chars/23.png", char24:"/game/chars/24.png",
   char25:"/game/chars/25.png", char26:"/game/chars/26.png", char27:"/game/chars/27.png", char28:"/game/chars/28.png",
   char29:"/game/chars/29.png", char30:"/game/chars/30.png", char31:"/game/chars/31.png", char32:"/game/chars/32.png",
@@ -1121,6 +1131,16 @@ const CHARACTERS = {
   boomnpc:{fr:"Doctor Doom",en:"Doctor Doom",canon:"Doctor Doom",align:'neutral', sex:'m', img:CHAR_IMG.char42},
   lorelei:{fr:"Vision",en:"Vision",canon:"Vision",align:'hero', sex:'m', img:CHAR_IMG.char8},
   kidspider:{fr:"Spider-Man",en:"Spider-Man",canon:"Spider-Man",align:'hero', sex:'m', img:CHAR_IMG.char41},
+  cyclops:{fr:"Cyclops",en:"Cyclops",canon:"Cyclops",align:'hero', sex:'m', img:CHAR_IMG.char43},
+  daredevil:{fr:"Daredevil",en:"Daredevil",canon:"Daredevil",align:'hero', sex:'m', img:CHAR_IMG.char44},
+  deadpool:{fr:"Deadpool",en:"Deadpool",canon:"Deadpool",align:'neutral', sex:'m', img:CHAR_IMG.char45},
+  docock:{fr:"Doctor Octopus",en:"Doctor Octopus",canon:"Doctor Octopus",align:'villain', sex:'m', img:CHAR_IMG.char46},
+  pyro:{fr:"Pyro",en:"Pyro",canon:"Pyro",align:'villain', sex:'m', img:CHAR_IMG.char47},
+  antman:{fr:"Ant-Man",en:"Ant-Man",canon:"Ant-Man",align:'hero', sex:'m', img:CHAR_IMG.char48},
+  apocalypse:{fr:"Apocalypse",en:"Apocalypse",canon:"Apocalypse",align:'villain', sex:'m', img:CHAR_IMG.char49},
+  capmarvel:{fr:"Captain Marvel",en:"Captain Marvel",canon:"Captain Marvel",align:'hero', sex:'f', img:CHAR_IMG.char50},
+  corvus:{fr:"Corvus Glaive",en:"Corvus Glaive",canon:"Corvus Glaive",align:'villain', sex:'m', img:CHAR_IMG.char51},
+  cull:{fr:"Cull Obsidian",en:"Cull Obsidian",canon:"Cull Obsidian",align:'villain', sex:'m', img:CHAR_IMG.char52},
 
   /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -1177,7 +1197,7 @@ const FACTIONS = {
   ],
 };
 /* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
-const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','The G','Siddharta','Doctor Doom'];
+const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','Deadpool','The G','Siddharta','Doctor Doom'];
 
 /* ============================ ATTRIBUTS (caracteristiques, sans camp) ============================
    Un attribut n'a pas de camp, peut melanger heros et villains, et se cumule. */
@@ -2732,7 +2752,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).filter(Boolean));
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:10},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
@@ -2824,7 +2844,9 @@ const CHAR_TIER = {
   kaerus:3, kidspider:6, fuchsia:3, umbra:6,
   courtier:5, zeroday:5,
   /* Specialistes humains : aucun pouvoir, misent sur l'entrainement et la technologie */
-  marsh:4
+  marsh:4,
+  /* Nouveaux venus : coherence MCU */
+  apocalypse:9, capmarvel:8, cyclops:6, corvus:6, cull:6, docock:5, antman:5, deadpool:5, pyro:4, daredevil:4
 };
 function charTier(key){
   if(!key) return 5;
