@@ -1075,7 +1075,7 @@ const CHAR_IMG = {
   char7:"/__l5e/assets-v1/9f48d2df-b8c7-4f8c-8b96-2aa21cc9771d/npc_redwidow.png",
   char8:"/__l5e/assets-v1/ae8336c2-92ed-4252-9030-62b6b9228e05/npc_audition.webp",
   char9:"/__l5e/assets-v1/9f0a51ea-fdd2-4b46-af75-a69b47094b0a/npc_docetrange.webp",
-  char10:"/__l5e/assets-v1/5bae346d-58b4-4f57-ad5d-07e08d962e5c/char10.png",
+  char10:"/__l5e/assets-v1/12de3b75-08c2-4744-bc2e-67f5dcb90468/The_G.png",
   char11:"/__l5e/assets-v1/fc4c6a64-88a9-4963-a4ca-3874d1117868/char11.png",
   char12:"/__l5e/assets-v1/073ef04c-88d0-4925-8e73-9c588280a5a8/npc_ghamos.webp",
   char13:"/__l5e/assets-v1/4c7978d7-12ce-4e9e-97b5-0a72ef8a1fd2/npc_cremsoler.png",
@@ -1098,6 +1098,15 @@ const CHAR_IMG = {
   char50:"/__l5e/assets-v1/27f1ff48-50d6-464f-b2a9-da3c05def2b7/Captain_Marvel.webp",
   char51:"/__l5e/assets-v1/2618e960-b842-4ad3-9583-bd9c9f1895f9/Corvus_Glaive.png",
   char52:"/__l5e/assets-v1/5aa5a43d-d57a-4e26-82f5-03183f05e17f/Cull_Obsidian.png",
+  char53:"/__l5e/assets-v1/5c005c7a-b308-4e5e-9261-442252a88061/Groot.png",
+  char54:"/__l5e/assets-v1/a7ed1dae-9489-4589-98a9-ca30c1f9468a/Jean_Grey.png",
+  char55:"/__l5e/assets-v1/f9e9c4b6-db6a-41bc-b5ad-0d6405e2f4c1/La_chose.png",
+  char56:"/__l5e/assets-v1/31de6d70-2397-4d64-968f-3ab8f7bdb0a3/Magneto.png",
+  char57:"/__l5e/assets-v1/09b3e412-5af6-4e23-b41a-31af60ca19d9/Ebony_Maw.png",
+  char58:"/__l5e/assets-v1/4f550f5d-63b1-4783-86b6-ba6432b9e830/Electro.png",
+  char59:"/__l5e/assets-v1/96a858cd-cd8a-4a04-83b3-6bbedc04f65d/Femme_invisible.png",
+  char60:"/__l5e/assets-v1/567fc8c7-1c5b-4673-83d7-c8d2a1d33c5f/Gamora.png",
+  char61:"/__l5e/assets-v1/cf0e42c8-e457-47e3-bcb7-ba62638ab5aa/Gorr.png",
   char21:"/game/chars/21.png", char22:"/game/chars/22.png", char23:"/game/chars/23.png", char24:"/game/chars/24.png",
   char25:"/game/chars/25.png", char26:"/game/chars/26.png", char27:"/game/chars/27.png", char28:"/game/chars/28.png",
   char29:"/game/chars/29.png", char30:"/game/chars/30.png", char31:"/game/chars/31.png", char32:"/game/chars/32.png",
@@ -1141,6 +1150,15 @@ const CHARACTERS = {
   capmarvel:{fr:"Captain Marvel",en:"Captain Marvel",canon:"Captain Marvel",align:'hero', sex:'f', img:CHAR_IMG.char50},
   corvus:{fr:"Corvus Glaive",en:"Corvus Glaive",canon:"Corvus Glaive",align:'villain', sex:'m', img:CHAR_IMG.char51},
   cull:{fr:"Cull Obsidian",en:"Cull Obsidian",canon:"Cull Obsidian",align:'villain', sex:'m', img:CHAR_IMG.char52},
+  groot:{fr:"Groot",en:"Groot",canon:"Groot",align:'hero', sex:'m', img:CHAR_IMG.char53},
+  jeangrey:{fr:"Jean Grey",en:"Jean Grey",canon:"Jean Grey",align:'hero', sex:'f', img:CHAR_IMG.char54},
+  thething:{fr:"The Thing",en:"The Thing",canon:"The Thing",align:'hero', sex:'m', img:CHAR_IMG.char55},
+  magneto:{fr:"Magneto",en:"Magneto",canon:"Magneto",align:'villain', sex:'m', img:CHAR_IMG.char56},
+  ebonymaw:{fr:"Ebony Maw",en:"Ebony Maw",canon:"Ebony Maw",align:'villain', sex:'m', img:CHAR_IMG.char57},
+  electro:{fr:"Electro",en:"Electro",canon:"Electro",align:'villain', sex:'m', img:CHAR_IMG.char58},
+  invisiblewoman:{fr:"Invisible Woman",en:"Invisible Woman",canon:"Invisible Woman",align:'hero', sex:'f', img:CHAR_IMG.char59},
+  gamora:{fr:"Gamora",en:"Gamora",canon:"Gamora",align:'hero', sex:'f', img:CHAR_IMG.char60},
+  gorr:{fr:"Gorr",en:"Gorr",canon:"Gorr",align:'villain', sex:'m', img:CHAR_IMG.char61},
 
   /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -2752,7 +2770,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:10},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:19},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
@@ -2846,7 +2864,8 @@ const CHAR_TIER = {
   /* Specialistes humains : aucun pouvoir, misent sur l'entrainement et la technologie */
   marsh:4,
   /* Nouveaux venus : coherence MCU */
-  apocalypse:9, capmarvel:8, cyclops:6, corvus:6, cull:6, docock:5, antman:5, deadpool:5, pyro:4, daredevil:4
+  apocalypse:9, capmarvel:8, cyclops:6, corvus:6, cull:6, docock:5, antman:5, deadpool:5, pyro:4, daredevil:4,
+  gorr:8, magneto:8, jeangrey:9, invisiblewoman:7, thething:6, groot:5, gamora:5, ebonymaw:6, electro:4
 };
 function charTier(key){
   if(!key) return 5;
