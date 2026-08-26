@@ -1190,17 +1190,17 @@ const CHARACTERS = {
   tempest:{fr:"Veuve Grise",en:"Grey Widow",align:'hero', sex:'f', img:CHAR_IMG.char27},
   sentinelle:{fr:"Prisma",en:"Prisma",align:'hero', sex:'m', img:CHAR_IMG.char28},
   inferno:{fr:"Miss Nova",en:"Miss Nova",align:'hero', sex:'f', img:CHAR_IMG.char29},
-  archange:{fr:"Docteur Bizarre",en:"Doctor Bizarre",align:'hero', sex:'m', img:CHAR_IMG.char30},
+  archange:{fr:"Arcanix",en:"Arcanix",align:'hero', sex:'m', img:CHAR_IMG.char30},
   baronvex:{fr:"Malvorax",en:"Malvorax",align:'villain', sex:'m', img:CHAR_IMG.char31},
   venefica:{fr:"Aurelys",en:"Aurelys",align:'villain', sex:'f', img:CHAR_IMG.char32},
   warlock:{fr:"Medusia",en:"Medusia",align:'villain', sex:'f', img:CHAR_IMG.char33},
   pyra:{fr:"Vantar",en:"Vantar",align:'villain', sex:'m', img:CHAR_IMG.char34},
   rustjaw:{fr:"Le Fou Rose",en:"The Pink Fool",align:'villain', sex:'m', img:CHAR_IMG.char35},
-  requiem:{fr:"Lokar",en:"Lokar",align:'villain', sex:'m', img:CHAR_IMG.char36},
+  requiem:{fr:"Mascarade",en:"Masquerade",align:'villain', sex:'m', img:CHAR_IMG.char36},
   courtier:{fr:"Kingfall",en:"Kingfall",align:'villain', sex:'m', img:CHAR_IMG.char37},
-  umbra:{fr:"Venoma",en:"Venoma",align:'villain', sex:'m', img:CHAR_IMG.char38},
+  umbra:{fr:"Devoreur",en:"Devourer",align:'villain', sex:'m', img:CHAR_IMG.char38},
   precheur:{fr:"Crane Cendre",en:"Ash Skull",align:'villain', sex:'m', img:CHAR_IMG.char39},
-  zeroday:{fr:"Helka",en:"Helka",align:'villain', sex:'f', img:CHAR_IMG.char40},
+  zeroday:{fr:"Ravageuse",en:"Ravager",align:'villain', sex:'f', img:CHAR_IMG.char40},
 
 };
 
@@ -1213,17 +1213,17 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
    On ne peut integrer une faction qu'a partir de la 4e etoile : les index 1-3 sont donc vides. */
 const FACTION_MIN_STARS = 4;
 const FACTIONS = {
-  hero: [ null, null, null, null,
-    { id:'xmen', fr:'X-MEN', en:'X-MEN', icon:'globe-segment', leader:'Cyclops',
-      members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X'] },
+  hero: [ null, null,
     { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'rings', leader:'Mister Fantastic',
       members:['Mister Fantastic','Invisible Woman','Human Torch','The Thing'] },
+    { id:'xmen', fr:'X-MEN', en:'X-MEN', icon:'globe-segment', leader:'Professor X',
+      members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X'] },
     { id:'guardians', fr:'GUARDIANS OF THE GALAXY', en:'GUARDIANS OF THE GALAXY', icon:'galaxy', leader:'Star-Lord',
       members:['Star-Lord','Rocket','Groot','Gamora','Nebula'] },
-    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe', leader:'Captain America',
+    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe', leader:'Iron Man',
       members:['Spider-Man','Iron Man','Captain America','Thor','Hulk','Black Widow','Black Panther','Scarlet Witch','Vision','Ant-Man','Doctor Strange'] },
   ],
-  villain: [ null, null, null, null,
+  villain: [ null, null,
     { id:'sinister6', fr:'SINISTER SIX', en:'SINISTER SIX', icon:'crack', leader:'Doctor Octopus',
       members:['Green Goblin','Doctor Octopus','Mysterio','Electro'] },
     { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet', leader:'Magneto',
@@ -1333,6 +1333,37 @@ function factionWeightedPick(pool){
   return pick(pool);
 }
 
+/* Blason generique pour une faction fondee par le joueur (pas de palier/icone officiel, juste
+   une etoile-eclat au centre, dans les couleurs du camp). */
+function customFactionEmblemSVG(side, size){
+  const uid = 'cfe'+Math.random().toString(36).slice(2,7);
+  const isHero = side==='hero';
+  const c1 = isHero ? '#5fd4ff' : '#ff7b8c', c2 = isHero ? '#0088cc' : '#a5122f', dark = isHero ? '#04263a' : '#3a0a14';
+  const icon = `<path d="M50 26 L56 42 L72 44 L59 55 L63 71 L50 61 L37 71 L41 55 L28 44 L44 42 Z" fill="#fff" opacity="0.94"/>`;
+  const shield = 'M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="custom faction">
+    <defs>
+      <linearGradient id="${uid}g" x1="0.1" y1="0" x2="0.9" y2="1">
+        <stop offset="0%" stop-color="${c1}"/><stop offset="48%" stop-color="${c2}"/><stop offset="100%" stop-color="${dark}"/>
+      </linearGradient>
+      <radialGradient id="${uid}core" cx="0.5" cy="0.42" r="0.62">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="42%" stop-color="${c1}" stop-opacity="0.55"/><stop offset="100%" stop-color="${dark}" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="${uid}glow" x="-45%" y="-45%" width="190%" height="190%">
+        <feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <clipPath id="${uid}clip"><path d="${shield}"/></clipPath>
+    </defs>
+    <g filter="url(#${uid}glow)">
+      <path d="${shield}" fill="${dark}"/>
+      <path d="${shield}" fill="url(#${uid}g)" opacity="0.96"/>
+    </g>
+    <g clip-path="url(#${uid}clip)"><circle cx="50" cy="46" r="42" fill="url(#${uid}core)"/></g>
+    <path d="${shield}" fill="none" stroke="${dark}" stroke-width="2.6" opacity="0.85"/>
+    <path d="M50,9.5 L83,20 L83,52 C83,76 66,89 50,96 C34,89 17,76 17,52 L17,20 Z" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.42"/>
+    <g opacity="0.98">${icon}</g>
+  </svg>`;
+}
 function factionEmblemSVG(side, tier, size){
   const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return '';
   const uid = 'fe'+Math.random().toString(36).slice(2,7);
@@ -2686,13 +2717,13 @@ const PRESETS = [
     perkFr:'Visiere tactique : il lit le champ de bataille en temps reel.', perkEn:'Tactical visor: he reads the battlefield in real time.',
     flawFr:'Trop confiant dans ses donnees : l\'imprevisible le desarme.', flawEn:'Too confident in his data: the unpredictable disarms him.',
     descFr:'Operateur en veste tactique, visiere lumineuse et brassard energetique.', descEn:'Operator in a tactical jacket with a glowing visor and energy armband.' },
-  { id:'glitch', charKey:'glitch', side:'hero', img:CHAR_IMG.char26, nameFr:'Sorciere Ambre', nameEn:'Amber Witch', heroFr:'Ambre', heroEn:'Amber', morphology:'humain', path:'mystique', powers:['telepathie','illusions'],
+  { id:'glitch', charKey:'glitch', side:'hero', img:CHAR_IMG.char26, nameFr:'Braise', nameEn:'Ember', heroFr:'Braise', heroEn:'Ember', morphology:'humain', path:'mystique', powers:['elementaire','illusions'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#5a3a12', secondaryColor:'#ffb02e', symbol:'' },
     align:18, stats:{courage:12, intelligence:18, popularity:10},
     perkFr:'Magie du chaos : elle peut renverser une mission perdue d\'un seul sort.', perkEn:'Chaos magic: she can flip a lost mission with a single spell.',
     flawFr:'Instable : ses pouvoirs blessent parfois ses propres allies.', flawEn:'Unstable: her powers sometimes hurt her own allies.',
     descFr:'Sorciere en cuir ambre et charbon, energie doree entre les doigts.', descEn:'Sorceress in amber and charcoal leather, golden energy in her hands.' },
-  { id:'tempest', charKey:'tempest', side:'hero', img:CHAR_IMG.char27, nameFr:'Veuve Grise', nameEn:'Grey Widow', heroFr:'Veuve Grise', heroEn:'Grey Widow', morphology:'elance', path:'physique', powers:['vitesse','force'],
+  { id:'tempest', charKey:'tempest', side:'hero', img:CHAR_IMG.char27, nameFr:'Voile Grise', nameEn:'Grey Veil', heroFr:'Voile Grise', heroEn:'Grey Veil', morphology:'elance', path:'physique', powers:['vitesse','force'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#2b3442', secondaryColor:'#7f8c9c', symbol:'' },
     align:14, stats:{courage:16, intelligence:16, popularity:6},
     perkFr:'Espionne d\'elite : infiltration, interrogatoire et sabotage impeccables.', perkEn:'Elite spy: flawless infiltration, interrogation and sabotage.',
@@ -2704,13 +2735,13 @@ const PRESETS = [
     perkFr:'Esprit synthetique : analyse parfaite, il anticipe chaque piege.', perkEn:'Synthetic mind: perfect analysis, he anticipates every trap.',
     flawFr:'Trop froid : il inspire de la mefiance, les relations montent lentement.', flawEn:'Too cold: he inspires distrust, relationships grow slowly.',
     descFr:'Androide a la peau doree et gemme cyan, calme absolu.', descEn:'Android with golden skin and a cyan gem, absolute calm.' },
-  { id:'inferno', charKey:'inferno', side:'hero', img:CHAR_IMG.char29, nameFr:'Miss Nova', nameEn:'Miss Nova', heroFr:'Miss Nova', heroEn:'Miss Nova', morphology:'humain', path:'physique', powers:['force','saut'],
+  { id:'inferno', charKey:'inferno', side:'hero', img:CHAR_IMG.char29, nameFr:'Emeraude', nameEn:'Emerald', heroFr:'Emeraude', heroEn:'Emerald', morphology:'humain', path:'physique', powers:['force','saut'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#1f6b45', secondaryColor:'#e63946', symbol:'' },
     align:32, stats:{courage:12, intelligence:8, popularity:22},
     perkFr:'Cheri du public : les reseaux la portent, sa cote grimpe vite.', perkEn:'Public darling: social media carries her, her rating soars.',
     flawFr:'Manque d\'experience : elle rate les missions les plus dures.', flawEn:'Lack of experience: she fails the hardest missions.',
     descFr:'Ado en bomber vert et echarpe rouge, poings d\'energie emeraude.', descEn:'Teen in a green bomber and red scarf, emerald energy fists.' },
-  { id:'archange', charKey:'archange', side:'hero', img:CHAR_IMG.char30, nameFr:'Docteur Bizarre', nameEn:'Doctor Bizarre', heroFr:'Docteur Bizarre', heroEn:'Doctor Bizarre', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
+  { id:'archange', charKey:'archange', side:'hero', img:CHAR_IMG.char30, nameFr:'Arcanix', nameEn:'Arcanix', heroFr:'Arcanix', heroEn:'Arcanix', morphology:'humain', path:'mystique', powers:['illusions','elementaire'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'staff', suitColor:'#14504a', secondaryColor:'#2fe0c0', symbol:'' },
     align:30, stats:{courage:10, intelligence:24, popularity:10},
     perkFr:'Maitre des arts occultes : il resout les crises impossibles.', perkEn:'Master of the occult arts: he solves impossible crises.',
@@ -2747,7 +2778,7 @@ const PRESETS = [
     perkFr:'Chaos elegant : personne ne devine jamais son prochain coup.', perkEn:'Elegant chaos: nobody ever guesses his next move.',
     flawFr:'Instable : ses alliances se retournent aussi vite qu\'elles se forment.', flawEn:'Unstable: his alliances flip as fast as they form.',
     descFr:'Dandy en costume rose et canne sertie, sourire de predateur.', descEn:'Dandy in a pink suit with a jeweled cane and a predator smile.' },
-  { id:'requiem', charKey:'requiem', side:'villain', img:CHAR_IMG.char36, nameFr:'Lokar', nameEn:'Lokar', heroFr:'Lokar', heroEn:'Lokar', morphology:'elance', path:'psychique', powers:['illusions','telepathie'],
+  { id:'requiem', charKey:'requiem', side:'villain', img:CHAR_IMG.char36, nameFr:'Mascarade', nameEn:'Masquerade', heroFr:'Mascarade', heroEn:'Masquerade', morphology:'elance', path:'mystique', powers:['illusions','metamorphose'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#123b45', secondaryColor:'#c98b3a', symbol:'' },
     align:-24, stats:{courage:10, intelligence:22, popularity:14},
     perkFr:'Manipulateur ne : il retourne les allies de ses ennemis.', perkEn:'Born manipulator: he turns his enemies\' allies.',
@@ -2759,19 +2790,19 @@ const PRESETS = [
     perkFr:'Empire criminel : argent, avocats et police achetes a chaque scandale.', perkEn:'Criminal empire: money, lawyers and bought police at every scandal.',
     flawFr:'Trop visible : la justice ne le lache jamais tres longtemps.', flawEn:'Too visible: the law never leaves him alone for long.',
     descFr:'Parrain colossal en costume creme, canne sertie a la main.', descEn:'Colossal kingpin in a cream suit with a jeweled cane.' },
-  { id:'umbra', charKey:'umbra', side:'villain', img:CHAR_IMG.char38, nameFr:'Venoma', nameEn:'Venoma', heroFr:'Venoma', heroEn:'Venoma', morphology:'colosse', path:'mystique', powers:['force','regen'],
+  { id:'umbra', charKey:'umbra', side:'villain', img:CHAR_IMG.char38, nameFr:'Devoreur', nameEn:'Devourer', heroFr:'Devoreur', heroEn:'Devourer', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#3d1140', secondaryColor:'#efeff5', symbol:'' },
     align:-30, stats:{courage:22, intelligence:6, popularity:-2},
     perkFr:'Symbiote vorace : regeneration monstrueuse en pleine mission.', perkEn:'Voracious symbiote: monstrous regeneration mid-mission.',
     flawFr:'Faim constante : elle perd le controle et fait des victimes.', flawEn:'Constant hunger: it loses control and claims victims.',
     descFr:'Masse de bave violette aux crocs blancs et marques d\'araignee.', descEn:'Mass of violet slime with white fangs and spider markings.' },
-  { id:'precheur', charKey:'precheur', side:'villain', img:CHAR_IMG.char39, nameFr:'Crane Cendre', nameEn:'Ash Skull', heroFr:'Crane Cendre', heroEn:'Ash Skull', morphology:'humain', path:'psychique', powers:['telepathie','illusions'],
+  { id:'precheur', charKey:'precheur', side:'villain', img:CHAR_IMG.char39, nameFr:'Crane Cendre', nameEn:'Ash Skull', heroFr:'Crane Cendre', heroEn:'Ash Skull', morphology:'humain', path:'psychique', powers:['telepathie','controle_emotionnel'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'armored', aura:'dark', weapon:'none', suitColor:'#1c2019', secondaryColor:'#8d9488', symbol:'' },
     align:-38, stats:{courage:18, intelligence:22, popularity:-12},
     perkFr:'Chef de guerre : il leve une armee entiere derriere lui.', perkEn:'Warlord: he raises an entire army behind him.',
     flawFr:'Hai de tous : aucune alliance publique possible.', flawEn:'Hated by all: no public alliance is possible.',
     descFr:'Officier au visage de crane gris cendre, manteau noir et olive.', descEn:'Officer with an ash-grey skull face in a black and olive coat.' },
-  { id:'zeroday', charKey:'zeroday', side:'villain', img:CHAR_IMG.char40, nameFr:'Helka', nameEn:'Helka', heroFr:'Helka', heroEn:'Helka', morphology:'humain', path:'mystique', powers:['elementaire','illusions'],
+  { id:'zeroday', charKey:'zeroday', side:'villain', img:CHAR_IMG.char40, nameFr:'Ravageuse', nameEn:'Ravager', heroFr:'Ravageuse', heroEn:'Ravager', morphology:'humain', path:'mystique', powers:['elementaire','illusions'],
     look:{ helmet:'half', cape:true, glasses:'none', gloves:'claws', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#101512', secondaryColor:'#3ddb62', symbol:'' },
     align:-34, stats:{courage:20, intelligence:14, popularity:4},
     perkFr:'Reine de la mort : ses armes apparaissent de nulle part, duels imperdables.', perkEn:'Death queen: her weapons appear from nowhere, unlosable duels.',
@@ -3413,6 +3444,11 @@ function renderRankBadge(){
       <span style="font-size:10px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
       <div style="width:24px;height:24px;">${factionEmblemSVG(S.team.side, S.team.tier, 24)}</div>
     </div>` : '';
+  /* Une faction que TU as fondee affiche elle aussi son propre petit blason, meme sans palier officiel. */
+  const customFactionHtml = (S.customFactions||[]).map(f=>`<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
+      <span style="font-size:10px; font-weight:800; color:${charColor(f.side)};">${f.name}</span>
+      <div style="width:24px;height:24px;">${customFactionEmblemSVG(f.side, 24)}</div>
+    </div>`).join('');
   let loveHtml = '';
   if(S.romance && S.romance.active && CHARACTERS[S.romance.charKey]){
     const pc = CHARACTERS[S.romance.charKey];
@@ -3421,7 +3457,7 @@ function renderRankBadge(){
     loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
   }
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${loveHtml}`;
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}`;
   if(stars > S.lastStars){ showRankUpToast(stars, zone); }
   S.lastStars = stars;
 }
@@ -3633,7 +3669,7 @@ function topbar(){
 function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
-    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd };
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -4954,26 +4990,74 @@ function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 10) return false;
   const tier = computeStars();
-  /* FACTIONS n'a des factions definies qu'a partir du palier 4 (Continent) : en dessous, l'invitation
+  /* FACTIONS n'a des factions definies qu'a partir du palier 2 (Ville) : en dessous, l'invitation
      afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
-  if(tier < 4) return false;
+  if(tier < 2) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
   if(tier <= S[key]) return false;
   if(Math.abs(S.align) < 55) return false;
-  if(S.inviteCount===undefined) S.inviteCount = 0;
-  const cap = (S.years||10) >= 30 ? 2 : 1;
-  if(S.inviteCount >= cap) return false;
+  /* Pas de plafond total sur la carriere : une proposition peut revenir tous les 7 ans, point. */
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
-  const gap = S.team ? 14 : 7;
-  if(S.currentYear - last < gap) return false;
+  if(S.currentYear - last < 7) return false;
   const fights = S.combat.won + S.combat.lost;
   const winRate = fights ? S.combat.won/fights : 0.35;
   let p = 0.06 + winRate*0.18 + (S.stats.popularity-58)/420 + (S.locations.length>=4 ? 0.04 : 0);
   if(S.team) p -= 0.10;
   if(Math.random() > clamp(p, 0.02, 0.26)) return false;
-  S[key] = tier; S.inviteCount += 1; S.lastInviteYear = S.currentYear;
+  S[key] = tier; S.lastInviteYear = S.currentYear;
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
+}
+/* ============================ OFFRE DE DEFECTION DU CAMP ADVERSE ============================
+   Meme quand tu appartiens deja a une equipe de ton propre camp, le camp oppose peut tenter de te
+   debaucher. Accepter bascule totalement ton alignement et ton equipe. Reste rare. */
+function checkDefectionOffer(){
+  const zone = zoneOf(S.align);
+  if(zone==='neutral' || S.totalMissionsDone < 10) return false;
+  const oppZone = zone==='hero' ? 'villain' : 'hero';
+  const tier = computeStars();
+  if(tier < 2) return false;
+  const key = oppZone==='hero' ? 'defectedTierHero' : 'defectedTierVillain';
+  if(tier <= (S[key]||0)) return false;
+  if(Math.abs(S.align) < 55) return false; // il faut etre clairement engage pour que le debauchage ait un sens
+  const last = (S.lastDefectionYear===undefined || S.lastDefectionYear===null) ? -99 : S.lastDefectionYear;
+  if(S.currentYear - last < 7) return false;
+  let p = 0.03 + (Math.abs(S.align)-55)/500; // reste plus rare qu'une invitation classique : gros pari narratif
+  if(Math.random() > clamp(p, 0.01, 0.08)) return false;
+  S[key] = tier; S.lastDefectionYear = S.currentYear;
+  S.pendingReturnScreen = S.screen; S.screen = 'defection'; S.defectionSide = oppZone; S.defectionTier = tier;
+  return true;
+}
+function screenDefection(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const isHero = S.defectionSide==='hero'; const tier = S.defectionTier;
+  const fname = factionName(S.defectionSide, tier);
+  const col = charColor(S.defectionSide);
+  d.innerHTML = `<span class="eyebrow" style="color:${col};">${fr?'OFFRE DU CAMP ADVERSE':'OFFER FROM THE OPPOSING SIDE'}</span>
+    <h2>${fr?'Une main tendue de l\'autre bord':'A hand reaching from the other side'}</h2>
+    <p class="lead">${fr?`${fname} t'observe depuis un moment. Ils savent exactement ce que tu es devenu(e) - et te proposent de tout changer.`:`${fname} has been watching you for a while. They know exactly what you've become - and they're offering to change all of it.`}</p>
+    <div class="team-hero-banner" style="border-color:${col};">
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.defectionSide, tier, 84)}</div>
+      <div class="tname" style="color:${col}; text-shadow:0 0 20px ${col};">${fname}</div>
+    </div>
+    <p class="lead" style="font-size:.9em; opacity:.75;">${fr?'Accepter bascule totalement ton camp, quitte immediatement ton equipe actuelle si tu en as une, et marque un tournant dans ta carriere.':'Accepting completely flips your side, immediately leaves your current team if you have one, and marks a turning point in your career.'}</p>
+    <div class="actions"><button class="btn ghost" id="declineD">${t('decline')}</button><button class="btn cyan" id="acceptD">${fr?'Basculer':'Switch sides'}</button></div>`;
+  d.querySelector('#acceptD').onclick=()=>{
+    const oldZone = zoneOf(S.align);
+    S.align = isHero ? 70 : -70;
+    S.turningPoints.push({ year:S.currentYear, from:oldZone, to:S.defectionSide });
+    S.lastZone = S.defectionSide;
+    S.team = { side:S.defectionSide, tier };
+    const label = fr ? `Tu as rejoint ${fname} - et change de camp.` : `You joined ${fname} - and switched sides.`;
+    S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero });
+    nextMission();
+  };
+  d.querySelector('#declineD').onclick=()=>{
+    const label = fr ? `${fname} n'a pas reussi a te faire basculer.` : `${fname} failed to turn you.`;
+    S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false });
+    nextMission();
+  };
+  return d;
 }
 /* ============================ CREATION DE FACTION PAR LE JOUEUR ============================
    Le joueur ne construit pas une faction de toutes pieces : c'est le jeu qui la lui propose, batie
@@ -5557,19 +5641,11 @@ function screenTraining(){
       if(sc > bestSc){ bestSc = sc; bestI = i; }
     });
     const btns = Array.from(cbox.querySelectorAll('.choice'));
-    const wLab = jvL({courage:'ton courage',intelligence:'ton intelligence',popularity:'ta notoriete'}[weakest],
-                     {courage:'your courage',intelligence:'your intelligence',popularity:'your standing'}[weakest]);
     if(bestI >= 0 && btns[bestI]){
       btns[bestI].classList.add('jv-reco');
       btns[bestI].style.setProperty('--jvc', jvColor());
       btns[bestI].setAttribute('data-reco', (S.lang==='fr'?'CONSEIL ':'ADVICE ') + jvName());
     }
-    const nm = cands[bestI] ? (S.lang==='fr'?cands[bestI].fr:cands[bestI].en) : '';
-    jvAttachTip(cbox, jvIsUltron()
-      ? jvL('Prends "'+nm+'". C\'est la voie la plus destructrice pour toi et elle comble '+wLab+'.',
-            'Take "'+nm+'". Most destructive path available and it fills the gap in '+wLab+'.')
-      : jvL('Je recommande "'+nm+'" : c\'est ce qui comble '+wLab+' et te rend le plus complet au retour.',
-            'I recommend "'+nm+'": it fills the gap in '+wLab+' and makes you the most complete on your return.'));
   })();
   return d;
 }
@@ -5996,7 +6072,16 @@ function buildBattleSquads(foeKey, mission){
      a ses cotes qu'avec n'importe quel autre membre de l'equipe. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && allyPool.includes(leaderKey)) allyPool = [leaderKey].concat(allyPool.filter(k=>k!==leaderKey));
-  const mine = activeMenteeKeys.filter(k=>allyPool.includes(k));
+  /* Si tu as plusieurs recrues actives (2 maximum, puisqu'elles cessent de l'etre au bout de 5 ans) :
+     pas de regle systematique - parfois une seule (au hasard, meme si c'est la meme que la derniere
+     fois), parfois les deux a la fois en escouade. */
+  const eligibleMentees = activeMenteeKeys.filter(k=>allyPool.includes(k));
+  let mine = [];
+  if(eligibleMentees.length === 1){
+    mine = eligibleMentees;
+  } else if(eligibleMentees.length >= 2){
+    mine = Math.random() < 0.25 ? eligibleMentees.slice() : [pick(eligibleMentees)];
+  }
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   let foePool = shuffle(keys.filter(k=> effectiveAlignOf(k)==='neutral' ? neutralSideThisFight[k]===oppSide : effectiveAlignOf(k)===oppSide));
   /* Si l'adversaire principal a sa propre recrue cette decennie, elle a de bonnes chances d'etre a
@@ -6856,6 +6941,7 @@ function handleZoneCheckAndContinue(){
     showSwitchAnnouncement(oldZone, newZone, ()=>{
       if(checkFactionExpulsion()){ nextMission(); return; }
       if(checkTeamInvite()){ render(); return; }
+      if(checkDefectionOffer()){ render(); return; }
       if(checkFactionCreationOffer()){ render(); return; }
       nextMission();
     });
@@ -6863,6 +6949,7 @@ function handleZoneCheckAndContinue(){
   }
   if(checkFactionExpulsion()){ nextMission(); return; }
   if(checkTeamInvite()){ render(); return; }
+  if(checkDefectionOffer()){ render(); return; }
   if(checkFactionCreationOffer()){ render(); return; }
   nextMission();
 }
