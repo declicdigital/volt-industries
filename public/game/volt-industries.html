@@ -3572,15 +3572,34 @@ function checkMenteeGraduations(){
     }
   });
 }
+/* Chapitres de rivalite : au-dela des simples altercations, des jalons (3e, 6e) marquent une vraie
+   escalade - jusqu'a un affrontement decisif dont l'issue est explicitement soulignee. */
+const RIVAL_CHAPTER_3_FR = n=>`${n} ne se contente plus de te croiser : la prochaine fois, ${n==='il'?'il':'elle'} viendra pour de bon.`;
+const RIVAL_CHAPTER_3_EN = n=>`${n} isn't just crossing your path anymore: next time, they're coming for real.`;
 function maybeRivalAltercation(){
+  if(!S.rivalKey) return;
   if(S.lastRivalAltercYear!=null && (S.currentYear - S.lastRivalAltercYear) < 1) return;
   if(Math.random() >= 0.35) return;
   const c = CHARACTERS[S.rivalKey]; if(!c) return;
   const name = S.lang==='fr'?c.fr:c.en;
-  const line = pick(S.lang==='fr'?RIVAL_ALTERC_FR:RIVAL_ALTERC_EN)(name).replace(/il\/elle/g, c.sex==='f'?(S.lang==='fr'?'elle':'she'):(S.lang==='fr'?'il':'he'));
   S.lastRivalAltercYear = S.currentYear;
   S.rivalAltercations = (S.rivalAltercations||0) + 1;
-  jarvisSay(line, line, S.lang==='fr'?'signal du rival':'rival signal');
+  const count = S.rivalAltercations;
+  if(count === 3){
+    const line = `${name} ${S.lang==='fr'?'ne se contente plus de te croiser : la prochaine fois, il/elle viendra pour de bon.'.replace('il/elle', c.sex==='f'?'elle':'il') : 'is done just crossing your path: next time, they are coming for real.'}`;
+    jarvisSay(line, line, S.lang==='fr'?'escalade':'escalation');
+    S.rivalClimaxReady = true;
+  } else if(count >= 6){
+    const line = S.lang==='fr'
+      ? `Le moment est venu. ${name} et toi savez tous les deux que ca ne peut plus attendre.`
+      : `The moment has come. Both you and ${name} know this can't wait any longer.`;
+    jarvisSay(line, line, S.lang==='fr'?'affrontement decisif':'decisive confrontation');
+    S.rivalClimaxReady = true;
+    S.rivalAltercations = 0; // le chapitre se boucle, un nouveau cycle de tension peut recommencer
+  } else {
+    const line = pick(S.lang==='fr'?RIVAL_ALTERC_FR:RIVAL_ALTERC_EN)(name).replace(/il\/elle/g, c.sex==='f'?(S.lang==='fr'?'elle':'she'):(S.lang==='fr'?'il':'he'));
+    jarvisSay(line, line, S.lang==='fr'?'signal du rival':'rival signal');
+  }
 }
 function maybeOldSideReminder(){
   if(!S.turningPoints.length) return;
@@ -3669,7 +3688,8 @@ function topbar(){
 function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
-    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd };
+    summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
+    codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -3808,6 +3828,116 @@ function sideAvatarPanel(){
 function statBar(label, val, color){ return `<div class="stat"><div class="slabel">${label}</div><div class="barbg"><div class="barfill" style="width:${clamp(val,0,100)}%; background:${color};"></div></div></div>`; }
 
 /* ---------- Screens: setup ---------- */
+/* ============================ CODEX DES PERSONNAGES ============================ */
+function screenCodex(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','inferno','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur','zeroday']);
+  const allKeys = Object.keys(CHARACTERS);
+  const metCount = allKeys.filter(k=>hasMetChar(k)).length;
+  const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
+  const repHtml = allFactions.map(f=>{
+    const rep = factionRepOf(f.id);
+    const pct = Math.round((rep+20)/40*100);
+    const col = rep>0 ? '#7ef0c0' : (rep<0 ? '#ff5c6e' : 'var(--dim)');
+    return `<div style="margin-bottom:8px;">
+      <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${f.fr}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
+      <div class="barbg" style="height:5px;"><div class="barfill" style="width:${pct}%; background:${col};"></div></div>
+    </div>`;
+  }).join('');
+  d.innerHTML = `<span class="eyebrow">${fr?'CODEX':'CODEX'}</span><h2>${fr?'Personnages rencontres':'Characters met'}</h2>
+    <p class="lead">${metCount} / ${allKeys.length} ${fr?'decouverts au fil de tes carrieres':'discovered across your careers'}</p>
+    <h3 style="margin-top:20px;">${fr?'Reputation par faction':'Faction reputation'}</h3>
+    <p class="lead" style="font-size:12px; margin-top:0;">${fr?'Ce que chaque faction pense de toi, meme si tu n\'en fais pas partie.':'What each faction thinks of you, even if you\'re not a member.'}</p>
+    <div style="margin-top:10px;">${repHtml}</div>
+    <h3 style="margin-top:24px;">${fr?'Personnages':'Characters'}</h3>
+    <div id="codexGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:10px; margin-top:10px;"></div>
+    <div class="actions"><button class="btn ghost" id="back">${fr?'Retour':'Back'}</button></div>`;
+  const grid = d.querySelector('#codexGrid');
+  const sorted = allKeys.slice().sort((a,b)=>{
+    const ma = hasMetChar(a)?0:1, mb = hasMetChar(b)?0:1;
+    if(ma!==mb) return ma-mb;
+    return (CHARACTERS[a].fr||'').localeCompare(CHARACTERS[b].fr||'');
+  });
+  grid.innerHTML = sorted.map(k=>{
+    const c = CHARACTERS[k]; const met = hasMetChar(k);
+    const isRecruit = recruits.has(k);
+    const col = c.align==='neutral' ? '#b98bff' : (c.align==='villain' ? '#ff2d55' : '#00e5ff');
+    if(!met){
+      return `<div style="text-align:center;">
+        <div style="width:100%; aspect-ratio:1; border-radius:12px; background:rgba(255,255,255,.03); border:1.5px dashed var(--line); display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--dim);">?</div>
+        <div style="font-size:9.5px; color:var(--dim); margin-top:4px;">${fr?'Inconnu':'Unknown'}</div>
+      </div>`;
+    }
+    const moral = moralityOf(k);
+    return `<div style="text-align:center;">
+      <div style="width:100%; aspect-ratio:1; border-radius:12px; overflow:hidden; border:1.5px solid ${col}; position:relative;">
+        ${c.img?`<img src="${c.img}" alt="${c.fr}" style="width:100%; height:100%; object-fit:cover; object-position:50% 12%;" onerror="this.style.display='none';">`:`<div style="width:100%;height:100%; display:flex; align-items:center; justify-content:center; font-weight:900; color:${col};">${c.fr.charAt(0)}</div>`}
+        ${isRecruit?`<span style="position:absolute; top:2px; right:2px; font-size:7px; font-weight:800; background:rgba(0,0,0,.6); color:#7ef0c0; padding:1px 3px; border-radius:4px;">${fr?'RECR.':'REC.'}</span>`:''}
+      </div>
+      <div style="font-size:9.5px; margin-top:4px; font-weight:700;">${fr?c.fr:c.en}</div>
+      <div style="font-size:8.5px; color:${col};">${moralityLabel(moral)}</div>
+    </div>`;
+  }).join('');
+  d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'welcome'; render(); };
+  return d;
+}
+/* ============================ SIMULATEUR DE DUEL ============================ */
+function screenDuelSimulator(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const keys = Object.keys(CHARACTERS).sort((a,b)=>(CHARACTERS[a].fr||'').localeCompare(CHARACTERS[b].fr||''));
+  if(!S.duelA) S.duelA = keys[0]; if(!S.duelB) S.duelB = keys[1];
+  const opts = (sel)=>keys.map(k=>`<option value="${k}" ${S[sel]===k?'selected':''}>${fr?CHARACTERS[k].fr:CHARACTERS[k].en}</option>`).join('');
+  d.innerHTML = `<span class="eyebrow">${fr?'SIMULATEUR':'SIMULATOR'}</span><h2>${fr?'Qui gagnerait ?':'Who would win?'}</h2>
+    <p class="lead">${fr?'Choisis deux personnages et lance la simulation - independant de ta carriere en cours.':'Pick two characters and run the simulation - independent from your ongoing career.'}</p>
+    <div style="display:flex; gap:10px; align-items:center; margin-top:16px;">
+      <select id="duelA" style="flex:1; padding:10px; border-radius:10px; background:rgba(255,255,255,.04); color:var(--ink); border:1px solid var(--line);">${opts('duelA')}</select>
+      <span style="font-weight:900; color:var(--dim);">VS</span>
+      <select id="duelB" style="flex:1; padding:10px; border-radius:10px; background:rgba(255,255,255,.04); color:var(--ink); border:1px solid var(--line);">${opts('duelB')}</select>
+    </div>
+    <div class="actions"><button class="btn cyan" id="runDuel">${fr?'Lancer le duel':'Run the duel'}</button></div>
+    <div id="duelResult" style="margin-top:16px;"></div>
+    <div class="actions"><button class="btn ghost" id="back">${fr?'Retour':'Back'}</button></div>`;
+  d.querySelector('#duelA').onchange = (e)=>{ S.duelA = e.target.value; };
+  d.querySelector('#duelB').onchange = (e)=>{ S.duelB = e.target.value; };
+  d.querySelector('#runDuel').onclick = ()=>{
+    const a = S.duelA, b = S.duelB;
+    const ca = CHARACTERS[a], cb = CHARACTERS[b];
+    const ta = charTier(a), tb = charTier(b);
+    const movesA = foeMovesFor(a), movesB = foeMovesFor(b);
+    const avgA = movesA.reduce((s,m)=>s+m.p*(m.acc||1),0)/movesA.length;
+    const avgB = movesB.reduce((s,m)=>s+m.p*(m.acc||1),0)/movesB.length;
+    const scoreA = ta*8 + avgA + Math.random()*18;
+    const scoreB = tb*8 + avgB + Math.random()*18;
+    const winner = scoreA >= scoreB ? a : b; const wc = winner===a?ca:cb;
+    const margin = Math.abs(scoreA-scoreB);
+    const verdict = margin > 25 ? (fr?'Ecrasant.':'A crushing win.') : (margin > 10 ? (fr?'Net, sans appel.':'Clean, no contest.') : (fr?'Ca s\'est joue a rien.':'It came down to the wire.'));
+    d.querySelector('#duelResult').innerHTML = `<div class="team-hero-banner" style="border-color:${charColor(wc.align)};">
+      <div class="tname" style="color:${charColor(wc.align)};">${fr?ca.fr:ca.en} (${ta}) ${fr?'contre':'vs'} ${fr?cb.fr:cb.en} (${tb})</div>
+      <p class="lead" style="margin-top:8px;">${fr?'Vainqueur :':'Winner:'} <b>${fr?wc.fr:wc.en}</b>. ${verdict}</p>
+    </div>`;
+  };
+  d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'welcome'; render(); };
+  return d;
+}
+/* ============================ TROPHEES ============================ */
+function screenTrophies(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const unlocked = TROPHIES.filter(tr=>META.achievements && META.achievements[tr.id]).length;
+  d.innerHTML = `<span class="eyebrow">${fr?'HAUTS FAITS':'ACHIEVEMENTS'}</span><h2>${fr?'Trophees':'Trophies'}</h2>
+    <p class="lead">${unlocked} / ${TROPHIES.length} ${fr?'debloques, toutes carrieres confondues':'unlocked, across all careers'}</p>
+    <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
+      ${TROPHIES.map(tr=>{
+        const got = META.achievements && META.achievements[tr.id];
+        return `<div style="padding:12px 14px; border-radius:12px; border:1.5px solid ${got?'#e8c96a':'var(--line)'}; background:${got?'rgba(232,201,106,.08)':'rgba(255,255,255,.02)'};">
+          <div style="font-weight:800; color:${got?'#e8c96a':'var(--ink)'};">${got?'&#127942; ':''}${fr?tr.fr:tr.en}</div>
+          <div style="font-size:12px; color:var(--dim); margin-top:3px;">${fr?tr.descFr:tr.descEn}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="actions"><button class="btn ghost" id="back">${fr?'Retour':'Back'}</button></div>`;
+  d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'welcome'; render(); };
+  return d;
+}
 function screenWelcome(){
   const d = document.createElement('div');
   d.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
@@ -3815,9 +3945,17 @@ function screenWelcome(){
     <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
     <div id="resumeBox"></div>
     <div class="actions" style="justify-content:center;"><button class="btn cyan" id="go">${t('start')} -></button></div>
+    <div class="actions" style="justify-content:center; gap:8px; flex-wrap:wrap; margin-top:6px;">
+      <button class="btn ghost" id="goCodex" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Codex':'Codex'}</button>
+      <button class="btn ghost" id="goDuel" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Simulateur de duel':'Duel simulator'}</button>
+      <button class="btn ghost" id="goTrophies" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Trophees':'Trophies'}</button>
+    </div>
     <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
     <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>`;
   d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
+  d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
+  d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
+  d.querySelector('#goTrophies').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='trophies'; render(); };
   loadCareerHistory(d.querySelector('#historyBox'));
   loadGameState().then(saved=>{
     if(!saved || !saved.heroName || !saved.missionsPlan || !saved.missionsPlan.length) return;
@@ -3934,7 +4072,8 @@ function applyPreset(p){
    4 personnages au depart (2 heros, 2 villains), puis 4 de plus a chaque palier jusqu'aux 22 canon.
    Base sur une progression meta stockee a part de la partie en cours : elle ne se reinitialise jamais. */
 const META_KEY = 'meta:unlockProgress';
-let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:false, gotVoidCompletion:false, loaded:false };
+let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:false, gotVoidCompletion:false, loaded:false,
+  achievements:{}, ngPlusBonus:null, totalFightsWon:0, totalCivilsSaved:0, totalBetrayals:0, artifactsFoundEver:[] };
 async function loadMetaProgress(){
   if(!window.storage){ META.loaded = true; return META; }
   try{
@@ -3957,8 +4096,77 @@ function recordCareerForMeta(){
   META.bestStars = Math.max(META.bestStars||0, computeStars());
   if(S.eighthStar) META.got8thStar = true;
   if(S.voidCompletionDone) META.gotVoidCompletion = true;
+  META.totalFightsWon = (META.totalFightsWon||0) + (S.combat.won||0);
+  META.totalBetrayals = (META.totalBetrayals||0) + (S.turningPoints?S.turningPoints.length:0);
+  (S.artifacts||[]).forEach(id=>{ if(!META.artifactsFoundEver.includes(id)) META.artifactsFoundEver.push(id); });
+  checkTrophies();
+  /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
+  if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
+    META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
+  }
   saveMetaProgress();
 }
+/* ============================ TROPHEES / HAUTS FAITS ============================
+   Persistants (META), transversaux a toutes les carrieres - distincts du deblocage de personnages. */
+const TROPHIES = [
+  { id:'first_win', fr:'Premier sang', en:'First blood', descFr:'Remporte ton premier combat.', descEn:'Win your first fight.', check:(m,s)=>(m.totalFightsWon||0)>=1 },
+  { id:'fifty_wins', fr:'Veteran', en:'Veteran', descFr:'Remporte 50 combats au total, toutes carrieres confondues.', descEn:'Win 50 fights total, across all careers.', check:(m)=>(m.totalFightsWon||0)>=50 },
+  { id:'five_careers', fr:'Ca devient une habitude', en:'Becoming a habit', descFr:'Termine 5 carrieres.', descEn:'Complete 5 careers.', check:(m)=>(m.careersCompleted||0)>=5 },
+  { id:'long_life', fr:'Toute une vie', en:'A whole life', descFr:'Termine une carriere de 30 ans ou plus.', descEn:'Complete a career of 30+ years.', check:(m)=>(m.longestCareerYears||0)>=30 },
+  { id:'eighth_star', fr:'Legende absolue', en:'Absolute legend', descFr:'Obtiens la 8eme etoile.', descEn:'Get the 8th star.', check:(m)=>!!m.got8thStar },
+  { id:'void_master', fr:'Maitre du Vide', en:'Master of the Void', descFr:'Reunis les 6 Eclats du Vide.', descEn:'Reunite the 6 Void Shards.', check:(m)=>!!m.gotVoidCompletion },
+  { id:'turncoat', fr:'Retournement de veste', en:'Turncoat', descFr:'Change de camp au moins 3 fois au total.', descEn:'Switch sides at least 3 times total.', check:(m)=>(m.totalBetrayals||0)>=3 },
+  { id:'artifact_hunter', fr:'Chasseur de reliques', en:'Relic hunter', descFr:'Trouve 3 artefacts differents au fil de tes carrieres.', descEn:'Find 3 different artifacts across your careers.', check:(m)=>(m.artifactsFoundEver||[]).length>=3 },
+  { id:'all_artifacts', fr:'Collection complete', en:'Complete collection', descFr:'Trouve tous les artefacts existants.', descEn:'Find every existing artifact.', check:(m)=>(m.artifactsFoundEver||[]).length>=ARTIFACTS.length },
+  { id:'ten_careers', fr:'Multivers personnel', en:'Personal multiverse', descFr:'Termine 10 carrieres.', descEn:'Complete 10 careers.', check:(m)=>(m.careersCompleted||0)>=10 },
+];
+function checkTrophies(){
+  TROPHIES.forEach(tr=>{
+    if(!META.achievements[tr.id] && tr.check(META, S)){
+      META.achievements[tr.id] = { year:S.currentYear||0, at:Date.now() };
+    }
+  });
+}
+/* ============================ ARTEFACTS / RELIQUES ============================
+   Trouvables en mission a partir de l'annee 3, rarement (roulement independant du reste).
+   Chacun donne un bonus permanent pour le reste de LA carriere en cours. */
+const ARTIFACTS = [
+  { id:'marteau_digne', fr:'Eclat de Marteau Digne', en:'Worthy Hammer Shard', descFr:'Un fragment d\'arme asgardienne qui ne repond qu\'aux coeurs purs.', descEn:'A shard of Asgardian weaponry that answers only to pure hearts.', bonus:{courage:6}, moveFr:'Eclat foudroyant', moveEn:'Thunder shard strike', movePower:34 },
+  { id:'bouclier_vibranium', fr:'Fragment de Vibranium', en:'Vibranium Fragment', descFr:'Un morceau de meteorite vibranium, increvable et parfaitement silencieux.', descEn:'A piece of vibranium meteorite, unbreakable and perfectly silent.', bonus:{intelligence:3, popularity:3}, moveFr:'Absorption cinetique', moveEn:'Kinetic absorption', movePower:0, heal:18 },
+  { id:'gantelet_brise', fr:'Gantelet Brise', en:'Shattered Gauntlet', descFr:'Les restes calcines d\'un gantelet cosmique. Sa puissance residuelle est encore dangereuse.', descEn:'The charred remains of a cosmic gauntlet. Its residual power is still dangerous.', bonus:{courage:4, intelligence:4}, moveFr:'Claquement residuel', moveEn:'Residual snap', movePower:40 },
+  { id:'oeil_agamotto_replique', fr:'Replique de l\'Oeil d\'Agamotto', en:'Replica of the Eye of Agamotto', descFr:'Une copie imparfaite, mais qui laisse entrevoir des bribes du futur proche.', descEn:'An imperfect copy, but it still shows fragments of the near future.', bonus:{intelligence:6}, moveFr:'Bribe du futur', moveEn:'Glimpse of the future', movePower:22, heal:10 },
+  { id:'griffe_wakandaise', fr:'Griffe Wakandaise', en:'Wakandan Claw', descFr:'Une relique ceremonielle, forgee dans le meme minerai que le Black Panther.', descEn:'A ceremonial relic, forged from the same ore as Black Panther\'s suit.', bonus:{courage:3, popularity:3}, moveFr:'Taillade ceremonielle', moveEn:'Ceremonial slash', movePower:30 },
+  { id:'sceptre_fissure', fr:'Sceptre Fissure', en:'Cracked Scepter', descFr:'Un vieux sceptre cosmique, fendu, mais dont l\'energie residuelle repond encore a l\'appel.', descEn:'An old cosmic scepter, cracked, but its residual energy still answers the call.', bonus:{intelligence:5, courage:2}, moveFr:'Decharge fissuree', moveEn:'Cracked discharge', movePower:32 },
+  { id:'carnet_stark', fr:'Carnet de Stark', en:'Stark\'s Notebook', descFr:'Des croquis techniques inacheves, mais deja d\'une avance folle.', descEn:'Unfinished technical sketches, already decades ahead of their time.', bonus:{intelligence:7}, moveFr:'Prototype improvise', moveEn:'Improvised prototype', movePower:26, heal:8 },
+];
+function findableArtifacts(){ return ARTIFACTS.filter(a=>!(S.artifacts||[]).includes(a.id)); }
+function maybeFindArtifact(){
+  if((S.currentYear||1) < 3) return null;
+  if(Math.random() > 0.05) return null; // reste rare
+  const pool = findableArtifacts();
+  if(!pool.length) return null;
+  const art = pick(pool);
+  S.artifacts = (S.artifacts||[]).concat([art.id]);
+  return art;
+}
+/* ============================ REPUTATION PAR FACTION ============================
+   Independante de ton appartenance : chaque faction te juge sur tes actes, meme si tu n'en fais
+   pas partie. -20 (traque activement) a +20 (respecte). */
+function factionRepAdjust(canonCharName, delta){
+  if(!S.factionRep) S.factionRep = {};
+  [...FACTIONS.hero, ...FACTIONS.villain].forEach(f=>{
+    if(f && f.members.includes(canonCharName)){
+      S.factionRep[f.id] = clamp((S.factionRep[f.id]||0) + delta, -20, 20);
+    }
+  });
+}
+function factionRepOf(factionId){ return (S.factionRep && S.factionRep[factionId]) || 0; }
+/* ============================ CODEX : personnages rencontres ============================ */
+function markMet(keys){
+  if(!S.metCharacters) S.metCharacters = [];
+  (keys||[]).forEach(k=>{ if(k && !S.metCharacters.includes(k)) S.metCharacters.push(k); });
+}
+function hasMetChar(key){ return (S.metCharacters||[]).includes(key); }
 const UNLOCK_TIERS = [
   { ids:['daredevil','marsh','fuchsia','kaerus'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['theg','siddartha','deadpool'], condFr:'Terminer 1 carriere', condEn:'Complete 1 career', check:(m)=>(m.careersCompleted||0)>=1 },
@@ -4644,6 +4852,16 @@ function buildCareerPlan(){
     .sort((a,b)=>(CHAR_UNLOCK_TIER[a]||1)-(CHAR_UNLOCK_TIER[b]||1));
   S.rivalKey = rivalPool.length ? rivalPool[randInt(0, Math.min(2, rivalPool.length-1))] : null;
   S.rivalAltercations = 0; S.lastRivalAltercYear = null;
+  S.artifacts = []; S.factionRep = S.factionRep || {};
+  if(!S.metCharacters) S.metCharacters = [];
+  /* Nouvelle Partie+ : l'heritage d'une carriere remarquable precedente donne un petit coup de pouce
+     au demarrage de celle-ci - consomme une seule fois. */
+  S.ngPlusApplied = null;
+  if(META.ngPlusBonus){
+    S.stats.courage += 3; S.stats.intelligence += 3; S.stats.popularity += 3;
+    S.ngPlusApplied = Object.assign({}, META.ngPlusBonus);
+    META.ngPlusBonus = null; saveMetaProgress();
+  }
 }
 
 function findPowerById(id){
@@ -4682,6 +4900,7 @@ function screenSummary(){
     <p class="lead">${S.lang==='fr'?'Voie':'Path'}: <b>${S.lang==='fr'?pathObj.fr:pathObj.en}</b></p>
     <p class="lead">${S.lang==='fr'?'Pouvoirs':'Powers'}: <b>${S.powers.map(id=>{ const p=findPowerById(id); return p ? (S.lang==='fr'?p.fr:p.en) : id; }).filter(Boolean).join(', ')}</b></p>
     <p class="lead">${S.lang==='fr' ? `Format: ${careerScaleLabel(S.years)} - ${S.years} ans, ${totalMissions} missions.` : `Format: ${careerScaleLabel(S.years)} - ${S.years} years, ${totalMissions} missions.`}</p>
+    ${S.ngPlusApplied ? `<p class="lead" style="color:#e8c96a;">${S.lang==='fr'?`Heritage de ${S.ngPlusApplied.fromHero} : +3 sur toutes tes stats de depart.`:`Legacy from ${S.ngPlusApplied.fromHero}: +3 to all your starting stats.`}</p>` : ''}
     <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 20)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
@@ -5101,6 +5320,8 @@ function nextMission(){
   if(shouldTriggerCrossedMenteeArc() && startCrossedMenteeArc()){ S.lastCrossedArcYear = S.currentYear; return; }
   if(shouldTriggerMentor() && startMentorScene()) return;
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
+  const foundArtifact = maybeFindArtifact();
+  if(foundArtifact){ showArtifactFound(foundArtifact, ()=>{ nextMission(); }); return; }
   S.pendingBattleWin = null;
   S.currentMission = S.peacefulEra ? pickIntrigueMission() : pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
@@ -5780,7 +6001,12 @@ function playerMoves(){
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
     return Object.assign({ shard:true, shardCol:s.col, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
-  return atkOut.concat(defOut).concat(shardMoves);
+  // Chaque artefact trouve ajoute lui aussi son propre coup special, en plus des coups habituels.
+  const artifactMoves = (S.artifacts||[]).map(id=>{
+    const a = ARTIFACTS.find(x=>x.id===id); if(!a) return null;
+    return { fr:a.moveFr, en:a.moveEn, p:a.movePower||20, acc:.85, heal:a.heal||undefined, artifact:true, artifactCol:'#e8c96a' };
+  }).filter(Boolean);
+  return atkOut.concat(defOut).concat(shardMoves).concat(artifactMoves);
 }
 /* Adversaire : 90% camp adverse, 10% querelle interne */
 function crossedMentees(){
@@ -5844,6 +6070,12 @@ function pickOpponentKey(){
   if(crossed.length && Math.random()<0.22) return pick(crossed).charKey;
   const pool = otherCharKeys().filter(charUnlocked);
   /* Le rival revient plus souvent que n'importe quel autre adversaire. */
+  /* Un chapitre de rivalite vient de s'escalader (voir maybeRivalAltercation) : la prochaine
+     rencontre eligible est garantie contre le rival, pour que l'affrontement annonce ait vraiment lieu. */
+  if(S.rivalClimaxReady && S.rivalKey && pool.includes(S.rivalKey)){
+    S.rivalClimaxReady = false;
+    return S.rivalKey;
+  }
   if(S.rivalKey && pool.includes(S.rivalKey) && Math.random() < 0.35) return S.rivalKey;
   /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
      dresser face a toi si tu incarnes l'un des deux. */
@@ -6097,8 +6329,11 @@ function buildBattleSquads(foeKey, mission){
   let allyPoolForFight = allyPool;
   if(mine.length>0 && !menteeGuaranteed) allyPoolForFight = allyPool.filter(k=>!mine.includes(k));
   const capForRoll = Math.min(maxExtra, allyPoolForFight.length, foePool.length);
+  const isCosmicScale = mission && (mission.scope||1) >= 7;
   let n;
-  if(menteeGuaranteed && capForRoll>=1){
+  if(isCosmicScale){
+    n = capForRoll; // menace cosmique : toute l'escouade disponible se presente, sans tirage
+  } else if(menteeGuaranteed && capForRoll>=1){
     n = clamp(1 + Math.round((capForRoll-1)*Math.pow(Math.random(),0.55)), 1, capForRoll);
   } else {
     n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
@@ -6206,6 +6441,7 @@ function startBattle(mission, done){
   (function surfaceLoreClash(){
     const present = [foeKey].concat(squads.allies, squads.foes).filter(Boolean);
     if(S.playerCharKey) present.push(S.playerCharKey);
+    markMet(present);
     const seen = new Set();
     for(const link of LORE_LINKS){
       const here = link.keys.filter(k=>present.includes(k));
@@ -6596,6 +6832,10 @@ function startBattle(mission, done){
   }
   function finish(win){
     st.busy = true; setMovesEnabled(false);
+    /* Reputation par faction : vaincre ou perdre contre un membre affecte ce que sa faction pense de toi. */
+    if(foeKey && CHARACTERS[foeKey]){
+      factionRepAdjust(canonName(foeKey), win ? -2 : 2);
+    }
     let extraLine = '';
     if(fullSquadFight){
       if(win){
@@ -6838,6 +7078,23 @@ const RECRUIT_REASON_LINES_EN = [
   h=>`A first failure convinced them: without a mentor like ${h}, next time could be the last.`,
   h=>`It wasn't random - ${h} is exactly the kind of reputation they hope to carry one day.`,
 ];
+function showArtifactFound(art, cb){
+  const isFr = S.lang==='fr';
+  const bonusTxt = Object.entries(art.bonus||{}).map(([k,v])=>{
+    const lab = {courage:isFr?'Courage':'Courage', intelligence:isFr?'Intelligence':'Intelligence', popularity:isFr?'Popularite':'Popularity'}[k]||k;
+    return `${lab} +${v}`;
+  }).join(' &middot; ');
+  Object.entries(art.bonus||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
+  const html = `<div class="ru-title" style="color:#e8c96a; font-size:11px; letter-spacing:2px;">${isFr?'RELIQUE TROUVEE':'RELIC FOUND'}</div>
+    <div style="font-size:19px; font-weight:900; margin-top:10px;">${isFr?art.fr:art.en}</div>
+    <p style="margin-top:8px; line-height:1.6; text-align:left;">${isFr?art.descFr:art.descEn}</p>
+    <div style="margin-top:12px; padding:10px 14px; border-radius:12px; border:1px solid rgba(232,201,106,.4); background:rgba(232,201,106,.08);">
+      <div style="font-size:10px; letter-spacing:1px; color:#e8c96a; font-weight:800;">${isFr?'BONUS PERMANENT':'PERMANENT BONUS'}</div>
+      <div style="margin-top:4px; font-size:13px;">${bonusTxt}</div>
+      <div style="margin-top:8px; font-size:12px; color:var(--dim);">${isFr?'Nouveau coup: ':'New move: '}<b>${isFr?art.moveFr:art.moveEn}</b></div>
+    </div>`;
+  showBattleAftermath(html, '#e8c96a', cb);
+}
 function showRecruitAnnouncement(key, cb){
   const isFr = S.lang==='fr';
   const c = CHARACTERS[key]; if(!c){ cb(); return; }
@@ -7945,6 +8202,7 @@ function themeChoices(themeKey, charKey, charAlign, relScale){
 }
 function generateConversation(charKey){
   const c = CHARACTERS[charKey]; if(!c) return null;
+  markMet([charKey]);
   const tone = CONV_LINES[c.align] ? c.align : 'neutral';
   const pack = CONV_LINES[tone];
   const oi = pickUnused('open_'+tone+'_'+charKey, pack.openFr.length);
@@ -8000,6 +8258,7 @@ function generateGroupConversation(){
   /* Tes eleves apparaissent dans les discussions de groupe */
   const mk = livingMentees().map(m=>m.charKey).filter(k=>k && !cast.includes(k));
   if(mk.length){ cast[cast.length-1] = pick(mk); }
+  markMet(cast);
   /* Un seul sujet pour toute la tablee : chacun ajoute sa replique sur CE sujet,
      et les reponses proposees repondent au sujet. */
   const themeKey = pickConvTheme(cast[0]);
