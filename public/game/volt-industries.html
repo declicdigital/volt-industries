@@ -3392,7 +3392,7 @@ function foeStrength(foeKey, mission){
   const danger = (mission && mission.danger) || 1;
   const scope = (mission && mission.scope) || 1;
   /* Le rival grandit avec toi : plus tu progresses, plus il progresse aussi. */
-  const rivalBonus = (foeKey===S.rivalKey) ? computeStars()*3 : 0;
+  const rivalBonus = (foeKey===S.rivalKey) ? computeStars()*3 + (S.rivalDarkened ? 18 : 0) : 0;
   /* La puissance propre du personnage (0-100) doit rester le facteur dominant : Red Skull reste
      nettement plus faible que Doctor Doom, quelle que soit la difficulte de la mission en cours.
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
@@ -3631,6 +3631,9 @@ function renderRankBadge(){
       <span style="font-size:10px; font-weight:800; color:${charColor(f.side)};">${f.name}</span>
       <div style="width:24px;height:24px;">${customFactionEmblemSVG(f.side, 24)}</div>
     </div>`).join('');
+  const rivalBadgeHtml = (S.rivalKey && CHARACTERS[S.rivalKey]) ? `<div class="rival-badge-link" style="cursor:pointer; text-align:right; margin-top:6px; font-size:10px; font-weight:800; color:#ff8a5c;">
+      ${S.lang==='fr'?'RIVAL':'RIVAL'}: ${S.lang==='fr'?CHARACTERS[S.rivalKey].fr:CHARACTERS[S.rivalKey].en}
+    </div>` : '';
   let loveHtml = '';
   if(S.romance && S.romance.active && CHARACTERS[S.romance.charKey]){
     const pc = CHARACTERS[S.romance.charKey];
@@ -3639,7 +3642,8 @@ function renderRankBadge(){
     loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
   }
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}`;
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
+  el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
   if(stars > S.lastStars){ showRankUpToast(stars, zone); }
   S.lastStars = stars;
 }
@@ -3767,21 +3771,81 @@ function maybeRivalAltercation(){
   S.lastRivalAltercYear = S.currentYear;
   S.rivalAltercations = (S.rivalAltercations||0) + 1;
   const count = S.rivalAltercations;
+  /* Le lien avec ton rival evolue a chaque altercation : chaque ligne penche legerement vers le
+     respect ou le ressentiment, ce qui determinera comment le chapitre final se joue. */
+  const bondDelta = Math.round((Math.random()*2-1)*4);
+  S.rivalBond = clamp((S.rivalBond||0) + bondDelta, -20, 20);
   if(count === 3){
     const line = `${name} ${S.lang==='fr'?'ne se contente plus de te croiser : la prochaine fois, il/elle viendra pour de bon.'.replace('il/elle', c.sex==='f'?'elle':'il') : 'is done just crossing your path: next time, they are coming for real.'}`;
     jarvisSay(line, line, S.lang==='fr'?'escalade':'escalation');
     S.rivalClimaxReady = true;
   } else if(count >= 6){
-    const line = S.lang==='fr'
-      ? `Le moment est venu. ${name} et toi savez tous les deux que ca ne peut plus attendre.`
-      : `The moment has come. Both you and ${name} know this can't wait any longer.`;
-    jarvisSay(line, line, S.lang==='fr'?'affrontement decisif':'decisive confrontation');
-    S.rivalClimaxReady = true;
     S.rivalAltercations = 0; // le chapitre se boucle, un nouveau cycle de tension peut recommencer
+    S.pendingRivalClimax = true;
   } else {
     const line = pick(S.lang==='fr'?RIVAL_ALTERC_FR:RIVAL_ALTERC_EN)(name).replace(/il\/elle/g, c.sex==='f'?(S.lang==='fr'?'elle':'she'):(S.lang==='fr'?'il':'he'));
     jarvisSay(line, line, S.lang==='fr'?'signal du rival':'rival signal');
   }
+}
+/* ============================ CHAPITRE FINAL DU RIVAL ============================
+   Trois branches selon le lien accumule au fil des altercations : reconciliation, affrontement
+   classique, ou trahison plus sombre qui durcit le combat final. */
+function screenRivalClimax(){
+  const d = document.createElement('div'); const isFr = S.lang==='fr';
+  const c = CHARACTERS[S.rivalKey]; const name = isFr?c.fr:c.en;
+  const col = charColor(c.align);
+  const bond = S.rivalBond||0;
+  let titleFr, titleEn, bodyFr, bodyEn, choices;
+  if(bond >= 8){
+    titleFr = 'Une main tendue'; titleEn = 'An offered hand';
+    bodyFr = `${name} baisse sa garde, pour la premiere fois. "On n'est peut-etre pas obliges de finir comme ca."`;
+    bodyEn = `${name} lowers their guard, for the first time. "Maybe we don't have to end up like this."`;
+    choices = [
+      { fr:'Accepter : vous n\'etes plus rivaux.', en:'Accept: you are no longer rivals.', action:'ally' },
+      { fr:'Refuser : la rivalite doit se conclure au combat.', en:'Refuse: the rivalry must end in battle.', action:'duel' },
+    ];
+  } else if(bond <= -8){
+    titleFr = 'La ligne franchie'; titleEn = 'The line crossed';
+    bodyFr = `${name} ne joue plus selon les regles. Ce qui arrive ensuite ne ressemble plus a une simple rivalite.`;
+    bodyEn = `${name} no longer plays by the rules. What comes next doesn't look like a simple rivalry anymore.`;
+    choices = [
+      { fr:'Affronter cette version plus dangereuse, sans reculer.', en:'Face this more dangerous version, without backing down.', action:'darkduel' },
+    ];
+  } else {
+    titleFr = 'Le moment est venu'; titleEn = 'The moment has come';
+    bodyFr = `Toi et ${name} savez tous les deux que ca ne peut plus attendre.`;
+    bodyEn = `Both you and ${name} know this can't wait any longer.`;
+    choices = [
+      { fr:'Y aller.', en:'Go for it.', action:'duel' },
+    ];
+  }
+  d.innerHTML = `<span class="eyebrow" style="color:${col};">${isFr?titleFr:titleEn}</span>
+    <div style="display:flex; align-items:center; gap:14px; margin:14px 0;">
+      <div style="width:100px; flex:0 0 100px;">${characterPortraitHTML(c, true)}</div>
+      <h2 style="margin:0;">${name}</h2>
+    </div>
+    <p class="lead">${isFr?bodyFr:bodyEn}</p>
+    <div class="actions" style="flex-direction:column; gap:8px;">
+      ${choices.map((ch,i)=>`<button class="btn ${i===0?'cyan':'ghost'}" id="rc${i}" style="width:100%;">${isFr?ch.fr:ch.en}</button>`).join('')}
+    </div>`;
+  choices.forEach((ch,i)=>{
+    d.querySelector('#rc'+i).onclick = ()=>{
+      S.pendingRivalClimax = false;
+      if(ch.action==='ally'){
+        const lbl = isFr?`${name} et toi enterrez la hache de guerre. Un allie inattendu, desormais.`:`You and ${name} bury the hatchet. An unexpected ally, from now on.`;
+        S.log.push({ year:S.currentYear, textFr:lbl, textEn:lbl, villain:false });
+        S.rivalReconciled = true; S.rivalKey = null;
+        nextMission();
+      } else {
+        S.rivalDarkened = (ch.action==='darkduel');
+        const scope = clamp(computeStars(), 2, 7);
+        const climaxMission = { charKey:S.rivalKey, danger:4, scope, location:{ name:randLocationName(scope), type:scope } };
+        S.currentMission = climaxMission; S.screen='mission'; render();
+        startBattle(climaxMission, (win)=>{ S.rivalDarkened=false; handleZoneCheckAndContinue(); });
+      }
+    };
+  });
+  return d;
 }
 function maybeOldSideReminder(){
   if(!S.turningPoints.length) return;
@@ -3871,7 +3935,8 @@ function screenContent(){
   const wrap = document.createElement('div');
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
-    codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies };
+    codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies, rivalDossier:screenRivalDossier, rivalClimax:screenRivalClimax,
+    pressEvent:screenPressEvent, investigation:screenInvestigation };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -4204,6 +4269,259 @@ function showResetConfirm(){
     wrap.remove();
     render();
   };
+}
+function screenRivalDossier(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  if(!S.rivalKey || !CHARACTERS[S.rivalKey]){
+    d.innerHTML = `<span class="eyebrow">${fr?'DOSSIER RIVAL':'RIVAL DOSSIER'}</span><h2>${fr?'Aucun rival pour l\'instant':'No rival yet'}</h2>
+      <p class="lead">${fr?'Un adversaire recurrent apparaitra au fil de ta carriere.':'A recurring opponent will emerge as your career unfolds.'}</p>
+      <div class="actions"><button class="btn ghost" id="back">${fr?'Retour':'Back'}</button></div>`;
+    d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'mission'; render(); };
+    return d;
+  }
+  const c = CHARACTERS[S.rivalKey]; const name = fr?c.fr:c.en; const col = charColor(c.align);
+  const bond = S.rivalBond||0;
+  const bondLabel = bond>=8 ? (fr?'Respect grandissant':'Growing respect') : bond<=-8 ? (fr?'Haine pure':'Pure hatred') : bond>2 ? (fr?'Tension nuancee':'Nuanced tension') : bond<-2 ? (fr?'Rancoeur':'Resentment') : (fr?'Neutre':'Neutral');
+  const bondPct = Math.round((bond+20)/40*100);
+  const bondCol = bond>0 ? '#7ef0c0' : (bond<0 ? '#ff5c6e' : 'var(--dim)');
+  d.innerHTML = `<span class="eyebrow" style="color:${col};">${fr?'DOSSIER RIVAL':'RIVAL DOSSIER'}</span>
+    <div style="display:flex; align-items:center; gap:14px; margin:14px 0;">
+      <div style="width:100px; flex:0 0 100px;">${characterPortraitHTML(c, true)}</div>
+      <div><h2 style="margin:0;">${name}</h2><div style="font-size:12px; color:var(--dim);">${fr?'Puissance':'Power'} ${charTier(S.rivalKey)}/100</div></div>
+    </div>
+    <div style="margin-top:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px;"><span>${fr?'Lien':'Bond'}: ${bondLabel}</span><span style="color:${bondCol}; font-weight:800;">${bond>0?'+':''}${bond}</span></div>
+      <div class="barbg" style="height:6px;"><div class="barfill" style="width:${bondPct}%; background:${bondCol};"></div></div>
+    </div>
+    <p class="lead" style="margin-top:14px;">${fr?`${S.rivalAltercations||0} altercation(s) dans le chapitre en cours.`:`${S.rivalAltercations||0} altercation(s) in the current chapter.`}</p>
+    <p class="lead" style="font-size:12px; color:var(--dim);">${fr?'Un lien fortement positif ouvrira une chance de reconciliation au prochain affrontement decisif. Un lien tres negatif le rendra plus dangereux que jamais.':'A strongly positive bond opens a chance of reconciliation at the next decisive clash. A very negative bond makes them more dangerous than ever.'}</p>
+    <div class="actions"><button class="btn ghost" id="back">${fr?'Retour':'Back'}</button></div>`;
+  d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'mission'; render(); };
+  return d;
+}
+/* ============================ GESTION DE REPUTATION PUBLIQUE ============================
+   Interviews, conferences de presse, scandales : des choix qui affectent ta popularite (et parfois
+   ton courage/intelligence), completement independants du combat et des conversations classiques. */
+const PRESS_EVENTS = [
+  { id:'press_tv', settingFr:'Interview television', settingEn:'TV interview',
+    fr:"Un journaliste te demande en direct pourquoi tu as choisi cette vie plutot qu'une autre.", en:"A journalist asks you live why you chose this life over any other.",
+    choices:[
+      { fr:"Repondre avec sincerite, quitte a montrer tes doutes.", en:"Answer sincerely, even if it shows your doubts.", eff:{popularity:4, courage:2} },
+      { fr:"Livrer une reponse parfaitement calibree pour l'image.", en:"Deliver a perfectly calibrated answer for your image.", eff:{popularity:6, intelligence:-2} },
+      { fr:"Refuser de repondre et changer de sujet.", en:"Refuse to answer and change the subject.", eff:{popularity:-3, intelligence:3} },
+    ]},
+  { id:'press_conf', settingFr:'Conference de presse', settingEn:'Press conference',
+    fr:"Apres ta derniere sortie publique, la presse veut des explications sur les degats collateraux.", en:"After your latest public outing, the press wants answers about the collateral damage.",
+    choices:[
+      { fr:"Assumer entierement, sans te defausser.", en:"Take full responsibility, without deflecting.", eff:{popularity:5, courage:3} },
+      { fr:"Minimiser les faits et deplacer le sujet sur les vrais coupables.", en:"Downplay the facts and shift focus to the real culprits.", eff:{popularity:2, intelligence:2} },
+      { fr:"Quitter la salle sans repondre a une seule question.", en:"Leave the room without answering a single question.", eff:{popularity:-6} },
+    ]},
+  { id:'press_scandal', settingFr:'Scandale a gerer', settingEn:'Scandal management',
+    fr:"Une photo compromettante circule, sortie de son contexte, et menace de faire boule de neige.", en:"A compromising photo is circulating, taken out of context, threatening to snowball.",
+    choices:[
+      { fr:"Publier une explication detaillee et transparente.", en:"Publish a detailed, transparent explanation.", eff:{popularity:3, intelligence:2} },
+      { fr:"Laisser tomber, ca finira par se calmer tout seul.", en:"Let it go, it'll blow over on its own.", eff:{popularity:-4} },
+      { fr:"Engager un avocat et menacer de poursuites.", en:"Hire a lawyer and threaten legal action.", eff:{popularity:-2, intelligence:4} },
+    ]},
+  { id:'press_talkshow', settingFr:'Passage televise', settingEn:'Talk show appearance',
+    fr:"L'animateur d'un talk-show populaire te pousse a commenter un autre heros ou villain en direct.", en:"A popular talk show host pushes you to comment on another hero or villain, live.",
+    choices:[
+      { fr:"Rester diplomate, sans mordre a l'hameçon.", en:"Stay diplomatic, without taking the bait.", eff:{popularity:2, intelligence:3} },
+      { fr:"Balancer une remarque cinglante qui va faire le buzz.", en:"Drop a cutting remark that's going to go viral.", eff:{popularity:5, courage:2} },
+      { fr:"Detourner la question avec humour.", en:"Deflect the question with humor.", eff:{popularity:3} },
+    ]},
+  { id:'press_social', settingFr:'Controverse en ligne', settingEn:'Online controversy',
+    fr:"Un vieux message que tu as poste il y a des annees refait surface et divise l'opinion.", en:"An old post of yours from years ago resurfaces and divides public opinion.",
+    choices:[
+      { fr:"Presenter des excuses publiques et sincères.", en:"Issue a sincere public apology.", eff:{popularity:4} },
+      { fr:"Defendre fermement ce que tu avais dit a l'epoque.", en:"Firmly defend what you said back then.", eff:{popularity:-3, courage:4} },
+      { fr:"Ignorer completement la polemique.", en:"Ignore the controversy entirely.", eff:{popularity:-1, intelligence:1} },
+    ]},
+  { id:'press_gala', settingFr:'Discours de gala', settingEn:'Gala speech',
+    fr:"On te demande un discours improvise devant les plus grands donateurs de la ville.", en:"You're asked to give an impromptu speech in front of the city's biggest donors.",
+    choices:[
+      { fr:"Improviser un discours du coeur, sans filet.", en:"Improvise a heartfelt speech, no safety net.", eff:{popularity:5, courage:3} },
+      { fr:"Reciter des lignes soigneusement preparees a l'avance.", en:"Recite carefully prepared lines.", eff:{popularity:3, intelligence:2} },
+      { fr:"Ecourter au maximum et laisser la parole a d'autres.", en:"Cut it as short as possible and let others speak.", eff:{popularity:-2} },
+    ]},
+  { id:'press_radio', settingFr:'Emission radio en direct', settingEn:'Live radio show',
+    fr:"Un auditeur appelle en direct pour te reprocher de ne jamais etre la quand il le faudrait.", en:"A caller phones in live to accuse you of never being there when it matters.",
+    choices:[
+      { fr:"L'ecouter vraiment et reconnaitre tes limites.", en:"Really listen and acknowledge your limits.", eff:{popularity:4, intelligence:1} },
+      { fr:"Te justifier point par point, avec agacement.", en:"Justify yourself point by point, visibly annoyed.", eff:{popularity:-2, courage:1} },
+      { fr:"Couper l'appel poliment et passer a la question suivante.", en:"Politely cut the call and move to the next question.", eff:{popularity:-1} },
+    ]},
+  { id:'press_documentary', settingFr:'Tournage de documentaire', settingEn:'Documentary filming',
+    fr:"Une equipe de documentaristes veut filmer un moment intime de ta vie de tous les jours.", en:"A documentary crew wants to film an intimate moment from your everyday life.",
+    choices:[
+      { fr:"Accepter et te montrer tel que tu es vraiment.", en:"Accept and show yourself exactly as you are.", eff:{popularity:5, courage:2} },
+      { fr:"Accepter mais controler chaque plan tourne.", en:"Accept, but control every single shot filmed.", eff:{popularity:2, intelligence:2} },
+      { fr:"Refuser categoriquement l'acces a ta vie privee.", en:"Categorically refuse access to your private life.", eff:{popularity:-3, intelligence:1} },
+    ]},
+];
+function shouldTriggerPressEvent(){
+  if((S.currentYear||1) < 2) return false;
+  if(S.lastPressYear!=null && (S.currentYear - S.lastPressYear) < 2) return false;
+  return Math.random() < 0.12;
+}
+function screenPressEvent(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  if(!S.usedPressIds) S.usedPressIds = [];
+  let pool = PRESS_EVENTS.filter(p=>!S.usedPressIds.includes(p.id));
+  if(!pool.length){ S.usedPressIds = []; pool = PRESS_EVENTS; }
+  const ev = pick(pool); S.usedPressIds.push(ev.id); S.lastPressYear = S.currentYear;
+  d.innerHTML = `<span class="eyebrow" style="color:#e8c96a;">${fr?'MEDIAS - ':'MEDIA - '}${fr?ev.settingFr:ev.settingEn}</span>
+    <h2>${fr?'Sous les projecteurs':'In the spotlight'}</h2>
+    <p class="lead">${fr?ev.fr:ev.en}</p>
+    <div class="actions" style="flex-direction:column; gap:8px;">
+      ${ev.choices.map((c,i)=>`<button class="btn ghost" id="pe${i}" style="width:100%; text-align:left;">${fr?c.fr:c.en}</button>`).join('')}
+    </div>`;
+  ev.choices.forEach((c,i)=>{
+    d.querySelector('#pe'+i).onclick = ()=>{
+      Object.entries(c.eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
+      showImpact(Object.entries(c.eff||{}).map(([k,v])=>({ label:t(k)||k, delta:v })),
+        fr?'Reaction publique':'Public reaction');
+      nextMission();
+    };
+  });
+  return d;
+}
+/* ============================ ENQUETES / MYSTERES ============================
+   Des indices a recouper plutot qu'une menace a affronter : une mission a resoudre par la
+   deduction, distincte du combat et des conversations. */
+const INVESTIGATIONS = [
+  { id:'inv_taupe',
+    introFr:"Des documents sensibles fuitent depuis trois semaines. Il te faut trouver la source avant que ca ne devienne incontrolable.",
+    introEn:"Sensitive documents have been leaking for three weeks. You need to find the source before it spirals out of control.",
+    cluesFr:["Le badge utilise pour l'acces correspond au niveau 3, pas au niveau 5 comme prevu.","Les fuites s'arretent toujours pile le week-end.","Un employe du niveau 3 a demande un conge la semaine des deux dernieres fuites."],
+    cluesEn:["The badge used for access matches level 3 clearance, not level 5 as expected.","The leaks always stop exactly on weekends.","A level-3 employee requested time off the week of the last two leaks."],
+    suspectsFr:["Le stagiaire du niveau 3","L'assistante de direction","Le responsable securite lui-meme"],
+    suspectsEn:["The level-3 intern","The executive assistant","The security chief himself"],
+    correct:0,
+    successFr:"Ta deduction est juste : confronte, le stagiaire craque et avoue tout.", successEn:"Your deduction is correct: confronted, the intern breaks down and confesses.",
+    failFr:"Tu accuses la mauvaise personne. La vraie taupe s'enfuit, plus prudente que jamais.", failEn:"You accuse the wrong person. The real mole slips away, more careful than ever.",
+    successEff:{intelligence:5, popularity:3}, failEff:{intelligence:-2, popularity:-3} },
+  { id:'inv_sabotage',
+    introFr:"Un equipement critique tombe en panne au pire moment, trop souvent pour etre un hasard.",
+    introEn:"Critical equipment keeps failing at the worst moment, too often to be a coincidence.",
+    cluesFr:["Les pannes touchent toujours le meme fournisseur de pieces.","Un technicien a acces a tout l'atelier, sans exception.","Les pannes ont commence juste apres l'arrivee d'un nouveau contrat concurrent."],
+    cluesEn:["The failures always involve the same parts supplier.","One technician has unrestricted access to the whole workshop.","The failures started right after a new competing contract was signed."],
+    suspectsFr:["Le nouveau technicien","Le fournisseur de pieces lui-meme","Un concurrent qui a paye en interne"],
+    suspectsEn:["The new technician","The parts supplier itself","A competitor who paid someone on the inside"],
+    correct:2,
+    successFr:"Bien vu : la piste remonte a un concurrent qui a graisse la patte d'un employe.", successEn:"Well spotted: the trail leads to a competitor who bribed an employee.",
+    failFr:"Tu perds du temps sur une fausse piste pendant que le vrai sabotage continue.", failEn:"You waste time on a false lead while the real sabotage continues.",
+    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-3} },
+  { id:'inv_disparition',
+    introFr:"Un civil important a disparu sans laisser de trace. Sa famille te supplie de l'aide.",
+    introEn:"An important civilian has vanished without a trace. Their family begs you for help.",
+    cluesFr:["Son telephone s'est eteint pres des anciens quais desaffectes.","Il avait recu des menaces d'un ancien associe une semaine avant.","Un temoin a vu une voiture inconnue garee devant chez lui la nuit des faits."],
+    cluesEn:["His phone went dark near the old disused docks.","He had received threats from a former associate a week before.","A witness saw an unfamiliar car parked outside his home that night."],
+    suspectsFr:["L'ancien associe menacant","Un enlevement crapuleux au hasard","Une fugue volontaire, personne ne l'a force"],
+    suspectsEn:["The threatening former associate","A random criminal kidnapping","A voluntary disappearance, nobody forced him"],
+    correct:0,
+    successFr:"Tu le retrouves a temps, retenu par son ancien associe pour une vieille dette.", successEn:"You find him in time, held by his former associate over an old debt.",
+    failFr:"Fausse piste : le temps perdu pourrait lui couter cher.", failEn:"Wrong lead: the lost time could cost him dearly.",
+    successEff:{courage:4, popularity:5}, failEff:{popularity:-4} },
+  { id:'inv_chantage',
+    introFr:"Quelqu'un fait chanter un membre respecte de la communaute avec des documents voles.",
+    introEn:"Someone is blackmailing a respected community member with stolen documents.",
+    cluesFr:["Les documents voles ne pouvaient venir que de trois personnes ayant l'acces.","Le maitre-chanteur exige un paiement en un lieu tres precis, filmé par une camera de securite voisine.","Un des trois suspects a soudain rembourse une grosse dette la semaine derniere."],
+    cluesEn:["The stolen documents could only have come from three people with access.","The blackmailer demands payment at a very specific spot, near a security camera.","One of the three suspects suddenly paid off a large debt last week."],
+    suspectsFr:["Un collegue proche jaloux","Un ancien employe licencie","La victime elle-meme, pour l'attention"],
+    suspectsEn:["A jealous close colleague","A recently fired former employee","The victim themself, seeking attention"],
+    correct:1,
+    successFr:"Confondu par la camera de securite, l'ancien employe avoue tout.", successEn:"Caught on the security camera, the former employee confesses everything.",
+    failFr:"Tu accuses a tort - le vrai maitre-chanteur frappe de nouveau, plus fort.", failEn:"You wrongly accuse someone - the real blackmailer strikes again, harder.",
+    successEff:{intelligence:5, popularity:4}, failEff:{popularity:-5} },
+  { id:'inv_double',
+    introFr:"Deux temoignages contradictoires se disputent la verite sur un incident recent.",
+    introEn:"Two contradictory testimonies are fighting over the truth of a recent incident.",
+    cluesFr:["Le premier temoin a un alibi verifiable, le second non.","Le second temoin a beaucoup a gagner si sa version est retenue.","Les images de videosurveillance, partiellement corrompues, semblent pencher vers un troisieme scenario."],
+    cluesEn:["The first witness has a verifiable alibi, the second does not.","The second witness has a lot to gain if their version is believed.","The partially corrupted security footage seems to lean toward a third scenario."],
+    suspectsFr:["Croire le premier temoin","Croire le second temoin","Chercher la verite ailleurs, entre les deux"],
+    suspectsEn:["Believe the first witness","Believe the second witness","Look for the truth elsewhere, between the two"],
+    correct:2,
+    successFr:"La verite etait plus nuancee que prevu - ta patience paie.", successEn:"The truth was more nuanced than expected - your patience pays off.",
+    failFr:"Tu prends parti trop vite, et la vraie version ne sort jamais au grand jour.", failEn:"You take sides too quickly, and the real version never comes to light.",
+    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-2} },
+  { id:'inv_relique',
+    introFr:"Un artefact ancien a ete vole dans un musee prive, sous haute securite.",
+    introEn:"An ancient artifact was stolen from a private museum under heavy security.",
+    cluesFr:["Aucune trace d'effraction n'a ete trouvee sur les lieux.","Le systeme de securite a ete desactive depuis l'interieur, avec un code valide.","Un seul employe avait ce niveau d'acces cette nuit-la."],
+    cluesEn:["No signs of forced entry were found at the scene.","The security system was disabled from the inside, with a valid code.","Only one employee had that level of access that night."],
+    suspectsFr:["L'employe avec le code valide","Un collectionneur prive obsessionnel","Le conservateur du musee lui-meme"],
+    suspectsEn:["The employee with the valid code","An obsessive private collector","The museum curator themself"],
+    correct:0,
+    successFr:"L'employe finit par ceder sous la pression et rend l'artefact.", successEn:"The employee eventually caves under pressure and returns the artifact.",
+    failFr:"Le veritable voleur a le temps de revendre l'artefact au marche noir.", failEn:"The real thief has time to sell the artifact on the black market.",
+    successEff:{intelligence:5, popularity:3}, failEff:{popularity:-3} },
+  { id:'inv_culte',
+    introFr:"Une serie de disparitions mineures pointe vers un groupe secret qui recrute discretement en ville.",
+    introEn:"A series of minor disappearances points to a secret group quietly recruiting in the city.",
+    cluesFr:["Toutes les victimes ont frequente le meme cafe dans les jours precedents.","Un symbole discret revient sur plusieurs affiches disparues depuis.","Un ancien membre du groupe accepte de parler, mais seulement en echange d'une protection."],
+    cluesEn:["All victims visited the same coffee shop in the days before.","A discreet symbol keeps appearing on posters that have since vanished.","A former group member agrees to talk, but only in exchange for protection."],
+    suspectsFr:["Infiltrer le groupe directement","Proteger l'ancien membre et l'ecouter","Ignorer et laisser faire la police locale"],
+    suspectsEn:["Infiltrate the group directly","Protect the former member and listen","Ignore it and let local police handle it"],
+    correct:1,
+    successFr:"Le temoignage protege permet de demanteler le reseau de recrutement.", successEn:"The protected testimony helps dismantle the recruitment network.",
+    failFr:"Sans protection, le temoin disparait a son tour.", failEn:"Without protection, the witness disappears too.",
+    successEff:{courage:4, intelligence:3, popularity:3}, failEff:{popularity:-4} },
+  { id:'inv_technologique',
+    introFr:"Un prototype technologique sensible a fuite vers un acheteur inconnu sur le marche noir.",
+    introEn:"A sensitive tech prototype leaked to an unknown black market buyer.",
+    cluesFr:["Les plans ont ete copies depuis un poste de travail specifique, a une heure precise.","Une seule personne travaillait encore a ce poste a cette heure-la.","Cette meme personne a change de train de vie recemment, sans explication."],
+    cluesEn:["The plans were copied from a specific workstation, at a precise time.","Only one person was still working at that station at that hour.","That same person's lifestyle changed recently, with no clear explanation."],
+    suspectsFr:["L'ingenieur en question","Un stagiaire sans lien apparent","Une intrusion exterieure complexe"],
+    suspectsEn:["The engineer in question","An intern with no apparent connection","A complex outside intrusion"],
+    correct:0,
+    successFr:"Confronte aux preuves, l'ingenieur reconnait avoir vendu les plans.", successEn:"Confronted with the evidence, the engineer admits to selling the plans.",
+    failFr:"Tu perds la trace du prototype, revendu avant que tu ne puisses agir.", failEn:"You lose track of the prototype, sold off before you could act.",
+    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-3, popularity:-2} },
+];
+function shouldTriggerInvestigation(){
+  if((S.currentYear||1) < 2) return false;
+  if(S.lastInvestigationYear!=null && (S.currentYear - S.lastInvestigationYear) < 3) return false;
+  return Math.random() < 0.10;
+}
+function screenInvestigation(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  if(!S.currentInvestigation){
+    if(!S.usedInvestigationIds) S.usedInvestigationIds = [];
+    let pool = INVESTIGATIONS.filter(iv=>!S.usedInvestigationIds.includes(iv.id));
+    if(!pool.length){ S.usedInvestigationIds = []; pool = INVESTIGATIONS; }
+    const iv = pick(pool); S.usedInvestigationIds.push(iv.id); S.lastInvestigationYear = S.currentYear;
+    S.currentInvestigation = iv;
+  }
+  const iv = S.currentInvestigation;
+  const clues = fr?iv.cluesFr:iv.cluesEn;
+  const suspects = fr?iv.suspectsFr:iv.suspectsEn;
+  d.innerHTML = `<span class="eyebrow" style="color:#8bd4ff;">${fr?'ENQUETE':'INVESTIGATION'}</span>
+    <h2>${fr?'Trois indices, une deduction':'Three clues, one deduction'}</h2>
+    <p class="lead">${fr?iv.introFr:iv.introEn}</p>
+    <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+      ${clues.map((c,i)=>`<div style="padding:10px 14px; border-radius:12px; border:1px solid var(--line); background:rgba(139,212,255,.05);">
+        <div style="font-size:9.5px; letter-spacing:1px; color:#8bd4ff; font-weight:800;">${fr?'INDICE':'CLUE'} ${i+1}</div>
+        <div style="font-size:13px; margin-top:3px;">${c}</div>
+      </div>`).join('')}
+    </div>
+    <p class="lead" style="margin-top:14px; font-weight:700;">${fr?'Ta conclusion ?':'Your conclusion?'}</p>
+    <div class="actions" style="flex-direction:column; gap:8px;">
+      ${suspects.map((s,i)=>`<button class="btn ghost" id="sus${i}" style="width:100%; text-align:left;">${s}</button>`).join('')}
+    </div>`;
+  suspects.forEach((s,i)=>{
+    d.querySelector('#sus'+i).onclick = ()=>{
+      const win = i === iv.correct;
+      const eff = win ? iv.successEff : iv.failEff;
+      Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
+      showImpact(Object.entries(eff||{}).map(([k,v])=>({ label:t(k)||k, delta:v })),
+        win ? (fr?iv.successFr:iv.successEn) : (fr?iv.failFr:iv.failEn));
+      S.currentInvestigation = null;
+      nextMission();
+    };
+  });
+  return d;
 }
 function screenWelcome(){
   const d = document.createElement('div');
@@ -5147,7 +5465,7 @@ function buildCareerPlan(){
     .filter(k=>CHARACTERS[k].align===oppSide0 && k!==S.playerCharKey)
     .sort((a,b)=>(CHAR_UNLOCK_TIER[a]||1)-(CHAR_UNLOCK_TIER[b]||1));
   S.rivalKey = rivalPool.length ? rivalPool[randInt(0, Math.min(2, rivalPool.length-1))] : null;
-  S.rivalAltercations = 0; S.lastRivalAltercYear = null;
+  S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
   S.artifacts = []; S.factionRep = S.factionRep || {};
   /* Si tu incarnes un detenteur canonique d'une Gemme (Loki, Vision, Doctor Doom, Thanos, Doctor
      Strange, Hela), tu pars deja avec la tienne - fidele au lore. */
@@ -5192,6 +5510,39 @@ function showCareerWelcome(cb){
     <p style="margin-top:10px; line-height:1.6; text-align:left;">"${isFr?info.fr:info.en}"</p>`;
   showBattleAftermath(html, col, cb);
 }
+/* Accroches narratives variees pour expliquer pourquoi ce personnage precis devient ton rival -
+   piochees au hasard pour eviter la repetition d'une carriere a l'autre. */
+const RIVAL_HOOK_FR = [
+  n=>`${n} a suivi tes tout premiers pas de loin - et a immediatement vu en toi une menace pour sa propre place.`,
+  n=>`Vous avez grandi dans le meme monde, forme par les memes epreuves. ${n} n'a jamais supporte de partager la vedette.`,
+  n=>`Une rumeur dit que ${n} t'a choisi personnellement comme adversaire, convaincu(e) qu'aucun de vous deux n'a sa place tant que l'autre existe.`,
+  n=>`Vos chemins se sont croises des ta premiere semaine. ${n} n'a plus jamais cesse de te tester.`,
+  n=>`${n} voit en toi le reflet de qui il/elle aurait pu devenir - et ca ne lui plait pas du tout.`,
+];
+const RIVAL_HOOK_EN = [
+  n=>`${n} watched your very first steps from a distance - and immediately saw you as a threat to their own place.`,
+  n=>`You grew up in the same world, shaped by the same trials. ${n} never could stand sharing the spotlight.`,
+  n=>`Rumor has it ${n} personally chose you as an opponent, convinced neither of you truly belongs while the other exists.`,
+  n=>`Your paths crossed in your very first week. ${n} never stopped testing you since.`,
+  n=>`${n} sees in you the reflection of who they could have become - and they don't like it one bit.`,
+];
+function showRivalIntro(cb){
+  if(!S.rivalKey || !CHARACTERS[S.rivalKey]){ cb(); return; }
+  const isFr = S.lang==='fr';
+  const c = CHARACTERS[S.rivalKey];
+  const col = charColor(c.align);
+  const name = isFr ? c.fr : c.en;
+  const hookFn = pick(isFr ? RIVAL_HOOK_FR : RIVAL_HOOK_EN);
+  const hook = hookFn(name).replace(/il\/elle/g, c.sex==='f'?(isFr?'elle':'she'):(isFr?'il':'he'));
+  const html = `<div class="ru-title" style="color:${col}; font-size:11px; letter-spacing:2px;">${isFr?'UN RIVAL SE DRESSE':'A RIVAL EMERGES'}</div>
+    <div style="display:flex; align-items:center; gap:14px; margin:14px 0 4px; text-align:left;">
+      <div style="width:118px; flex:0 0 118px;">${characterPortraitHTML(c, true)}</div>
+      <div style="flex:1; min-width:0;"><div style="font-size:19px; font-weight:900;">${name}</div>
+        <div style="font-size:11px; color:var(--dim); margin-top:2px;">${isFr?'Va grandir avec toi, tout au long de ta carriere.':'Will grow alongside you, throughout your whole career.'}</div></div>
+    </div>
+    <p style="margin-top:10px; line-height:1.6; text-align:left;">${hook}</p>`;
+  showBattleAftermath(html, col, cb);
+}
 function screenSummary(){
   const d = document.createElement('div');
   const totalMissions = S.missionsPlan.reduce((a,b)=>a+b,0);
@@ -5205,7 +5556,7 @@ function screenSummary(){
     <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--accent);font-weight:700;margin:10px 0;"><span style="font-size:18px;">⏱</span> ${t('estTime')}: <span style="color:var(--fg);">${formatDuration(totalMissions * 20)}</span></div>
     <div class="actions"><button class="btn ghost" id="back">&lt;- ${t('back')}</button><button class="btn cyan" id="go">${t('continueMission')} -></button></div>`;
   d.querySelector('#back').onclick=()=>{ S.screen='mode'; render(); };
-  d.querySelector('#go').onclick=()=>{ showCareerWelcome(()=>{ nextMission(); }); };
+  d.querySelector('#go').onclick=()=>{ showCareerWelcome(()=>{ showRivalIntro(()=>{ nextMission(); }); }); };
   return d;
 }
 
@@ -5613,6 +5964,7 @@ function checkFactionCreationOffer(){
 }
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
+  if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
   const mentorSteps = Math.min(2, livingMentees().length);
   const missionsThisYear = S.missionsPlan[S.currentYear-1] + mentorSteps;
@@ -5631,6 +5983,8 @@ function nextMission(){
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   const foundArtifact = maybeFindArtifact();
   if(foundArtifact){ showArtifactFound(foundArtifact, ()=>{ nextMission(); }); return; }
+  if(shouldTriggerPressEvent()){ S.screen='pressEvent'; render(); return; }
+  if(shouldTriggerInvestigation()){ S.screen='investigation'; render(); return; }
   S.pendingBattleWin = null;
   S.currentMission = S.peacefulEra ? pickIntrigueMission() : pickMission(); S.screen='mission'; render(); afterMissionRender(S.currentMission);
 }
