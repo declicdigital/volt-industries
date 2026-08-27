@@ -251,6 +251,29 @@
   .pmove-col{ flex:1; min-width:0; }
   .pmove-h{ font-size:8px; font-weight:900; letter-spacing:1px; color:var(--dim); margin-bottom:3px; }
   .pmove-line{ font-size:9.5px; color:var(--muted); line-height:1.4; }
+  /* ---------- Grille complete de personnages (remplace le carrousel) ---------- */
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px; margin-top:16px; }
+  .char-tile{ cursor:pointer; border-radius:12px; overflow:hidden; border:1.5px solid var(--line); background:rgba(255,255,255,.02); position:relative; transition:.15s; text-align:center; padding-bottom:4px; }
+  .char-tile:hover, .char-tile:focus, .char-tile.active{ border-color:var(--pc-color); box-shadow:0 0 14px -4px var(--pc-color); outline:none; transform:translateY(-2px); }
+  .char-tile-photo{ position:relative; width:100%; aspect-ratio:3/4; background:#0a0d14; overflow:hidden; }
+  .char-tile-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
+  .char-tile-initial{ display:flex; align-items:center; justify-content:center; height:100%; font-weight:900; font-size:20px; color:var(--pc-color); }
+  .char-tile.locked .char-tile-photo img, .char-tile.locked .char-tile-initial{ filter:grayscale(1) brightness(.32); }
+  .char-tile-lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(4,6,12,.35); filter:drop-shadow(0 0 6px rgba(0,0,0,.9)); }
+  .char-tile-dot{ width:7px; height:7px; border-radius:50%; margin:5px auto 2px; box-shadow:0 0 6px currentColor; }
+  .char-tile-name{ font-size:9.5px; font-weight:700; color:var(--ink); padding:0 3px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .char-tile.locked .char-tile-name{ opacity:.4; }
+  .char-detail-panel{ display:none; }
+  .char-detail-panel.open{ display:flex; gap:14px; margin-top:16px; padding:14px; border:1.5px solid var(--pc-color); border-radius:16px; background:rgba(255,255,255,.02); box-shadow:0 0 20px -8px var(--pc-color); }
+  .char-detail-panel .cdp-photo{ position:relative; flex:0 0 110px; width:110px; height:140px; border-radius:12px; overflow:hidden; background:#0a0d14; }
+  .char-detail-panel .cdp-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
+  .char-detail-panel .cdp-body{ flex:1; min-width:0; text-align:left; }
+  @media (max-width:600px){
+    .char-grid{ grid-template-columns:repeat(auto-fill, minmax(58px, 1fr)); gap:6px; }
+    .char-tile-name{ font-size:8.5px; }
+    .char-detail-panel.open{ flex-direction:column; }
+    .char-detail-panel .cdp-photo{ width:100%; height:160px; }
+  }
   @media (max-width:600px){
     .cc-wrap{ max-width:100%; gap:4px; }
     .cc-pair{ gap:6px; }
@@ -4890,12 +4913,8 @@ function screenProfileChoice(){
         :"Take a selfie or upload a photo: Volt Industries forges a photoreal hero (or villain) with your own face, then you customize suit, aura and powers."}</p>
     </div>
     <h3 style="margin-top:26px;">${S.lang==='fr'?'Ou incarne un personnage du roster':'Or play as a roster character'}</h3>
-    <div class="cc-wrap" id="ccWrap">
-      <button class="cc-arrow cc-prev" id="ccPrev" aria-label="${S.lang==='fr'?'Precedent':'Previous'}">&#10094;</button>
-      <div class="cc-pair" id="ccCard"></div>
-      <button class="cc-arrow cc-next" id="ccNext" aria-label="${S.lang==='fr'?'Suivant':'Next'}">&#10095;</button>
-    </div>
-    <div class="cc-dots" id="ccDots"></div>`;
+    <div id="charDetailPanel" class="char-detail-panel"></div>
+    <div class="char-grid" id="charGrid"></div>`;
   d.querySelector('#ffOpen').onclick = ()=>{ S.screen='faceforge'; render(); };
   /* Personnage perso deja forge : on le garde d'une partie a l'autre */
   const saved = ffLoadCustom();
@@ -4923,10 +4942,8 @@ function screenProfileChoice(){
       if(ch.dataset.sx === saved.sex) ch.classList.add('on');
     });
     box.onclick = ()=>{ applyCustomCharacter(saved); S.heroName = saved.name || ''; S.screen='name'; render(); };
-    d.insertBefore(box, d.querySelector('#ccWrap'));
+    d.insertBefore(box, d.querySelector('#charGrid'));
   }
-  /* Carrousel : un heros + un villain du meme palier, cote a cote sur le meme ecran, dans l'ordre de deblocage. */
-  if(!S.profileCarouselIdx) S.profileCarouselIdx = 0;
   const statLine = (s)=>{
     const sign = (v)=> (v>0?'+':'')+v;
     return `<div class="pstats">CRG ${sign(s.courage||0)} &middot; INT ${sign(s.intelligence||0)} &middot; POP ${sign(s.popularity||0)}</div>`;
@@ -4937,8 +4954,27 @@ function screenProfileChoice(){
     const def = powers.map(k=> (DEFENSE_MOVES_BY_POWER[k]||[])[0]).filter(Boolean);
     return { atk, def };
   }
-  function miniCardHtml(p){
-    if(!p) return '';
+  /* Grille complete : tous les personnages visibles d'un coup, grises + cadenas si verrouilles.
+     Le detail (stats, atouts, coups) s'affiche au survol (PC) ou au toucher (mobile) dans le
+     panneau au-dessus, plutot que d'etre toujours visible sur chaque case. */
+  function tileHtml(p){
+    const unlocked = isPresetUnlocked(p.id);
+    const canonC = CHARACTERS[p.charKey];
+    const isIndependentChar = canonC && canonC.align==='neutral';
+    const col = isIndependentChar ? '#b98bff' : (p.side==='villain' ? '#ff2d55' : '#00e5ff');
+    const nm = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.nameFr:p.nameEn);
+    return `<div class="char-tile ${unlocked?'':'locked'}" data-pid="${p.id}" style="--pc-color:${col};" tabindex="0">
+      <div class="char-tile-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:`<span class="char-tile-initial">${nm.charAt(0)}</span>`}
+        ${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
+      <div class="char-tile-dot" style="background:${col};"></div>
+      <div class="char-tile-name">${nm}</div>
+    </div>`;
+  }
+  const gridEl = d.querySelector('#charGrid');
+  gridEl.innerHTML = SELECTABLE_PRESETS.map(tileHtml).join('');
+  const panelEl = d.querySelector('#charDetailPanel');
+  function renderDetail(p){
+    if(!p){ panelEl.classList.remove('open'); panelEl.innerHTML=''; return; }
     const unlocked = isPresetUnlocked(p.id);
     const canonC = CHARACTERS[p.charKey];
     const isIndependentChar = canonC && canonC.align==='neutral';
@@ -4948,42 +4984,41 @@ function screenProfileChoice(){
     const mv = movePreview(p);
     const morality = moralityOf(p.charKey);
     const moralCol = morality>=4 ? '#7ef0c0' : (morality<=-4 ? '#ff5c6e' : '#e8c96a');
-    const mvHtml = `<div class="pmoves">
-        <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'ATTAQUES':'ATTACKS'}</div>${mv.atk.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
-        <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'DEFENSES':'DEFENSE'}</div>${mv.def.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
+    panelEl.classList.add('open');
+    panelEl.style.setProperty('--pc-color', col);
+    panelEl.innerHTML = `<div class="cdp-photo">${p.img?`<img src="${p.img}" alt="${nm}">`:''}<span class="preset-badge">${badge}</span></div>
+      <div class="cdp-body">
+        <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
+        ${statLine(p.stats||{})}
+        <div class="pstats" style="color:${moralCol};">${S.lang==='fr'?'MORALITE':'MORALITY'} ${moralityLabel(morality)}</div>
+        <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
+        <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div>
+        <div class="pmoves">
+          <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'ATTAQUES':'ATTACKS'}</div>${mv.atk.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
+          <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'DEFENSES':'DEFENSE'}</div>${mv.def.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
+        </div>
+        ${unlocked?`<button class="btn cyan" id="cdpPick" style="margin-top:12px; width:100%;">${S.lang==='fr'?'CHOISIR':'PICK'}</button>`
+          :`<div class="pc-lock-cond" style="margin-top:10px;">&#128274; ${tierConditionFor(p.id)}</div>`}
       </div>`;
-    return `<div class="preset-card ${p.side} ${unlocked?'':'locked'}" data-pid="${p.id}" style="--pc-color:${col};">
-      <div class="preset-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:''}<span class="preset-badge">${badge}</span>
-        ${unlocked?'':`<div class="pc-lock"><span class="pc-lock-icon">&#128274;</span><div class="pc-lock-cond">${tierConditionFor(p.id)}</div></div>`}</div>
-      <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
-      ${statLine(p.stats||{})}
-      <div class="pstats" style="color:${moralCol};">${S.lang==='fr'?'MORALITE':'MORALITY'} ${moralityLabel(morality)}</div>
-      <div class="ptrait good">+ ${S.lang==='fr'?p.perkFr:p.perkEn}</div>
-      <div class="ptrait bad">- ${S.lang==='fr'?p.flawFr:p.flawEn}</div>
-      ${mvHtml}
-      <button class="btn cyan" data-pick="${p.id}" style="margin-top:14px; width:100%;" ${unlocked?'':'disabled'}>${unlocked?(S.lang==='fr'?'CHOISIR':'PICK'):(S.lang==='fr'?'VERROUILLE':'LOCKED')}</button>
-    </div>`;
+    if(unlocked){ panelEl.querySelector('#cdpPick').onclick = ()=>{ applyPreset(p); S.screen='startside'; render(); }; }
   }
-  function renderCard(){
-    const idx = clamp(S.profileCarouselIdx, 0, PAIR_HEROES.length-1);
-    S.profileCarouselIdx = idx;
-    const heroP = SELECTABLE_PRESETS.find(x=>x.id===PAIR_HEROES[idx]);
-    const villP = SELECTABLE_PRESETS.find(x=>x.id===PAIR_VILLAINS[idx]);
-    const cardEl = d.querySelector('#ccCard');
-    const dotsEl = d.querySelector('#ccDots');
-    cardEl.innerHTML = miniCardHtml(heroP) + miniCardHtml(villP);
-    dotsEl.innerHTML = PAIR_HEROES.map((hid,i)=>{
-      const bothUnlocked = isPresetUnlocked(PAIR_HEROES[i]) && isPresetUnlocked(PAIR_VILLAINS[i]);
-      return `<span class="cc-dot ${i===idx?'on':''} ${bothUnlocked?'':'lk'}"></span>`;
-    }).join('');
-    cardEl.querySelectorAll('[data-pick]').forEach(btn=>{
-      btn.onclick = ()=>{ const p = SELECTABLE_PRESETS.find(x=>x.id===btn.dataset.pick); if(p){ applyPreset(p); S.screen='startside'; render(); } };
+  gridEl.querySelectorAll('.char-tile').forEach(tile=>{
+    const p = SELECTABLE_PRESETS.find(x=>x.id===tile.dataset.pid);
+    tile.addEventListener('mouseenter', ()=>renderDetail(p));
+    tile.addEventListener('focus', ()=>renderDetail(p));
+    tile.addEventListener('click', ()=>{
+      gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active'));
+      tile.classList.add('active');
+      renderDetail(p);
+      panelEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
     });
-  }
-  d.querySelector('#ccPrev').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx - 1 + PAIR_HEROES.length) % PAIR_HEROES.length; renderCard(); };
-  d.querySelector('#ccNext').onclick = ()=>{ S.profileCarouselIdx = (S.profileCarouselIdx + 1) % PAIR_HEROES.length; renderCard(); };
-  renderCard();
-  if(!META.loaded){ loadMetaProgress().then(()=>renderCard()); }
+  });
+  if(!META.loaded){ loadMetaProgress().then(()=>{ gridEl.innerHTML = SELECTABLE_PRESETS.map(tileHtml).join(''); gridEl.querySelectorAll('.char-tile').forEach(tile=>{
+    const p = SELECTABLE_PRESETS.find(x=>x.id===tile.dataset.pid);
+    tile.addEventListener('mouseenter', ()=>renderDetail(p));
+    tile.addEventListener('focus', ()=>renderDetail(p));
+    tile.addEventListener('click', ()=>{ gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active')); tile.classList.add('active'); renderDetail(p); panelEl.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+  }); }); }
   return d;
 }
 
@@ -9486,10 +9521,10 @@ function maybeTriggerRomance(){
   if(!S.romanceFate) return false;
   const past = (S.romanceHistory||[]).length;
   if(past >= (S.romanceMax||1)) return false;
-  // apres une rupture, il faut du temps avant de refaire sa vie
-  const gap = past ? 3 : 1;
+  // apres une rupture, il faut du temps avant de refaire sa vie ; la toute premiere peut demarrer tout de suite
+  const gap = past ? 3 : 0;
   if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < gap) return false;
-  if(Math.random() > 0.45) return false;
+  if(Math.random() > 0.65) return false;
   const enemy = Math.random() < 0.20;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
