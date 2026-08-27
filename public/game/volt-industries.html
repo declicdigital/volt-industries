@@ -251,26 +251,30 @@
   .pmove-col{ flex:1; min-width:0; }
   .pmove-h{ font-size:8px; font-weight:900; letter-spacing:1px; color:var(--dim); margin-bottom:3px; }
   .pmove-line{ font-size:9.5px; color:var(--muted); line-height:1.4; }
-  /* ---------- Grille complete de personnages (remplace le carrousel) ---------- */
-  .char-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px; margin-top:16px; }
-  .char-tile{ cursor:pointer; border-radius:12px; overflow:hidden; border:1.5px solid var(--line); background:rgba(255,255,255,.02); position:relative; transition:.15s; text-align:center; padding-bottom:4px; }
-  .char-tile:hover, .char-tile:focus, .char-tile.active{ border-color:var(--pc-color); box-shadow:0 0 14px -4px var(--pc-color); outline:none; transform:translateY(-2px); }
+  /* ---------- Grille paginee de personnages (remplace le carrousel), grandes vignettes ---------- */
+  .char-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-top:16px; }
+  .char-tile{ cursor:pointer; border-radius:14px; overflow:hidden; border:1.5px solid var(--line); background:rgba(255,255,255,.02); position:relative; transition:.15s; text-align:center; padding-bottom:8px; }
+  .char-tile:hover, .char-tile:focus, .char-tile.active{ border-color:var(--pc-color); box-shadow:0 0 18px -4px var(--pc-color); outline:none; transform:translateY(-2px); }
   .char-tile-photo{ position:relative; width:100%; aspect-ratio:3/4; background:#0a0d14; overflow:hidden; }
   .char-tile-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
-  .char-tile-initial{ display:flex; align-items:center; justify-content:center; height:100%; font-weight:900; font-size:20px; color:var(--pc-color); }
+  .char-tile-initial{ display:flex; align-items:center; justify-content:center; height:100%; font-weight:900; font-size:38px; color:var(--pc-color); }
   .char-tile.locked .char-tile-photo img, .char-tile.locked .char-tile-initial{ filter:grayscale(1) brightness(.32); }
-  .char-tile-lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(4,6,12,.35); filter:drop-shadow(0 0 6px rgba(0,0,0,.9)); }
-  .char-tile-dot{ width:7px; height:7px; border-radius:50%; margin:5px auto 2px; box-shadow:0 0 6px currentColor; }
-  .char-tile-name{ font-size:9.5px; font-weight:700; color:var(--ink); padding:0 3px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .char-tile-lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:34px; background:rgba(4,6,12,.35); filter:drop-shadow(0 0 6px rgba(0,0,0,.9)); }
+  .char-tile-dot{ width:9px; height:9px; border-radius:50%; margin:8px auto 4px; box-shadow:0 0 6px currentColor; }
+  .char-tile-name{ font-size:13px; font-weight:800; color:var(--ink); padding:0 4px; line-height:1.25; }
   .char-tile.locked .char-tile-name{ opacity:.4; }
+  .char-pager{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; }
+  .char-pager-label{ font-size:12px; font-weight:800; letter-spacing:.5px; color:var(--dim); min-width:80px; text-align:center; }
   .char-detail-panel{ display:none; }
   .char-detail-panel.open{ display:flex; gap:14px; margin-top:16px; padding:14px; border:1.5px solid var(--pc-color); border-radius:16px; background:rgba(255,255,255,.02); box-shadow:0 0 20px -8px var(--pc-color); }
   .char-detail-panel .cdp-photo{ position:relative; flex:0 0 110px; width:110px; height:140px; border-radius:12px; overflow:hidden; background:#0a0d14; }
   .char-detail-panel .cdp-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
   .char-detail-panel .cdp-body{ flex:1; min-width:0; text-align:left; }
   @media (max-width:600px){
-    .char-grid{ grid-template-columns:repeat(auto-fill, minmax(58px, 1fr)); gap:6px; }
-    .char-tile-name{ font-size:8.5px; }
+    .char-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; }
+    .char-tile-name{ font-size:11.5px; }
+    .char-tile-initial{ font-size:28px; }
+    .char-tile-lock{ font-size:26px; }
     .char-detail-panel.open{ flex-direction:column; }
     .char-detail-panel .cdp-photo{ width:100%; height:160px; }
   }
@@ -4956,7 +4960,14 @@ function screenProfileChoice(){
   }
   /* Grille complete : tous les personnages visibles d'un coup, grises + cadenas si verrouilles.
      Le detail (stats, atouts, coups) s'affiche au survol (PC) ou au toucher (mobile) dans le
-     panneau au-dessus, plutot que d'etre toujours visible sur chaque case. */
+     panneau au-dessus, plutot que d'etre toujours visible sur chaque case.
+     Tries par puissance (le plus faible en premier), pagines par pages de 4x3 pour que les
+     portraits restent grands et lisibles au lieu d'etre minuscules dans une grille geante. */
+  const sortedPresets = SELECTABLE_PRESETS.slice().sort((a,b)=>(CHAR_TIER[a.charKey]||50)-(CHAR_TIER[b.charKey]||50));
+  const PAGE_COLS = 4, PAGE_ROWS = 3, PAGE_SIZE = PAGE_COLS*PAGE_ROWS;
+  const pageCount = Math.ceil(sortedPresets.length / PAGE_SIZE);
+  if(!S.charGridPage) S.charGridPage = 0;
+  S.charGridPage = clamp(S.charGridPage, 0, pageCount-1);
   function tileHtml(p){
     const unlocked = isPresetUnlocked(p.id);
     const canonC = CHARACTERS[p.charKey];
@@ -4971,7 +4982,9 @@ function screenProfileChoice(){
     </div>`;
   }
   const gridEl = d.querySelector('#charGrid');
-  gridEl.innerHTML = SELECTABLE_PRESETS.map(tileHtml).join('');
+  const pagerEl = document.createElement('div');
+  pagerEl.className = 'char-pager';
+  gridEl.insertAdjacentElement('afterend', pagerEl);
   const panelEl = d.querySelector('#charDetailPanel');
   function renderDetail(p){
     if(!p){ panelEl.classList.remove('open'); panelEl.innerHTML=''; return; }
@@ -5002,23 +5015,29 @@ function screenProfileChoice(){
       </div>`;
     if(unlocked){ panelEl.querySelector('#cdpPick').onclick = ()=>{ applyPreset(p); S.screen='startside'; render(); }; }
   }
-  gridEl.querySelectorAll('.char-tile').forEach(tile=>{
-    const p = SELECTABLE_PRESETS.find(x=>x.id===tile.dataset.pid);
-    tile.addEventListener('mouseenter', ()=>renderDetail(p));
-    tile.addEventListener('focus', ()=>renderDetail(p));
-    tile.addEventListener('click', ()=>{
-      gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active'));
-      tile.classList.add('active');
-      renderDetail(p);
-      panelEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  function renderPage(){
+    const start = S.charGridPage * PAGE_SIZE;
+    const pagePresets = sortedPresets.slice(start, start+PAGE_SIZE);
+    gridEl.innerHTML = pagePresets.map(tileHtml).join('');
+    gridEl.querySelectorAll('.char-tile').forEach(tile=>{
+      const p = sortedPresets.find(x=>x.id===tile.dataset.pid);
+      tile.addEventListener('mouseenter', ()=>renderDetail(p));
+      tile.addEventListener('focus', ()=>renderDetail(p));
+      tile.addEventListener('click', ()=>{
+        gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active'));
+        tile.classList.add('active');
+        renderDetail(p);
+        panelEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      });
     });
-  });
-  if(!META.loaded){ loadMetaProgress().then(()=>{ gridEl.innerHTML = SELECTABLE_PRESETS.map(tileHtml).join(''); gridEl.querySelectorAll('.char-tile').forEach(tile=>{
-    const p = SELECTABLE_PRESETS.find(x=>x.id===tile.dataset.pid);
-    tile.addEventListener('mouseenter', ()=>renderDetail(p));
-    tile.addEventListener('focus', ()=>renderDetail(p));
-    tile.addEventListener('click', ()=>{ gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active')); tile.classList.add('active'); renderDetail(p); panelEl.scrollIntoView({ behavior:'smooth', block:'nearest' }); });
-  }); }); }
+    pagerEl.innerHTML = `<button class="cc-arrow" id="charPagePrev">&#10094;</button>
+      <span class="char-pager-label">${S.lang==='fr'?'Page':'Page'} ${S.charGridPage+1} / ${pageCount}</span>
+      <button class="cc-arrow" id="charPageNext">&#10095;</button>`;
+    pagerEl.querySelector('#charPagePrev').onclick = ()=>{ S.charGridPage = (S.charGridPage-1+pageCount)%pageCount; renderDetail(null); renderPage(); };
+    pagerEl.querySelector('#charPageNext').onclick = ()=>{ S.charGridPage = (S.charGridPage+1)%pageCount; renderDetail(null); renderPage(); };
+  }
+  renderPage();
+  if(!META.loaded){ loadMetaProgress().then(renderPage); }
   return d;
 }
 
