@@ -1529,14 +1529,14 @@ const MISSIONS = [
       { fr:"Accepter l'offre - le pouvoir a un prix que tu es pret a payer.", en:"Accept the offer - power has a price you're willing to pay.", eff:{align:-12, popularity:-3, rel:{boomnpc:6}} },
     ]},
   { id:'deuil_malachar', type:'combat', danger:2, scope:3, charKey:'malachar', tagFr:'Rencontre', tagEn:'Encounter',
-    fr:"Ghamos te confronte, ronge par le deuil, et te demande de l'aider dans sa quete de vengeance.", en:"Ghamos confronts you, consumed by grief, and asks for your help in his quest for vengeance.",
+    fr:"Thanos te confronte, ronge par le deuil, et te demande de l'aider dans sa quete de vengeance.", en:"Thanos confronts you, consumed by grief, and asks for your help in his quest for vengeance.",
     choices:[
       { fr:"Essayer de le raisonner et l'aider a faire son deuil autrement.", en:"Try to reason with him and help him grieve differently.", eff:{align:6, intelligence:3, rel:{malachar:4}} },
       { fr:"Le combattre pour proteger ses cibles.", en:"Fight him to protect his targets.", eff:{align:5, courage:5, rel:{malachar:-4}} },
       { fr:"Rejoindre sa croisade - sa douleur resonne en toi.", en:"Join his crusade - his pain resonates with you.", eff:{align:-11, courage:4, rel:{malachar:7}} },
     ]},
   { id:'duel_rival', type:'combat', danger:1, scope:1, charKey:'obsidian', tagFr:'Rivalite', tagEn:'Rivalry',
-    fr:"Gigatron, rival inventeur dechu, sabote publiquement l'une de tes inventions pour t'humilier.", en:"Gigatron, a fallen rival inventor, publicly sabotages one of your inventions to humiliate you.",
+    fr:"Ultron, rival inventeur dechu, sabote publiquement l'une de tes inventions pour t'humilier.", en:"Ultron, a fallen rival inventor, publicly sabotages one of your inventions to humiliate you.",
     choices:[
       { fr:"Repondre par une demonstration publique magistrale.", en:"Respond with a masterful public demonstration.", eff:{align:2, intelligence:5, popularity:4, rel:{obsidian:-2}} },
       { fr:"Lui offrir une seconde chance et une collaboration.", en:"Offer him a second chance and a collaboration.", eff:{align:7, rel:{obsidian:5}} },
@@ -1564,7 +1564,7 @@ const MISSIONS = [
       { fr:"Essayer de la doubler a son propre jeu.", en:"Try to outplay her at her own game.", eff:{align:-2, intelligence:6, rel:{lorelei:2}} },
     ]},
   { id:'catastrophe_naturelle', type:'rescue', danger:2, scope:3, charKey:'vaelor', tagFr:'Catastrophe naturelle', tagEn:'Natural disaster',
-    fr:"Un phenomene climatique extreme menace une region entiere. Fhor te demande de l'aide.", en:"An extreme weather phenomenon threatens an entire region. Fhor asks for your help.",
+    fr:"Un phenomene climatique extreme menace une region entiere. Thor te demande de l'aide.", en:"An extreme weather phenomenon threatens an entire region. Thor asks for your help.",
     choices:[
       { fr:"Combattre en premiere ligne a ses cotes.", en:"Fight on the front line at his side.", eff:{align:7, courage:6, rel:{vaelor:5}} },
       { fr:"Organiser l'evacuation des populations pendant qu'il agit.", en:"Organize civilian evacuation while he acts.", eff:{align:5, intelligence:4, popularity:4} },
@@ -1592,7 +1592,7 @@ const MISSIONS = [
       { fr:"Retourner ta veste et rejoindre la coalition au moment critique.", en:"Switch sides and join the coalition at the critical moment.", eff:{align:-14, popularity:-8, rel:{mandate:6, malachar:3}} },
     ]},
   { id:'siege_continental', type:'combat', danger:2, scope:4, charKey:'mandate', tagFr:'Crise continentale', tagEn:'Continental crisis',
-    fr:"Les forces du Mandat s'emparent methodiquement d'un continent entier, region par region.", en:"Bang's forces are methodically seizing an entire continent, region by region.",
+    fr:"Les forces de Kang s'emparent methodiquement d'un continent entier, region par region.", en:"Kang's forces are methodically seizing an entire continent, region by region.",
     choices:[
       { fr:"Coordonner une resistance continentale avec Volt Industries.", en:"Coordinate a continent-wide resistance with Volt Industries.", eff:{align:9, courage:5, popularity:5, rel:{volt:4}} },
       { fr:"Negocier une zone tampon pour proteger les civils en priorite.", en:"Negotiate a buffer zone to protect civilians first.", eff:{align:4, intelligence:6, rel:{marsh:2}} },
@@ -1606,14 +1606,14 @@ const MISSIONS = [
       { fr:"Negocier ta propre survie en echange d'informations sur les defenses.", en:"Negotiate your own survival in exchange for defense intel.", eff:{align:-16, popularity:-9, rel:{mandate:6}} },
     ]},
   { id:'faille_systeme', type:'rescue', danger:3, scope:6, charKey:'vaelor', tagFr:'Faille stellaire', tagEn:'Stellar rift',
-    fr:"Une faille spatio-temporelle menace de destabiliser le systeme stellaire tout entier. Fhor te demande une aide vitale.", en:"A space-time rift threatens to destabilize the entire star system. Fhor asks for your vital help.",
+    fr:"Une faille spatio-temporelle menace de destabiliser le systeme stellaire tout entier. Thor te demande une aide vitale.", en:"A space-time rift threatens to destabilize the entire star system. Thor asks for your vital help.",
     choices:[
       { fr:"Te jeter corps et ame dans la stabilisation de la faille.", en:"Throw yourself entirely into stabilizing the rift.", eff:{align:13, courage:9, rel:{vaelor:6}} },
       { fr:"Concevoir une solution technique a distance, plus prudente.", en:"Design a safer technical solution from a distance.", eff:{align:6, intelligence:10, rel:{volt:3}} },
-      { fr:"Laisser Fhor s'en charger seul et observer depuis un lieu sur.", en:"Let Fhor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
+      { fr:"Laisser Thor s'en charger seul et observer depuis un lieu sur.", en:"Let Thor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
     ]},
   { id:'guerre_cosmique', type:'combat', danger:3, scope:7, tagFr:'Guerre cosmique', tagEn:'Cosmic war',
-    fr:"Une entite ancestrale, aussi vieille que le deuil de Ghamos lui-meme, menace l'existence de la realite connue.", en:"An ancestral entity, as old as Ghamos's own grief, threatens the existence of known reality.",
+    fr:"Une entite ancestrale, aussi vieille que le deuil de Thanos lui-meme, menace l'existence de la realite connue.", en:"An ancestral entity, as old as Thanos's own grief, threatens the existence of known reality.",
     choices:[
       { fr:"Unir tous tes allies, heros comme rivaux, dans une derniere alliance.", en:"Unite every ally, heroes and rivals alike, in one final alliance.", eff:{align:15, courage:10, popularity:9, rel:{volt:5, vaelor:4, marsh:3, nyx:3}} },
       { fr:"Chercher une issue plus subtile, en epargnant un maximum de vies.", en:"Seek a subtler solution, sparing as many lives as possible.", eff:{align:8, intelligence:11, rel:{marsh:4}} },
@@ -2622,7 +2622,7 @@ const PRESETS = [
     perkFr:'Moyens illimites : intelligence tres haute, budgets et technologies sans limite.', perkEn:'Unlimited means: very high intelligence, endless budget and tech.',
     flawFr:'Courage moyen sur le terrain et suspicion permanente sur ses interets.', flawEn:'Average field courage and constant suspicion about his interests.',
     descFr:'Industriel milliardaire, cerveau derriere la moitie des armures du monde.', descEn:'Billionaire industrialist, mind behind half the world\'s armors.' },
-  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Fhor', nameEn:'Fhor', heroFr:'Fhor', heroEn:'Fhor', morphology:'divin', path:'divin', powers:['elementaire','force'],
+  { id:'vaelor', charKey:'vaelor', side:'hero', img:CHAR_IMG.char5, nameFr:'Thor', nameEn:'Thor', heroFr:'Thor', heroEn:'Thor', morphology:'divin', path:'divin', powers:['elementaire','force'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#2b3242', secondaryColor:'#c94b2c', symbol:'' },
     align:30, stats:{courage:18, intelligence:8, popularity:14},
     perkFr:'Puissance divine : la foudre repond a son appel, aucune arme mortelle ne l\'arrete.', perkEn:'Divine might: lightning answers his call, no mortal weapon stops him.',
@@ -2634,7 +2634,7 @@ const PRESETS = [
     perkFr:'Bouclier incassable : absorbe et renvoie les coups les plus lourds.', perkEn:'Unbreakable shield: absorbs and returns the heaviest blows.',
     flawFr:'Sans arsenal high-tech : desavantage face aux ennemis blindes ou a distance.', flawEn:'No high-tech arsenal: at a disadvantage against armored or ranged foes.',
     descFr:'Soldat de premiere ligne, bouclier au poing. Il encaisse pour que personne d\'autre ne tombe.', descEn:'Front-line soldier, shield in hand. He takes the hits so nobody else falls.' },
-  { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Muskl', nameEn:'Muskl', heroFr:'Muskl', heroEn:'Muskl', morphology:'colosse', path:'physique', powers:['force','regen'],
+  { id:'ferrum', charKey:'ferrum', side:'hero', img:CHAR_IMG.char4, nameFr:'Hulk', nameEn:'Hulk', heroFr:'Hulk', heroEn:'Hulk', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3a3f47', secondaryColor:'#c8763c', symbol:'' },
     align:25, stats:{courage:20, intelligence:4, popularity:10},
     perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
@@ -2677,7 +2677,7 @@ const PRESETS = [
     perkFr:'Le grand adversaire : puissance mystique et esprit superieur, tres peu d\'echecs.', perkEn:'The great adversary: mystic power and superior mind, very few failures.',
     flawFr:'Cible numero un : les heros s\'allient contre lui, aucune redemption facile.', flawEn:'Target number one: heroes unite against him, redemption is nearly impossible.',
     descFr:'L\'antagoniste central. Il pense en siecles, pas en missions.', descEn:'The central antagonist. He thinks in centuries, not missions.' },
-  { id:'malachar', charKey:'malachar', side:'villain', img:CHAR_IMG.char12, nameFr:'Ghamos', nameEn:'Ghamos', heroFr:'Ghamos', heroEn:'Ghamos', morphology:'colosse', path:'physique', powers:['force','regen'],
+  { id:'malachar', charKey:'malachar', side:'villain', img:CHAR_IMG.char12, nameFr:'Thanos', nameEn:'Thanos', heroFr:'Thanos', heroEn:'Thanos', morphology:'colosse', path:'physique', powers:['force','regen'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'claws', boots:'none', aura:'dark', weapon:'none', suitColor:'#221830', secondaryColor:'#a13cff', symbol:'' },
     align:-50, stats:{courage:20, intelligence:14, popularity:18},
     perkFr:'Destruction pure : quasi invincible en combat frontal.', perkEn:'Pure destruction: nearly unbeatable in a frontal fight.',
@@ -2707,7 +2707,7 @@ const PRESETS = [
     perkFr:'Increvable : revient de blessures qui tueraient n\'importe qui.', perkEn:'Unkillable: returns from wounds that would kill anyone.',
     flawFr:'Terreur pure : la population le hait, aucune couverture legale.', flawEn:'Pure terror: the public hates him, no legal cover.',
     descFr:'Rumeur devenue chair. On raconte qu\'il a deja ete enterre deux fois.', descEn:'A rumor made flesh. They say he has been buried twice already.' },
-  { id:'obsidian', charKey:'obsidian', side:'villain', img:CHAR_IMG.char17, nameFr:'Gigatron', nameEn:'Gigatron', heroFr:'Gigatron', heroEn:'Gigatron', morphology:'armure', path:'tech', powers:['armure','rayons'],
+  { id:'obsidian', charKey:'obsidian', side:'villain', img:CHAR_IMG.char17, nameFr:'Ultron', nameEn:'Ultron', heroFr:'Ultron', heroEn:'Ultron', morphology:'armure', path:'tech', powers:['armure','rayons'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'dark', weapon:'none', suitColor:'#101014', secondaryColor:'#ff2d3f', symbol:'OBS' },
     align:-40, stats:{courage:16, intelligence:19, popularity:14},
     perkFr:'Machine de guerre : blindage et puissance de feu superieurs.', perkEn:'War machine: superior armor and firepower.',
@@ -2719,7 +2719,7 @@ const PRESETS = [
     perkFr:'Sceptre cosmique : rayons devastateurs et carapace quasi indestructible.', perkEn:'Cosmic scepter: devastating blasts and near-indestructible carapace.',
     flawFr:'Rage devorante : aucune retenue, ne negocie jamais.', flawEn:'Devouring rage: no restraint, never negotiates.',
     descFr:'Il veut moins gouverner le monde que le vider.', descEn:'He wants less to rule the world than to empty it.' },
-  { id:'mandate', charKey:'mandate', side:'villain', img:CHAR_IMG.char19, nameFr:'Bang', nameEn:'Bang', heroFr:'Bang', heroEn:'Bang', morphology:'humain', path:'tech', powers:['ia','rayons'],
+  { id:'mandate', charKey:'mandate', side:'villain', img:CHAR_IMG.char19, nameFr:'Kang', nameEn:'Kang', heroFr:'Kang', heroEn:'Kang', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#20242c', secondaryColor:'#d8dde6', symbol:'M' },
     align:-22, stats:{courage:16, intelligence:16, popularity:12},
     perkFr:'Autorite officielle : la loi, les budgets et le Daily Bugle jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
@@ -3113,7 +3113,7 @@ const PRESETS = [
 /* Personnages jouables : les 22 personnages canon (11 heros, 11 villains). Deblocage progressif, voir UNLOCK_TIERS. */
 const SELECTABLE_IDS = ['hawkeye','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
-/* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
+/* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Hulk, Thanos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
 const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:40},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 /* Personnages temporairement mis en pause : pas encore d'image disponible. Ils gardent toutes
@@ -3839,9 +3839,18 @@ function screenRivalClimax(){
       } else {
         S.rivalDarkened = (ch.action==='darkduel');
         const scope = clamp(computeStars(), 2, 7);
-        const climaxMission = { charKey:S.rivalKey, danger:4, scope, location:{ name:randLocationName(scope), type:scope } };
-        S.currentMission = climaxMission; S.screen='mission'; render();
-        startBattle(climaxMission, (win)=>{ S.rivalDarkened=false; handleZoneCheckAndContinue(); });
+        const climaxMission = { charKey:S.rivalKey, danger:4, scope, choices:[], tagFr:'Affrontement decisif', tagEn:'Decisive clash', location:{ name:randLocationName(scope), type:scope } };
+        S.currentMission = climaxMission; S.pendingBattleWin = null;
+        /* Filet de securite : si quoi que ce soit echoue au lancement du combat, le joueur ne doit
+           jamais rester bloque sur un ecran vide - on relance la progression normale plutot que de
+           planter en silence. */
+        try{
+          startBattle(climaxMission, (win)=>{ S.rivalDarkened=false; handleZoneCheckAndContinue(); });
+        }catch(err){
+          console.error('Erreur au lancement du combat decisif contre le rival:', err);
+          S.rivalDarkened = false;
+          nextMission();
+        }
       }
     };
   });
@@ -5474,7 +5483,7 @@ function buildCareerPlan(){
   const myZone0 = zoneOf(S.align); const mySide0 = myZone0==='villain' ? 'villain' : 'hero';
   const oppSide0 = mySide0==='villain' ? 'hero' : 'villain';
   const rivalPool = Object.keys(CHARACTERS)
-    .filter(k=>CHARACTERS[k].align===oppSide0 && k!==S.playerCharKey)
+    .filter(k=>CHARACTERS[k].align===oppSide0 && k!==S.playerCharKey && !DISABLED_CHARS.has(k))
     .sort((a,b)=>(CHAR_UNLOCK_TIER[a]||1)-(CHAR_UNLOCK_TIER[b]||1));
   S.rivalKey = rivalPool.length ? rivalPool[randInt(0, Math.min(2, rivalPool.length-1))] : null;
   S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
@@ -6801,6 +6810,7 @@ function battleTargetForYears(years){
 }
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
+  if(mission.forceDuel) return true; // un defi personnel direct doit toujours etre un vrai combat visible
   if(mission.pivotal || mission.breakthrough || mission.intrigue) return false;
   const f = battleForm();
   if(injuryActive()) return false;
