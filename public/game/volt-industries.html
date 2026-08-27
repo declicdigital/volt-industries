@@ -3048,7 +3048,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:29},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:40},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
