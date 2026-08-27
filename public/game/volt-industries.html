@@ -955,7 +955,7 @@ const T = {
     startVillain:"Villain", startVillainDesc:"Tu commences deja marque comme une menace.",
     modeTitle:"Ta carriere", modeLead:"Deux formats de partie sont possibles.",
     modeShort:"Carriere courte", modeShortDesc:"10 annees fixes, 3 missions par an, 3 choix par mission.",
-    modeLong:"Carriere longue", modeLongDesc:"Jusqu'a 80 annees, 3 a 10 missions par an. Le niveau des missions proposees suit ton rang - de simples affaires de quartier jusqu'aux crises cosmiques. Formation de recrues, bascules multiples entre lumiere et ombre, risque de mort, discussions marquantes avec d'autres figures, bilan complet a la fin.",
+    modeLong:"Carriere longue", modeLongDesc:"Jusqu'a 80 annees, 3 a 10 missions par an. Le niveau des missions proposees suit ton rang - de simples affaires de quartier jusqu'aux combats multivers. Formation de recrues, bascules multiples entre lumiere et ombre, risque de mort, discussions marquantes avec d'autres figures, bilan complet a la fin.",
     yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere", estTime:"Temps estime", estMission:"~20 s par mission (choix, combats, discussions)",
     summaryTitle:"Ton dossier VOLT INDUSTRIES", year:"Annee", mission:"Mission",
     alignHero:"Heros", alignVillain:"Villain", alignNeutral:"Equilibre",
@@ -1006,7 +1006,7 @@ const T = {
     startVillain:"Villain", startVillainDesc:"You already start marked as a menace.",
     modeTitle:"Your career", modeLead:"Two game formats are available.",
     modeShort:"Short career", modeShortDesc:"Fixed 10 years, 3 missions per year, 3 choices per mission.",
-    modeLong:"Long career", modeLongDesc:"Up to 80 years, 3 to 10 missions per year. Mission scale follows your rank - from small neighborhood affairs up to cosmic crises. Train recruits, shift repeatedly between light and darkness, risk death, have meaningful talks with other figures, get a full report at the end.",
+    modeLong:"Long career", modeLongDesc:"Up to 80 years, 3 to 10 missions per year. Mission scale follows your rank - from small neighborhood affairs up to multiverse combat. Train recruits, shift repeatedly between light and darkness, risk death, have meaningful talks with other figures, get a full report at the end.",
     yearsLabel:"Number of years", beginCareer:"Start career", estTime:"Estimated time", estMission:"~20 s per mission (choices, battles, talks)",
     summaryTitle:"Your VOLT INDUSTRIES file", year:"Year", mission:"Mission",
     alignHero:"Hero", alignVillain:"Menace", alignNeutral:"Balance",
@@ -1612,12 +1612,12 @@ const MISSIONS = [
       { fr:"Concevoir une solution technique a distance, plus prudente.", en:"Design a safer technical solution from a distance.", eff:{align:6, intelligence:10, rel:{volt:3}} },
       { fr:"Laisser Thor s'en charger seul et observer depuis un lieu sur.", en:"Let Thor handle it alone and watch from safety.", eff:{align:-7, popularity:-5, rel:{vaelor:-4}} },
     ]},
-  { id:'guerre_cosmique', type:'combat', danger:3, scope:7, tagFr:'Guerre cosmique', tagEn:'Cosmic war',
+  { id:'guerre_cosmique', type:'combat', danger:3, scope:7, tagFr:'Combat Multivers', tagEn:'Multiverse Combat',
     fr:"Une entite ancestrale, aussi vieille que le deuil de Thanos lui-meme, menace l'existence de la realite connue.", en:"An ancestral entity, as old as Thanos's own grief, threatens the existence of known reality.",
     choices:[
       { fr:"Unir tous tes allies, heros comme rivaux, dans une derniere alliance.", en:"Unite every ally, heroes and rivals alike, in one final alliance.", eff:{align:15, courage:10, popularity:9, rel:{volt:5, vaelor:4, marsh:3, nyx:3}} },
       { fr:"Chercher une issue plus subtile, en epargnant un maximum de vies.", en:"Seek a subtler solution, sparing as many lives as possible.", eff:{align:8, intelligence:11, rel:{marsh:4}} },
-      { fr:"Saisir ce chaos cosmique pour t'approprier un pouvoir absolu.", en:"Seize this cosmic chaos to claim absolute power for yourself.", eff:{align:-20, popularity:-10, rel:{mandate:7, malachar:5}} },
+      { fr:"Saisir ce chaos multivers pour t'approprier un pouvoir absolu.", en:"Seize this multiverse chaos to claim absolute power for yourself.", eff:{align:-20, popularity:-10, rel:{mandate:7, malachar:5}} },
     ]},
 ];
 
@@ -3445,7 +3445,7 @@ function careerScore(){
     { label: fr?'Impact sur le terrain':'Field impact', value: impact, max:22 },
     { label: fr?'Puissance atteinte':'Power reached', value: power, max:20 },
     { label: fr?'Heritage et liens':'Legacy and bonds', value: legacy, max:16 },
-    { label: fr?'Envergure cosmique':'Cosmic scale', value: cosmicBonus, max:12 },
+    { label: fr?'Envergure multivers':'Multiverse scale', value: cosmicBonus, max:12 },
     { label: fr?'Sanctions et pertes':'Setbacks', value: -malus, max:0 },
   ];
   let total = clamp(Math.round(combatPart + impact + power + legacy + cosmicBonus - malus), 1, 100);
@@ -3497,15 +3497,18 @@ function computeStars(){
   return 7;
 }
 /* ---------- 8eme etoile doree, cachee : avoir reellement sauve (hero) ou detruit (villain) le multivers ---------- */
+/* Regle simplifiee et definitive : la 8eme etoile ne s'obtient plus que de deux facons, point final.
+   1) Reunir les 6 Gemmes d'Infinite.
+   2) Atteindre 7 etoiles ET une carriere d'au moins 50 ans.
+   Plus de tirage aleatoire d'eligibilite, plus de seuil d'alignement, plus d'obtention automatique
+   a 40 ans : ces anciennes conditions sont totalement retirees. */
 function eighthStarQualifies(){
-  if(computeStars() < 7) return false;
-  if(Math.abs(S.align) < 90) return false;
-  return (S.trueCosmicWins||0) >= 2;
+  if((S.eclats||[]).length >= ECLATS.length) return true;
+  if(computeStars() >= 7 && (S.currentYear||1) >= 50) return true;
+  return false;
 }
-/* Seules 5% des carrieres sont meme capables d'y pretendre (tirage unique au debut de la partie). */
 function tryGrantEighthStar(){
   if(S.eighthStar) return false;
-  if(!S.eighthStarEligible) return false;
   if(!eighthStarQualifies()) return false;
   S.eighthStar = true;
   return true;
@@ -3565,18 +3568,32 @@ function autoCareerStep(){
   setTimeout(()=>{
     S._autoStepPending = false;
     if(!S.careerAuto || S.screen==='end') return;
+    /* La cinematique de la 8eme etoile merite d'etre vue : on arrete la simulation net, sans
+       jamais cliquer a travers automatiquement. */
+    if(document.querySelector('.cine-overlay.eighth-star')){
+      S.careerAuto = false; renderCareerAutoWidget();
+      return;
+    }
     if(document.querySelector('.btl-overlay') || document.getElementById('convOverlay') || document.querySelector('.cine-overlay')){
       // Quelque chose est encore affiche par-dessus (overlay en train de disparaitre, etc.) : on retente un peu plus tard, sans jamais abandonner.
       setTimeout(autoCareerStep, 400);
       return;
     }
-    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training'){
-      const cbox = document.getElementById('choices');
-      if(cbox){ const btns = Array.from(cbox.querySelectorAll('button')); if(btns.length){ pick(btns).click(); return; } }
+    /* Creer une faction et le choix retraite/temps supplementaire sont trop importants pour etre
+       repondus automatiquement : on arrete la simulation et on laisse la main. */
+    if(S.screen==='factionCreate' || S.screen==='careerDurationChoice'){
+      S.careerAuto = false; renderCareerAutoWidget();
+      return;
+    }
+    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='rivalClimax'){
+      const cbox = document.getElementById('choices') || document.querySelector('.actions');
+      const btns = cbox ? Array.from(cbox.querySelectorAll('button')) : [];
+      if(btns.length){ pick(btns).click(); return; }
       setTimeout(autoCareerStep, 400); return;
     }
-    if(S.screen==='invite'){
-      const accept = document.getElementById('accept'); if(accept){ accept.click(); return; }
+    if(S.screen==='invite' || S.screen==='defection'){
+      const accept = document.getElementById('accept') || document.getElementById('acceptD');
+      if(accept){ accept.click(); return; }
       setTimeout(autoCareerStep, 400); return;
     }
     if(S.screen==='yearbreak'){
@@ -3945,6 +3962,7 @@ function screenContent(){
   const map = { welcome:screenWelcome, profileChoice:screenProfileChoice, faceforge:screenFaceForge, name:screenName, look:screenLook, path:screenPath, powers:screenPowers, startside:screenStartSide, mode:screenMode,
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
     codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies, rivalDossier:screenRivalDossier, rivalClimax:screenRivalClimax,
+    careerDurationChoice:screenCareerDurationChoice,
     pressEvent:screenPressEvent, investigation:screenInvestigation };
   wrap.appendChild(map[S.screen]());
   return wrap;
@@ -5411,7 +5429,7 @@ function screenMode(){
   const fr = S.lang==='fr';
   if(!S.years || S.years<5) S.years = 10;
   d.innerHTML = `<span class="eyebrow">05</span><h2>${t('modeTitle')}</h2>
-    <p class="lead">${fr?"Choisis la duree de ta carriere. Plus elle est longue, plus les enjeux montent : missions cosmiques, bascules de camp, formation de recrues, risque de mort.":"Pick how long your career runs. The longer it goes, the higher the stakes: cosmic missions, side switches, training recruits, risk of death."}</p>
+    <p class="lead">${fr?"Choisis la duree de ta carriere. Plus elle est longue, plus les enjeux montent : combats multivers, bascules de camp, formation de recrues, risque de mort.":"Pick how long your career runs. The longer it goes, the higher the stakes: multiverse combat, side switches, training recruits, risk of death."}</p>
     <div id="yearsBox" style="margin-top:22px;">
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
         <span style="font-weight:800;">${t('yearsLabel')}:</span>
@@ -5991,7 +6009,7 @@ function nextMission(){
   const missionsThisYear = S.missionsPlan[S.currentYear-1] + mentorSteps;
   if(S.currentMissionInYear >= missionsThisYear){
     pushYearHistoryIfDone();
-    if(S.currentYear >= S.missionsPlan.length){ S.screen='end'; render(); return; }
+    if(S.currentYear >= S.missionsPlan.length){ S.screen='careerDurationChoice'; render(); return; }
     S.screen='yearbreak'; render(); return;
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
@@ -7974,8 +7992,7 @@ function resolveOutcome(mission){
     if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1;
     if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
   if(!hadEighthBefore){
-    if(S.currentYear>=40){ S.eighthStar = true; S.pendingEighthStarCinematic = true; }
-    else if(tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
+    if(tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
   }
   return { type, outcome };
 }
@@ -8181,9 +8198,35 @@ function screenRetirementOffer(){
   d.querySelector('#livePeace').onclick = ()=>{
     S.peacefulEra = true;
     S.currentYear += 1; S.currentMissionInYear = 0;
-    if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; }
+    if(S.currentYear > S.missionsPlan.length){ S.screen='careerDurationChoice'; render(); return; }
     nextMission();
   };
+  return d;
+}
+function screenCareerDurationChoice(){
+  const d = document.createElement('div'); const isFr = S.lang==='fr';
+  if(!S._extraYearsChoice) S._extraYearsChoice = 5;
+  d.innerHTML = `<span class="eyebrow">${isFr?'FIN DE CARRIERE PREVUE':'PLANNED CAREER END'}</span>
+    <h2>${isFr?`Tu as atteint les ${S.missionsPlan.length} ans que tu avais prevus au depart.`:`You've reached the ${S.missionsPlan.length} years you originally planned.`}</h2>
+    <p class="lead">${isFr?'Tu peux t\'arreter ici en beaute, ou continuer aussi longtemps que tu le souhaites.':'You can stop here on a high note, or keep going for as long as you\'d like.'}</p>
+    <div id="extraYearsBox" style="margin-top:20px; padding:16px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02);">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-weight:800;">${isFr?'Annees supplementaires':'Extra years'}:</span>
+        <span id="extraYearsVal" style="font-size:30px;font-weight:900;color:var(--accent);text-shadow:0 0 20px var(--accent);line-height:1;">${S._extraYearsChoice}</span>
+      </div>
+      <input type="range" min="1" max="25" step="1" value="${S._extraYearsChoice}" id="extraYearsRange" style="width:100%;">
+      <div style="display:flex;justify-content:space-between;color:var(--dim);font-size:11px;letter-spacing:1px;margin-top:4px;"><span>1</span><span>25</span></div>
+    </div>
+    <div class="actions" style="flex-direction:column; gap:10px; align-items:stretch; margin-top:18px;">
+      <button class="btn cyan" id="stopHere">${isFr?'Prendre ta retraite maintenant':'Retire now'}</button>
+      <button class="btn ghost" id="extraTime">${isFr?'Continuer avec ces annees supplementaires':'Continue with these extra years'}</button>
+    </div>`;
+  d.querySelector('#extraYearsRange').oninput = (e)=>{
+    S._extraYearsChoice = parseInt(e.target.value);
+    d.querySelector('#extraYearsVal').textContent = S._extraYearsChoice;
+  };
+  d.querySelector('#stopHere').onclick = ()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); };
+  d.querySelector('#extraTime').onclick = ()=>{ const extra = S._extraYearsChoice||5; S._extraYearsChoice = 5; extendCareer(extra); };
   return d;
 }
 function screenYearBreak(){
@@ -8196,7 +8239,7 @@ function screenYearBreak(){
     <div class="actions"><button class="btn cyan" id="go">${S.lang==='fr'?'Annee suivante':'Next year'} -></button></div>`;
   d.querySelector('#go').onclick=()=>{ S.currentYear += 1; S.currentMissionInYear = 0;
     maybeOldSideReminder(); maybeTeamBetrayal(); maybeRivalAltercation(); checkMenteeGraduations();
-    if(S.currentYear > S.missionsPlan.length){ S.screen='end'; render(); return; } nextMission(); };
+    if(S.currentYear > S.missionsPlan.length){ S.screen='careerDurationChoice'; render(); return; } nextMission(); };
   return d;
 }
 
