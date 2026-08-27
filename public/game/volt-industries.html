@@ -5448,6 +5448,18 @@ function buildCareerPlan(){
      elles ne se seraient jamais reproduites au-dela de la toute premiere carriere de la session. */
   S.voidCompletionDone = false;
   S.introConvDone = false;
+  /* Meme bug, encore : le tirage "cette carriere aura-t-elle une histoire d'amour" (romanceFate,
+     ~30% de chance) n'etait fait qu'une fois au tout premier chargement de la page, jamais
+     retire au demarrage d'une nouvelle carriere. Si la toute premiere partie de la session tombait
+     sur "non" (70% de chances), plus aucune carriere suivante n'avait jamais de romance possible. */
+  S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
+  S.romanceFate = Math.random() < 0.30;
+  S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
+  /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
+     final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
+     carriere ratait ce tirage, plus AUCUNE carriere de la session ne pouvait jamais debloquer Doom,
+     peu importe la performance du joueur. */
+  S.eighthStar = false; S.eighthStarEligible = Math.random() < 0.05; S.pendingEighthStarCinematic = false;
   /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, exactement 2 recrues
      par tranche de 10 ans de carriere pour le joueur (pas plus). */
   S.mentorEligible = Math.random() < 0.70;
