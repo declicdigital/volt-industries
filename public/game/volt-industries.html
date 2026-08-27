@@ -1140,6 +1140,17 @@ const CHAR_IMG = {
   char69:"/__l5e/assets-v1/e0bc70cc-dd3d-4f38-9356-3303441c2652/Proxima_Midnight.png",
   char70:"/__l5e/assets-v1/528fdcd1-cad8-4285-8bda-c4a02513b7af/Rocket.png",
   char71:"/__l5e/assets-v1/a6f9874b-d5bf-43c0-b305-581c2c55fcda/Star-Lord.png",
+  char72:"/__l5e/assets-v1/1de3978b-a5a3-4a70-9fab-27de312833d4/Venom-2.png",
+  char73:"/__l5e/assets-v1/1b79708e-1a20-4ca8-95c6-a59ba7632c7c/Wolverine-2.png",
+  char74:"/__l5e/assets-v1/5af51748-6a76-4a8a-9798-010bf6723af6/Telios.png",
+  char75:"/__l5e/assets-v1/ddbb021e-4b35-4351-92d0-5f5c4dca522c/Bucky.png",
+  char76:"/__l5e/assets-v1/07271d38-3e46-4fd8-b982-b585cf023146/Drax.png",
+  char77:"/__l5e/assets-v1/e90be537-6c76-407b-99f4-59b4a21a3c12/Falcon.png",
+  char78:"/__l5e/assets-v1/43b7abae-ce22-4e89-a20c-03546d5a325f/Hawkeye.png",
+  char79:"/__l5e/assets-v1/205c1566-b204-4899-82f0-6e2097181793/Wasp.png",
+  char80:"/__l5e/assets-v1/5e158dd6-aa01-4fe0-8683-9149cf3d1ee4/Black_Widow.png",
+  char81:"/__l5e/assets-v1/0ea5baf7-4181-4fd7-8589-1df9215baf11/mantis.png",
+  char82:"/__l5e/assets-v1/ad44e778-4d5f-4339-8d4c-0a66b1ff17d9/Sylvie.png",
   char21:"/game/chars/21.png", char22:"/game/chars/22.png", char23:"/game/chars/23.png", char24:"/game/chars/24.png",
   char25:"/game/chars/25.png", char26:"/game/chars/26.png", char27:"/game/chars/27.png", char28:"/game/chars/28.png",
   char29:"/game/chars/29.png", char30:"/game/chars/30.png", char31:"/game/chars/31.png", char32:"/game/chars/32.png",
@@ -1202,6 +1213,17 @@ const CHARACTERS = {
   proxima:{fr:"Proxima Midnight",en:"Proxima Midnight",canon:"Proxima Midnight",align:'villain', sex:'f', img:CHAR_IMG.char69},
   rocket:{fr:"Rocket",en:"Rocket",canon:"Rocket",align:'hero', sex:'m', img:CHAR_IMG.char70},
   starlord:{fr:"Star-Lord",en:"Star-Lord",canon:"Star-Lord",align:'hero', sex:'m', img:CHAR_IMG.char71},
+  venom:{fr:"Venom",en:"Venom",canon:"Venom",align:'neutral', sex:'m', img:CHAR_IMG.char72},
+  wolverine:{fr:"Wolverine",en:"Wolverine",canon:"Wolverine",align:'hero', sex:'m', img:CHAR_IMG.char73},
+  telios:{fr:"Telios",en:"Telios",canon:"Telios",align:'hero', sex:'m', img:CHAR_IMG.char74},
+  bucky:{fr:"Bucky",en:"Bucky",canon:"Bucky",align:'neutral', sex:'m', img:CHAR_IMG.char75},
+  drax:{fr:"Drax",en:"Drax",canon:"Drax",align:'hero', sex:'m', img:CHAR_IMG.char76},
+  falcon:{fr:"Falcon",en:"Falcon",canon:"Falcon",align:'hero', sex:'m', img:CHAR_IMG.char77},
+  hawkeye:{fr:"Hawkeye",en:"Hawkeye",canon:"Hawkeye",align:'hero', sex:'m', img:CHAR_IMG.char78},
+  wasp:{fr:"Wasp",en:"Wasp",canon:"Wasp",align:'neutral', sex:'f', img:CHAR_IMG.char79},
+  yelena:{fr:"Yelena",en:"Yelena",canon:"Yelena",align:'neutral', sex:'f', img:CHAR_IMG.char80},
+  mantis:{fr:"Mantis",en:"Mantis",canon:"Mantis",align:'hero', sex:'f', img:CHAR_IMG.char81},
+  sylvie:{fr:"Sylvie",en:"Sylvie",canon:"Sylvie",align:'neutral', sex:'f', img:CHAR_IMG.char82},
 
   /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -1237,28 +1259,28 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
 const FACTION_MIN_STARS = 4;
 const FACTIONS = {
   hero: [ null, null,
-    { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'rings', leader:'Mister Fantastic',
+    { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'four', leader:'Mister Fantastic',
       members:['Mister Fantastic','Invisible Woman','Human Torch','The Thing'] },
-    { id:'xmen', fr:'X-MEN', en:'X-MEN', icon:'globe-segment', leader:'Professor X',
+    { id:'xmen', fr:'X-MEN', en:'X-MEN', icon:'xmen', leader:'Professor X',
       members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X'] },
     { id:'guardians', fr:'GUARDIANS OF THE GALAXY', en:'GUARDIANS OF THE GALAXY', icon:'galaxy', leader:'Star-Lord',
-      members:['Star-Lord','Rocket','Groot','Gamora','Nebula'] },
-    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe', leader:'Iron Man',
-      members:['Spider-Man','Iron Man','Captain America','Thor','Hulk','Black Widow','Black Panther','Scarlet Witch','Vision','Ant-Man','Doctor Strange'] },
+      members:['Star-Lord','Rocket','Groot','Gamora','Nebula','Drax','Mantis','Telios'] },
+    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'avengers', leader:'Iron Man',
+      members:['Spider-Man','Iron Man','Captain America','Thor','Hulk','Black Widow','Black Panther','Scarlet Witch','Vision','Ant-Man','Doctor Strange','Falcon','Hawkeye'] },
   ],
   villain: [ null, null,
-    { id:'sinister6', fr:'SINISTER SIX', en:'SINISTER SIX', icon:'crack', leader:'Doctor Octopus',
+    { id:'sinister6', fr:'SINISTER SIX', en:'SINISTER SIX', icon:'six', leader:'Doctor Octopus',
       members:['Green Goblin','Doctor Octopus','Mysterio','Electro'] },
-    { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet', leader:'Magneto',
+    { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'brotherhood', leader:'Magneto',
       members:['Magneto','Mystique','Pyro'] },
-    { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'coil', leader:'Doctor Doom',
+    { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'cabal', leader:'Doctor Doom',
       members:['Doctor Doom','Red Skull'] },
-    { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'void', leader:'Thanos',
+    { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'blackorder', leader:'Thanos',
       members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian'] },
   ],
 };
 /* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
-const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','Deadpool','The G','Siddharta','Doctor Doom'];
+const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','Deadpool','The G','Siddharta','Doctor Doom','Bucky','Wasp','Yelena','Sylvie'];
 
 /* ============================ ATTRIBUTS (caracteristiques, sans camp) ============================
    Un attribut n'a pas de camp, peut melanger heros et villains, et se cumule. */
@@ -3026,7 +3048,7 @@ const SELECTABLE_IDS = ['theg','volt','vaelor','aegis','ferrum','marsh','nyx','s
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Iron Boy, Muskl, Ghamos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
-const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:29},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
+const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1)]).concat([CHAR_IMG.char41, CHAR_IMG.char42]).concat(Array.from({length:40},(_,i)=>CHAR_IMG['char'+(i+43)])).filter(Boolean));
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
