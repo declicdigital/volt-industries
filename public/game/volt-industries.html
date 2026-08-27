@@ -9066,14 +9066,6 @@ function handleRomanceEffect(rom, conv){
 function maybeTriggerConversation(){
   if(S.dead || S.activeConversation) return;
   if(!(S.screen==='mission' || S.screen==='mentor')) return;
-  if(!S.introConvDone){
-    S.introConvDone = true;
-    const intro = introConversation();
-    if(intro && CHARACTERS[intro.charKey] && intro.charKey !== S.playerCharKey){
-      S.activeConversation = intro; S.convLineIndex = 0; S.lastConvYear = S.currentYear;
-      renderConversationOverlay(); return;
-    }
-  }
   if(S.lastConvYear===undefined || S.lastConvYear===null) S.lastConvYear = S.currentYear - 2;
   if(maybeTriggerRomance()){ S.missionsSinceConv = 0; return; }
   const gap = S.currentYear - S.lastConvYear;
