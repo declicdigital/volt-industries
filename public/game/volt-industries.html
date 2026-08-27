@@ -1515,14 +1515,14 @@ const MISSIONS = [
       { fr:"Se taire completement - le silence aussi terrorise.", en:"Stay completely silent - silence terrifies too.", eff:{align:-2, popularity:-1, intelligence:2} },
     ]},
   { id:'recrutement_heros', type:'social', danger:0, scope:1, charKey:'volt', tagFr:'Recrutement', tagEn:'Recruitment',
-    fr:"Iron Boy t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Iron Boy personally invites you to join his elite response team.",
+    fr:"Iron Man t'invite personnellement a rejoindre son equipe d'intervention d'elite.", en:"Iron Man personally invites you to join his elite response team.",
     choices:[
       { fr:"Accepter avec enthousiasme.", en:"Accept enthusiastically.", eff:{align:9, popularity:3, rel:{volt:6}} },
       { fr:"Accepter, mais a tes conditions.", en:"Accept, but on your own terms.", eff:{align:4, intelligence:3, rel:{volt:2}} },
       { fr:"Refuser - tu preferes agir seul.", en:"Refuse - you prefer working alone.", eff:{align:0, courage:3, rel:{volt:-3}} },
     ]},
   { id:'approche_villain', type:'social', danger:0, scope:1, charKey:'boomnpc', tagFr:'Tentation', tagEn:'Temptation',
-    fr:"Dr Boom t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"Dr Boom secretly approaches you, offering unlimited resources for your loyalty.",
+    fr:"Doctor Doom t'approche en secret et te propose des ressources illimitees contre ta loyaute.", en:"Doctor Doom secretly approaches you, offering unlimited resources for your loyalty.",
     choices:[
       { fr:"Rejeter l'offre et le denoncer aux autorites.", en:"Reject the offer and report him to the authorities.", eff:{align:8, popularity:2, rel:{boomnpc:-5, volt:3}} },
       { fr:"Ecouter, sans t'engager, pour recolter des informations.", en:"Listen without committing, to gather intel.", eff:{align:-1, intelligence:4, rel:{boomnpc:1, nyx:2}} },
@@ -1550,14 +1550,14 @@ const MISSIONS = [
       { fr:"Laisser quelqu'un d'autre prendre le risque a ta place.", en:"Let someone else take the risk instead.", eff:{align:-8, popularity:-6} },
     ]},
   { id:'infiltration', type:'combat', danger:2, scope:2, charKey:'nyx', tagFr:'Infiltration', tagEn:'Infiltration',
-    fr:"Purple Witch te propose de t'infiltrer dans une cellule HYDRA pour la demanteler de l'interieur.", en:"Purple Witch proposes infiltrating a HYDRA cell to dismantle it from within.",
+    fr:"Scarlet Witch te propose de t'infiltrer dans une cellule HYDRA pour la demanteler de l'interieur.", en:"Scarlet Witch proposes infiltrating a HYDRA cell to dismantle it from within.",
     choices:[
       { fr:"Accepter la mission, quitte a mentir longtemps.", en:"Accept the mission, even if it means lying for a long time.", eff:{align:4, intelligence:5, rel:{nyx:5}} },
       { fr:"Refuser - ce n'est pas ton style.", en:"Refuse - it's not your style.", eff:{courage:2, rel:{nyx:-2}} },
       { fr:"Accepter, mais garder les benefices de la cellule pour toi.", en:"Accept, but keep the organization's profits for yourself.", eff:{align:-9, intelligence:2, rel:{nyx:-6, mandate:2}} },
     ]},
   { id:'trickster', type:'social', danger:0, scope:1, charKey:'lorelei', tagFr:'Manipulation', tagEn:'Manipulation',
-    fr:"Audition te propose un marche ambigu : il t'aide contre une menace, en echange d'une faveur non precisee.", en:"Audition offers an ambiguous deal: he helps against a threat, for an unspecified future favor.",
+    fr:"Vision te propose un marche ambigu : il t'aide contre une menace, en echange d'une faveur non precisee.", en:"Vision offers an ambiguous deal: he helps against a threat, for an unspecified future favor.",
     choices:[
       { fr:"Refuser tout marche avec elle.", en:"Refuse any deal with her.", eff:{align:2, courage:3, rel:{lorelei:-3}} },
       { fr:"Accepter, prudemment.", en:"Accept, cautiously.", eff:{intelligence:4, rel:{lorelei:4}} },
@@ -2616,7 +2616,7 @@ const PRESETS = [
     perkFr:'Maitrise de l\'electricite : la foudre repond a son appel, en plus d\'une force colossale.', perkEn:'Electricity mastery: lightning answers his call, on top of colossal strength.',
     flawFr:'Tout le monde l\'attend au tournant : la moindre faute coute double en reputation.', flawEn:'Everyone watches him: every mistake costs double reputation.',
     descFr:'Le heros de reference de Volt Industries, l\'electricite dans les poings. Le monde entier connait son nom.', descEn:'Volt Industries\' flagship hero, lightning in his fists. The whole world knows his name.' },
-  { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Iron Boy', nameEn:'Iron Boy', heroFr:'Volt', heroEn:'Volt', morphology:'humain', path:'tech', powers:['ia','rayons'],
+  { id:'volt', charKey:'volt', side:'hero', img:CHAR_IMG.char1, nameFr:'Iron Man', nameEn:'Iron Man', heroFr:'Iron Man', heroEn:'Iron Man', morphology:'humain', path:'tech', powers:['ia','rayons'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#0f2a4a', secondaryColor:'#39d0ff', symbol:'V' },
     align:28, stats:{courage:12, intelligence:20, popularity:18},
     perkFr:'Moyens illimites : intelligence tres haute, budgets et technologies sans limite.', perkEn:'Unlimited means: very high intelligence, endless budget and tech.',
@@ -2628,7 +2628,7 @@ const PRESETS = [
     perkFr:'Puissance divine : la foudre repond a son appel, aucune arme mortelle ne l\'arrete.', perkEn:'Divine might: lightning answers his call, no mortal weapon stops him.',
     flawFr:'Peu populaire, mauvaise image mediatique, alliances difficiles.', flawEn:'Unpopular, poor media image, alliances are hard to build.',
     descFr:'Dieu du tonnerre revenu de trop de fronts. Il se bat, il ne parle pas.', descEn:'God of thunder back from too many fronts. He fights, he does not talk.' },
-  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Captain Americain', nameEn:'Captain Americain', heroFr:'Captain Americain', heroEn:'Captain Americain', morphology:'humain', path:'physique', powers:['force','invulnerabilite'],
+  { id:'aegis', charKey:'aegis', side:'hero', img:CHAR_IMG.char3, nameFr:'Captain America', nameEn:'Captain America', heroFr:'Captain America', heroEn:'Captain America', morphology:'humain', path:'physique', powers:['force','invulnerabilite'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'shield', suitColor:'#e8eef7', secondaryColor:'#1a6cff', symbol:'AGS' },
     align:35, stats:{courage:16, intelligence:10, popularity:20},
     perkFr:'Bouclier incassable : absorbe et renvoie les coups les plus lourds.', perkEn:'Unbreakable shield: absorbs and returns the heaviest blows.',
@@ -2640,13 +2640,13 @@ const PRESETS = [
     perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
     flawFr:'Intelligence faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low intelligence: easily manipulated, fails strategic missions.',
     descFr:'Ancien docker devenu montagne humaine.', descEn:'Former dockworker turned human mountain.' },
-  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Red Widow', nameEn:'Red Widow', heroFr:'Meridian', heroEn:'Meridian', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
+  { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Black Widow', nameEn:'Black Widow', heroFr:'Black Widow', heroEn:'Black Widow', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#123c78', secondaryColor:'#ffc63f', symbol:'MRD' },
     align:30, stats:{courage:14, intelligence:18, popularity:6},
     perkFr:'Instincts aiguises : lit le terrain, anticipe chaque embuscade.', perkEn:'Sharp instincts: reads the field, anticipates every ambush.',
     flawFr:'Sans super-pouvoirs : chaque combat contre un colosse est un pari.', flawEn:'No superpowers: every fight against a heavyweight is a gamble.',
     descFr:'Officier de terrain aux reflexes d\'exception, formee au combat rapproche.', descEn:'Field officer with exceptional reflexes, trained in close combat.' },
-  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Purple Witch', nameEn:'Purple Witch', heroFr:'Purple Witch', heroEn:'Purple Witch', morphology:'elance', path:'mystique', powers:['illusions','elementaire'],
+  { id:'nyx', charKey:'nyx', side:'hero', img:CHAR_IMG.char6, nameFr:'Scarlet Witch', nameEn:'Scarlet Witch', heroFr:'Scarlet Witch', heroEn:'Scarlet Witch', morphology:'elance', path:'mystique', powers:['illusions','elementaire'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1b1b26', secondaryColor:'#8a7bff', symbol:'' },
     align:14, stats:{courage:14, intelligence:14, popularity:10},
     perkFr:'Magie du chaos : ses sorts reecrivent les probabilites en sa faveur.', perkEn:'Chaos magic: her spells rewrite the odds in her favor.',
@@ -2658,13 +2658,13 @@ const PRESETS = [
     perkFr:'Maitrise des arcanes : portails et illusions renversent le cours d\'un combat.', perkEn:'Mastery of the arcane: portals and illusions turn the tide of any fight.',
     flawFr:'Peu de puissance offensive : depend beaucoup de ses allies.', flawEn:'Little offensive power: depends heavily on allies.',
     descFr:'Sorcier Supreme retire du monde. Sa vraie arme, ce sont les arcanes.', descEn:'Sorcerer Supreme withdrawn from the world. His real weapon is the arcane.' },
-  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Audition', nameEn:'Audition', heroFr:'Audition', heroEn:'Audition', morphology:'armure', path:'tech', powers:['rayons','invulnerabilite'],
+  { id:'valkyr', charKey:'lorelei', side:'hero', img:CHAR_IMG.char8, nameFr:'Vision', nameEn:'Vision', heroFr:'Vision', heroEn:'Vision', morphology:'armure', path:'tech', powers:['rayons','invulnerabilite'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'electric', weapon:'none', suitColor:'#d8a63c', secondaryColor:'#2b2f38', symbol:'' },
     align:20, stats:{courage:16, intelligence:19, popularity:6},
     perkFr:'Corps synthetique : rayons solaires devastateurs, densite modulable a volonte.', perkEn:'Synthetic body: devastating solar beams, density he can shift at will.',
     flawFr:'Orgueil : refuse les ordres, provoque des conflits avec ses allies.', flawEn:'Pride: refuses orders, creates conflicts with allies.',
     descFr:'Etre synthetique a l\'esprit affute. Frappe droit, ne recule jamais.', descEn:'Sharp-minded synthetic being. Strikes straight, never retreats.' },
-  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Panthera', nameEn:'Panthera', heroFr:'Panthera', heroEn:'Panthera', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
+  { id:'sable', charKey:'sable', side:'hero', img:CHAR_IMG.char2, nameFr:'Black Panther', nameEn:'Black Panther', heroFr:'Black Panther', heroEn:'Black Panther', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'dark', weapon:'none', suitColor:'#4b2a7a', secondaryColor:'#1a1a22', symbol:'' },
     align:12, stats:{courage:14, intelligence:17, popularity:6},
     perkFr:'Guerrier-roi : reflexes et sens surhumains, jamais pris au piege.', perkEn:'Warrior-king: superhuman reflexes and senses, never cornered.',
@@ -2683,25 +2683,25 @@ const PRESETS = [
     perkFr:'Destruction pure : quasi invincible en combat frontal.', perkEn:'Pure destruction: nearly unbeatable in a frontal fight.',
     flawFr:'Aucune finesse : impossible de negocier, popularite au plus bas.', flawEn:'No finesse: cannot negotiate, popularity at rock bottom.',
     descFr:'Colosse de roche et d\'energie. Ce qu\'il traverse ne se reconstruit pas.', descEn:'Colossus of rock and energy. What he crosses is never rebuilt.' },
-  { id:'kaerus', charKey:'kaerus', side:'villain', img:CHAR_IMG.char13, nameFr:'Cremsoler', nameEn:'Cremsoler', heroFr:'Cremsoler', heroEn:'Cremsoler', morphology:'armure', path:'tech', powers:['armure','ia'],
+  { id:'kaerus', charKey:'kaerus', side:'villain', img:CHAR_IMG.char13, nameFr:'Red Skull', nameEn:'Red Skull', heroFr:'Red Skull', heroEn:'Red Skull', morphology:'armure', path:'tech', powers:['armure','ia'],
     look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#14181f', secondaryColor:'#ff8a1f', symbol:'K' },
     align:-30, stats:{courage:8, intelligence:18, popularity:10},
     perkFr:'Ingenieur du chaos : plans imparables, technologie volee de pointe.', perkEn:'Engineer of chaos: unstoppable plans, stolen cutting-edge tech.',
     flawFr:'Physiquement vulnerable hors de son armure.', flawEn:'Physically vulnerable outside his armor.',
     descFr:'Genie renegat qui vend la guerre au plus offrant.', descEn:'Renegade genius selling war to the highest bidder.' },
-  { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Cruhela', nameEn:'Cruhela', heroFr:'Cruhela', heroEn:'Cruhela', morphology:'elance', path:'mystique', powers:['invocation','elementaire'],
+  { id:'aurelia', charKey:'aurelia', side:'villain', img:CHAR_IMG.char14, nameFr:'Hela', nameEn:'Hela', heroFr:'Hela', heroEn:'Hela', morphology:'elance', path:'mystique', powers:['invocation','elementaire'],
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'standard', boots:'standard', aura:'flame', weapon:'none', suitColor:'#c8a13c', secondaryColor:'#16161c', symbol:'' },
     align:-25, stats:{courage:16, intelligence:16, popularity:12},
     perkFr:'Legions d\'outre-tombe : convoque des allies morts pour submerger l\'ennemi.', perkEn:'Legion of the dead: summons fallen allies to overwhelm the enemy.',
     flawFr:'Bannie des siens : aucune allegeance ne lui fait confiance longtemps.', flawEn:'Exiled by her own: no allegiance trusts her for long.',
     descFr:'Deesse dechue venue reclamer ce qu\'on lui a vole. Le pouvoir est un heritage.', descEn:'Fallen goddess come to reclaim what was stolen from her. Power is an inheritance.' },
-  { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Moki', nameEn:'Moki', heroFr:'Moki', heroEn:'Moki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
+  { id:'vipera', charKey:'vipera', side:'villain', img:CHAR_IMG.char15, nameFr:'Loki', nameEn:'Loki', heroFr:'Loki', heroEn:'Loki', morphology:'humain', path:'mystique', powers:['illusions','telepathie'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'claws', boots:'standard', aura:'dark', weapon:'none', suitColor:'#1c2b24', secondaryColor:'#7ad14f', symbol:'' },
     align:-35, stats:{courage:12, intelligence:16, popularity:14},
     perkFr:'Venin et illusions : elimine ses cibles avant qu\'elles ne le voient.', perkEn:'Venom and illusions: removes targets before they see her.',
     flawFr:'Instable : ses choix impulsifs font decrocher son alignement.', flawEn:'Unstable: impulsive choices swing her alignment.',
     descFr:'Chasse puis exhibe, il a appris a mordre en premier.', descEn:'Hunted then paraded, she learned to bite first.' },
-  { id:'sepulcre', charKey:'sepulcre', side:'villain', img:CHAR_IMG.char16, nameFr:'Totemactus', nameEn:'Totemactus', heroFr:'Totemactus', heroEn:'Totemactus', morphology:'colosse', path:'mystique', powers:['regen','elementaire'],
+  { id:'sepulcre', charKey:'sepulcre', side:'villain', img:CHAR_IMG.char16, nameFr:'Galactus', nameEn:'Galactus', heroFr:'Galactus', heroEn:'Galactus', morphology:'colosse', path:'mystique', powers:['regen','elementaire'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'claws', boots:'armored', aura:'dark', weapon:'scythe', suitColor:'#0d0d12', secondaryColor:'#5ae0c0', symbol:'' },
     align:-40, stats:{courage:18, intelligence:15, popularity:16},
     perkFr:'Increvable : revient de blessures qui tueraient n\'importe qui.', perkEn:'Unkillable: returns from wounds that would kill anyone.',
@@ -2713,7 +2713,7 @@ const PRESETS = [
     perkFr:'Machine de guerre : blindage et puissance de feu superieurs.', perkEn:'War machine: superior armor and firepower.',
     flawFr:'Aucune emotion : impossible de creer des liens, relations toujours froides.', flawEn:'No emotion: cannot bond, relationships stay cold.',
     descFr:'Machine de guerre autonome. Aucune negociation.', descEn:'Autonomous war machine. No negotiation.' },
-  { id:'nihil', charKey:'nihil', side:'villain', img:CHAR_IMG.char18, nameFr:'Anusilus', nameEn:'Anusilus', heroFr:'Anusilus', heroEn:'Anusilus', morphology:'colosse', path:'tech', powers:['rayons','invulnerabilite'],
+  { id:'nihil', charKey:'nihil', side:'villain', img:CHAR_IMG.char18, nameFr:'Annihilus', nameEn:'Annihilus', heroFr:'Annihilus', heroEn:'Annihilus', morphology:'colosse', path:'tech', powers:['rayons','invulnerabilite'],
     look:{ helmet:'none', cape:true, glasses:'none', gloves:'standard', boots:'none', aura:'dark', weapon:'none', suitColor:'#0b0b10', secondaryColor:'#9aa0ff', symbol:'' },
     align:-38, stats:{courage:15, intelligence:16, popularity:4},
     perkFr:'Sceptre cosmique : rayons devastateurs et carapace quasi indestructible.', perkEn:'Cosmic scepter: devastating blasts and near-indestructible carapace.',
@@ -2725,7 +2725,7 @@ const PRESETS = [
     perkFr:'Autorite officielle : la loi, les budgets et le Daily Bugle jouent pour lui.', perkEn:'Official authority: law, budgets and media work for him.',
     flawFr:'Aucun talent de combat : sans son appareil, il ne vaut rien.', flawEn:'No combat skill: without his apparatus, he is nothing.',
     descFr:'Le visage propre du controle. Il signe les ordres, jamais les crimes.', descEn:'The clean face of control. He signs orders, never crimes.' },
-  { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Le Fou Vert', nameEn:'Le Fou Vert', heroFr:'Le Fou Vert', heroEn:'Le Fou Vert', morphology:'humain', path:'tech', powers:['armure','rayons'],
+  { id:'fuchsia', charKey:'fuchsia', side:'villain', img:CHAR_IMG.char20, nameFr:'Green Goblin', nameEn:'Green Goblin', heroFr:'Green Goblin', heroEn:'Green Goblin', morphology:'humain', path:'tech', powers:['armure','rayons'],
     look:{ helmet:'none', cape:true, glasses:'aviator', gloves:'standard', boots:'standard', aura:'none', weapon:'none', suitColor:'#e0409a', secondaryColor:'#f5d7e8', symbol:'' },
     align:-20, stats:{courage:0, intelligence:17, popularity:20},
     perkFr:'Planeur de guerre : bombes et tirs d\'assaut depuis les airs.', perkEn:'War glider: bombs and assault fire from the air.',
@@ -2853,13 +2853,13 @@ const PRESETS = [
     perkFr:'Reine de la mort : ses armes apparaissent de nulle part, duels imperdables.', perkEn:'Death queen: her weapons appear from nowhere, unlosable duels.',
     flawFr:'Orgueil royal : elle sous-estime les heros les plus jeunes.', flawEn:'Royal pride: she underestimates the youngest heroes.',
     descFr:'Deesse en armure obsidienne, bois noirs et flammes vertes.', descEn:'Goddess in obsidian armor with black antlers and green flames.' },
-  { id:'kidspider', charKey:'kidspider', side:'hero', img:CHAR_IMG.char41, nameFr:'Kid-Spider', nameEn:'Kid-Spider', heroFr:'Kid-Spider', heroEn:'Kid-Spider', morphology:'elance', path:'physique', powers:['vitesse','saut'],
+  { id:'kidspider', charKey:'kidspider', side:'hero', img:CHAR_IMG.char41, nameFr:'Spider-Man', nameEn:'Spider-Man', heroFr:'Spider-Man', heroEn:'Spider-Man', morphology:'elance', path:'physique', powers:['vitesse','saut'],
     look:{ helmet:'full', cape:false, glasses:'visor', gloves:'light', boots:'light', aura:'none', weapon:'none', suitColor:'#d2263c', secondaryColor:'#123a8c', symbol:'' },
     align:26, stats:{courage:11, intelligence:13, popularity:18},
     perkFr:'Reflexes arachneens : esquive et contre-attaque quasi automatiques.', perkEn:'Arachnid reflexes: near-automatic dodge and counter.',
     flawFr:'Trop jeune : la presse et les mentors le sous-estiment.', flawEn:'Too young: press and mentors underestimate him.',
     descFr:'Gamin du quartier devenu acrobate masque, toujours en mouvement.', descEn:'A neighborhood kid turned masked acrobat, always moving.' },
-  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Dr Boom', nameEn:'Dr Boom', heroFr:'Dr Boom', heroEn:'Dr Boom', morphology:'armure', path:'tech', powers:['armure','elementaire'],
+  { id:'boomnpc', charKey:'boomnpc', side:'villain', img:CHAR_IMG.char42, nameFr:'Doctor Doom', nameEn:'Doctor Doom', heroFr:'Doctor Doom', heroEn:'Doctor Doom', morphology:'armure', path:'tech', powers:['armure','elementaire'],
     look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'electric', weapon:'none', suitColor:'#2f6b4a', secondaryColor:'#8c8f96', symbol:'' },
     align:-30, stats:{courage:13, intelligence:18, popularity:16},
     perkFr:'Genie souverain : ses machines de siege brisent les defenses.', perkEn:'Sovereign genius: his siege machines break defenses.',
@@ -3148,7 +3148,7 @@ function freshState(lang){
     usedChoicePhrases:{ bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }, usedTextIdx:{},
     portrait:null, playerCharKey:null,
     romance:null, romanceHistory:[], lastRomanceYear:null,
-    romanceFate: Math.random() < 0.30,
+    romanceFate: Math.random() < (0.30 + Math.random()*0.30),
     romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
     lastStars:1, savedToHistory:false,
     startAge:24, extensions:0,
@@ -3574,7 +3574,41 @@ function autoCareerStep(){
       S.careerAuto = false; renderCareerAutoWidget();
       return;
     }
-    if(document.querySelector('.btl-overlay') || document.getElementById('convOverlay') || document.querySelector('.cine-overlay')){
+    /* Le combat gere maintenant son propre mode automatique (st.auto, active des le depart quand
+       S.careerAuto est actif) : on n'a plus qu'a cliquer les ecrans de bilan ("Continuer") qui
+       suivent un combat resolu, sans jamais toucher aux coups eux-memes. */
+    const btlOverlay = document.querySelector('.btl-overlay');
+    if(btlOverlay){
+      if(S._btlWatchdogStart == null) S._btlWatchdogStart = Date.now();
+      /* Filet de securite : dans de rares cas, le moteur de combat peut se figer (course entre deux
+         tours). Plutot que de bloquer la simulation indefiniment, on force la resolution du combat
+         apres quelques secondes sans aucun progres. */
+      if(Date.now() - S._btlWatchdogStart > 9000){
+        S._btlWatchdogStart = null;
+        btlOverlay.remove();
+        document.querySelectorAll('.cine-overlay').forEach(el=>el.remove());
+        S.pendingBattleWin = Math.random() < 0.55;
+        if(S.pendingBattleWin) S.combat.won = (S.combat.won||0)+1; else S.combat.lost = (S.combat.lost||0)+1;
+        if(typeof handleZoneCheckAndContinue === 'function') handleZoneCheckAndContinue(); else nextMission();
+        setTimeout(autoCareerStep, 500);
+        return;
+      }
+      const continueBtns = Array.from(btlOverlay.querySelectorAll('.btl-move')).filter(b=>!b.disabled && /continu|ok|suivant|next|download|telecharg/i.test(b.id||''));
+      const realContinue = continueBtns.filter(b=>!/download|telecharg/i.test(b.id||''));
+      if(realContinue.length){ realContinue[0].click(); setTimeout(autoCareerStep, 500); return; }
+      setTimeout(autoCareerStep, 500);
+      return;
+    }
+    S._btlWatchdogStart = null;
+    if(document.getElementById('convOverlay')){
+      const convNext = document.getElementById('convNext');
+      if(convNext){ convNext.click(); setTimeout(autoCareerStep, 450); return; }
+      const convChoices = document.getElementById('convChoices');
+      const convBtns = convChoices ? Array.from(convChoices.querySelectorAll('button')) : [];
+      if(convBtns.length){ pick(convBtns).click(); setTimeout(autoCareerStep, 450); return; }
+      setTimeout(autoCareerStep, 400); return;
+    }
+    if(document.querySelector('.cine-overlay')){
       // Quelque chose est encore affiche par-dessus (overlay en train de disparaitre, etc.) : on retente un peu plus tard, sans jamais abandonner.
       setTimeout(autoCareerStep, 400);
       return;
@@ -5462,7 +5496,7 @@ function buildCareerPlan(){
   S.years = clamp(S.years||10, 5, 50);
   S.mode = S.years <= 12 ? 'short' : 'long';
   for(let y=0;y<S.years;y++) S.missionsPlan.push(3);
-  S.currentYear = 1; S.currentMissionInYear = 0; S.usedIds = []; S.currentYearEntries = [];
+  S.currentYear = 1; S.currentMissionInYear = 0; S.totalMissionsDone = 0; S.usedIds = []; S.currentYearEntries = [];
   S.battlePlan = { target: battleTargetForYears(S.years), played: 0 };
   /* Bug corrige : cet indicateur empeche de compter une carriere deux fois en cas de re-render de
      l'ecran de fin, mais n'etait jamais remis a zero au demarrage d'une nouvelle carriere - seule
@@ -5475,12 +5509,14 @@ function buildCareerPlan(){
      elles ne se seraient jamais reproduites au-dela de la toute premiere carriere de la session. */
   S.voidCompletionDone = false;
   S.introConvDone = false;
-  /* Meme bug, encore : le tirage "cette carriere aura-t-elle une histoire d'amour" (romanceFate,
-     ~30% de chance) n'etait fait qu'une fois au tout premier chargement de la page, jamais
-     retire au demarrage d'une nouvelle carriere. Si la toute premiere partie de la session tombait
-     sur "non" (70% de chances), plus aucune carriere suivante n'avait jamais de romance possible. */
+  /* Meme bug, encore : le tirage "cette carriere aura-t-elle une histoire d'amour" (romanceFate)
+     n'etait fait qu'une fois au tout premier chargement de la page, jamais retire au demarrage
+     d'une nouvelle carriere. Si la toute premiere partie de la session tombait sur "non", plus
+     aucune carriere suivante n'avait jamais de romance possible.
+     Le taux lui-meme varie maintenant entre 30% et 60% de chances selon la carriere, au lieu d'un
+     taux fixe a 30%. */
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
-  S.romanceFate = Math.random() < 0.30;
+  S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
   S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
@@ -5493,6 +5529,35 @@ function buildCareerPlan(){
   S.mentorCap = S.mentorEligible ? Math.max(1, Math.round((S.years/10) * 2)) : 0;
   S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
+  /* ======================================================================================
+     CORRECTIF MAJEUR : quasiment tout l'etat d'une carriere n'etait jamais remis a zero au
+     demarrage d'une nouvelle carriere - seule la toute premiere carriere d'une session de
+     navigation partait vraiment de zero. Toutes les suivantes accumulaient indefiniment les
+     statistiques, l'historique annee par annee, les bascules de camp, les relations, le
+     journal de combat, etc. de TOUTES les carrieres precedentes jouees dans la meme session.
+     C'est ce qui produisait des bilans de fin de carriere totalement incoherents (des dizaines
+     de "Annee X" en double, des centaines de combats pour une carriere de 5 ans...). */
+  /* Important : S.stats, S.align, S.initialAlignMagnitude, S.reputationFloor et S.lastZone ne sont
+     PAS reinitialises ici - applyPreset() les fixe deja correctement juste avant, selon le
+     personnage choisi. Les reinitialiser ici ecraserait les stats de depart propres a chaque
+     personnage. */
+  S.rel = { volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 };
+  S.log = [];
+  S.team = null; S.usedMentorIds = []; S.usedArcIds = []; S.invitedTierHero = 0; S.invitedTierVillain = 0;
+  S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
+  S.battleForm = { momentum:0, streak:0, injury:null };
+  S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
+  S.turningPoints = []; S.yearsHistory = [];
+  S.dead = false; S.deathInfo = null;
+  S.activeConversation = null; S.convLineIndex = 0; S.usedConvIds = []; S.lastConvYear = null; S.missionsSinceConv = 0; S.usedFrag = {};
+  S.usedChoicePhrases = { bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }; S.usedTextIdx = {};
+  S.lastStars = 1;
+  S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
+  S.usedPivotalIds = []; S.usedBreakthroughIds = []; S.usedIntrigueIds = [];
+  S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null;
+  S.customFactions = []; S.factionFounders = null; S.factionFounderSide = null;
+  S.orientationCount = 0; S.lastOrientationYear = null;
+  /* ====================================================================================== */
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
   S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
   /* Rival : un adversaire du camp oppose t'est assigne des le debut, choisi parmi ceux qui peuvent
@@ -7194,7 +7259,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null };
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto };
 
   /* Une photo par niveau de combat (quartier, ville, pays...), animee par-dessus. Pas encore d'image = decor par defaut. */
   const SCOPE_BG_IMAGES = {
@@ -7340,8 +7405,14 @@ function startBattle(mission, done){
     return best;
   }
   function maybeAutoPlay(){
+    if(S.careerAuto && !st.auto){
+      st.auto = true; st.speed = 4;
+      const btn=document.getElementById('btlAutoBtn'); if(btn) btn.classList.add('active');
+      const speedBtns = document.querySelectorAll('.btl-ctrl-btn[data-speed]');
+      speedBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.speed,10)===4));
+    }
     if(!st.auto || st.busy) return;
-    setTimeout(()=>{ if(st.auto && !st.busy) playerTurn(autoChooseMoveIdx()); }, wait(500));
+    setTimeout(()=>{ if((st.auto||S.careerAuto) && !st.busy) playerTurn(autoChooseMoveIdx()); }, wait(500));
   }
 
   function refreshSpotlight(){
@@ -7697,8 +7768,8 @@ function startBattle(mission, done){
   }
   function playerTurn(i){
     if(st.busy) return;
-    if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     st.busy = true; setMovesEnabled(false);
+    if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
     if(Math.random() > m.acc){
@@ -9411,7 +9482,7 @@ function maybeTriggerRomance(){
     S.activeConversation = conv; S.convLineIndex = 0; S.lastConvYear = S.currentYear;
     renderConversationOverlay(); return true;
   }
-  // toutes les carrieres n'ont pas d'histoire d'amour : ~30% en ont une
+  // toutes les carrieres n'ont pas d'histoire d'amour : entre 30% et 60% de chances selon la carriere
   if(!S.romanceFate) return false;
   const past = (S.romanceHistory||[]).length;
   if(past >= (S.romanceMax||1)) return false;
