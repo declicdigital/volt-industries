@@ -858,85 +858,118 @@
     .welcome-layout{ grid-template-columns:minmax(0,1fr); grid-template-areas:"logo" "pod" "main"; gap:18px; }
     .wl-pod{ position:static; }
   }
-  .pod{ position:relative; user-select:none; pointer-events:none; -webkit-user-select:none; }
-  /* --- lab chamber backdrop --- */
-  .pod-scene{ position:relative; padding:14px 12px 0; border-radius:20px; overflow:hidden;
+  .pod{ position:relative; user-select:none; pointer-events:none; -webkit-user-select:none;
+    --podc:#a855f7; }
+  /* ===== salle labo 3D ===== */
+  .pod-scene{ position:relative; overflow:hidden; border-radius:18px; padding:0 0 6px;
+    perspective:900px; perspective-origin:50% 42%;
     background:
-      radial-gradient(120% 70% at 50% 8%, color-mix(in oklab, var(--podc) 16%, transparent), transparent 70%),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, transparent 1px 34px),
-      repeating-linear-gradient(180deg, rgba(255,255,255,.022) 0 1px, transparent 1px 34px),
-      linear-gradient(180deg, #070a14, #04060d 60%, #02040a);
-    border:1px solid rgba(255,255,255,.06);
-    box-shadow: inset 0 0 90px -20px color-mix(in oklab, var(--podc) 40%, transparent), 0 24px 50px -26px #000; }
-  .pod-scene::before{ content:""; position:absolute; left:-20%; right:-20%; bottom:0; height:34%;
-    background:radial-gradient(ellipse at 50% 100%, color-mix(in oklab, var(--podc) 30%, transparent), transparent 70%); filter:blur(10px); }
-  /* --- top cap + pipes --- */
-  .pod-cap{ position:relative; z-index:3; height:26px; margin:0 auto -12px; width:74%;
-    border-radius:14px 14px 8px 8px;
-    background:linear-gradient(180deg,#2a3040,#171c28 45%,#0c1018);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -6px 12px -6px #000, 0 6px 16px -8px #000; }
-  .pod-cap::before{ content:""; position:absolute; left:12%; right:12%; top:6px; height:4px; border-radius:3px;
-    background:repeating-linear-gradient(90deg, rgba(255,255,255,.16) 0 3px, transparent 3px 8px); }
-  .pod-cap i{ position:absolute; top:-13px; width:9px; height:15px; border-radius:4px 4px 0 0;
-    background:linear-gradient(180deg,#333b4c,#1b212d);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
-  .pod-cap i:nth-child(1){ left:18%; } .pod-cap i:nth-child(2){ left:44%; height:20px; top:-18px; } .pod-cap i:nth-child(3){ right:18%; }
-  /* --- glass cylinder --- */
-  .pod-tube{ position:relative; z-index:2; height:372px; margin:0 auto; width:88%; overflow:hidden;
-    border-radius:46px/26px;
+      radial-gradient(120% 60% at 50% 0%, color-mix(in oklab, var(--podc) 22%, transparent), transparent 62%),
+      linear-gradient(180deg, #0a0713 0%, #0b0817 44%, #120c22 66%, #07050e 100%);
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow: inset 0 0 120px -30px color-mix(in oklab, var(--podc) 45%, transparent), 0 26px 60px -30px #000; }
+  /* plafond technique */
+  .pod-ceil{ position:absolute; left:-6%; right:-6%; top:0; height:22%; transform:rotateX(58deg); transform-origin:50% 0%;
     background:
-      linear-gradient(90deg, rgba(255,255,255,.16) 0 2%, rgba(255,255,255,.03) 8%, transparent 22%, transparent 74%, rgba(255,255,255,.05) 90%, rgba(255,255,255,.13) 100%),
-      linear-gradient(180deg, color-mix(in oklab, var(--podc) 22%, transparent), color-mix(in oklab, var(--podc) 9%, transparent) 55%, color-mix(in oklab, var(--podc) 30%, transparent)),
-      linear-gradient(160deg, rgba(8,10,20,.92), rgba(3,5,12,.96));
-    border:1px solid color-mix(in oklab, var(--podc) 42%, transparent);
-    box-shadow: 0 0 40px -8px color-mix(in oklab, var(--podc) 60%, transparent), inset 0 0 70px -12px color-mix(in oklab, var(--podc) 60%, transparent), inset 0 -40px 60px -40px #000;
-    transition: box-shadow .9s ease, border-color .9s ease; }
-  /* specular streaks on the glass */
-  .pod-tube::before{ content:""; position:absolute; inset:0; pointer-events:none; z-index:5; border-radius:inherit;
+      repeating-linear-gradient(90deg, transparent 0 26px, color-mix(in oklab, var(--podc) 55%, transparent) 26px 30px, transparent 30px 76px),
+      linear-gradient(180deg, rgba(255,255,255,.05), transparent 70%);
+    opacity:.5; filter:blur(.4px); }
+  /* sol en perspective + reflets */
+  .pod-floor{ position:absolute; left:-40%; right:-40%; bottom:0; height:46%; transform:rotateX(74deg); transform-origin:50% 100%;
     background:
-      linear-gradient(96deg, transparent 30%, rgba(255,255,255,.10) 41%, transparent 50%),
-      linear-gradient(96deg, transparent 62%, rgba(255,255,255,.06) 69%, transparent 76%); }
-  .pod-tube::after{ content:""; position:absolute; left:0; right:0; top:0; height:16%; z-index:6; pointer-events:none;
-    background:linear-gradient(180deg, rgba(255,255,255,.14), transparent);
-    border-radius:inherit; }
-  .pod-glow{ position:absolute; left:50%; bottom:2%; width:86%; height:70%; transform:translateX(-50%); border-radius:50%;
-    background:radial-gradient(ellipse at 50% 65%, color-mix(in oklab, var(--podc) 80%, transparent), transparent 70%);
-    filter:blur(20px); opacity:.7; animation:podPulse 3.4s ease-in-out infinite; }
-  @keyframes podPulse{ 0%,100%{ opacity:.5; transform:translateX(-50%) scale(1);} 50%{ opacity:.85; transform:translateX(-50%) scale(1.05);} }
-  .pod-arc{ position:absolute; inset:0; opacity:.4; mix-blend-mode:screen;
-    background:repeating-linear-gradient(78deg, transparent 0 14px, color-mix(in oklab, var(--podc) 38%, transparent) 14px 15px, transparent 15px 30px);
-    animation:podArc 2.6s linear infinite; }
-  @keyframes podArc{ 0%{ opacity:.14; background-position:0 0;} 45%{ opacity:.42;} 50%{ opacity:.1;} 100%{ opacity:.18; background-position:44px 0;} }
-  /* rising bubbles inside the fluid */
-  .pod-bub{ position:absolute; inset:0; overflow:hidden; opacity:.6; }
-  .pod-bub b{ position:absolute; bottom:-10%; width:6px; height:6px; border-radius:50%;
+      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 46px),
+      radial-gradient(ellipse at 50% 20%, color-mix(in oklab, var(--podc) 30%, transparent), transparent 62%),
+      linear-gradient(180deg, #14101f, #06040c);
+    box-shadow: inset 0 0 90px -20px #000; }
+  /* consoles holo au fond */
+  .pod-holo{ position:absolute; right:5%; top:34%; width:38%; height:26%; opacity:.5; filter:blur(.3px);
+    background:
+      linear-gradient(105deg, transparent 0 10%, color-mix(in oklab, var(--podc) 40%, transparent) 10% 11%, transparent 11%),
+      repeating-linear-gradient(0deg, color-mix(in oklab, var(--podc) 30%, transparent) 0 1px, transparent 1px 7px);
+    transform:rotateY(-26deg); transform-origin:100% 50%; border-radius:6px;
+    box-shadow:0 0 26px -6px color-mix(in oklab, var(--podc) 60%, transparent); }
+  .pod-holo.l{ left:5%; right:auto; top:44%; width:26%; height:18%; transform:rotateY(26deg); transform-origin:0 50%; }
+  /* ===== capsule cylindrique ===== */
+  .pod-cyl{ position:relative; z-index:4; width:86%; margin:30px auto 0; }
+  /* couronne metallique haute (ellipse) */
+  .pod-crown{ position:relative; height:54px; border-radius:50%;
+    background:
+      radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--podc) 70%, transparent) 0 26%, transparent 62%),
+      linear-gradient(180deg,#3b4358,#20263a 46%,#0d1120);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.28), inset 0 -12px 22px -10px #000, 0 10px 24px -10px #000,
+      0 0 40px -10px color-mix(in oklab, var(--podc) 70%, transparent); }
+  .pod-crown::after{ content:""; position:absolute; left:16%; right:16%; top:26%; bottom:22%; border-radius:50%;
+    background:radial-gradient(ellipse at 50% 50%, color-mix(in oklab, var(--podc) 90%, transparent), transparent 70%);
+    filter:blur(4px); animation:podPulse 3.6s ease-in-out infinite; }
+  /* corps en verre : ombrage lateral = volume */
+  .pod-body{ position:relative; height:330px; margin-top:-27px; overflow:hidden;
+    border-radius:0 0 46%/0 0 12%;
+    background:
+      linear-gradient(90deg, rgba(6,6,14,.92) 0 3%, rgba(255,255,255,.16) 6%, rgba(255,255,255,.03) 13%,
+        color-mix(in oklab, var(--podc) 12%, transparent) 34%, color-mix(in oklab, var(--podc) 6%, transparent) 62%,
+        rgba(255,255,255,.05) 88%, rgba(255,255,255,.13) 95%, rgba(6,6,14,.92) 100%),
+      linear-gradient(180deg, color-mix(in oklab, var(--podc) 26%, transparent), color-mix(in oklab, var(--podc) 10%, transparent) 55%, color-mix(in oklab, var(--podc) 34%, transparent));
+    box-shadow: inset 0 0 90px -14px color-mix(in oklab, var(--podc) 70%, transparent), 0 0 60px -12px color-mix(in oklab, var(--podc) 55%, transparent);
+    transition:box-shadow .9s ease; }
+  .pod-body::before{ content:""; position:absolute; inset:0; z-index:7; pointer-events:none;
+    background:linear-gradient(97deg, transparent 26%, rgba(255,255,255,.11) 33%, transparent 40%, transparent 66%, rgba(255,255,255,.07) 72%, transparent 79%); }
+  /* brume volumetrique */
+  .pod-glow{ position:absolute; left:50%; bottom:-4%; width:92%; height:78%; transform:translateX(-50%); border-radius:50%;
+    background:radial-gradient(ellipse at 50% 62%, color-mix(in oklab, var(--podc) 85%, transparent), transparent 68%);
+    filter:blur(22px); opacity:.68; animation:podPulse 3.6s ease-in-out infinite; }
+  @keyframes podPulse{ 0%,100%{ opacity:.5; } 50%{ opacity:.9; } }
+  /* eclairs */
+  .pod-arc{ position:absolute; inset:0; opacity:.35; mix-blend-mode:screen; z-index:3;
+    background:repeating-linear-gradient(72deg, transparent 0 15px, color-mix(in oklab, var(--podc) 45%, transparent) 15px 16px, transparent 16px 32px);
+    animation:podArc 2.4s linear infinite; }
+  @keyframes podArc{ 0%{opacity:.1; background-position:0 0;} 45%{opacity:.4;} 50%{opacity:.08;} 100%{opacity:.16; background-position:40px 0;} }
+  /* anneaux lumineux haut/bas (perspective) */
+  .pod-ringtop,.pod-ringbot{ position:absolute; left:8%; right:8%; height:24px; border-radius:50%; z-index:2;
+    border:2px solid color-mix(in oklab, var(--podc) 75%, transparent);
+    box-shadow:0 0 22px -2px color-mix(in oklab, var(--podc) 80%, transparent), inset 0 0 20px -6px color-mix(in oklab, var(--podc) 80%, transparent); }
+  .pod-ringtop{ top:8px; } .pod-ringbot{ bottom:14px; animation:podPulse 3.6s ease-in-out infinite; }
+  .pod-bub{ position:absolute; inset:0; overflow:hidden; opacity:.55; z-index:5; }
+  .pod-bub b{ position:absolute; bottom:-8%; width:6px; height:6px; border-radius:50%;
     background:radial-gradient(circle at 35% 35%, #fff, color-mix(in oklab, var(--podc) 70%, transparent));
     opacity:.5; animation:podBub 7s linear infinite; }
-  .pod-bub b:nth-child(1){ left:22%; animation-duration:6.2s; }
-  .pod-bub b:nth-child(2){ left:48%; width:4px; height:4px; animation-delay:1.6s; animation-duration:8s; }
-  .pod-bub b:nth-child(3){ left:70%; width:8px; height:8px; animation-delay:3.1s; animation-duration:7.4s; }
-  .pod-bub b:nth-child(4){ left:34%; width:3px; height:3px; animation-delay:4.4s; animation-duration:5.6s; }
-  @keyframes podBub{ 0%{ transform:translateY(0) translateX(0); opacity:0;} 15%{opacity:.55;} 100%{ transform:translateY(-380px) translateX(8px); opacity:0;} }
-  .pod-fig{ position:absolute; left:50%; bottom:3%; transform:translateX(-50%); height:86%; width:90%; z-index:4;
-    object-fit:contain; object-position:bottom center; filter:drop-shadow(0 0 18px color-mix(in oklab, var(--podc) 70%, transparent)) contrast(1.05);
+  .pod-bub b:nth-child(1){ left:24%; animation-duration:6.4s; }
+  .pod-bub b:nth-child(2){ left:50%; width:4px; height:4px; animation-delay:1.8s; animation-duration:8.2s; }
+  .pod-bub b:nth-child(3){ left:72%; width:8px; height:8px; animation-delay:3.2s; animation-duration:7.2s; }
+  .pod-bub b:nth-child(4){ left:36%; width:3px; height:3px; animation-delay:4.6s; animation-duration:5.8s; }
+  @keyframes podBub{ 0%{transform:translateY(0); opacity:0;} 15%{opacity:.55;} 100%{transform:translateY(-330px) translateX(9px); opacity:0;} }
+  .pod-fig{ position:absolute; left:50%; bottom:5%; transform:translateX(-50%); height:84%; width:88%; z-index:6;
+    object-fit:contain; object-position:bottom center;
+    filter:drop-shadow(0 0 20px color-mix(in oklab, var(--podc) 75%, transparent)) contrast(1.06) saturate(1.05);
     opacity:0; transition:opacity .7s ease; }
-  .pod-fig.on{ opacity:1; animation:podFloat 6s ease-in-out infinite; }
+  .pod-fig.on{ opacity:1; animation:podFloat 6.5s ease-in-out infinite; }
   @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateY(0);} 50%{ transform:translateX(-50%) translateY(-9px);} }
-  .pod-scan{ position:absolute; left:0; right:0; height:22%; pointer-events:none; z-index:5;
-    background:linear-gradient(180deg, transparent, color-mix(in oklab, var(--podc) 30%, transparent), transparent); animation:podScan 4.6s linear infinite; }
-  @keyframes podScan{ from{ top:-22%; } to{ top:104%; } }
-  /* --- metal plinth --- */
-  .pod-plinth{ position:relative; z-index:3; margin:-16px auto 0; width:100%; height:44px; }
-  .pod-plinth::before{ content:""; position:absolute; left:2%; right:2%; top:0; height:26px; border-radius:50%/60%;
-    background:linear-gradient(180deg,#2d3444,#141a26 60%,#0a0e16);
-    box-shadow:inset 0 2px 0 rgba(255,255,255,.18), 0 12px 26px -12px #000; }
-  .pod-plinth::after{ content:""; position:absolute; left:8%; right:8%; top:22px; height:16px; border-radius:0 0 12px 12px;
-    background:linear-gradient(180deg,#111725,#080b13);
-    box-shadow:0 12px 26px -14px #000, inset 0 0 22px -6px color-mix(in oklab, var(--podc) 70%, transparent); }
-  .pod-ring{ position:absolute; left:14%; right:14%; top:12px; height:8px; border-radius:50%; z-index:2;
-    background:radial-gradient(ellipse at 50% 50%, color-mix(in oklab, var(--podc) 90%, transparent), transparent 72%);
-    filter:blur(3px); animation:podPulse 3.4s ease-in-out infinite; }
-  .pod-base{ position:relative; z-index:4; margin:6px 10px 12px; border:1px solid var(--line); border-radius:12px; padding:9px 11px;
+  .pod-scan{ position:absolute; left:0; right:0; height:20%; pointer-events:none; z-index:7;
+    background:linear-gradient(180deg, transparent, color-mix(in oklab, var(--podc) 30%, transparent), transparent); animation:podScan 4.8s linear infinite; }
+  @keyframes podScan{ from{ top:-20%; } to{ top:104%; } }
+  /* ===== socle massif 3D ===== */
+  .pod-plinth{ position:relative; z-index:5; margin:-22px auto 0; width:112%; left:-6%; height:78px; }
+  .pod-plinth .disc{ position:absolute; left:0; right:0; top:0; height:44px; border-radius:50%;
+    background:linear-gradient(180deg,#3a4257,#1d2436 45%,#0c101c);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.24), 0 16px 34px -14px #000,
+      0 0 46px -14px color-mix(in oklab, var(--podc) 70%, transparent); }
+  .pod-plinth .wall{ position:absolute; left:2%; right:2%; top:30px; height:34px; border-radius:0 0 46%/0 0 100%;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 2px, transparent 2px 8px, rgba(0,0,0,.35) 8px 9px, transparent 9px 30px),
+      linear-gradient(180deg,#1a2130,#0a0e17);
+    box-shadow: inset 0 -10px 18px -12px #000, 0 18px 34px -16px #000; }
+  .pod-plinth .lip{ position:absolute; left:12%; right:12%; top:22px; height:12px; border-radius:50%; z-index:2;
+    background:radial-gradient(ellipse at 50% 50%, color-mix(in oklab, var(--podc) 95%, transparent), transparent 72%);
+    filter:blur(3px); animation:podPulse 3.6s ease-in-out infinite; }
+  .pod-plinth .screen{ position:absolute; left:34%; right:34%; top:44px; height:14px; border-radius:3px; z-index:3;
+    background:linear-gradient(180deg, color-mix(in oklab, var(--podc) 42%, #05070d), #05070d);
+    border:1px solid color-mix(in oklab, var(--podc) 45%, transparent);
+    box-shadow:0 0 14px -3px color-mix(in oklab, var(--podc) 70%, transparent); overflow:hidden; }
+  .pod-plinth .screen::after{ content:""; position:absolute; inset:2px;
+    background:repeating-linear-gradient(90deg, color-mix(in oklab, var(--podc) 80%, transparent) 0 2px, transparent 2px 5px);
+    opacity:.7; animation:podArc 2.4s linear infinite; }
+  /* plaque infos */
+  .pod-base{ position:relative; z-index:6; margin:8px 12px 12px; border:1px solid var(--line); border-radius:12px; padding:9px 11px;
     background:linear-gradient(180deg, rgba(16,21,33,.96), rgba(6,8,16,.96));
     box-shadow:0 16px 34px -18px #000, inset 0 1px 0 rgba(255,255,255,.06); }
   .pod-name{ font-size:12.5px; font-weight:900; letter-spacing:2.4px; text-transform:uppercase; color:var(--podc); text-shadow:0 0 12px color-mix(in oklab, var(--podc) 60%, transparent); }
@@ -947,12 +980,13 @@
   .pod-gauges i:nth-child(2)::after{ animation-delay:.5s; } .pod-gauges i:nth-child(3)::after{ animation-delay:1s; } .pod-gauges i:nth-child(4)::after{ animation-delay:1.5s; }
   @keyframes podGauge{ 0%,100%{ transform:scaleX(.25);} 50%{ transform:scaleX(.95);} }
   @media(max-width:900px){
-    .pod-tube{ height:230px; border-radius:40px/22px; }
-    .pod-cap{ height:20px; width:68%; }
-    .pod-plinth{ height:34px; }
+    .pod-body{ height:220px; }
+    .pod-crown{ height:40px; margin-top:0; } .pod-cyl{ margin-top:18px; }
+    .pod-plinth{ height:58px; } .pod-plinth .disc{ height:34px; } .pod-plinth .wall{ top:24px; height:26px; }
+    @keyframes podBub{ 0%{transform:translateY(0); opacity:0;} 15%{opacity:.5;} 100%{transform:translateY(-220px); opacity:0;} }
   }
   @media(prefers-reduced-motion:reduce){
-    .pod-glow,.pod-arc,.pod-scan,.pod-fig.on,.pod-gauges i::after,.pod-bub b,.pod-ring{ animation:none; }
+    .pod-glow,.pod-arc,.pod-scan,.pod-fig.on,.pod-gauges i::after,.pod-bub b,.pod-crown::after,.pod-plinth .lip,.pod-ringbot,.pod-plinth .screen::after{ animation:none; }
   }
 
 </style>
@@ -4852,15 +4886,28 @@ function podAuraColor(align){
 function incubatorPodHTML(){
   return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff;">
    <div class="pod-scene">
-    <div class="pod-cap"><i></i><i></i><i></i></div>
-    <div class="pod-tube" id="podTube">
-      <div class="pod-glow"></div>
-      <div class="pod-arc"></div>
-      <div class="pod-bub"><b></b><b></b><b></b><b></b></div>
-      <img class="pod-fig" id="podFig" alt="" decoding="async" />
-      <div class="pod-scan"></div>
+    <div class="pod-ceil"></div>
+    <div class="pod-floor"></div>
+    <div class="pod-holo l"></div>
+    <div class="pod-holo"></div>
+    <div class="pod-cyl">
+      <div class="pod-crown"></div>
+      <div class="pod-body" id="podTube">
+        <div class="pod-glow"></div>
+        <div class="pod-arc"></div>
+        <div class="pod-ringtop"></div>
+        <div class="pod-bub"><b></b><b></b><b></b><b></b></div>
+        <img class="pod-fig" id="podFig" alt="" decoding="async" />
+        <div class="pod-ringbot"></div>
+        <div class="pod-scan"></div>
+      </div>
+      <div class="pod-plinth">
+        <div class="disc"></div>
+        <div class="lip"></div>
+        <div class="wall"></div>
+        <div class="screen"></div>
+      </div>
     </div>
-    <div class="pod-plinth"><div class="pod-ring"></div></div>
     <div class="pod-base">
       <div class="pod-name" id="podName">-</div>
       <div class="pod-sub" id="podSub">capsule d'incubation</div>
