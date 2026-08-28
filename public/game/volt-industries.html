@@ -5199,6 +5199,7 @@ async function loadMetaProgress(){
     if(r && r.value) Object.assign(META, JSON.parse(r.value));
   }catch(e){ /* aucune progression enregistree pour l'instant */ }
   META.loaded = true;
+  try{ evaluateUnlocks(); }catch(e){}
   return META;
 }
 async function saveMetaProgress(){
