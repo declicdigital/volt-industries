@@ -5220,8 +5220,10 @@ function recordCareerForMeta(){
   (S.artifacts||[]).forEach(id=>{ if(!META.artifactsFoundEver.includes(id)) META.artifactsFoundEver.push(id); });
   /* Jalons varies pour l'echelle de deblocage : vie amoureuse, appartenance/creation de faction,
      mentorat, obtention d'une Gemme, survie a une altercation avec le rival. */
-  if((S.romance && (S.romance.love||0) > 0) ||
-     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))){ META.everHadRomance = true; metaBump('romanceCount'); }
+  if(((S.romance && (S.romance.love||0) > 0) ||
+     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))) && !S.romanceCounted){
+    S.romanceCounted = true; META.everHadRomance = true; metaBump('romanceCount');
+  }
   if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
   if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
   if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
@@ -5372,7 +5374,15 @@ function evaluateUnlocks(){
     const m = TIER_METRICS[META.tierUnlocked];
     if(!m) break;
     const v = metaVal(m.key), base = Number(META.tierBase[m.key]||0);
-    if(v >= m.target && v > base){
+    /* Deux familles de metriques :
+       - compteurs cumulatifs (carrieres, romances, factions...) : il faut une unite de plus qu'a l'activation ;
+       - records (meilleur nombre d'etoiles, carriere la plus longue) : le record ne bouge pas si l'historique est
+         deja au-dessus, donc on valide des qu'une NOUVELLE carriere est terminee avec le record atteint. */
+    const isRecord = (m.key==='bestStars' || m.key==='longestCareerYears');
+    const progressed = isRecord
+      ? metaVal('careersCompleted') > Number(META.tierBase['careersCompleted']||0)
+      : v > base;
+    if(v >= m.target && progressed){
       META.tierUnlocked++;
       META.tierBase = tierSnapshot();
       changed = true;
@@ -10353,7 +10363,7 @@ function handleRomanceEffect(rom, conv){
   /* Le jalon de deblocage (Red Skull / Bucky) doit etre acquis des que la relation existe
      vraiment, pas seulement si elle est encore active a la fin de la carriere. */
   if((r.love||0) > 0 || rom.advance){
-    if(!META.everHadRomance){ META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); evaluateUnlocks(); saveMetaProgress(); }
+    if(!S.romanceCounted){ S.romanceCounted = true; META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); evaluateUnlocks(); saveMetaProgress(); }
   }
   if(rom.advance){
     r.stage = rom.advance; r.lastYear = S.currentYear;
