@@ -5532,6 +5532,29 @@ function tierConditionFor(id){
   if(!t) return fr ? 'Personnage secret' : 'Secret character';
   return fr ? t.condFr : t.condEn;
 }
+/* Progression actuelle vers l'objectif, affichee sous la forme "(X/Y)" quand c'est une condition
+   chiffree (nombre de combats, de recrues, etc.) - rien n'est ajoute pour les jalons binaires
+   (vivre une romance, rejoindre une faction...) ni pour "disponible des le debut". */
+function tierProgressFor(id){
+  const t = UNLOCK_TIERS.find(t=>t.ids.includes(id));
+  if(!t) return '';
+  const src = t.check.toString();
+  let m = src.match(/\(m\.(\w+)\|\|0\)>=(\d+)/);
+  if(m){
+    const cur = Math.min(metaVal(m[1]), parseInt(m[2]));
+    return ` (${cur}/${m[2]})`;
+  }
+  m = src.match(/\(m\.(\w+)\|\|\[\]\)\.length>=(\d+)/);
+  if(m){
+    const arr = META[m[1]]||[];
+    const cur = Math.min(arr.length, parseInt(m[2]));
+    return ` (${cur}/${m[2]})`;
+  }
+  return '';
+}
+function tierConditionWithProgress(id){
+  return tierConditionFor(id) + tierProgressFor(id);
+}
 /* Ordre d'affichage du carrousel : 31 ecrans de 2 personnages, classes de la puissance la plus
    faible a la plus forte (Galactus, Thanos, Jean Grey et Doctor Doom tout a la fin). */
 const PAIR_HEROES   = ['hawkeye','daredevil','marsh','mantis','kaerus','wasp','mystique','cull','corvus','mysterio','drax','groot','sable','fuchsia','sylvie','thething','kidspider','siddartha','electro','mrfantastic','volt','storm','aurelia','profx','obsidian','apocalypse','ferrum','vaelor','vipera','sepulcre','jeangrey'];
@@ -5607,7 +5630,7 @@ function screenProfileChoice(){
         ${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
       <div class="char-tile-dot" style="background:${col};"></div>
       <div class="char-tile-name">${nm}</div>
-      ${unlocked?'':`<div class="char-tile-cond">${tierConditionFor(p.id)}</div>`}
+      ${unlocked?'':`<div class="char-tile-cond">${tierConditionWithProgress(p.id)}</div>`}
     </div>`;
   }
   const gridEl = d.querySelector('#charGrid');
@@ -5640,7 +5663,7 @@ function screenProfileChoice(){
           <div class="pmove-col"><div class="pmove-h">${S.lang==='fr'?'DEFENSES':'DEFENSE'}</div>${mv.def.map(m=>`<div class="pmove-line">${S.lang==='fr'?m.fr:m.en}</div>`).join('')}</div>
         </div>
         ${unlocked?`<button class="btn cyan" id="cdpPick" style="margin-top:12px; width:100%;">${S.lang==='fr'?'CHOISIR':'PICK'}</button>`
-          :`<div class="pc-lock-cond" style="margin-top:10px;">&#128274; ${tierConditionFor(p.id)}</div>`}
+          :`<div class="pc-lock-cond" style="margin-top:10px;">&#128274; ${tierConditionWithProgress(p.id)}</div>`}
       </div>`;
     if(unlocked){ panelEl.querySelector('#cdpPick').onclick = ()=>{ applyPreset(p); S.screen='startside'; render(); }; }
   }
