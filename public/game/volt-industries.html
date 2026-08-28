@@ -450,6 +450,14 @@
   .eclat-cine .cine-scope{ color:var(--eclat-col); text-shadow:0 0 18px var(--eclat-col); }
   .eclat-cine .cine-title{ color:#fff; text-shadow:0 0 22px var(--eclat-col), 0 0 55px var(--eclat-col); }
   .eclat-cine-icon{ color:var(--eclat-col); text-shadow:0 0 28px var(--eclat-col), 0 0 70px var(--eclat-col); }
+  .gem-cine-stage{ display:flex; justify-content:center; margin-bottom:12px; animation: gemRise .9s cubic-bezier(.2,.9,.2,1); filter:drop-shadow(0 0 26px var(--eclat-col)); }
+  .gem-cine-stage svg{ animation: gemFloat 3.4s ease-in-out infinite; }
+  @keyframes gemRise{ from{ transform:scale(.4) translateY(30px); opacity:0; } to{ transform:none; opacity:1; } }
+  @keyframes gemFloat{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-8px) rotate(2deg);} }
+  .gem-chip{ display:inline-flex; align-items:center; justify-content:center; filter:drop-shadow(0 0 5px var(--gc)); animation: gemPulse 2.6s ease-in-out infinite; }
+  @keyframes gemPulse{ 0%,100%{ filter:drop-shadow(0 0 4px var(--gc)); } 50%{ filter:drop-shadow(0 0 11px var(--gc)); } }
+  .gem-gauntlet-mini{ width:26px; height:26px; object-fit:contain; margin-left:3px; filter:drop-shadow(0 0 8px rgba(255,190,60,.85)); animation: gemPulse 2.2s ease-in-out infinite; }
+  .gauntlet-wrap .gauntlet-shine{ position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, rgba(255,225,150,.35), transparent 62%); animation: gemPulse 2.8s ease-in-out infinite; pointer-events:none; }
   .eclat-cine-fx{ position:absolute; inset:0; z-index:1; pointer-events:none; }
   /* Derive (Espace) : rayons qui tournent + debris qui derivent */
   .eclat-bg-space .eclat-cine-fx{ background:repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--eclat-col) 12%, transparent) 0deg 3deg, transparent 3deg 16deg);
@@ -1308,7 +1316,7 @@ const FACTIONS = {
   ],
 };
 /* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
-const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','Deadpool','The G','Siddharta','Doctor Doom'];
+const INDEPENDENTS = ['Loki','Hela','Ultron','Venom','Galactus','Gorr','Annihilus','Apocalypse','Daredevil','Captain Marvel','Deadpool','The G','Siddharta','Doctor Doom','Bucky','Wasp','Yelena','Sylvie'];
 
 /* ============================ ATTRIBUTS (caracteristiques, sans camp) ============================
    Un attribut n'a pas de camp, peut melanger heros et villains, et se cumule. */
@@ -1442,6 +1450,111 @@ function factionEmblemSVG(side, tier, size){
   const uid = 'fe'+Math.random().toString(36).slice(2,7);
   const isHero = side==='hero';
   const c1 = isHero ? '#5fd4ff' : '#ff7b8c', c2 = isHero ? '#0088cc' : '#a5122f', dark = isHero ? '#04263a' : '#3a0a14';
+  /* Logos 3D dedies, un par faction : metal biseaute, reflets et ombres portees comme les Pierres. */
+  const M = `url(#${uid}metal)`, EDGE = `url(#${uid}edge)`;
+  const ICONS_3D = {
+    avengers: `<g>
+      <circle cx="50" cy="47" r="23" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="7"/>
+      <circle cx="50" cy="47" r="23" fill="none" stroke="${M}" stroke-width="5"/>
+      <path d="M50 24 L50 70" stroke="${M}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M31 34 L69 60" stroke="${M}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M50 24 L50 70" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>
+      <circle cx="50" cy="47" r="23" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/>
+    </g>`,
+    xmen: `<g>
+      <circle cx="50" cy="47" r="24" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="8"/>
+      <circle cx="50" cy="47" r="24" fill="none" stroke="${M}" stroke-width="6"/>
+      <path d="M34 31 L66 63 M66 31 L34 63" stroke="#000" stroke-opacity=".4" stroke-width="9" stroke-linecap="round"/>
+      <path d="M34 31 L66 63 M66 31 L34 63" stroke="${M}" stroke-width="6.5" stroke-linecap="round"/>
+      <path d="M35 32 L64 61" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+    </g>`,
+    f4: `<g>
+      <circle cx="50" cy="47" r="24" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="8"/>
+      <circle cx="50" cy="47" r="24" fill="none" stroke="${M}" stroke-width="6"/>
+      <path d="M56 30 L38 52 L50 52 L46 66 L64 44 L52 44 Z" fill="${M}"/>
+      <path d="M56 30 L38 52 L50 52" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.3"/>
+    </g>`,
+    guardians: `<g>
+      <ellipse cx="50" cy="47" rx="26" ry="9" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="6" transform="rotate(-20 50 47)"/>
+      <ellipse cx="50" cy="47" rx="26" ry="9" fill="none" stroke="${M}" stroke-width="4" transform="rotate(-20 50 47)"/>
+      <ellipse cx="50" cy="47" rx="26" ry="9" fill="none" stroke="${M}" stroke-width="2.4" opacity=".65" transform="rotate(24 50 47)"/>
+      <circle cx="50" cy="47" r="10" fill="#000" opacity=".45"/>
+      <circle cx="50" cy="47" r="9" fill="${M}"/>
+      <circle cx="46" cy="43" r="3" fill="#fff" opacity=".8"/>
+    </g>`,
+    sinister6: `<g>
+      <circle cx="50" cy="47" r="11" fill="#000" opacity=".45"/>
+      <circle cx="50" cy="47" r="10" fill="${M}"/>
+      <circle cx="46.5" cy="43.5" r="3" fill="#fff" opacity=".85"/>
+      ${Array.from({length:6},(_,i)=>{const a=(i/6)*Math.PI*2-Math.PI/2;
+        const x1=50+Math.cos(a)*11, y1=47+Math.sin(a)*11, x2=50+Math.cos(a)*26, y2=47+Math.sin(a)*26,
+              xm=50+Math.cos(a+.35)*19, ym=47+Math.sin(a+.35)*19;
+        return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="6" stroke-linecap="round"/>
+        <path d="M${x1.toFixed(1)} ${y1.toFixed(1)} Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${M}" stroke-width="3.4" stroke-linecap="round"/>`;}).join('')}
+    </g>`,
+    brotherhood: `<g>
+      <path d="M50 24 A23 23 0 1 1 34 65" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="10" stroke-linecap="round"/>
+      <path d="M50 24 A23 23 0 1 1 34 65" fill="none" stroke="${M}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M50 34 A13 13 0 1 0 41 58" fill="none" stroke="${M}" stroke-width="5" stroke-linecap="round" opacity=".85"/>
+      <path d="M50 25 A22 22 0 0 1 68 34" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>
+    </g>`,
+    cabal: `<g>
+      <path d="M50 24 L70 34 L70 54 C70 66 61 72 50 76 C39 72 30 66 30 54 L30 34 Z" fill="#000" opacity=".45"/>
+      <path d="M50 26 L68 35.5 L68 54 C68 64.5 60 70 50 73.5 C40 70 32 64.5 32 54 L32 35.5 Z" fill="${M}"/>
+      <path d="M50 34 L58 44 L50 62 L42 44 Z" fill="#0a0209" opacity=".7"/>
+      <path d="M50 27 L67 36" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>
+    </g>`,
+    blackorder: `<g>
+      <circle cx="50" cy="47" r="25" fill="#000" opacity=".55"/>
+      <circle cx="50" cy="47" r="25" fill="none" stroke="${M}" stroke-width="4"/>
+      <circle cx="50" cy="47" r="13" fill="#05000a"/>
+      <circle cx="50" cy="47" r="13" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1"/>
+      ${Array.from({length:8},(_,i)=>{const a=(i/8)*Math.PI*2;
+        return `<path d="M${(50+Math.cos(a)*14).toFixed(1)} ${(47+Math.sin(a)*14).toFixed(1)} L${(50+Math.cos(a)*24).toFixed(1)} ${(47+Math.sin(a)*24).toFixed(1)}" stroke="${M}" stroke-width="2.6" stroke-linecap="round"/>`;}).join('')}
+      <circle cx="45" cy="41" r="2.6" fill="#fff" opacity=".55"/>
+    </g>`,
+  };
+  if(ICONS_3D[fac.id]){
+    const icon3d = ICONS_3D[fac.id];
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 106" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${(S.lang==='fr'?fac.fr:fac.en)}">
+      <defs>
+        <linearGradient id="${uid}g" x1="0.1" y1="0" x2="0.9" y2="1">
+          <stop offset="0%" stop-color="${c1}"/><stop offset="48%" stop-color="${c2}"/><stop offset="100%" stop-color="${dark}"/>
+        </linearGradient>
+        <linearGradient id="${uid}metal" x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/><stop offset="38%" stop-color="#f2f6ff"/><stop offset="62%" stop-color="#b9c6d8"/><stop offset="100%" stop-color="#6d7a8c"/>
+        </linearGradient>
+        <linearGradient id="${uid}sheen" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="45%" stop-color="#ffffff" stop-opacity="0.05"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="${uid}core" cx="0.5" cy="0.4" r="0.62">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/><stop offset="45%" stop-color="${c1}" stop-opacity="0.5"/><stop offset="100%" stop-color="${dark}" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="${uid}glow" x="-45%" y="-45%" width="190%" height="190%">
+          <feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="${uid}emb" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.1" flood-color="#000" flood-opacity="0.55"/>
+        </filter>
+        <clipPath id="${uid}clip"><path d="M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z"/></clipPath>
+      </defs>
+      <g filter="url(#${uid}glow)">
+        <path d="M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z" fill="${dark}"/>
+        <path d="M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z" fill="url(#${uid}g)" opacity="0.96"/>
+      </g>
+      <g clip-path="url(#${uid}clip)">
+        <circle cx="50" cy="46" r="42" fill="url(#${uid}core)"/>
+        <path d="M12,64 L88,44 L88,52 L12,72 Z" fill="#000000" opacity="0.14"/>
+        <path d="M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z" fill="url(#${uid}sheen)"/>
+      </g>
+      <path d="M50,4 L88,16.5 L88,52 C88,79 69,93.5 50,101 C31,93.5 12,79 12,52 L12,16.5 Z" fill="none" stroke="${dark}" stroke-width="2.6" opacity="0.85"/>
+      <path d="M50,9.5 L83,20 L83,52 C83,76 66,89 50,96 C34,89 17,76 17,52 L17,20 Z" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.42"/>
+      <g filter="url(#${uid}emb)">${icon3d}</g>
+      <path d="M31,80.5 L69,80.5 L64.5,90 L35.5,90 Z" fill="${dark}" opacity="0.92"/>
+      <path d="M31,80.5 L69,80.5 L64.5,90 L35.5,90 Z" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.35"/>
+      <text x="50" y="87.6" font-size="7.4" font-weight="800" letter-spacing="1.4" fill="#ffffff" fill-opacity="0.9" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">${['','I','II','III','IV','V','VI','VII'][tier] || String(tier)}</text>
+    </svg>`;
+  }
   let icon = '';
   switch(fac.icon){
     case 'house': icon = `<path d="M50 28 L70 44 L70 68 L58 68 L58 54 L42 54 L42 68 L30 68 L30 44 Z" fill="#fff" opacity="0.92"/>`; break;
@@ -5845,20 +5958,63 @@ function startCrossedMenteeArc(){
 }
 /* ---------- Evenement Majeur : rare, mais capable de faire bondir le score d'un seul coup si tu le remportes ---------- */
 /* ---------- Les Gemmes d'Infinite : 6 fragments originaux, chacun avec sa propre quete et son pouvoir special. Jamais garanti de tous les obtenir. ---------- */
+/* Les 6 Pierres d'Infinite : couleurs exactes du Gantelet (bleu, jaune, rouge, violet, vert, orange). */
+const GAUNTLET_IMG = "/__l5e/assets-v1/aca1a565-1f2d-41fb-913e-4b169b91fb6b/Design_sans_titre_1.png";
 const ECLATS = [
-  { id:'derive', frName:"Gemme de l'Espace", enName:"Space Gem", domainFr:'Espace', domainEn:'Space', col:'#4fd3ff',
+  { id:'derive', frName:"Pierre de l'Espace", enName:"Space Stone", domainFr:'Espace', domainEn:'Space', col:'#2f8bff', col2:'#9ed4ff',
     move:{ fr:'Rupture spatiale', en:'Spatial rupture', p:46, acc:.74 } },
-  { id:'murmure', frName:"Gemme de l'Esprit", enName:"Mind Gem", domainFr:'Esprit', domainEn:'Mind', col:'#b98bff',
+  { id:'murmure', frName:"Pierre de l'Esprit", enName:"Mind Stone", domainFr:'Esprit', domainEn:'Mind', col:'#ffd21f', col2:'#fff3b0',
     move:{ fr:'Cri silencieux', en:'Silent scream', p:44, acc:.78 } },
-  { id:'fracture', frName:"Gemme de la Realite", enName:"Reality Gem", domainFr:'Realite', domainEn:'Reality', col:'#ff8a3d',
+  { id:'fracture', frName:"Pierre de la Realite", enName:"Reality Stone", domainFr:'Realite', domainEn:'Reality', col:'#ff2233', col2:'#ff9aa2',
     move:{ fr:'Faille reelle', en:'Real rift', p:48, acc:.7 } },
-  { id:'fureur', frName:"Gemme du Pouvoir", enName:"Power Gem", domainFr:'Puissance', domainEn:'Power', col:'#ff3b5c',
+  { id:'fureur', frName:"Pierre du Pouvoir", enName:"Power Stone", domainFr:'Puissance', domainEn:'Power', col:'#a44bff', col2:'#dcb0ff',
     move:{ fr:'Deferlante', en:'Onslaught', p:50, acc:.68 } },
-  { id:'attente', frName:"Gemme du Temps", enName:"Time Gem", domainFr:'Temps', domainEn:'Time', col:'#37e6a8',
+  { id:'attente', frName:"Pierre du Temps", enName:"Time Stone", domainFr:'Temps', domainEn:'Time', col:'#2ee07a', col2:'#aaf7cd',
     move:{ fr:'Boucle figee', en:'Frozen loop', p:20, acc:1, heal:24 } },
-  { id:'vestige', frName:"Gemme de l'Ame", enName:"Soul Gem", domainFr:'Ame', domainEn:'Soul', col:'#ffd23f',
+  { id:'vestige', frName:"Pierre de l'Ame", enName:"Soul Stone", domainFr:'Ame', domainEn:'Soul', col:'#ff8a1f', col2:'#ffd0a0',
     move:{ fr:"Ecrin d'ames", en:'Soul casket', p:24, acc:.95, heal:18 } },
 ];
+/* Rendu SVG d'une vraie pierre precieuse taillee : facettes, reflet, aureole. */
+function gemSVG(shard, size, opts){
+  const o = opts || {};
+  const uid = 'gem'+Math.random().toString(36).slice(2,7);
+  const c = shard.col, c2 = shard.col2 || '#ffffff';
+  const spin = o.spin ? `<animateTransform attributeName="transform" type="rotate" from="0 50 52" to="360 50 52" dur="14s" repeatCount="indefinite"/>` : '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 104" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="gem">
+    <defs>
+      <radialGradient id="${uid}halo" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="55%" stop-color="${c}" stop-opacity="0.28"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="${uid}body" x1="0.2" y1="0" x2="0.8" y2="1">
+        <stop offset="0%" stop-color="${c2}"/><stop offset="42%" stop-color="${c}"/><stop offset="100%" stop-color="#0b0410"/>
+      </linearGradient>
+      <linearGradient id="${uid}top" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="60%" stop-color="${c2}" stop-opacity="0.6"/><stop offset="100%" stop-color="${c}" stop-opacity="0.35"/>
+      </linearGradient>
+      <filter id="${uid}soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3.2"/>
+      </filter>
+    </defs>
+    <circle cx="50" cy="52" r="49" fill="url(#${uid}halo)" filter="url(#${uid}soft)"/>
+    <g>${spin}
+      <path d="M50 8 L79 30 L68 84 L32 84 L21 30 Z" fill="url(#${uid}body)"/>
+      <path d="M50 8 L79 30 L50 40 L21 30 Z" fill="url(#${uid}top)" opacity="0.95"/>
+      <path d="M21 30 L50 40 L32 84 Z" fill="${c}" opacity="0.55"/>
+      <path d="M79 30 L50 40 L68 84 Z" fill="#000000" opacity="0.28"/>
+      <path d="M50 40 L32 84 L68 84 Z" fill="${c2}" opacity="0.35"/>
+      <path d="M50 8 L50 40" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1"/>
+      <path d="M38 20 L45 34" stroke="#ffffff" stroke-opacity="0.65" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M50 8 L79 30 L68 84 L32 84 L21 30 Z" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.2"/>
+    </g>
+  </svg>`;
+}
+/* Le Gantelet de l'Infini, avec ses 6 pierres scintillantes une fois toutes reunies. */
+function gauntletHTML(size){
+  return `<div class="gauntlet-wrap" style="width:${size}px; max-width:78vw; margin:0 auto; position:relative;">
+    <img src="${GAUNTLET_IMG}" alt="Gantelet de l'Infini" style="width:100%; display:block; filter:drop-shadow(0 0 34px rgba(255,190,60,.55));">
+    <div class="gauntlet-shine"></div>
+  </div>`;
+}
 function shouldTriggerEclatQuest(){
   if((S.eclats||[]).length >= ECLATS.length) return false;
   if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 1) return false;
@@ -5955,12 +6111,13 @@ function eclatBadgeRowHTML(){
   const owned = S.eclats || [];
   if(!owned.length) return '';
   const chips = owned.map(id=>{
-    const shard = ECLATS.find(e=>e.id===id); const cfg = ECLAT_CINE_CONFIG[id];
-    if(!shard || !cfg) return '';
+    const shard = ECLATS.find(e=>e.id===id);
+    if(!shard) return '';
     const name = S.lang==='fr' ? shard.frName : shard.enName;
-    return `<span title="${name}" style="display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:${shard.col}22; border:1px solid ${shard.col}; color:${shard.col}; font-size:11px; line-height:1; text-shadow:0 0 6px ${shard.col};">${cfg.icon}</span>`;
+    return `<span class="gem-chip" title="${name}" style="--gc:${shard.col};">${gemSVG(shard, 20)}</span>`;
   }).join('');
-  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:6px;">${chips}</div>`;
+  const full = owned.length >= ECLATS.length;
+  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>`;
 }
 function showEclatCinematic(shard, cb){
   const isFr = S.lang==='fr';
@@ -5972,8 +6129,8 @@ function showEclatCinematic(shard, cb){
   overlay.style.setProperty('--eclat-col', shard.col);
   overlay.innerHTML = `<div class="cine-flash"></div><div class="eclat-cine-fx"></div>
     <div class="cine-content">
-      <div class="star8-icon eclat-cine-icon">${cfg.icon}</div>
-      <div class="cine-scope">${isFr?'GEMME D\'INFINITE OBTENUE':'INFINITY GEM OBTAINED'}</div>
+      <div class="gem-cine-stage">${gemSVG(shard, 176, {spin:false})}</div>
+      <div class="cine-scope">${isFr?'PIERRE D\'INFINITE OBTENUE':'INFINITY STONE OBTAINED'}</div>
       <div class="cine-title">${name.toUpperCase()}</div>
       <p class="star8-sub">${isFr?`Domaine : ${domain}. Un nouveau pouvoir s'eveille en toi.`:`Domain: ${domain}. A new power awakens in you.`}</p>
       <button class="btl-move" id="eclatCineContinue" style="min-width:160px; margin-top:14px; border-color:${shard.col};"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
@@ -5981,7 +6138,7 @@ function showEclatCinematic(shard, cb){
   document.body.appendChild(overlay);
   const advance = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
   overlay.querySelector('#eclatCineContinue').onclick = advance;
-  if(S.careerAuto) setTimeout(advance, 1000);
+  if(S.careerAuto) setTimeout(advance, 1400);
 }
 /* Obtention mutualisee : detecte le moment ou les 6 eclats sont enfin tous reunis. */
 function grantEclatShard(shard){
@@ -6237,6 +6394,73 @@ function wrapCenteredText(ctx, text, cx, cy, maxWidth, lineHeight){
   lines.forEach((l,i)=> ctx.fillText(l, cx, startY + i*lineHeight));
   return lines.length;
 }
+/* Dessine le vrai portrait du joueur (sa photo/son personnage choisi) dans le cadre de la carte.
+   Si aucune photo n'existe, on retombe sur la silhouette SVG generee. */
+function drawPlayerPortraitOnCard(ctx, pX, pY, pW, pH, tintCol, done){
+  const cx = pX + pW/2;
+  function paint(img){
+    ctx.save();
+    roundRectPath(ctx, pX+4, pY+4, pW-8, pH-8, 14); ctx.clip();
+    const pg = ctx.createRadialGradient(cx, pY+pH*0.4, 20, cx, pY+pH*0.4, pW*0.75);
+    pg.addColorStop(0, tintCol); pg.addColorStop(1,'transparent');
+    ctx.fillStyle = pg; ctx.fillRect(pX, pY, pW, pH);
+    const iw = img.width || 280, ih = img.height || 380;
+    const scale = Math.min((pW-24)/iw, (pH-24)/ih);
+    const dw = iw*scale, dh = ih*scale;
+    ctx.drawImage(img, cx-dw/2, pY+(pH-dh)/2, dw, dh);
+    ctx.restore();
+  }
+  function fallbackSVG(){
+    try{
+      const svgBlob = new Blob([avatarSVG()], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(svgBlob);
+      const im2 = new Image();
+      im2.onload = ()=>{ paint(im2); URL.revokeObjectURL(url); done(); };
+      im2.onerror = ()=>{ URL.revokeObjectURL(url); done(); };
+      im2.src = url;
+    }catch(e){ done(); }
+  }
+  if(S.portrait){
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{ paint(img); done(); };
+    img.onerror = fallbackSVG;
+    img.src = S.portrait;
+  } else fallbackSVG();
+}
+/* Vraie pierre precieuse taillee, dessinee au canvas (facettes + reflet + aureole). */
+function drawGemOnCanvas(ctx, x, y, r, shard){
+  const c = shard.col, c2 = shard.col2 || '#ffffff';
+  ctx.save();
+  const halo = ctx.createRadialGradient(x, y, r*0.2, x, y, r*2.1);
+  halo.addColorStop(0, `${c}99`); halo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, r*2.1, 0, Math.PI*2); ctx.fill();
+  const p = (dx,dy)=>[x+dx*r, y+dy*r];
+  const top=[p(0,-1.05)], tl=[p(-0.72,-0.45)], tr=[p(0.72,-0.45)],
+        bl=[p(-0.48,0.95)], br=[p(0.48,0.95)], mid=[p(0,-0.18)];
+  const poly=(pts, fill, alpha)=>{
+    ctx.globalAlpha = alpha==null?1:alpha; ctx.fillStyle = fill;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+  };
+  const body = ctx.createLinearGradient(x-r, y-r, x+r, y+r);
+  body.addColorStop(0, c2); body.addColorStop(.45, c); body.addColorStop(1, '#12040f');
+  ctx.shadowColor = c; ctx.shadowBlur = r*1.1;
+  poly([top[0], tr[0], br[0], bl[0], tl[0]], body);
+  ctx.shadowBlur = 0;
+  poly([top[0], tr[0], mid[0], tl[0]], '#ffffff', .5);
+  poly([tl[0], mid[0], bl[0]], c, .55);
+  poly([tr[0], mid[0], br[0]], '#000000', .3);
+  poly([mid[0], bl[0], br[0]], c2, .32);
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = Math.max(1, r*0.06);
+  ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); ctx.lineTo(tr[0][0], tr[0][1]);
+  ctx.lineTo(br[0][0], br[0][1]); ctx.lineTo(bl[0][0], bl[0][1]); ctx.lineTo(tl[0][0], tl[0][1]);
+  ctx.closePath(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(1.4, r*0.1);
+  ctx.beginPath(); ctx.moveTo(x-r*0.34, y-r*0.62); ctx.lineTo(x-r*0.16, y-r*0.28); ctx.stroke();
+  ctx.restore();
+}
 function generateTrophyCardCanvas(cb){
   const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
   const W = 1080, H = 1350, cx = W/2;
@@ -6310,29 +6534,8 @@ function generateTrophyCardCanvas(cb){
     ctx.fillText(`VOLT INDUSTRIES \u2014 ${dateStr}`, cx, H-50);
     cb(canvas);
   }
-  // Portrait reel du personnage (sa propre silhouette generee, avec ses couleurs de tenue)
-  try{
-    const svgStr = avatarSVG();
-    const svgBlob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-    img.onload = ()=>{
-      ctx.save();
-      roundRectPath(ctx, pX+4, pY+4, pW-8, pH-8, 14); ctx.clip();
-      const pg = ctx.createRadialGradient(cx, pY+pH*0.4, 20, cx, pY+pH*0.4, pW*0.75);
-      pg.addColorStop(0, villain?'rgba(255,90,60,.16)':'rgba(0,194,255,.14)'); pg.addColorStop(1,'transparent');
-      ctx.fillStyle = pg; ctx.fillRect(pX, pY, pW, pH);
-      const iw = img.width || 280, ih = img.height || 380;
-      const scale = Math.min((pW-40)/iw, (pH-40)/ih);
-      const dw = iw*scale, dh = ih*scale;
-      ctx.drawImage(img, cx-dw/2, pY+pH-dh-14, dw, dh);
-      ctx.restore();
-      URL.revokeObjectURL(url);
-      finalize();
-    };
-    img.onerror = ()=>{ URL.revokeObjectURL(url); finalize(); };
-    img.src = url;
-  }catch(e){ finalize(); }
+  // Vrai portrait du joueur (sa photo ou son personnage choisi)
+  drawPlayerPortraitOnCard(ctx, pX, pY, pW, pH, villain?'rgba(255,90,60,.16)':'rgba(0,194,255,.14)', finalize);
 }
 function downloadTrophyCard(){
   generateTrophyCardCanvas((canvas)=>{
@@ -6382,7 +6585,7 @@ function generateVoidTrophyCardCanvas(cb){
   drawStarPath(ctx, cx, 108, 8, 52, 23); ctx.fill();
   ctx.shadowBlur = 0;
   ctx.fillStyle = voidCol; ctx.font = '900 24px Arial, sans-serif';
-  ctx.fillText((isFr?'LES 6 ECLATS DU VIDE REUNIS':'ALL 6 VOID SHARDS UNITED'), cx, 192);
+  ctx.fillText((isFr?"LES 6 PIERRES D'INFINITE REUNIES":'ALL 6 INFINITY STONES UNITED'), cx, 192);
   const pW = 380, pH = 440, pX = cx-pW/2, pY = 216;
   ctx.save();
   ctx.shadowColor = heroCol; ctx.shadowBlur = 26;
@@ -6400,57 +6603,46 @@ function generateVoidTrophyCardCanvas(cb){
     ctx.fillStyle = '#ffffff'; ctx.font = '900 40px Arial, sans-serif';
     const mainLine = villain ? (isFr?'LE CHAOS EST TOTAL':'TOTAL CHAOS') : (isFr?'TU AS GAGNE LE JEU':'YOU WON THE GAME');
     const nLines = wrapCenteredText(ctx, mainLine, cx, pY+pH+64, W-150, 50);
-    /* Rangee des 6 eclats, cote a cote, chacun dans sa propre couleur. */
-    const shardsY = pY+pH+64 + (nLines*24) + 40;
-    const shardR = 26, gap = 68, startX = cx - gap*2.5;
-    ECLATS.forEach((shard,i)=>{
-      const sx = startX + i*gap;
-      ctx.save();
-      ctx.shadowColor = shard.col; ctx.shadowBlur = 18;
-      ctx.beginPath(); ctx.arc(sx, shardsY, shardR, 0, Math.PI*2);
-      ctx.fillStyle = `${shard.col}26`; ctx.fill();
-      ctx.lineWidth = 2.4; ctx.strokeStyle = shard.col; ctx.stroke();
-      ctx.restore();
-      ctx.fillStyle = shard.col; ctx.font = '700 22px Arial, sans-serif';
-      ctx.fillText(ECLAT_CANVAS_GLYPH[shard.id] || '\u2726', sx, shardsY+8);
-    });
-    const nameY = shardsY + 70;
+    /* Rangee des 6 Pierres d'Infinite, taillees comme de vraies gemmes, dans leur couleur exacte. */
+    const shardsY = pY+pH+64 + (nLines*24) + 46;
+    const gap = 68, startX = cx - gap*2.5;
+    ECLATS.forEach((shard,i)=>{ drawGemOnCanvas(ctx, startX + i*gap, shardsY, 24, shard); });
+    const nameY = shardsY + 74;
+    ctx.textAlign = 'center';
     ctx.font = '700 32px Arial, sans-serif'; ctx.fillStyle = heroCol;
     ctx.fillText((S.heroName||'').toUpperCase(), cx, nameY);
     ctx.font = '400 20px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
-    ctx.fillText(villain ? (isFr?'MAITRE DU VIDE':'MASTER OF THE VOID') : (isFr?'MAITRE DU VIDE':'MASTER OF THE VOID'), cx, nameY+32);
-    /* Score et etoiles toujours au maximum : les 6 eclats valent une victoire totale et definitive. */
+    ctx.fillText(isFr?"MAITRE DE L'INFINI":'MASTER OF INFINITY', cx, nameY+32);
     ctx.font = '600 23px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
     ctx.fillText(`${isFr?'Score':'Score'} 100/100  \u2022  ${isFr?'Annee':'Year'} ${S.currentYear}`, cx, nameY+86);
     ctx.fillStyle = voidCol; ctx.font = '600 26px Arial, sans-serif';
     ctx.fillText('\u2605'.repeat(8), cx, nameY+128);
-    ctx.font = '400 16px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
-    const dateStr = new Date().toLocaleDateString(isFr?'fr-FR':'en-US');
-    ctx.fillText(`VOLT INDUSTRIES \u2014 ${dateStr}`, cx, H-50);
-    cb(canvas);
-  }
-  try{
-    const svgStr = avatarSVG();
-    const svgBlob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-    img.onload = ()=>{
+    /* Le Gantelet de l'Infini, pierres serties, en sceau de la carte. */
+    function footer(){
+      ctx.textAlign = 'center';
+      ctx.font = '400 16px Arial, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.5)';
+      const dateStr = new Date().toLocaleDateString(isFr?'fr-FR':'en-US');
+      ctx.fillText(`VOLT INDUSTRIES \u2014 ${dateStr}`, cx, H-50);
+      cb(canvas);
+    }
+    const gimg = new Image(); gimg.crossOrigin = 'anonymous';
+    const gY = nameY+152, gH = Math.max(120, H-90-gY);
+    gimg.onload = ()=>{
+      const scale = Math.min(300/gimg.width, gH/gimg.height);
+      const dw = gimg.width*scale, dh = gimg.height*scale;
       ctx.save();
-      roundRectPath(ctx, pX+4, pY+4, pW-8, pH-8, 14); ctx.clip();
-      const pg = ctx.createRadialGradient(cx, pY+pH*0.4, 20, cx, pY+pH*0.4, pW*0.75);
-      pg.addColorStop(0, `${voidCol}28`); pg.addColorStop(1,'transparent');
-      ctx.fillStyle = pg; ctx.fillRect(pX, pY, pW, pH);
-      const iw = img.width || 280, ih = img.height || 380;
-      const scale = Math.min((pW-40)/iw, (pH-40)/ih);
-      const dw = iw*scale, dh = ih*scale;
-      ctx.drawImage(img, cx-dw/2, pY+pH-dh-14, dw, dh);
+      const hal = ctx.createRadialGradient(cx, gY+dh/2, 10, cx, gY+dh/2, dw*0.8);
+      hal.addColorStop(0,'rgba(255,205,110,.35)'); hal.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = hal; ctx.fillRect(cx-dw, gY-20, dw*2, dh+40);
+      ctx.shadowColor = 'rgba(255,200,90,.8)'; ctx.shadowBlur = 34;
+      ctx.drawImage(gimg, cx-dw/2, gY, dw, dh);
       ctx.restore();
-      URL.revokeObjectURL(url);
-      finalize();
+      footer();
     };
-    img.onerror = ()=>{ URL.revokeObjectURL(url); finalize(); };
-    img.src = url;
-  }catch(e){ finalize(); }
+    gimg.onerror = footer;
+    gimg.src = GAUNTLET_IMG;
+  }
+  drawPlayerPortraitOnCard(ctx, pX, pY, pW, pH, `${voidCol}28`, finalize);
 }
 function downloadVoidCard(){
   generateVoidTrophyCardCanvas((canvas)=>{
@@ -6458,7 +6650,7 @@ function downloadVoidCard(){
       if(!blob) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `6-eclats-du-vide-${(S.heroName||'heros').replace(/[^a-z0-9]+/gi,'_')}.png`;
+      a.href = url; a.download = `6-pierres-infinite-${(S.heroName||'heros').replace(/[^a-z0-9]+/gi,'_')}.png`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(url), 4000);
     }, 'image/png');
@@ -6494,13 +6686,14 @@ function showVoidCompletionCinematic(cb){
   const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
   const title = villain ? (isFr?'LE CHAOS EST TOTAL':'TOTAL CHAOS') : (isFr?'TU AS GAGNE LE JEU':'YOU WON THE GAME');
   const sub = villain
-    ? (isFr?"Les 6 Gemmes d'Infinite sont a toi. Tout ce qui tenait encore debout s'effondre dans la lumiere violette.":"All 6 Infinity Gems are yours. Everything still standing collapses in violet light.")
-    : (isFr?"Les 6 Gemmes d'Infinite sont reunis. L'equilibre tient enfin, grace a toi.":"All 6 Infinity Gems are united. Balance finally holds, because of you.");
+    ? (isFr?"Les 6 Pierres d'Infinite sont serties dans ton Gantelet. Tout ce qui tenait encore debout s'effondre.":"All 6 Infinity Stones are set in your Gauntlet. Everything still standing collapses.")
+    : (isFr?"Les 6 Pierres d'Infinite sont reunies dans le Gantelet. L'equilibre tient enfin, grace a toi.":"All 6 Infinity Stones are united in the Gauntlet. Balance finally holds, because of you.");
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay eighth-star void-complete ' + (villain?'void-villain':'void-hero');
   overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-rays"></div><div class="star8-burst"></div>${villain?'<div class="void-shatter"></div>':''}
     <div class="cine-content">
-      <div class="star8-icon void-icon">&#10022;</div>
-      <div class="cine-scope">${isFr?'LES 6 ECLATS DU VIDE REUNIS':'ALL 6 VOID SHARDS UNITED'}</div>
+      ${gauntletHTML(300)}
+      <div class="gem-row-cine" style="display:flex; gap:8px; justify-content:center; margin:10px 0 6px;">${ECLATS.map(s=>`<span class="gem-chip" style="--gc:${s.col};">${gemSVG(s, 34)}</span>`).join('')}</div>
+      <div class="cine-scope">${isFr?"LES 6 PIERRES D'INFINITE REUNIES":'ALL 6 INFINITY STONES UNITED'}</div>
       <div class="cine-title">${title}</div>
       <p class="star8-sub">${sub}</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px;">
