@@ -7837,84 +7837,234 @@ function startBattle(mission, done){
     }
   }, 2000);
 
-  /* Une photo par niveau de combat (quartier, ville, pays...), animee par-dessus. Pas encore d'image = decor par defaut. */
-  const SCOPE_BG_IMAGES = {
-    1: { url:'/game/backgrounds/quartier.jpg', mood:'steam' },
-    2: { url:'/game/backgrounds/ville.jpg', mood:'fire' },
-    3: { url:'/game/backgrounds/pays.jpg', mood:'sky' },
-    4: { url:'/game/backgrounds/continent.jpg', mood:'beam' },
-    5: { url:'/game/backgrounds/monde.jpg', mood:'rainbow' },
-    6: { url:'/game/backgrounds/univers.jpg', mood:'space' },
-    7: { url:'/game/backgrounds/multivers.jpg', mood:'multiverse' },
-  };
-  const MOOD_CLASS = { fire:'fire-mood', sky:'sky-mood', beam:'beam-mood', rainbow:'rainbow-mood', space:'space-mood', multiverse:'multiverse-mood' };
-  function moodParticlesHTML(mood){
-    if(mood==='fire') return `<div class="photo-ember" style="left:10%; animation-delay:0s;"></div>
-         <div class="photo-ember" style="left:28%; animation-delay:1.4s;"></div>
-         <div class="photo-ember" style="left:70%; animation-delay:2.6s;"></div>
-         <div class="photo-ember" style="left:86%; animation-delay:.8s;"></div>
-         <div class="photo-ember" style="left:52%; animation-delay:3.6s;"></div>
-         <div class="photo-flicker"></div>`;
-    if(mood==='sky') return `<div class="photo-smoke" style="left:10%; animation-delay:0s;"></div>
-         <div class="photo-smoke" style="left:26%; animation-delay:2.4s;"></div>
-         <div class="photo-smoke" style="left:66%; animation-delay:4.8s;"></div>
-         <div class="photo-rays"></div>`;
-    if(mood==='beam') return `<div class="photo-beam-glow"></div>
-         <div class="photo-lightning" style="left:68%; top:20%; animation-delay:.3s;"></div>
-         <div class="photo-lightning" style="left:78%; top:38%; animation-delay:2.1s;"></div>
-         <div class="photo-lightning" style="left:64%; top:66%; animation-delay:3.8s;"></div>
-         <div class="photo-lightning" style="left:24%; top:32%; animation-delay:5.4s;"></div>`;
-    if(mood==='space') return `<div class="photo-tower-pulse"></div>
-         <div class="photo-laser" style="left:32%; top:30%; width:28%; animation-delay:.6s; transform:rotate(-6deg);"></div>
-         <div class="photo-laser" style="left:66%; top:16%; width:34%; animation-delay:3.2s; transform:rotate(9deg);"></div>
-         <div class="photo-explosion-flicker"></div>
-         <div class="photo-sparkle" style="left:20%; top:22%; animation-delay:.4s;"></div>
-         <div class="photo-sparkle" style="left:78%; top:12%; animation-delay:1.6s;"></div>
-         <div class="photo-sparkle" style="left:58%; top:8%; animation-delay:2.8s;"></div>`;
-    if(mood==='multiverse') return `<div class="photo-planet-glow"></div>
-         <div class="photo-rift"></div>
-         <div class="photo-ember" style="left:4%; bottom:10%; animation-delay:0s;"></div>
-         <div class="photo-ember" style="left:90%; bottom:12%; animation-delay:1.8s;"></div>
-         <div class="photo-ember" style="left:94%; bottom:16%; animation-delay:3.2s;"></div>
-         <div class="photo-ember" style="left:12%; bottom:22%; animation-delay:2.4s;"></div>
-         <div class="photo-debris" style="left:15%; top:10%; animation-delay:0s;"></div>
-         <div class="photo-debris" style="left:70%; top:6%; animation-delay:3s;"></div>
-         <div class="photo-debris" style="left:85%; top:14%; animation-delay:6s;"></div>
-         <div class="photo-debris" style="left:40%; top:4%; animation-delay:9s;"></div>`;
-    if(mood==='rainbow'){
-      const sparkle = (l,t,d)=>`<div class="photo-sparkle" style="left:${l}%; top:${t}%; animation-delay:${d}s;"></div>`;
-      const pts = [[30,55,0],[38,62,.6],[46,58,1.2],[54,52,.3],[62,56,1.8],[70,50,.9],[48,68,2.4],[58,64,1.5],[35,48,2.1],[65,44,.4]];
-      return pts.map(p=>sparkle(p[0],p[1],p[2])).join('') + `<div class="photo-sunflare"></div>`;
+  /* === DECOR DE COMBAT : environnement anime complet, un par ampleur de combat ===
+     Chaque scope (1 quartier -> 7 multivers) monte un vrai environnement : ciel vivant,
+     silhouettes d'architecture SVG en parallaxe sur 2-3 profondeurs, fenetres/lumieres
+     qui pulsent dans le decor, brouillard volumetrique, particules et faisceaux.
+     100% CSS/SVG (pas de video, pas de canvas), anime en transform/opacity uniquement. */
+  function stRand(seed){ let s = seed || 1; return ()=>{ s = (s*1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
+  function stStars(n, seed){
+    const r = stRand(seed); let out='';
+    for(let i=0;i<n;i++){
+      const x=(r()*100).toFixed(2), y=(r()*72).toFixed(2), d=(r()*4.5).toFixed(2), sc=(.6+r()*1.2).toFixed(2);
+      out += `<div class="st-star" style="left:${x}%; top:${y}%; animation-delay:${d}s; transform:scale(${sc});"></div>`;
     }
-    return `<div class="photo-steam" style="left:14%; animation-delay:0s;"></div>
-         <div class="photo-steam" style="left:62%; animation-delay:3.2s;"></div>
-         <div class="photo-steam" style="left:84%; animation-delay:6s;"></div>`;
+    return out;
   }
-  function photoSetHTML(cfg){
-    const particles = moodParticlesHTML(cfg.mood);
-    return `<div class="btl-set photo-set ${MOOD_CLASS[cfg.mood]||''}">
-      <div class="photo-img" style="background-image:url('${cfg.url}');"></div>
-      ${particles}
-      <div class="photo-sweep"></div>
-      <div class="photo-grade"></div>
-      <div class="photo-vignette"></div>
+  function stMotes(n, seed, color, from){
+    const r = stRand(seed); let out='';
+    for(let i=0;i<n;i++){
+      const x=(r()*100).toFixed(2), d=(r()*11).toFixed(2), dur=(8+r()*7).toFixed(1);
+      out += `<div class="st-mote" style="left:${x}%; bottom:${from||-2}%; color:${color}; animation-delay:-${d}s; animation-duration:${dur}s;"></div>`;
+    }
+    return out;
+  }
+  function stStreaks(n, seed, color, rtl){
+    const r = stRand(seed); let out='';
+    for(let i=0;i<n;i++){
+      const y=(6+r()*54).toFixed(2), d=(r()*7).toFixed(2), dur=(4.5+r()*4).toFixed(1), w=(9+r()*16).toFixed(0);
+      out += `<div class="st-streak${rtl?' rtl':''}" style="top:${y}%; width:${w}%; color:${color}; animation-delay:-${d}s; animation-duration:${dur}s;"></div>`;
+    }
+    return out;
+  }
+  /* Silhouette de ville : immeubles + fenetres qui s'allument/s'eteignent dans le decor */
+  function stSkylineSVG(seed, o){
+    const r = stRand(seed), W=400, H=200; const base = o.base==null?200:o.base;
+    let b='', wins='', x=0, i=0;
+    while(x < W){
+      const w = 14 + Math.round(r()*36);
+      const h = Math.round((o.minH||40) + r()*((o.maxH||140)-(o.minH||40)));
+      const top = base - h;
+      b += `<rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${o.fill}"/>`;
+      if(o.spire && r()>.72) b += `<rect x="${(x+w/2-1).toFixed(1)}" y="${(top-16-r()*22).toFixed(1)}" width="2" height="26" fill="${o.fill}"/>`;
+      if(o.win){
+        const cols = Math.max(1, Math.floor(w/9)), rows = Math.max(1, Math.floor(h/13));
+        for(let c=0;c<cols;c++) for(let q=0;q<rows;q++){
+          if(r()>.55) continue;
+          wins += `<rect class="w" x="${(x+4+c*9).toFixed(1)}" y="${(top+6+q*13).toFixed(1)}" width="3" height="5" fill="${o.win}" style="animation-delay:-${(r()*6).toFixed(2)}s;"/>`;
+        }
+      }
+      x += w + 2 + Math.round(r()*8); i++;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${b}${wins}</svg>`;
+  }
+  /* Crete de montagnes / massifs lointains */
+  function stRidgeSVG(seed, o){
+    const r = stRand(seed), W=400, H=200; let p=`0,${H} 0,${o.y||120}`;
+    for(let x=0;x<=W;x+=20){ const y=(o.y||120) - (r()*(o.amp||46)); p += ` ${x},${y.toFixed(1)}`; }
+    p += ` ${W},${H}`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polygon points="${p}" fill="${o.fill}"/></svg>`;
+  }
+  /* Coursive/vaisseau : arches structurelles qui defilent (interieur high-tech) */
+  function stArchSVG(seed, o){
+    const r = stRand(seed), W=400, H=200; let g='';
+    for(let x=10;x<W;x+=52){
+      const h = 150 + r()*30;
+      g += `<path d="M${x} ${H} L${x} ${(H-h).toFixed(0)} Q${(x+22).toFixed(0)} ${(H-h-26).toFixed(0)} ${(x+44).toFixed(0)} ${(H-h).toFixed(0)} L${(x+44).toFixed(0)} ${H}" fill="none" stroke="${o.fill}" stroke-width="4"/>`;
+      g += `<rect class="w" x="${(x+18).toFixed(0)}" y="${(H-h-14).toFixed(0)}" width="8" height="3" fill="${o.win}" style="animation-delay:-${(r()*6).toFixed(2)}s;"/>`;
+      g += `<rect x="${x-2}" y="${H-16}" width="48" height="3" fill="${o.fill}" opacity=".7"/>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${g}</svg>`;
+  }
+  function stPar(depth, svg, style){
+    return `<div class="st-par ${depth}" style="${style||''}">${svg}${svg}</div>`;
+  }
+  const STAGE_THEMES = {
+    /* 1 - QUARTIER : ruelle industrielle, lampes sodium, vapeur des bouches d'egout */
+    1: ()=>({
+      vars:`--st-base:#0a0b10; --st-sky:linear-gradient(180deg,#171a24 0%,#22202a 42%,#2b2118 100%);
+        --st-glow:radial-gradient(ellipse 60% 40% at 30% 76%, rgba(255,150,45,.28), transparent 68%);
+        --st-linec:rgba(255,150,45,.26); --st-beamc:rgba(255,175,80,.32); --st-flashc:radial-gradient(ellipse 40% 30% at 22% 60%, rgba(255,190,110,.35), transparent 60%);`,
+      layers:[
+        `<div class="st-sky"></div>`,
+        `<div class="st-breath"></div>`,
+        `<div class="st-cloudband" style="opacity:.35;"></div>`,
+        stPar('far', stSkylineSVG(11,{fill:'#12141c', win:'#ffb45a', minH:50, maxH:120, base:196}), 'opacity:.85; bottom:26%; top:auto; height:46%;'),
+        stPar('mid', stSkylineSVG(23,{fill:'#0c0e14', win:'#ffd08a', minH:70, maxH:160, base:200}), 'opacity:.95; bottom:8%; top:auto; height:60%;'),
+        stPar('near', stSkylineSVG(37,{fill:'#05060a', minH:110, maxH:190, base:200}), 'bottom:-6%; top:auto; height:56%; opacity:1;'),
+        `<div class="st-beam" style="left:6%;"></div><div class="st-beam" style="left:64%; animation-delay:-6s;"></div>`,
+        `<div class="st-fog" style="color:rgba(255,190,130,.5);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(16, 5, 'rgba(255,170,70,.9)')}</div>`,
+        `<div class="st-flash" style="animation-duration:13s;"></div>`,
+      ]}),
+    /* 2 - VILLE : megapole neon, trafic aerien, hologrammes */
+    2: ()=>({
+      vars:`--st-base:#04060f; --st-sky:linear-gradient(180deg,#060b1c 0%,#0d1330 38%,#2a0f3a 100%);
+        --st-glow:radial-gradient(ellipse 70% 45% at 50% 78%, rgba(0,194,255,.26), transparent 66%);
+        --st-linec:rgba(0,194,255,.34); --st-beamc:rgba(0,194,255,.3);`,
+      layers:[
+        `<div class="st-sky"></div><div class="st-breath"></div>`,
+        `<div class="st-l">${stStars(30, 9)}</div>`,
+        `<div class="st-cloudband" style="opacity:.4;"></div>`,
+        stPar('far', stSkylineSVG(41,{fill:'#0a1226', win:'#5fd6ff', minH:60, maxH:150, base:198, spire:true}), 'bottom:24%; top:auto; height:52%; opacity:.8;'),
+        `<div class="st-l">${stStreaks(4, 51, 'rgba(120,220,255,.9)')}${stStreaks(3, 71, 'rgba(255,120,190,.85)', true)}</div>`,
+        stPar('mid', stSkylineSVG(59,{fill:'#060a18', win:'#8fe7ff', minH:80, maxH:180, base:200, spire:true}), 'bottom:6%; top:auto; height:64%; opacity:.95;'),
+        stPar('near', stSkylineSVG(83,{fill:'#02040a', minH:120, maxH:200, base:200}), 'bottom:-8%; top:auto; height:52%;'),
+        `<div class="st-floor"></div>`,
+        `<div class="st-beam" style="left:16%;"></div><div class="st-beam" style="left:70%; animation-delay:-7s;"></div>`,
+        `<div class="st-fog" style="color:rgba(90,200,255,.45);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(18, 97, 'rgba(120,220,255,.9)')}</div>`,
+      ]}),
+    /* 3 - PAYS : orage sur la chaine de montagnes, vallee illuminee, pluie et eclairs */
+    3: ()=>({
+      vars:`--st-base:#05070d; --st-sky:linear-gradient(180deg,#0a1020 0%,#141c30 45%,#1d2436 100%);
+        --st-glow:radial-gradient(ellipse 60% 40% at 60% 70%, rgba(150,190,255,.2), transparent 66%);
+        --st-linec:rgba(160,200,255,.22); --st-beamc:rgba(190,215,255,.28);`,
+      layers:[
+        `<div class="st-sky"></div><div class="st-breath"></div><div class="st-breath b" style="--st-glow:radial-gradient(ellipse 40% 26% at 24% 34%, rgba(190,215,255,.18), transparent 62%);"></div>`,
+        `<div class="st-cloudband"></div><div class="st-cloudband b"></div>`,
+        stPar('far', stRidgeSVG(13,{fill:'#141b2c', y:110, amp:56}), 'bottom:18%; top:auto; height:56%; opacity:.9;'),
+        stPar('mid', stRidgeSVG(29,{fill:'#0b1120', y:132, amp:44}), 'bottom:4%; top:auto; height:56%;'),
+        stPar('mid', stSkylineSVG(47,{fill:'#080d18', win:'#ffd79a', minH:26, maxH:60, base:200}), 'bottom:2%; top:auto; height:26%; opacity:.85;'),
+        stPar('near', stRidgeSVG(67,{fill:'#03060c', y:150, amp:40}), 'bottom:-10%; top:auto; height:50%;'),
+        `<div class="st-rain"></div>`,
+        `<div class="st-fog" style="color:rgba(170,200,255,.4);"><i></i><i></i><i></i></div>`,
+        `<div class="st-flash"></div><div class="st-flash" style="animation-duration:11s; animation-delay:-4s; --st-flashc:radial-gradient(ellipse 50% 34% at 26% 22%, rgba(210,230,255,.5), transparent 60%);"></div>`,
+        `<div class="st-l">${stMotes(10, 31, 'rgba(190,215,255,.7)')}</div>`,
+      ]}),
+    /* 4 - CONTINENT : littoral fortifie, aurores, projecteurs de defense */
+    4: ()=>({
+      vars:`--st-base:#04070e; --st-sky:linear-gradient(180deg,#04101c 0%,#08203a 40%,#0b2a44 100%);
+        --st-glow:radial-gradient(ellipse 80% 40% at 50% 24%, rgba(90,255,210,.2), transparent 64%);
+        --st-linec:rgba(90,255,210,.28); --st-beamc:rgba(120,255,225,.3);`,
+      layers:[
+        `<div class="st-sky"></div><div class="st-breath"></div>`,
+        `<div class="st-l">${stStars(26, 3)}</div>`,
+        `<div class="st-cloudband" style="--st-cloud:radial-gradient(ellipse 30% 70% at 20% 50%, rgba(90,255,210,.2), transparent 70%),radial-gradient(ellipse 28% 60% at 58% 40%, rgba(120,180,255,.18), transparent 70%),radial-gradient(ellipse 30% 66% at 88% 54%, rgba(160,120,255,.16), transparent 70%); animation-duration:100s;"></div>`,
+        `<div class="st-cloudband b" style="--st-cloud:radial-gradient(ellipse 26% 60% at 34% 46%, rgba(120,255,225,.16), transparent 70%),radial-gradient(ellipse 30% 64% at 76% 52%, rgba(120,180,255,.14), transparent 70%);"></div>`,
+        stPar('far', stRidgeSVG(17,{fill:'#0a1a2a', y:130, amp:38}), 'bottom:22%; top:auto; height:48%; opacity:.85;'),
+        stPar('mid', stSkylineSVG(53,{fill:'#071726', win:'#7ffbe0', minH:70, maxH:170, base:200, spire:true}), 'bottom:6%; top:auto; height:62%;'),
+        stPar('near', stArchSVG(61,{fill:'#03080f', win:'#7ffbe0'}), 'bottom:-10%; top:auto; height:56%; opacity:.95;'),
+        `<div class="st-beam" style="left:4%;"></div><div class="st-beam" style="left:38%; animation-delay:-5s;"></div><div class="st-beam" style="left:74%; animation-delay:-9s;"></div>`,
+        `<div class="st-floor"></div>`,
+        `<div class="st-fog" style="color:rgba(110,255,220,.4);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(16, 77, 'rgba(120,255,225,.9)')}${stStreaks(3, 87, 'rgba(180,255,240,.8)')}</div>`,
+      ]}),
+    /* 5 - MONDE : orbite basse, courbure de la planete, satellites et lever de soleil */
+    5: ()=>({
+      vars:`--st-base:#01030a; --st-sky:linear-gradient(180deg,#01030a 0%,#04081a 46%,#071026 100%);
+        --st-glow:radial-gradient(ellipse 90% 34% at 50% 96%, rgba(90,170,255,.35), transparent 62%);
+        --st-linec:rgba(120,190,255,.24); --st-beamc:rgba(255,220,160,.26);
+        --st-celbg:radial-gradient(circle at 34% 30%, rgba(255,246,210,.95), rgba(255,190,110,.5) 44%, transparent 72%);
+        --st-celsh:0 0 120px 40px rgba(255,200,120,.35);`,
+      layers:[
+        `<div class="st-sky"></div>`,
+        `<div class="st-l">${stStars(46, 7)}</div>`,
+        `<div class="st-cel" style="left:66%; top:8%; width:22vmin; height:22vmin;"><i></i></div>`,
+        `<div class="st-breath"></div>`,
+        `<div class="st-l" style="overflow:hidden;"><div style="position:absolute; left:-30%; right:-30%; bottom:-72%; height:120%; border-radius:50%;
+            background:radial-gradient(ellipse at 50% 8%, rgba(60,140,230,.55), rgba(10,40,90,.9) 34%, rgba(3,8,20,1) 62%);
+            box-shadow:0 0 90px 24px rgba(90,180,255,.35); animation:stCel 34s ease-in-out infinite;"></div>
+          <div style="position:absolute; left:-30%; right:-30%; bottom:-64%; height:118%; border-radius:50%;
+            box-shadow:0 0 60px 18px rgba(140,210,255,.5) inset; opacity:.6; animation:stBreath 11s ease-in-out infinite;"></div></div>`,
+        stPar('mid', stArchSVG(19,{fill:'#0b1830', win:'#9fd8ff'}), 'bottom:34%; top:auto; height:30%; opacity:.55;'),
+        stPar('near', stArchSVG(29,{fill:'#040a16', win:'#cfe9ff'}), 'bottom:-12%; top:auto; height:46%; opacity:.9;'),
+        `<div class="st-l">${stStreaks(4, 43, 'rgba(200,230,255,.85)')}${stStreaks(2, 63, 'rgba(255,220,160,.8)', true)}</div>`,
+        `<div class="st-fog" style="color:rgba(120,190,255,.35);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(14, 101, 'rgba(200,230,255,.9)')}</div>`,
+      ]}),
+    /* 6 - UNIVERS : nebuleuse, anneaux de station, saut lumiere */
+    6: ()=>({
+      vars:`--st-base:#02030a; --st-sky:linear-gradient(180deg,#04021a 0%,#0a0630 44%,#12083a 100%);
+        --st-glow:radial-gradient(ellipse 70% 46% at 40% 40%, rgba(150,110,255,.3), transparent 66%);
+        --st-linec:rgba(150,120,255,.3); --st-beamc:rgba(160,130,255,.3);
+        --st-celbg:radial-gradient(circle at 36% 32%, rgba(255,255,255,.8), rgba(120,180,255,.45) 40%, transparent 74%);
+        --st-celsh:0 0 130px 40px rgba(120,170,255,.4);`,
+      layers:[
+        `<div class="st-sky"></div>`,
+        `<div class="st-l">${stStars(56, 5)}</div>`,
+        `<div class="st-breath"></div><div class="st-breath b" style="--st-glow:radial-gradient(ellipse 50% 40% at 74% 62%, rgba(255,90,180,.22), transparent 64%);"></div>`,
+        `<div class="st-cloudband" style="--st-cloud:radial-gradient(ellipse 30% 70% at 18% 48%, rgba(150,110,255,.28), transparent 70%),radial-gradient(ellipse 26% 60% at 52% 40%, rgba(0,180,255,.2), transparent 70%),radial-gradient(ellipse 30% 66% at 84% 56%, rgba(255,90,180,.22), transparent 70%); height:70%; animation-duration:150s;"></div>`,
+        `<div class="st-ring b"></div><div class="st-ring"></div>`,
+        `<div class="st-cel" style="left:12%; top:14%; width:26vmin; height:26vmin;"><i></i></div>`,
+        stPar('mid', stArchSVG(23,{fill:'#160f36', win:'#c0a8ff'}), 'bottom:26%; top:auto; height:40%; opacity:.6;'),
+        stPar('near', stArchSVG(43,{fill:'#06031a', win:'#e0d0ff'}), 'bottom:-14%; top:auto; height:52%;'),
+        `<div class="st-floor"></div>`,
+        `<div class="st-beam" style="left:26%;"></div><div class="st-beam" style="left:62%; animation-delay:-6s;"></div>`,
+        `<div class="st-l">${stStreaks(6, 89, 'rgba(200,180,255,.9)')}</div>`,
+        `<div class="st-fog" style="color:rgba(160,120,255,.4);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(20, 113, 'rgba(200,180,255,.95)')}</div>`,
+      ]}),
+    /* 7 - MULTIVERS : realite fracturee, portails prismatiques, gravite inversee */
+    7: ()=>({
+      vars:`--st-base:#03010a; --st-sky:linear-gradient(180deg,#0a0224 0%,#1b0736 40%,#2a0a2e 100%);
+        --st-glow:radial-gradient(ellipse 70% 50% at 50% 44%, rgba(255,120,220,.28), transparent 66%);
+        --st-linec:rgba(255,140,230,.3); --st-beamc:rgba(255,140,230,.3);
+        --st-celbg:conic-gradient(from 0deg, rgba(255,220,120,.7), rgba(0,220,255,.55), rgba(255,90,180,.65), rgba(255,220,120,.7));
+        --st-celsh:0 0 140px 50px rgba(255,140,230,.35);`,
+      layers:[
+        `<div class="st-sky"></div>`,
+        `<div class="st-l">${stStars(48, 17)}</div>`,
+        `<div class="st-breath"></div><div class="st-breath b" style="--st-glow:radial-gradient(ellipse 44% 34% at 22% 30%, rgba(0,220,255,.24), transparent 62%);"></div>`,
+        `<div class="st-portal" style="left:8%; top:12%; width:34vmin; height:34vmin;"></div>`,
+        `<div class="st-portal" style="right:6%; top:30%; width:24vmin; height:24vmin; animation-delay:-5s; opacity:.45;"></div>`,
+        `<div class="st-ring b"></div><div class="st-ring"></div>`,
+        `<div class="st-cel" style="left:44%; top:6%; width:20vmin; height:20vmin; filter:blur(1px);"><i></i></div>`,
+        stPar('far', stSkylineSVG(101,{fill:'#1a0930', win:'#ffb3f0', minH:50, maxH:150, base:198, spire:true}), 'bottom:26%; top:auto; height:48%; opacity:.6; transform:scaleY(-1);'),
+        stPar('mid', stSkylineSVG(103,{fill:'#12042a', win:'#ffd0ff', minH:70, maxH:170, base:200, spire:true}), 'bottom:6%; top:auto; height:60%; opacity:.85;'),
+        stPar('near rev', stArchSVG(107,{fill:'#05010f', win:'#ffd0ff'}), 'bottom:-14%; top:auto; height:52%;'),
+        `<div class="st-shard" style="left:14%; top:44%;"></div><div class="st-shard" style="left:72%; top:22%; animation-delay:-8s;"></div>
+         <div class="st-shard" style="left:52%; top:62%; animation-delay:-15s; opacity:.35;"></div><div class="st-shard" style="left:30%; top:12%; animation-delay:-4s; opacity:.3;"></div>`,
+        `<div class="st-floor"></div>`,
+        `<div class="st-beam" style="left:10%;"></div><div class="st-beam" style="left:46%; animation-delay:-5s;"></div><div class="st-beam" style="left:78%; animation-delay:-9s;"></div>`,
+        `<div class="st-fog" style="color:rgba(255,140,230,.4);"><i></i><i></i><i></i></div>`,
+        `<div class="st-l">${stMotes(22, 127, 'rgba(255,180,240,.95)')}${stStreaks(4, 131, 'rgba(180,220,255,.85)', true)}</div>`,
+        `<div class="st-flash" style="animation-duration:15s; --st-flashc:radial-gradient(ellipse 60% 44% at 40% 40%, rgba(255,190,255,.45), transparent 62%);"></div>`,
+      ]}),
+  };
+  function battleStageHTML(scope){
+    const lvl = Math.max(1, Math.min(7, scope|0 || 1));
+    const th = STAGE_THEMES[lvl]();
+    return `<div class="btl-set btl-stage stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
+      ${th.layers.join('')}
+      <div class="st-grade"></div>
+      <div class="st-vig"></div>
     </div>`;
   }
-  function incubatorSetHTML(){
-    const tube = (delay)=>`<div class="incub-tube" style="animation-delay:${delay}s;"><i style="animation-delay:${delay+.4}s;"></i></div>`;
-    const col = (side)=>`<div class="incub-col ${side}">${[0,.7,1.4,2.1,2.8].map(d=>tube(d)).join('')}</div>`;
-    return `<div class="btl-set incub-set">${col('left')}${col('right')}<div class="incub-glow"></div><div class="incub-floor"></div></div>`;
-  }
-  function towerSetHTML(){
-    const caseDiv = (delay)=>`<div class="lab-case" style="animation-delay:${delay}s;"></div>`;
-    const cases = (side)=>`<div class="lab-cases ${side}">${[0,.6,1.2,1.8].map(d=>caseDiv(d)).join('')}</div>`;
-    return `<div class="btl-set lab-set"><div class="lab-ceiling"></div><div class="lab-floor"></div><div class="lab-floor-sweep"></div>${cases('left')}${cases('right')}<div class="lab-orb"></div></div>`;
-  }
-  const bgImg = SCOPE_BG_IMAGES[scope];
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
-    ${bgImg ? photoSetHTML(bgImg) : (scope>=7 ? incubatorSetHTML() : (scope>=6 ? towerSetHTML() : ''))}
+    ${battleStageHTML(scope)}
     <div class="btl-epic-flash"></div>
     <div class="btl-spotlight">
       <div class="btl-fighter me">
