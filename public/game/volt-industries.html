@@ -3260,7 +3260,7 @@ const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1
 /* Personnages temporairement mis en pause : pas encore d'image disponible. Ils gardent toutes
    leurs donnees (puissance, moralite, coups) prets, mais n'apparaissent nulle part dans le jeu
    tant que ce n'est pas retire d'ici. */
-const DISABLED_CHARS = new Set(['bucky','drax']);
+const DISABLED_CHARS = new Set();
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img) && !DISABLED_CHARS.has(k));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
