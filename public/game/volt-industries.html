@@ -4644,6 +4644,23 @@ async function resetMetaProgress(){
   META.totalCivilsSaved = 0;
   META.totalBetrayals = 0;
   META.artifactsFoundEver = [];
+  /* Compteurs du systeme de paliers : sans ca les personnages restaient debloques. */
+  META.everHadRomance = false;
+  META.everJoinedFaction = false;
+  META.everFoundedFaction = false;
+  META.everHadMentee = false;
+  META.everGotGem = false;
+  META.everSurvivedRivalClash = false;
+  META.romanceCount = 0;
+  META.factionJoins = 0;
+  META.factionsFounded = 0;
+  META.menteeCount = 0;
+  META.gemCount = 0;
+  META.rivalClashes = 0;
+  META.star8Count = 0;
+  META.tierUnlocked = 1;
+  META.tierBase = null;
+  try{ evaluateUnlocks(); }catch(e){}
   await saveMetaProgress();
 }
 function showResetConfirm(){
