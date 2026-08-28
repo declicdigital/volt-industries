@@ -3500,10 +3500,13 @@ function t(key){ return T[S.lang][key]; }
 function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 function computePowerLevel(){
-  const base = 12 + S.powers.length*6;
+  /* Bug corrige : la vraie puissance du personnage choisi (CHAR_TIER, note sur 100) n'etait jamais
+     utilisee ici - Doctor Doom et Hawkeye avaient exactement la meme formule ! Elle est maintenant
+     le facteur dominant, avec la progression (stats, missions, age) qui vient s'ajouter par-dessus. */
+  const charBase = S.playerCharKey ? charTier(S.playerCharKey) : 50;
   const statBonus = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/9);
   const growth = Math.min(30, Math.floor(S.totalMissionsDone/8));
-  return clamp(base+statBonus+growth+agingDelta(),1,100);
+  return clamp(charBase*0.75 + statBonus*0.6 + growth*0.9 + agingDelta(), 1, 100);
 }
 /* ---------- Vieillissement : certains gagnent en puissance avec l'age, d'autres declinent ---------- */
 function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1); }
@@ -8240,7 +8243,14 @@ function startBattle(mission, done){
   const form = battleForm();
   const inj = injuryActive();
   const ps = playerStrength(), fs = foeStrength(foeKey, mission);
-  const myMaxHP = Math.round(Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0)));
+  /* Bug corrige : les bonus de competences/momentum/faction pouvaient a eux seuls faire plafonner
+     n'importe quel personnage aussi haut que Doctor Doom, puisque playerStrength() est bornee de la
+     meme facon pour tout le monde. La puissance propre du personnage (CHAR_TIER) est maintenant un
+     vrai multiplicateur final : le plafond de Doom reste toujours nettement au-dessus de celui d'un
+     personnage faible, quel que soit son niveau de competences accumulees. */
+  const charPowerScale = 0.45 + (charTier(S.playerCharKey)||50)/100 * 1.25;
+  const baseHP = Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0));
+  const myMaxHP = Math.round(baseHP * charPowerScale);
   const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
   const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
   const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
