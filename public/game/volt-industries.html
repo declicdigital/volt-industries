@@ -546,6 +546,21 @@
      lisibilite des personnages, barres de vie et boutons au premier plan. */
   .btl-stage{ --st-base:#04060c; --st-acc:#00c2ff; --st-acc2:#7a5cff; background:var(--st-base); }
   .btl-stage *{ pointer-events:none; }
+  /* Decors PHOTOREALISTES : chaque combat s'ouvre sur un vrai plan de cinema (image live-action
+     rendue en 1920x1080) anime en lent travelling (ken-burns). Les couches purement
+     decoratives geometriques sont neutralisees, seules les couches atmospheriques
+     (brouillard, pluie, eclairs, particules, lumieres qui respirent) restent par-dessus. */
+  .st-photo{ position:absolute; inset:-6%; background-size:cover; background-position:center 42%;
+    background-repeat:no-repeat; will-change:transform; animation:stKen 46s ease-in-out infinite alternate;
+    filter:saturate(1.06) contrast(1.06); }
+  @keyframes stKen{ 0%{ transform:scale(1.06) translate3d(-1.2%,0.6%,0);} 100%{ transform:scale(1.16) translate3d(1.4%,-1%,0);} }
+  .btl-stage.st-real .st-par, .btl-stage.st-real .st-floor, .btl-stage.st-real svg,
+  .btl-stage.st-real .st-shard, .btl-stage.st-real .st-cel, .btl-stage.st-real .st-ring,
+  .btl-stage.st-real .st-sky, .btl-stage.st-real .st-cloudband, .btl-stage.st-real .st-star,
+  .btl-stage.st-real .st-portal{ display:none !important; }
+  .btl-stage.st-real .st-breath{ opacity:.5; mix-blend-mode:screen; }
+  .btl-stage.st-real .st-fog i{ opacity:.2; }
+  .btl-stage.st-real .st-grade{ background:linear-gradient(180deg, rgba(4,6,12,.34) 0%, rgba(4,6,12,.12) 32%, rgba(4,6,12,.5) 72%, rgba(3,4,9,.88) 100%); }
   .st-l{ position:absolute; inset:0; }
   .st-par{ position:absolute; top:0; bottom:0; left:0; width:200%; display:flex; will-change:transform; }
   .st-par > *{ flex:0 0 50%; width:50%; height:100%; display:block; }
@@ -4964,6 +4979,7 @@ const POD_FIT_TWEAKS = {
   wolverine:{ y:-14 },               /* Wolverine */
   pyro:{ y:-14 },                    /* Pyro */
   aurelia:{ scale:1.10 },            /* Hela */
+  malachar:{ scale:1.14, y:-8 },     /* Thanos */
 };
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
@@ -5448,8 +5464,6 @@ function screenProfileChoice(){
     gridEl.innerHTML = pagePresets.map(tileHtml).join('');
     gridEl.querySelectorAll('.char-tile').forEach(tile=>{
       const p = sortedPresets.find(x=>x.id===tile.dataset.pid);
-      tile.addEventListener('mouseenter', ()=>renderDetail(p));
-      tile.addEventListener('focus', ()=>renderDetail(p));
       tile.addEventListener('click', ()=>{
         gridEl.querySelectorAll('.char-tile.active').forEach(t=>t.classList.remove('active'));
         tile.classList.add('active');
@@ -7979,7 +7993,8 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
   function battleStageHTML(scope){
     const lvl = Math.max(1, Math.min(7, scope|0 || 1));
     const th = STAGE_THEMES[lvl]();
-    return `<div class="btl-set btl-stage stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
+    return `<div class="btl-set btl-stage st-real stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
+      <div class="st-photo" style="background-image:url('stages/stage${lvl}.jpg');"></div>
       ${th.layers.join('')}
       <div class="st-grade"></div>
       <div class="st-vig"></div>
@@ -8052,20 +8067,28 @@ function startBattle(mission, done){
      tourner indefiniment sans jamais dire qui a gagne. */
   const watchdogTimer = setInterval(()=>{
     if(!document.body.contains(ov)){ clearInterval(watchdogTimer); return; }
-    const stalled = st.busy && (Date.now() - st.lastProgressAt) > 6000;
-    const looping = st.turnCallCount > 40; // beaucoup plus de tours que ce qu'un vrai combat ne devrait jamais avoir
-    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 12000; // cycle sans jamais redonner la main au joueur
-    if((stalled || looping || neverYourTurn) && !document.getElementById('btlStuckHelp')){
+    /* On ne force JAMAIS la fin d'un combat qui avance : tant que le joueur a la main (st.busy
+       false) ou que les tours s'enchainent, on laisse le combat aller jusqu'au KO. Le filet ne
+       sert qu'a un vrai gel (aucune progression pendant tres longtemps alors que le joueur n'a
+       pas la main). */
+    const frozen = st.busy && (Date.now() - st.lastProgressAt) > 25000;
+    if(frozen && !document.getElementById('btlStuckHelp')){
       const logBox = ov.querySelector('.btl-log');
       const msg = document.createElement('div');
       msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
-      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - conclusion forcee dans quelques secondes...' : 'The fight seems stuck - forcing an outcome in a few seconds...';
+      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - reprise du combat...' : 'The fight seems stuck - resuming...';
       if(logBox) logBox.insertAdjacentElement('afterend', msg);
       setTimeout(()=>{
-        if(document.body.contains(ov)){ clearInterval(watchdogTimer); finish(Math.random() < 0.55); }
-      }, 2500);
+        const m = document.getElementById('btlStuckHelp'); if(m) m.remove();
+        if(!document.body.contains(ov)) return;
+        /* On relance le tour en cours au lieu de couper le combat. */
+        if(allFoesDown()){ clearInterval(watchdogTimer); finish(true); return; }
+        if(playerDown()){ clearInterval(watchdogTimer); finish(false); return; }
+        st.lastProgressAt = Date.now();
+        try{ runTurn(); }catch(e){}
+      }, 1800);
     }
-  }, 2000);
+  }, 3000);
 
   const ov = document.createElement('div');
   ov.className = 'btl-overlay has-stage intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
