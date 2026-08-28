@@ -546,6 +546,21 @@
      lisibilite des personnages, barres de vie et boutons au premier plan. */
   .btl-stage{ --st-base:#04060c; --st-acc:#00c2ff; --st-acc2:#7a5cff; background:var(--st-base); }
   .btl-stage *{ pointer-events:none; }
+  /* Decors PHOTOREALISTES : chaque combat s'ouvre sur un vrai plan de cinema (image live-action
+     rendue en 1920x1080) anime en lent travelling (ken-burns). Les couches purement
+     decoratives geometriques sont neutralisees, seules les couches atmospheriques
+     (brouillard, pluie, eclairs, particules, lumieres qui respirent) restent par-dessus. */
+  .st-photo{ position:absolute; inset:-6%; background-size:cover; background-position:center 42%;
+    background-repeat:no-repeat; will-change:transform; animation:stKen 46s ease-in-out infinite alternate;
+    filter:saturate(1.06) contrast(1.06); }
+  @keyframes stKen{ 0%{ transform:scale(1.06) translate3d(-1.2%,0.6%,0);} 100%{ transform:scale(1.16) translate3d(1.4%,-1%,0);} }
+  .btl-stage.st-real .st-par, .btl-stage.st-real .st-floor, .btl-stage.st-real svg,
+  .btl-stage.st-real .st-shard, .btl-stage.st-real .st-cel, .btl-stage.st-real .st-ring,
+  .btl-stage.st-real .st-sky, .btl-stage.st-real .st-cloudband, .btl-stage.st-real .st-star,
+  .btl-stage.st-real .st-portal{ display:none !important; }
+  .btl-stage.st-real .st-breath{ opacity:.5; mix-blend-mode:screen; }
+  .btl-stage.st-real .st-fog i{ opacity:.2; }
+  .btl-stage.st-real .st-grade{ background:linear-gradient(180deg, rgba(4,6,12,.34) 0%, rgba(4,6,12,.12) 32%, rgba(4,6,12,.5) 72%, rgba(3,4,9,.88) 100%); }
   .st-l{ position:absolute; inset:0; }
   .st-par{ position:absolute; top:0; bottom:0; left:0; width:200%; display:flex; will-change:transform; }
   .st-par > *{ flex:0 0 50%; width:50%; height:100%; display:block; }
