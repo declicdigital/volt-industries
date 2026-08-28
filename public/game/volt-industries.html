@@ -4829,6 +4829,7 @@ function mountIncubatorPod(root){
     setTimeout(()=>{
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
+      pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
       fig.src = c.img;
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
       subEl.textContent = c.align === 'hero' ? (isFr?'Specimen - Heros':'Specimen - Hero')
