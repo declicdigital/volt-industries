@@ -4851,17 +4851,22 @@ function podAuraColor(align){
 }
 function incubatorPodHTML(){
   return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff;">
+   <div class="pod-scene">
+    <div class="pod-cap"><i></i><i></i><i></i></div>
     <div class="pod-tube" id="podTube">
       <div class="pod-glow"></div>
       <div class="pod-arc"></div>
+      <div class="pod-bub"><b></b><b></b><b></b><b></b></div>
       <img class="pod-fig" id="podFig" alt="" decoding="async" />
       <div class="pod-scan"></div>
     </div>
+    <div class="pod-plinth"><div class="pod-ring"></div></div>
     <div class="pod-base">
       <div class="pod-name" id="podName">-</div>
       <div class="pod-sub" id="podSub">capsule d'incubation</div>
       <div class="pod-gauges"><i></i><i></i><i></i><i></i></div>
     </div>
+   </div>
   </div>`;
 }
 function mountIncubatorPod(root){
