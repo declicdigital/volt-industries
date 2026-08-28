@@ -871,18 +871,20 @@
     mask-image:radial-gradient(ellipse 82% 92% at 50% 52%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
     mix-blend-mode:screen; opacity:.95; transition:filter .9s ease; }
 
-  /* sujet immerge : bords adoucis, bas dissous dans le plasma, teinte du fluide */
-  .pod-fig{ position:absolute; left:50%; bottom:22%; transform:translateX(-50%); width:50%; height:57%; z-index:3;
+  /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
+  .pod-fig{ position:absolute; left:50%; bottom:23%; transform:translateX(-50%); width:50%; height:56%; z-index:3;
     object-fit:contain; object-position:bottom center;
-    filter:drop-shadow(0 0 26px color-mix(in oklab, var(--podc) 85%, transparent)) contrast(.96) saturate(.9) brightness(1.02);
-    -webkit-mask-image:radial-gradient(ellipse 78% 88% at 50% 42%, #000 55%, rgba(0,0,0,.55) 82%, transparent 100%),
-      linear-gradient(180deg, #000 0 62%, rgba(0,0,0,.45) 88%, transparent 100%);
-    -webkit-mask-composite:source-in;
-    mask-image:radial-gradient(ellipse 78% 88% at 50% 42%, #000 55%, rgba(0,0,0,.55) 82%, transparent 100%),
-      linear-gradient(180deg, #000 0 62%, rgba(0,0,0,.45) 88%, transparent 100%);
-    mask-composite:intersect;
+    filter:saturate(1.06) contrast(1.02) brightness(1.03)
+      drop-shadow(0 0 1px color-mix(in oklab, var(--podc) 95%, transparent))
+      drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 90%, transparent))
+      drop-shadow(0 0 10px color-mix(in oklab, var(--podc) 80%, transparent))
+      drop-shadow(0 0 30px color-mix(in oklab, var(--podc) 60%, transparent))
+      drop-shadow(0 0 70px color-mix(in oklab, var(--podc) 40%, transparent));
+    -webkit-mask-image:linear-gradient(180deg, #000 0 74%, rgba(0,0,0,.5) 92%, transparent 100%);
+    mask-image:linear-gradient(180deg, #000 0 74%, rgba(0,0,0,.5) 92%, transparent 100%);
     opacity:0; transition:opacity 1s ease; }
-  .pod-fig.on{ opacity:.92; animation:podFloat 6.5s ease-in-out infinite; }
+  .pod-fig.on{ opacity:1; animation:podFloat 6.5s ease-in-out infinite; }
+
   /* teinte du fluide par dessus le sujet pour le fondre dans la capsule */
   .pod-tint{ position:absolute; left:50%; bottom:20%; width:56%; height:62%; transform:translateX(-50%); z-index:4;
     pointer-events:none; border-radius:50% 50% 42% 42%/38% 38% 30% 30%;
