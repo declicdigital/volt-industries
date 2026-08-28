@@ -7650,18 +7650,21 @@ function loreAllyOf(charKey){
 }
 function pickOpponentKey(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-  if(S.traitorKey && CHARACTERS[S.traitorKey] && Math.random()<0.18) return S.traitorKey;
-  const crossed = crossedMentees();
-  if(crossed.length && Math.random()<0.22) return pick(crossed).charKey;
   const pool = otherCharKeys().filter(charUnlocked);
-  /* Le rival revient plus souvent que n'importe quel autre adversaire. */
-  /* Un chapitre de rivalite vient de s'escalader (voir maybeRivalAltercation) : la prochaine
-     rencontre eligible est garantie contre le rival, pour que l'affrontement annonce ait vraiment lieu. */
+  /* Le rival revient plus souvent que n'importe quel autre adversaire - il est donc verifie en
+     tout premier, avant meme le traitre ou les recrues passees a l'ennemi, pour que ce ne soit
+     plus jamais eux qui lui volent la priorite. */
   if(S.rivalClimaxReady && S.rivalKey && pool.includes(S.rivalKey)){
     S.rivalClimaxReady = false;
     return S.rivalKey;
   }
   if(S.rivalKey && pool.includes(S.rivalKey) && Math.random() < 0.35) return S.rivalKey;
+  /* Bug corrige : ces deux mecanismes etaient verifies AVANT le rival, avec des chances plus
+     elevees (18% et 22%), ce qui pouvait les faire revenir plus souvent que lui - a l'oppose de
+     l'intention du jeu. Ils passent maintenant apres le rival, avec des chances reduites. */
+  if(S.traitorKey && CHARACTERS[S.traitorKey] && Math.random()<0.08) return S.traitorKey;
+  const crossed = crossedMentees();
+  if(crossed.length && Math.random()<0.10) return pick(crossed).charKey;
   /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
      dresser face a toi si tu incarnes l'un des deux. */
   if(S.playerCharKey){
