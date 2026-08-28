@@ -873,7 +873,7 @@
     mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
-  .pod-fig{ position:absolute; left:50%; bottom:20%; transform:translateX(-50%); width:62%; height:66%; z-index:3;
+  .pod-fig{ position:absolute; left:50%; bottom:20%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 88%; width:62%; height:66%; z-index:3;
     object-fit:contain; object-position:bottom center;
     filter:saturate(1.04) contrast(1.03) brightness(1.04)
       drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
@@ -914,7 +914,7 @@
       radial-gradient(ellipse 40% 22% at 62% 30%, color-mix(in oklab, var(--podc) 35%, transparent), transparent 70%);
     mix-blend-mode:screen; filter:blur(16px); opacity:.38; animation:podMist 9s ease-in-out infinite alternate; }
   @keyframes podMist{ from{ transform:translateY(4px) scale(1); opacity:.45; } to{ transform:translateY(-6px) scale(1.05); opacity:.72; } }
-  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateY(0);} 50%{ transform:translateX(-50%) translateY(-8px);} }
+  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(0) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(-8px) scale(var(--pod-scale, 1));} }
   /* halo d'energie autour du sujet, dans le verre */
   .pod-glow{ position:absolute; left:50%; bottom:18%; width:60%; height:56%; transform:translateX(-50%); border-radius:50%; z-index:2;
     background:radial-gradient(ellipse at 50% 60%, color-mix(in oklab, var(--podc) 75%, transparent), transparent 70%);
@@ -944,6 +944,22 @@
     .wl-pod{ max-width:min(92vw, 420px); margin:0 auto; }
     .pod-scene{ height:min(52vh, 520px); }
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
+  }
+  @media(max-width:560px){
+    #app{ padding-left:12px; padding-right:12px; padding-top:max(14px, env(safe-area-inset-top)); }
+    .welcome-layout{ gap:10px; }
+    .wl-logo{ height:82px; align-items:center; overflow:visible; }
+    .wl-logo svg{ width:auto; height:92px; max-width:76vw; transform:translateX(11%); }
+    .wl-pod{ width:100%; max-width:360px; }
+    .pod-scene{ width:100%; height:auto; max-height:none; aspect-ratio:800/1120; overflow:hidden; }
+    .pod-bg{ background-size:contain; }
+    .pod-fig{ width:64%; height:69%; bottom:17%; }
+    .pod-glow{ bottom:16%; height:60%; }
+    .pod-tint{ bottom:17%; height:64%; }
+    .pod-smoke{ top:8%; bottom:17%; }
+    .pod-mist{ top:10%; bottom:17%; }
+    .pod-glass{ top:7%; bottom:16%; }
+    .pod-base{ left:11%; right:11%; bottom:2.5%; padding:6px 9px; }
   }
   @media(prefers-reduced-motion:reduce){
     .pod-glow,.pod-scan,.pod-fig.on,.pod-gauges i::after,.pod-mist,.pod-tint,.pod-smoke i{ animation:none; }
@@ -4950,6 +4966,30 @@ function podFigSrc(url){
   }
   return _podSrcMap[url] || url;
 }
+function fitPodFigure(img){
+  if(!img || !img.naturalWidth || !img.naturalHeight) return;
+  try{
+    const maxSide = 240;
+    const ratio = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * ratio));
+    const h = Math.max(1, Math.round(img.naturalHeight * ratio));
+    const canvas = document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx = canvas.getContext('2d', {willReadFrequently:true}); if(!ctx) return;
+    ctx.drawImage(img,0,0,w,h);
+    const px = ctx.getImageData(0,0,w,h).data;
+    let minX=w, maxX=0, minY=h, maxY=0;
+    for(let y=0;y<h;y+=2){ for(let x=0;x<w;x+=2){
+      if(px[(y*w+x)*4+3] > 22){ minX=Math.min(minX,x); maxX=Math.max(maxX,x); minY=Math.min(minY,y); maxY=Math.max(maxY,y); }
+    }}
+    if(maxY<=minY) return;
+    const usefulH=(maxY-minY)/h;
+    const scale=Math.min(1.48, Math.max(1, .78/usefulH));
+    const center=((minX+maxX)/2)/w;
+    const shift=Math.max(-18,Math.min(18,(.5-center)*img.getBoundingClientRect().width));
+    img.style.setProperty('--pod-scale',scale.toFixed(3));
+    img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
+  }catch(e){ img.style.setProperty('--pod-scale','1.08'); }
+}
 function mountIncubatorPod(root){
   if(_podTimer){ clearInterval(_podTimer); _podTimer = null; }
   const pod = root.querySelector('.pod'); if(!pod) return;
@@ -4968,6 +5008,9 @@ function mountIncubatorPod(root){
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
       pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
+      fig.style.setProperty('--pod-scale','1');
+      fig.style.setProperty('--pod-shift-x','0px');
+      fig.onload = ()=>fitPodFigure(fig);
       fig.src = podFigSrc(c.img);
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
       subEl.textContent = c.align === 'hero' ? (isFr?'Specimen - Heros':'Specimen - Hero')
