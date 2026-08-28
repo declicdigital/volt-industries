@@ -263,6 +263,7 @@
   .char-tile-dot{ width:9px; height:9px; border-radius:50%; margin:8px auto 4px; box-shadow:0 0 6px currentColor; }
   .char-tile-name{ font-size:13px; font-weight:800; color:var(--ink); padding:0 4px; line-height:1.25; }
   .char-tile.locked .char-tile-name{ opacity:.4; }
+  .char-tile-cond{ font-size:9px; color:#e8c96a; padding:2px 5px 0; line-height:1.25; }
   .char-pager{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:16px; }
   .char-pager-label{ font-size:12px; font-weight:800; letter-spacing:.5px; color:var(--dim); min-width:80px; text-align:center; }
   .char-detail-panel{ display:none; }
@@ -4979,6 +4980,7 @@ function screenProfileChoice(){
         ${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
       <div class="char-tile-dot" style="background:${col};"></div>
       <div class="char-tile-name">${nm}</div>
+      ${unlocked?'':`<div class="char-tile-cond">${tierConditionFor(p.id)}</div>`}
     </div>`;
   }
   const gridEl = d.querySelector('#charGrid');
@@ -7313,7 +7315,28 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto };
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
+     completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
+     sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
+     surveille les trois cas et on force une conclusion propre plutot que de laisser le combat
+     tourner indefiniment sans jamais dire qui a gagne. */
+  const watchdogTimer = setInterval(()=>{
+    if(!document.body.contains(ov)){ clearInterval(watchdogTimer); return; }
+    const stalled = st.busy && (Date.now() - st.lastProgressAt) > 6000;
+    const looping = st.turnCallCount > 40; // beaucoup plus de tours que ce qu'un vrai combat ne devrait jamais avoir
+    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 12000; // cycle sans jamais redonner la main au joueur
+    if((stalled || looping || neverYourTurn) && !document.getElementById('btlStuckHelp')){
+      const logBox = ov.querySelector('.btl-log');
+      const msg = document.createElement('div');
+      msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
+      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - conclusion forcee dans quelques secondes...' : 'The fight seems stuck - forcing an outcome in a few seconds...';
+      if(logBox) logBox.insertAdjacentElement('afterend', msg);
+      setTimeout(()=>{
+        if(document.body.contains(ov)){ clearInterval(watchdogTimer); finish(Math.random() < 0.55); }
+      }, 2500);
+    }
+  }, 2000);
 
   /* Une photo par niveau de combat (quartier, ville, pays...), animee par-dessus. Pas encore d'image = decor par defaut. */
   const SCOPE_BG_IMAGES = {
@@ -7677,6 +7700,7 @@ function startBattle(mission, done){
     setTimeout(()=>{ runTurn(); }, wait(1000));
   }
   function finish(win){
+    clearInterval(watchdogTimer);
     st.busy = true; setMovesEnabled(false);
     /* Reputation par faction : vaincre ou perdre contre un membre affecte ce que sa faction pense de toi. */
     if(foeKey && CHARACTERS[foeKey]){
@@ -7738,11 +7762,14 @@ function startBattle(mission, done){
   }
   /* Dispatcher de tour : chacun agit dans l'ordre d'initiative, joueur inclus. */
   function runTurn(){
+    st.lastProgressAt = Date.now();
+    st.turnCallCount = (st.turnCallCount||0) + 1;
     if(allFoesDown()){ finish(true); return; }
     if(playerDown()){ finish(false); return; }
     const actor = nextActor();
     if(!actor){ setTimeout(runTurn, wait(50)); return; }
     if(actor.side==='ally' && actor.ref.isPlayer){
+      st.lastPlayerTurnAt = Date.now();
       st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
       maybeAutoPlay();
       return;
