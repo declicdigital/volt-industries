@@ -5219,7 +5219,8 @@ function recordCareerForMeta(){
   (S.artifacts||[]).forEach(id=>{ if(!META.artifactsFoundEver.includes(id)) META.artifactsFoundEver.push(id); });
   /* Jalons varies pour l'echelle de deblocage : vie amoureuse, appartenance/creation de faction,
      mentorat, obtention d'une Gemme, survie a une altercation avec le rival. */
-  if(S.romance && (S.romance.love||0) > 0) META.everHadRomance = true;
+  if((S.romance && (S.romance.love||0) > 0) ||
+     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))) META.everHadRomance = true;
   if(S.team) META.everJoinedFaction = true;
   if(S.customFactions && S.customFactions.length) META.everFoundedFaction = true;
   if(S.mentees && S.mentees.length) META.everHadMentee = true;
@@ -10285,6 +10286,11 @@ function handleRomanceEffect(rom, conv){
   if(rom.betray) r.betrayed = true;
   const c = CHARACTERS[r.charKey];
   const n = S.lang==='fr'?c.fr:c.en;
+  /* Le jalon de deblocage (Red Skull / Bucky) doit etre acquis des que la relation existe
+     vraiment, pas seulement si elle est encore active a la fin de la carriere. */
+  if((r.love||0) > 0 || rom.advance){
+    if(!META.everHadRomance){ META.everHadRomance = true; saveMetaProgress(); checkTrophies(); }
+  }
   if(rom.advance){
     r.stage = rom.advance; r.lastYear = S.currentYear;
     S.log.push({ year:S.currentYear, textFr:`Histoire d'amour avec ${n} : ca continue.`, textEn:`Love story with ${n}: it goes on.`, villain:!!r.enemy });
