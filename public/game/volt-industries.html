@@ -861,15 +861,15 @@
   .pod{ position:relative; user-select:none; pointer-events:none; -webkit-user-select:none;
     --podc:#a855f7; --podhue:0deg; }
   /* la capsule sort du decor : pas de cadre, pas de fond, elle se fond dans l'image de la salle */
-  .pod-scene{ position:relative; width:100%; aspect-ratio:800/1200; overflow:visible; }
+  .pod-scene{ position:relative; width:auto; height:min(76vh, 900px); aspect-ratio:800/1200; max-width:100%; margin:0 auto; overflow:visible; }
   .pod-bg{ position:absolute; inset:0;
     background:url("/__l5e/assets-v1/3d1400a9-a805-43dd-8c70-963f3a62a8c4/pod-capsule.png") center bottom/contain no-repeat;
     filter:hue-rotate(var(--podhue)) saturate(1.08) contrast(1.04)
       drop-shadow(0 0 60px color-mix(in oklab, var(--podc) 55%, transparent))
       drop-shadow(0 24px 70px rgba(0,0,0,.75));
-    -webkit-mask-image:radial-gradient(ellipse 82% 92% at 50% 52%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
-    mask-image:radial-gradient(ellipse 82% 92% at 50% 52%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
-    mix-blend-mode:screen; opacity:.95; transition:filter .9s ease; }
+    -webkit-mask-image:radial-gradient(ellipse 66% 80% at 50% 56%, #000 34%, rgba(0,0,0,.55) 62%, rgba(0,0,0,.16) 82%, transparent 96%);
+    mask-image:radial-gradient(ellipse 66% 80% at 50% 56%, #000 34%, rgba(0,0,0,.55) 62%, rgba(0,0,0,.16) 82%, transparent 96%);
+    mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
   .pod-fig{ position:absolute; left:50%; bottom:23%; transform:translateX(-50%); width:50%; height:56%; z-index:3;
