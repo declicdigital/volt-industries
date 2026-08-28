@@ -3251,7 +3251,7 @@ const PRESETS = [
 ];
 
 /* Personnages jouables : les 22 personnages canon (11 heros, 11 villains). Deblocage progressif, voir UNLOCK_TIERS. */
-const SELECTABLE_IDS = ['hawkeye','bucky','drax','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc'];
+const SELECTABLE_IDS = ['hawkeye','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','bucky','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','drax','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Hulk, Thanos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
@@ -4967,34 +4967,36 @@ function markMet(keys){
 }
 function hasMetChar(key){ return (S.metCharacters||[]).includes(key); }
 const UNLOCK_TIERS = [
-  { ids:['hawkeye','rocket','daredevil','yelena'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['hawkeye','rocket'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['daredevil','yelena'], condFr:'Terminer 1 carrieres au total', condEn:'Complete 1 careers total', check:(m)=>(m.careersCompleted||0)>=1 },
   { ids:['marsh','falcon'], condFr:'Atteindre 2 etoiles dans une carriere', condEn:'Reach 2 stars in a career', check:(m)=>(m.bestStars||0)>=2 },
-  { ids:['mantis','starlord'], condFr:'Terminer 1 carrieres au total', condEn:'Complete 1 careers total', check:(m)=>(m.careersCompleted||0)>=1 },
-  { ids:['kaerus','wasp'], condFr:'Vivre une relation amoureuse', condEn:'Live through a romantic relationship', check:(m)=>!!m.everHadRomance },
-  { ids:['aegis','mystique'], condFr:'Terminer 2 carrieres au total', condEn:'Complete 2 careers total', check:(m)=>(m.careersCompleted||0)>=2 },
-  { ids:['pyro','cull'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
-  { ids:['proxima','corvus'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['docock','mysterio'], condFr:'Terminer une carriere d\'au moins 10 ans', condEn:'Complete a career of at least 10 years', check:(m)=>(m.longestCareerYears||0)>=10 },
-  { ids:['nebula','cyclops'], condFr:'Terminer 3 carrieres au total', condEn:'Complete 3 careers total', check:(m)=>(m.careersCompleted||0)>=3 },
-  { ids:['groot','gamora'], condFr:'Former une recrue', condEn:'Train a recruit', check:(m)=>!!m.everHadMentee },
-  { ids:['sable','ebonymaw'], condFr:'Atteindre 4 etoiles dans une carriere', condEn:'Reach 4 stars in a career', check:(m)=>(m.bestStars||0)>=4 },
-  { ids:['fuchsia','deadpool'], condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years', check:(m)=>(m.longestCareerYears||0)>=15 },
-  { ids:['sylvie','wolverine'], condFr:'Terminer 4 carrieres au total', condEn:'Complete 4 careers total', check:(m)=>(m.careersCompleted||0)>=4 },
-  { ids:['thething','antman'], condFr:'Obtenir une Gemme d\'Infinite', condEn:'Obtain an Infinity Gem', check:(m)=>!!m.everGotGem },
-  { ids:['kidspider','theg','siddartha'], condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career', check:(m)=>(m.bestStars||0)>=5 },
-  { ids:['venom','electro'], condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years', check:(m)=>(m.longestCareerYears||0)>=20 },
-  { ids:['telios','mrfantastic'], condFr:'Terminer 5 carrieres au total', condEn:'Complete 5 careers total', check:(m)=>(m.careersCompleted||0)>=5 },
-  { ids:['humantorch','volt'], condFr:'Fonder ta propre faction', condEn:'Found your own faction', check:(m)=>!!m.everFoundedFaction },
-  { ids:['invisiblewoman','storm'], condFr:'Atteindre 6 etoiles dans une carriere', condEn:'Reach 6 stars in a career', check:(m)=>(m.bestStars||0)>=6 },
-  { ids:['nihil','aurelia'], condFr:'Terminer une carriere d\'au moins 25 ans', condEn:'Complete a career of at least 25 years', check:(m)=>(m.longestCareerYears||0)>=25 },
-  { ids:['valkyr','profx'], condFr:'Terminer 6 carrieres au total', condEn:'Complete 6 careers total', check:(m)=>(m.careersCompleted||0)>=6 },
-  { ids:['capmarvel','obsidian'], condFr:'Survivre a un affrontement decisif avec ton rival', condEn:'Survive a decisive clash with your rival', check:(m)=>!!m.everSurvivedRivalClash },
-  { ids:['magneto','apocalypse'], condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career', check:(m)=>(m.bestStars||0)>=7 },
-  { ids:['gorr','ferrum'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
-  { ids:['mandate','vaelor'], condFr:'Terminer 8 carrieres au total', condEn:'Complete 8 careers total', check:(m)=>(m.careersCompleted||0)>=8 },
-  { ids:['solen','vipera'], condFr:'Terminer une carriere d\'au moins 35 ans', condEn:'Complete a career of at least 35 years', check:(m)=>(m.longestCareerYears||0)>=35 },
-  { ids:['nyx','sepulcre'], condFr:'Terminer 10 carrieres au total', condEn:'Complete 10 careers total', check:(m)=>(m.careersCompleted||0)>=10 },
-  { ids:['jeangrey','malachar'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
+  { ids:['mantis','starlord'], condFr:'Terminer 2 carrieres au total', condEn:'Complete 2 careers total', check:(m)=>(m.careersCompleted||0)>=2 },
+  { ids:['kaerus','bucky'], condFr:'Vivre une relation amoureuse', condEn:'Live through a romantic relationship', check:(m)=>!!m.everHadRomance },
+  { ids:['wasp','aegis'], condFr:'Terminer 3 carrieres au total', condEn:'Complete 3 careers total', check:(m)=>(m.careersCompleted||0)>=3 },
+  { ids:['mystique','pyro'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
+  { ids:['cull','proxima'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
+  { ids:['corvus','docock'], condFr:'Terminer une carriere d\'au moins 10 ans', condEn:'Complete a career of at least 10 years', check:(m)=>(m.longestCareerYears||0)>=10 },
+  { ids:['mysterio','nebula'], condFr:'Terminer 4 carrieres au total', condEn:'Complete 4 careers total', check:(m)=>(m.careersCompleted||0)>=4 },
+  { ids:['drax','cyclops'], condFr:'Former une recrue', condEn:'Train a recruit', check:(m)=>!!m.everHadMentee },
+  { ids:['groot','gamora'], condFr:'Atteindre 4 etoiles dans une carriere', condEn:'Reach 4 stars in a career', check:(m)=>(m.bestStars||0)>=4 },
+  { ids:['sable','ebonymaw'], condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years', check:(m)=>(m.longestCareerYears||0)>=15 },
+  { ids:['fuchsia','deadpool'], condFr:'Terminer 5 carrieres au total', condEn:'Complete 5 careers total', check:(m)=>(m.careersCompleted||0)>=5 },
+  { ids:['sylvie','wolverine'], condFr:'Obtenir une Gemme d\'Infinite', condEn:'Obtain an Infinity Gem', check:(m)=>!!m.everGotGem },
+  { ids:['thething','antman'], condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career', check:(m)=>(m.bestStars||0)>=5 },
+  { ids:['kidspider','theg','siddartha'], condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years', check:(m)=>(m.longestCareerYears||0)>=20 },
+  { ids:['venom','electro'], condFr:'Terminer 6 carrieres au total', condEn:'Complete 6 careers total', check:(m)=>(m.careersCompleted||0)>=6 },
+  { ids:['telios','mrfantastic'], condFr:'Fonder ta propre faction', condEn:'Found your own faction', check:(m)=>!!m.everFoundedFaction },
+  { ids:['humantorch','volt'], condFr:'Atteindre 6 etoiles dans une carriere', condEn:'Reach 6 stars in a career', check:(m)=>(m.bestStars||0)>=6 },
+  { ids:['invisiblewoman','storm'], condFr:'Terminer une carriere d\'au moins 25 ans', condEn:'Complete a career of at least 25 years', check:(m)=>(m.longestCareerYears||0)>=25 },
+  { ids:['nihil','aurelia'], condFr:'Terminer 7 carrieres au total', condEn:'Complete 7 careers total', check:(m)=>(m.careersCompleted||0)>=7 },
+  { ids:['valkyr','profx'], condFr:'Survivre a un affrontement decisif avec ton rival', condEn:'Survive a decisive clash with your rival', check:(m)=>!!m.everSurvivedRivalClash },
+  { ids:['capmarvel','obsidian'], condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career', check:(m)=>(m.bestStars||0)>=7 },
+  { ids:['magneto','apocalypse'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
+  { ids:['gorr','ferrum'], condFr:'Terminer 8 carrieres au total', condEn:'Complete 8 careers total', check:(m)=>(m.careersCompleted||0)>=8 },
+  { ids:['mandate','vaelor'], condFr:'Terminer une carriere d\'au moins 35 ans', condEn:'Complete a career of at least 35 years', check:(m)=>(m.longestCareerYears||0)>=35 },
+  { ids:['solen','vipera'], condFr:'Terminer 9 carrieres au total', condEn:'Complete 9 careers total', check:(m)=>(m.careersCompleted||0)>=9 },
+  { ids:['nyx','sepulcre'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
+  { ids:['jeangrey','malachar'], condFr:'Terminer 10 carrieres au total', condEn:'Complete 10 careers total', check:(m)=>(m.careersCompleted||0)>=10 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
 /* Deblocage strictement sequentiel : un palier ne compte que si TOUS les paliers precedents sont deja
@@ -5019,8 +5021,8 @@ function tierConditionFor(id){
 }
 /* Ordre d'affichage du carrousel : 11 ecrans de 2 personnages, classes de la puissance la plus
    faible a la plus forte (Thor et Doctor Doom, les 2 plus puissants du jeu, tout a la fin). */
-const PAIR_HEROES   = ['hawkeye','daredevil','marsh','mantis','kaerus','aegis','pyro','proxima','docock','nebula','groot','sable','fuchsia','sylvie','thething','kidspider','siddartha','electro','mrfantastic','volt','storm','aurelia','profx','obsidian','apocalypse','ferrum','vaelor','vipera','sepulcre','malachar'];
-const PAIR_VILLAINS = ['rocket','yelena','falcon','starlord','wasp','mystique','cull','corvus','mysterio','cyclops','gamora','ebonymaw','deadpool','wolverine','antman','theg','venom','telios','humantorch','invisiblewoman','nihil','valkyr','capmarvel','magneto','gorr','mandate','solen','nyx','jeangrey','boomnpc'];
+const PAIR_HEROES   = ['hawkeye','daredevil','marsh','mantis','kaerus','wasp','mystique','cull','corvus','mysterio','drax','groot','sable','fuchsia','sylvie','thething','kidspider','siddartha','electro','mrfantastic','volt','storm','aurelia','profx','obsidian','apocalypse','ferrum','vaelor','vipera','sepulcre','malachar'];
+const PAIR_VILLAINS = ['rocket','yelena','falcon','starlord','bucky','aegis','pyro','proxima','docock','nebula','cyclops','gamora','ebonymaw','deadpool','wolverine','antman','theg','venom','telios','humantorch','invisiblewoman','nihil','valkyr','capmarvel','magneto','gorr','mandate','solen','nyx','jeangrey','boomnpc'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
