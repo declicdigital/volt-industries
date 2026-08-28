@@ -873,7 +873,7 @@
     mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
-  .pod-fig{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:54%; height:60%; z-index:3;
+  .pod-fig{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(var(--pod-shift-y, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:54%; height:60%; z-index:3;
     object-fit:contain; object-position:bottom center;
     filter:saturate(1.06) contrast(1.06) brightness(1.16)
       drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
@@ -927,7 +927,7 @@
       radial-gradient(ellipse 40% 22% at 62% 30%, color-mix(in oklab, var(--podc) 35%, transparent), transparent 70%);
     mix-blend-mode:screen; filter:blur(16px); opacity:.24; animation:podMist 9s ease-in-out infinite alternate; }
   @keyframes podMist{ from{ transform:translateY(4px) scale(1); opacity:.45; } to{ transform:translateY(-6px) scale(1.05); opacity:.72; } }
-  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(0) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(-8px) scale(var(--pod-scale, 1));} }
+  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(var(--pod-shift-y, 0px)) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(calc(var(--pod-shift-y, 0px) - 8px)) scale(var(--pod-scale, 1));} }
   /* halo d'energie autour du sujet, dans le verre */
   .pod-glow{ position:absolute; left:50%; bottom:18%; width:60%; height:56%; transform:translateX(-50%); border-radius:50%; z-index:2;
     background:radial-gradient(ellipse at 50% 60%, color-mix(in oklab, var(--podc) 75%, transparent), transparent 70%);
@@ -4940,7 +4940,7 @@ function podCharacterPool(){
   Object.keys(CHAR_IMG).forEach(k=>{
     const m = /^char(\d+)$/.exec(k); if(!m) return;
     const n = +m[1];
-    if(n <= 20 || (n >= 41 && n <= 71)) allowedImgs.add(CHAR_IMG[k]);
+    if(n <= 20 || (n >= 41 && n <= 82)) allowedImgs.add(CHAR_IMG[k]);
   });
   return Object.keys(CHARACTERS).filter(k=>{
     const c = CHARACTERS[k];
@@ -4979,6 +4979,13 @@ function podFigSrc(url){
   }
   return _podSrcMap[url] || url;
 }
+const POD_FIT_TWEAKS = {
+  aegis:{ scale:1.10, y:-16 },       /* Captain America */
+  apocalypse:{ scale:1.10, y:-16 },  /* Apocalypse */
+  vaelor:{ scale:1.10, y:-16 },      /* Thor */
+  thething:{ scale:1.10, y:-16 },    /* The Thing */
+  vipera:{ y:-14 },                  /* Loki */
+};
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
   try{
@@ -5002,8 +5009,11 @@ function fitPodFigure(img){
     const scale=Math.min(1.18, Math.max(.9, Math.min(byH, byW)));
     const center=((minX+maxX)/2)/w;
     const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
-    img.style.setProperty('--pod-scale',scale.toFixed(3));
+    const tw = POD_FIT_TWEAKS[img.dataset.podKey || ''] || {};
+    const finalScale = Math.min(1.34, scale * (tw.scale || 1));
+    img.style.setProperty('--pod-scale',finalScale.toFixed(3));
     img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
+    img.style.setProperty('--pod-shift-y',`${(tw.y||0)}px`);
   }catch(e){ img.style.setProperty('--pod-scale','1.02'); }
 }
 function mountIncubatorPod(root){
@@ -5026,6 +5036,8 @@ function mountIncubatorPod(root){
       pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
       fig.style.setProperty('--pod-scale','1');
       fig.style.setProperty('--pod-shift-x','0px');
+      fig.style.setProperty('--pod-shift-y','0px');
+      fig.dataset.podKey = pool[i];
       fig.onload = ()=>fitPodFigure(fig);
       fig.src = podFigSrc(c.img);
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
