@@ -4658,6 +4658,14 @@ async function resetMetaProgress(){
   META.gemCount = 0;
   META.rivalClashes = 0;
   META.star8Count = 0;
+  ['totalFightsLost','totalMissions','totalYearsLived','totalSkillsLearned','maxSkillsInCareer',
+   'totalMentees','maxMenteesInCareer','maxGemsInCareer','totalGemsFound','totalCosmicWins',
+   'totalMultiverseWins','totalDeaths','bestAlignGood','bestAlignEvil','bestCourage','bestIntelligence',
+   'bestPopularity','maxLove','heroCareers','villainCareers','neutralCareers','survivedCareers',
+   'flawlessCareers','starFiveCareers','starSevenCareers','marathonCareers','loyalCareers']
+    .forEach(k=>{ META[k] = 0; });
+  META.locationsEver = [];
+  META.charactersPlayed = [];
   META.tierUnlocked = 1;
   META.tierBase = null;
   try{ evaluateUnlocks(); }catch(e){}
