@@ -5247,6 +5247,44 @@ function recordCareerForMeta(){
   if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); }
   if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
   if(S.eighthStar) metaBump('star8Count');
+  /* Compteurs a vie supplementaires, utilises par les trophees. */
+  const fightsLost = S.combat.lost||0, fightsWon = S.combat.won||0;
+  const missions = (S.missionsPlan?S.missionsPlan.length:0) || years || 0;
+  const skills = (S.skills||[]).length, gems = (S.eclats||[]).length, mentees = (S.mentees||[]).length;
+  const stars = computeStars();
+  const st = S.stats||{};
+  META.totalFightsLost = (META.totalFightsLost||0) + fightsLost;
+  META.totalMissions = (META.totalMissions||0) + missions;
+  META.totalYearsLived = (META.totalYearsLived||0) + (years||0);
+  META.totalSkillsLearned = (META.totalSkillsLearned||0) + skills;
+  META.maxSkillsInCareer = Math.max(META.maxSkillsInCareer||0, skills);
+  META.totalMentees = (META.totalMentees||0) + mentees;
+  META.maxMenteesInCareer = Math.max(META.maxMenteesInCareer||0, mentees);
+  META.maxGemsInCareer = Math.max(META.maxGemsInCareer||0, gems);
+  META.totalGemsFound = (META.totalGemsFound||0) + gems;
+  META.totalCosmicWins = (META.totalCosmicWins||0) + (S.cosmicWins||0);
+  META.totalMultiverseWins = (META.totalMultiverseWins||0) + (S.trueCosmicWins||0);
+  META.totalDeaths = (META.totalDeaths||0) + (S.dead?1:0);
+  META.bestAlignGood = Math.max(META.bestAlignGood||0, S.align||0);
+  META.bestAlignEvil = Math.min(META.bestAlignEvil||0, S.align||0);
+  META.bestCourage = Math.max(META.bestCourage||0, st.courage||0);
+  META.bestIntelligence = Math.max(META.bestIntelligence||0, st.intelligence||0);
+  META.bestPopularity = Math.max(META.bestPopularity||0, st.popularity||0);
+  META.maxLove = Math.max(META.maxLove||0, (S.romance&&S.romance.love)||0,
+    ...(S.romanceHistory||[]).map(r=>r.love||0));
+  META.heroCareers = (META.heroCareers||0) + ((S.align||0) > 20 ? 1 : 0);
+  META.villainCareers = (META.villainCareers||0) + ((S.align||0) < -20 ? 1 : 0);
+  META.neutralCareers = (META.neutralCareers||0) + (Math.abs(S.align||0) <= 20 ? 1 : 0);
+  META.survivedCareers = (META.survivedCareers||0) + (S.dead?0:1);
+  if(fightsWon>=5 && fightsLost===0) META.flawlessCareers = (META.flawlessCareers||0) + 1;
+  if(stars>=5) META.starFiveCareers = (META.starFiveCareers||0) + 1;
+  if(stars>=7) META.starSevenCareers = (META.starSevenCareers||0) + 1;
+  if(years>=40) META.marathonCareers = (META.marathonCareers||0) + 1;
+  if((S.turningPoints||[]).length===0) META.loyalCareers = (META.loyalCareers||0) + 1;
+  META.locationsEver = META.locationsEver || [];
+  (S.locations||[]).forEach(l=>{ const n=l&&l.name; if(n && !META.locationsEver.includes(n)) META.locationsEver.push(n); });
+  META.charactersPlayed = META.charactersPlayed || [];
+  if(S.charKey && !META.charactersPlayed.includes(S.charKey)) META.charactersPlayed.push(S.charKey);
   checkTrophies();
   evaluateUnlocks();
   /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
