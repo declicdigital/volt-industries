@@ -7993,7 +7993,8 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
   function battleStageHTML(scope){
     const lvl = Math.max(1, Math.min(7, scope|0 || 1));
     const th = STAGE_THEMES[lvl]();
-    return `<div class="btl-set btl-stage stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
+    return `<div class="btl-set btl-stage st-real stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
+      <div class="st-photo" style="background-image:url('stages/stage${lvl}.jpg');"></div>
       ${th.layers.join('')}
       <div class="st-grade"></div>
       <div class="st-vig"></div>
