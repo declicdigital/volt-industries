@@ -850,9 +850,9 @@
     #app{ padding-bottom:130px; }
   }
   /* ---------- Vitrine d'incubation (decoratif) ---------- */
-  .welcome-layout{ display:grid; grid-template-columns: 300px minmax(0,1fr); grid-template-areas:"logo logo" "pod main"; gap:26px 32px; align-items:start; }
+  .welcome-layout{ display:grid; grid-template-columns: min(44vw, 520px) minmax(0,1fr); grid-template-areas:"logo logo" "pod main"; gap:26px 30px; align-items:start; }
   .wl-logo{ grid-area:logo; display:flex; justify-content:center; }
-  .wl-pod{ grid-area:pod; position:sticky; top:24px; }
+  .wl-pod{ grid-area:pod; position:sticky; top:10px; }
   .wl-main{ grid-area:main; min-width:0; }
   @media(max-width:900px){
     .welcome-layout{ grid-template-columns:minmax(0,1fr); grid-template-areas:"logo" "pod" "main"; gap:18px; }
@@ -860,11 +860,17 @@
   }
   .pod{ position:relative; user-select:none; pointer-events:none; -webkit-user-select:none;
     --podc:#a855f7; --podhue:0deg; }
-  .pod-scene{ position:relative; width:100%; aspect-ratio:800/1200; overflow:hidden; border-radius:16px;
-    box-shadow:0 26px 60px -30px #000, 0 0 40px -18px color-mix(in oklab, var(--podc) 60%, transparent); }
+  /* la capsule sort du decor : pas de cadre, pas de fond, elle se fond dans l'image de la salle */
+  .pod-scene{ position:relative; width:100%; height:min(82vh, 980px); overflow:visible; }
   .pod-bg{ position:absolute; inset:0;
-    background:url("/__l5e/assets-v1/3d1400a9-a805-43dd-8c70-963f3a62a8c4/pod-capsule.png") center/cover no-repeat;
-    filter:hue-rotate(var(--podhue)) saturate(1.05); transition:filter .9s ease; }
+    background:url("/__l5e/assets-v1/3d1400a9-a805-43dd-8c70-963f3a62a8c4/pod-capsule.png") center bottom/contain no-repeat;
+    filter:hue-rotate(var(--podhue)) saturate(1.08) contrast(1.04)
+      drop-shadow(0 0 60px color-mix(in oklab, var(--podc) 55%, transparent))
+      drop-shadow(0 24px 70px rgba(0,0,0,.75));
+    -webkit-mask-image:radial-gradient(ellipse 82% 92% at 50% 52%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
+    mask-image:radial-gradient(ellipse 82% 92% at 50% 52%, #000 62%, rgba(0,0,0,.6) 84%, transparent 100%);
+    mix-blend-mode:screen; opacity:.95; transition:filter .9s ease; }
+
   /* sujet immerge : bords adoucis, bas dissous dans le plasma, teinte du fluide */
   .pod-fig{ position:absolute; left:50%; bottom:22%; transform:translateX(-50%); width:50%; height:57%; z-index:3;
     object-fit:contain; object-position:bottom center;
