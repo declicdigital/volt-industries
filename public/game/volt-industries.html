@@ -5199,6 +5199,7 @@ async function loadMetaProgress(){
     if(r && r.value) Object.assign(META, JSON.parse(r.value));
   }catch(e){ /* aucune progression enregistree pour l'instant */ }
   META.loaded = true;
+  try{ evaluateUnlocks(); }catch(e){}
   return META;
 }
 async function saveMetaProgress(){
@@ -5220,13 +5221,15 @@ function recordCareerForMeta(){
   /* Jalons varies pour l'echelle de deblocage : vie amoureuse, appartenance/creation de faction,
      mentorat, obtention d'une Gemme, survie a une altercation avec le rival. */
   if((S.romance && (S.romance.love||0) > 0) ||
-     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))) META.everHadRomance = true;
-  if(S.team) META.everJoinedFaction = true;
-  if(S.customFactions && S.customFactions.length) META.everFoundedFaction = true;
-  if(S.mentees && S.mentees.length) META.everHadMentee = true;
-  if(S.eclats && S.eclats.length) META.everGotGem = true;
-  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)) META.everSurvivedRivalClash = true;
+     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))){ META.everHadRomance = true; metaBump('romanceCount'); }
+  if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
+  if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
+  if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
+  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); }
+  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
+  if(S.eighthStar) metaBump('star8Count');
   checkTrophies();
+  evaluateUnlocks();
   /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
   if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
     META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
@@ -5329,23 +5332,86 @@ const UNLOCK_TIERS = [
 ];
 /* Deblocage strictement sequentiel : un palier ne compte que si TOUS les paliers precedents sont deja
    debloques. Meme une carriere a 8 etoiles ne saute jamais par-dessus les paliers du dessous. */
-function unlockedPresetIds(){
-  const out=[];
-  for(const t of UNLOCK_TIERS){
-    if(!t.check(META)) break;
-    out.push(...t.ids);
+/* Metrique cumulee associee a chaque palier (index 1..30 ; le palier 0 est offert). */
+const TIER_METRICS = [
+  null,
+  {key:'careersCompleted', target:1}, {key:'bestStars', target:2}, {key:'careersCompleted', target:2},
+  {key:'romanceCount', target:1}, {key:'careersCompleted', target:3}, {key:'factionJoins', target:1},
+  {key:'bestStars', target:3}, {key:'longestCareerYears', target:10}, {key:'careersCompleted', target:4},
+  {key:'menteeCount', target:1}, {key:'bestStars', target:4}, {key:'longestCareerYears', target:15},
+  {key:'careersCompleted', target:5}, {key:'gemCount', target:1}, {key:'bestStars', target:5},
+  {key:'longestCareerYears', target:20}, {key:'careersCompleted', target:6}, {key:'factionsFounded', target:1},
+  {key:'bestStars', target:6}, {key:'longestCareerYears', target:25}, {key:'careersCompleted', target:7},
+  {key:'rivalClashes', target:1}, {key:'bestStars', target:7}, {key:'longestCareerYears', target:30},
+  {key:'careersCompleted', target:8}, {key:'longestCareerYears', target:35}, {key:'careersCompleted', target:9},
+  {key:'longestCareerYears', target:40}, {key:'careersCompleted', target:10}, {key:'star8Count', target:1},
+];
+const TIER_METRIC_KEYS = ['careersCompleted','bestStars','longestCareerYears','romanceCount','factionJoins',
+  'menteeCount','gemCount','factionsFounded','rivalClashes','star8Count'];
+function metaVal(k){ return Number(META[k]||0); }
+function metaBump(k){ META[k] = metaVal(k) + 1; }
+function tierSnapshot(){ const s={}; TIER_METRIC_KEYS.forEach(k=>{ s[k] = metaVal(k); }); return s; }
+/* Deblocage strictement palier par palier : chaque palier ouvre exactement 2 personnages, et il faut une
+   NOUVELLE progression (au-dela du niveau atteint quand le palier est devenu actif) pour le franchir.
+   Impossible donc de debloquer plusieurs paliers d'un coup avec de l'historique deja accumule. */
+function evaluateUnlocks(){
+  let changed = false;
+  if(typeof META.tierUnlocked !== 'number' || META.tierUnlocked < 1){
+    /* Migration depuis l'ancien systeme : on garde le nombre de paliers deja acquis. */
+    let legacy = 0;
+    for(const t of UNLOCK_TIERS){ if(!t.check(META)) break; legacy++; }
+    /* Garde-fou anti-bug : l'ancien systeme pouvait liberer toute la chaine d'un coup. On plafonne la
+       reprise a une progression credible (1 palier par carriere terminee) pour repartir proprement. */
+    const cap = 1 + metaVal('careersCompleted');
+    META.tierUnlocked = Math.max(1, Math.min(legacy, cap, UNLOCK_TIERS.length));
+    META.tierBase = tierSnapshot();
+    changed = true;
   }
+  if(!META.tierBase){ META.tierBase = tierSnapshot(); changed = true; }
+  while(META.tierUnlocked < UNLOCK_TIERS.length){
+    const m = TIER_METRICS[META.tierUnlocked];
+    if(!m) break;
+    const v = metaVal(m.key), base = Number(META.tierBase[m.key]||0);
+    if(v >= m.target && v > base){
+      META.tierUnlocked++;
+      META.tierBase = tierSnapshot();
+      changed = true;
+    } else break;
+  }
+  if(changed) saveMetaProgress();
+  return changed;
+}
+function unlockedTierCount(){
+  if(typeof META.tierUnlocked !== 'number') evaluateUnlocks();
+  return Math.max(1, Math.min(META.tierUnlocked||1, UNLOCK_TIERS.length));
+}
+function unlockedPresetIds(){
+  const n = unlockedTierCount();
+  const out=[];
+  for(let i=0;i<n;i++) out.push(...UNLOCK_TIERS[i].ids);
   return out;
 }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
+/* Raison de verrouillage : la vraie condition du palier du personnage + sa position dans la chaine. */
 function tierConditionFor(id){
+  const fr = S.lang==='fr';
   const idx = UNLOCK_TIERS.findIndex(t=>t.ids.includes(id));
   if(idx<0) return '';
-  for(let i=0;i<=idx;i++){
-    if(!UNLOCK_TIERS[i].check(META)) return S.lang==='fr' ? UNLOCK_TIERS[i].condFr : UNLOCK_TIERS[i].condEn;
-  }
   const t = UNLOCK_TIERS[idx];
-  return S.lang==='fr' ? t.condFr : t.condEn;
+  const cond = fr ? t.condFr : t.condEn;
+  const cur = unlockedTierCount();
+  const label = `${fr?'Palier':'Tier'} ${idx+1}/${UNLOCK_TIERS.length}`;
+  if(idx > cur){
+    const nx = UNLOCK_TIERS[cur];
+    const nxCond = fr ? nx.condFr : nx.condEn;
+    return `${label} &middot; ${cond} — ${fr?'debloque d\'abord le palier':'first clear tier'} ${cur+1} (${nxCond})`;
+  }
+  const m = TIER_METRICS[idx];
+  if(m){
+    const need = Math.max(m.target, Number((META.tierBase||{})[m.key]||0) + 1);
+    return `${label} &middot; ${cond} (${metaVal(m.key)}/${need})`;
+  }
+  return `${label} &middot; ${cond}`;
 }
 /* Ordre d'affichage du carrousel : 31 ecrans de 2 personnages, classes de la puissance la plus
    faible a la plus forte (Galactus, Thanos, Jean Grey et Doctor Doom tout a la fin). */
@@ -10300,7 +10366,7 @@ function handleRomanceEffect(rom, conv){
   /* Le jalon de deblocage (Red Skull / Bucky) doit etre acquis des que la relation existe
      vraiment, pas seulement si elle est encore active a la fin de la carriere. */
   if((r.love||0) > 0 || rom.advance){
-    if(!META.everHadRomance){ META.everHadRomance = true; saveMetaProgress(); checkTrophies(); }
+    if(!META.everHadRomance){ META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); evaluateUnlocks(); saveMetaProgress(); }
   }
   if(rom.advance){
     r.stage = rom.advance; r.lastYear = S.currentYear;
