@@ -3907,10 +3907,10 @@ function autoCareerStep(){
   setTimeout(()=>{
     S._autoStepPending = false;
     if(!S.careerAuto || S.screen==='end') return;
-    /* La cinematique de la 8eme etoile merite d'etre vue : on arrete la simulation net, sans
-       jamais cliquer a travers automatiquement. */
+    /* La cinematique de la 8eme etoile merite d'etre vue : on attend qu'elle se termine, sans
+       cliquer a travers, mais sans couper la simulation non plus. */
     if(document.querySelector('.cine-overlay.eighth-star')){
-      S.careerAuto = false; renderCareerAutoWidget();
+      setTimeout(autoCareerStep, 600);
       return;
     }
     /* Le combat gere maintenant son propre mode automatique (st.auto, active des le depart quand
