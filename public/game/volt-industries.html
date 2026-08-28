@@ -3907,10 +3907,10 @@ function autoCareerStep(){
   setTimeout(()=>{
     S._autoStepPending = false;
     if(!S.careerAuto || S.screen==='end') return;
-    /* La cinematique de la 8eme etoile merite d'etre vue : on attend qu'elle se termine, sans
-       cliquer a travers, mais sans couper la simulation non plus. */
+    /* La cinematique de la 8eme etoile merite d'etre vue : on arrete la simulation net, sans
+       jamais cliquer a travers automatiquement. */
     if(document.querySelector('.cine-overlay.eighth-star')){
-      setTimeout(autoCareerStep, 600);
+      S.careerAuto = false; renderCareerAutoWidget();
       return;
     }
     /* Le combat gere maintenant son propre mode automatique (st.auto, active des le depart quand
@@ -3939,59 +3939,74 @@ function autoCareerStep(){
       return;
     }
     S._btlWatchdogStart = null;
-    if(document.getElementById('convOverlay')){
+    const convEl = document.getElementById('convOverlay');
+    if(convEl){
+      /* Filet de securite conversations : si l'overlay reste affiche sans qu'aucun bouton cliquable
+         n'apparaisse (ligne bloquee, choix jamais rendus), on le ferme et on relance la carriere
+         plutot que de laisser la simulation coincee. */
+      if(S._convWatchdogStart == null || S._convWatchdogEl !== convEl){ S._convWatchdogStart = Date.now(); S._convWatchdogEl = convEl; }
       const convNext = document.getElementById('convNext');
-      if(convNext){ convNext.click(); setTimeout(autoCareerStep, 450); return; }
       const convChoices = document.getElementById('convChoices');
-      const convBtns = convChoices ? Array.from(convChoices.querySelectorAll('button')) : [];
-      if(convBtns.length){ pick(convBtns).click(); setTimeout(autoCareerStep, 450); return; }
+      const convBtns = convChoices ? Array.from(convChoices.querySelectorAll('button')).filter(b=>!b.disabled) : [];
+      if(convNext && !convNext.disabled){ S._convWatchdogStart = Date.now(); convNext.click(); setTimeout(autoCareerStep, 450); return; }
+      if(convBtns.length){ S._convWatchdogStart = Date.now(); pick(convBtns).click(); setTimeout(autoCareerStep, 450); return; }
+      if(Date.now() - S._convWatchdogStart > 6000){
+        S._convWatchdogStart = null; S._convWatchdogEl = null;
+        convEl.remove();
+        document.querySelectorAll('.cine-overlay').forEach(el=>el.remove());
+        render();
+        setTimeout(autoCareerStep, 400);
+        return;
+      }
       setTimeout(autoCareerStep, 400); return;
     }
+    S._convWatchdogStart = null; S._convWatchdogEl = null;
     if(document.querySelector('.cine-overlay')){
-      // Quelque chose est encore affiche par-dessus (overlay en train de disparaitre, etc.) : on retente un peu plus tard, sans jamais abandonner.
+      /* Quelque chose est encore affiche par-dessus (overlay en train de disparaitre, etc.). On
+         retente, et si un overlay decoratif reste bloque trop longtemps on le retire. */
+      if(S._cineWatchdogStart == null) S._cineWatchdogStart = Date.now();
+      if(Date.now() - S._cineWatchdogStart > 8000){
+        S._cineWatchdogStart = null;
+        document.querySelectorAll('.cine-overlay').forEach(el=>el.remove());
+        setTimeout(autoCareerStep, 300);
+        return;
+      }
       setTimeout(autoCareerStep, 400);
       return;
     }
-    /* Ces ecrans etaient auparavant des points d'arret : la simulation se coupait plusieurs fois
-       par partie. On y repond maintenant par un choix par defaut non destructif (on continue). */
-    if(S.screen==='factionCreate'){
-      const skip = document.getElementById('skipFac');
-      if(skip){ skip.click(); return; }
-      setTimeout(autoCareerStep, 400); return;
-    }
-    if(S.screen==='careerDurationChoice'){
-      // Fin de la duree prevue : on cloture la carriere proprement plutot que de figer la simulation.
-      const stopHere = document.getElementById('stopHere');
-      if(stopHere){ stopHere.click(); return; }
-      setTimeout(autoCareerStep, 400); return;
+    S._cineWatchdogStart = null;
+    /* Creer une faction et le choix retraite/temps supplementaire sont trop importants pour etre
+       repondus automatiquement : on arrete la simulation et on laisse la main. */
+    if(S.screen==='factionCreate' || S.screen==='careerDurationChoice'){
+      S.careerAuto = false; renderCareerAutoWidget();
+      return;
     }
     if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='rivalClimax'){
       const cbox = document.getElementById('choices') || document.querySelector('.actions');
       const btns = cbox ? Array.from(cbox.querySelectorAll('button')).filter(b=>!b.disabled) : [];
-      if(btns.length){ pick(btns).click(); return; }
+      if(btns.length){ autoClickAndWatch(pick(btns)); return; }
       setTimeout(autoCareerStep, 400); return;
     }
     if(S.screen==='invite' || S.screen==='defection'){
       const accept = document.getElementById('accept') || document.getElementById('acceptD');
-      if(accept){ accept.click(); return; }
+      if(accept){ autoClickAndWatch(accept); return; }
       setTimeout(autoCareerStep, 400); return;
     }
     if(S.screen==='yearbreak'){
       const retireNow = document.getElementById('retireNow');
       if(retireNow){
-        // On continue a vivre plutot que de couper la simulation sur cet ecran.
-        const peace = document.getElementById('livePeace');
-        if(peace){ peace.click(); return; }
-        setTimeout(autoCareerStep, 400); return;
+        // La proposition de retraite/vie paisible est trop importante pour etre repondue automatiquement : on arrete la simulation et on laisse la main.
+        S.careerAuto = false; renderCareerAutoWidget();
+        return;
       }
-      const go = document.getElementById('go'); if(go){ go.click(); return; }
+      const go = document.getElementById('go'); if(go){ autoClickAndWatch(go); return; }
       setTimeout(autoCareerStep, 400); return;
     }
     /* Filet general : tout autre ecran (bilan, evenement scenarise, etc.) est joue avec son bouton
        principal. La simulation ne doit jamais se retrouver sans etape suivante planifiee. */
     const anyBox = document.getElementById('choices') || document.querySelector('.actions');
     const anyBtns = anyBox ? Array.from(anyBox.querySelectorAll('button')).filter(b=>!b.disabled && !/download|telecharg|export/i.test((b.id||'')+(b.className||''))) : [];
-    if(anyBtns.length){ anyBtns[0].click(); return; }
+    if(anyBtns.length){ autoClickAndWatch(anyBtns[0]); return; }
     setTimeout(autoCareerStep, 500);
   }, 300);
 }
