@@ -617,8 +617,8 @@
     border:1px solid rgba(255,255,255,.18); clip-path:polygon(18% 0, 100% 22%, 82% 100%, 0 74%);
     animation:stShard 24s ease-in-out infinite; will-change:transform; }
   @keyframes stShard{ 0%,100%{ transform:translate3d(0,0,0) rotate(-6deg);} 50%{ transform:translate3d(2vw,-4vh,0) rotate(9deg);} }
-  .st-grade{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(4,6,12,.5) 0%, rgba(4,6,12,.34) 34%, rgba(4,6,12,.72) 74%, rgba(3,4,9,.92) 100%); }
-  .st-vig{ position:absolute; inset:0; box-shadow:inset 0 0 190px 66px rgba(0,0,0,.85); animation:stVig 8s ease-in-out infinite; }
+  .st-grade{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(4,6,12,.28) 0%, rgba(4,6,12,.14) 34%, rgba(4,6,12,.55) 74%, rgba(3,4,9,.86) 100%); }
+  .st-vig{ position:absolute; inset:0; box-shadow:inset 0 0 170px 42px rgba(0,0,0,.7); animation:stVig 8s ease-in-out infinite; }
   @keyframes stVig{ 0%,100%{ opacity:.86;} 50%{ opacity:1;} }
   .btl-stage svg{ display:block; }
   .btl-stage svg .w{ animation:stWin 6s steps(1,end) infinite; }
@@ -7834,7 +7834,7 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
   const STAGE_THEMES = {
     /* 1 - QUARTIER : ruelle industrielle, lampes sodium, vapeur des bouches d'egout */
     1: ()=>({
-      vars:`--st-base:#0a0b10; --st-sky:linear-gradient(180deg,#171a24 0%,#22202a 42%,#2b2118 100%);
+      vars:`--st-base:#0a0b10; --st-sky:linear-gradient(180deg,#232838 0%,#33303e 42%,#48331f 100%);
         --st-glow:radial-gradient(ellipse 60% 40% at 30% 76%, rgba(255,150,45,.28), transparent 68%);
         --st-linec:rgba(255,150,45,.26); --st-beamc:rgba(255,175,80,.32); --st-flashc:radial-gradient(ellipse 40% 30% at 22% 60%, rgba(255,190,110,.35), transparent 60%);`,
       layers:[
@@ -7869,16 +7869,16 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
       ]}),
     /* 3 - PAYS : orage sur la chaine de montagnes, vallee illuminee, pluie et eclairs */
     3: ()=>({
-      vars:`--st-base:#05070d; --st-sky:linear-gradient(180deg,#0a1020 0%,#141c30 45%,#1d2436 100%);
+      vars:`--st-base:#05070d; --st-sky:linear-gradient(180deg,#16203a 0%,#243352 45%,#33405c 100%);
         --st-glow:radial-gradient(ellipse 60% 40% at 60% 70%, rgba(150,190,255,.2), transparent 66%);
         --st-linec:rgba(160,200,255,.22); --st-beamc:rgba(190,215,255,.28);`,
       layers:[
         `<div class="st-sky"></div><div class="st-breath"></div><div class="st-breath b" style="--st-glow:radial-gradient(ellipse 40% 26% at 24% 34%, rgba(190,215,255,.18), transparent 62%);"></div>`,
         `<div class="st-cloudband"></div><div class="st-cloudband b"></div>`,
-        stPar('far', stRidgeSVG(13,{fill:'#141b2c', y:110, amp:56}), 'bottom:18%; top:auto; height:56%; opacity:.9;'),
-        stPar('mid', stRidgeSVG(29,{fill:'#0b1120', y:132, amp:44}), 'bottom:4%; top:auto; height:56%;'),
+        stPar('far', stRidgeSVG(13,{fill:'#25314e', y:110, amp:56}), 'bottom:18%; top:auto; height:56%; opacity:.9;'),
+        stPar('mid', stRidgeSVG(29,{fill:'#151d33', y:132, amp:44}), 'bottom:4%; top:auto; height:56%;'),
         stPar('mid', stSkylineSVG(47,{fill:'#080d18', win:'#ffd79a', minH:26, maxH:60, base:200}), 'bottom:2%; top:auto; height:26%; opacity:.85;'),
-        stPar('near', stRidgeSVG(67,{fill:'#03060c', y:150, amp:40}), 'bottom:-10%; top:auto; height:50%;'),
+        stPar('near', stRidgeSVG(67,{fill:'#080d18', y:150, amp:40}), 'bottom:-10%; top:auto; height:50%;'),
         `<div class="st-rain"></div>`,
         `<div class="st-fog" style="color:rgba(170,200,255,.4);"><i></i><i></i><i></i></div>`,
         `<div class="st-flash"></div><div class="st-flash" style="animation-duration:11s; animation-delay:-4s; --st-flashc:radial-gradient(ellipse 50% 34% at 26% 22%, rgba(210,230,255,.5), transparent 60%);"></div>`,
