@@ -4855,7 +4855,10 @@ function screenWelcome(){
       <button class="btn ghost" id="goReset" style="font-size:11px; padding:6px 12px; color:#ff5c6e; border-color:rgba(255,92,110,.35);">${S.lang==='fr'?'Reinitialiser la progression':'Reset progress'}</button>
     </div>
     <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
-    <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>`;
+    <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>
+    </div>
+  </div>`;
+  mountIncubatorPod(d);
   d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
   d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
   d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
