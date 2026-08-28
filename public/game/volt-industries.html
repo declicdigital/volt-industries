@@ -5220,13 +5220,15 @@ function recordCareerForMeta(){
   /* Jalons varies pour l'echelle de deblocage : vie amoureuse, appartenance/creation de faction,
      mentorat, obtention d'une Gemme, survie a une altercation avec le rival. */
   if((S.romance && (S.romance.love||0) > 0) ||
-     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))) META.everHadRomance = true;
-  if(S.team) META.everJoinedFaction = true;
-  if(S.customFactions && S.customFactions.length) META.everFoundedFaction = true;
-  if(S.mentees && S.mentees.length) META.everHadMentee = true;
-  if(S.eclats && S.eclats.length) META.everGotGem = true;
-  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)) META.everSurvivedRivalClash = true;
+     (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))){ META.everHadRomance = true; metaBump('romanceCount'); }
+  if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
+  if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
+  if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
+  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); }
+  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
+  if(S.eighthStar) metaBump('star8Count');
   checkTrophies();
+  evaluateUnlocks();
   /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
   if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
     META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
