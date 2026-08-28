@@ -1357,7 +1357,7 @@ const CHAR_IMG = {
   char43:"/__l5e/assets-v1/c0a12cab-ed87-453b-a3e5-387d97594a60/Cyclope.png",
   char44:"/__l5e/assets-v1/f746b1cb-710e-40ca-8dc0-325b0e8064aa/Daredevil.png",
   char45:"/__l5e/assets-v1/c4743226-dfad-4384-90a2-ebc0084527e3/Deadpool.png",
-  char46:"/__l5e/assets-v1/63c48ee7-64e3-434e-b1d0-7b0723fe07d9/Dr_Octopus.png",
+  char46:"/game/pod-ai/doctor-octopus.png",
   char47:"/__l5e/assets-v1/50226cb9-1562-4305-b80a-5a250b7fd43f/Pyro.png",
   char48:"/__l5e/assets-v1/90b23b2a-4a2c-44fe-8e71-35668126e7cd/Ant_Man.png",
   char49:"/__l5e/assets-v1/9e3668c8-2398-4e99-a217-edcbe4a571de/Apocalypse.png",
@@ -4940,7 +4940,7 @@ function podCharacterPool(){
   Object.keys(CHAR_IMG).forEach(k=>{
     const m = /^char(\d+)$/.exec(k); if(!m) return;
     const n = +m[1];
-    if(n <= 20 || (n >= 41 && n <= 71)) allowedImgs.add(CHAR_IMG[k]);
+    if(n <= 20 || (n >= 41 && n <= 82)) allowedImgs.add(CHAR_IMG[k]);
   });
   return Object.keys(CHARACTERS).filter(k=>{
     const c = CHARACTERS[k];
@@ -4998,8 +4998,9 @@ function fitPodFigure(img){
     const usefulH=(maxY-minY)/h, usefulW=(maxX-minX)/w;
     const box=img.getBoundingClientRect();
     // le sujet est contenu par la boite : on prend la contrainte la plus stricte (hauteur ou largeur)
-    const byH=.80/Math.max(.28,usefulH), byW=.86/Math.max(.28,usefulW);
-    const scale=Math.min(1.18, Math.max(.9, Math.min(byH, byW)));
+    // les visuels de capsule sont deja normalises en amont : on corrige juste les cas extremes
+    const byH=.84/Math.max(.28,usefulH), byW=1.02/Math.max(.28,usefulW);
+    const scale=Math.min(1.22, Math.max(.96, Math.min(byH, byW)));
     const center=((minX+maxX)/2)/w;
     const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
     img.style.setProperty('--pod-scale',scale.toFixed(3));
