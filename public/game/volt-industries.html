@@ -873,7 +873,7 @@
     mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
-  .pod-fig{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(var(--pod-shift-y, 0%)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:54%; height:60%; z-index:3;
+  .pod-fig{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:54%; height:60%; z-index:3;
     object-fit:contain; object-position:bottom center;
     filter:saturate(1.06) contrast(1.06) brightness(1.16)
       drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
@@ -927,7 +927,7 @@
       radial-gradient(ellipse 40% 22% at 62% 30%, color-mix(in oklab, var(--podc) 35%, transparent), transparent 70%);
     mix-blend-mode:screen; filter:blur(16px); opacity:.24; animation:podMist 9s ease-in-out infinite alternate; }
   @keyframes podMist{ from{ transform:translateY(4px) scale(1); opacity:.45; } to{ transform:translateY(-6px) scale(1.05); opacity:.72; } }
-  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(var(--pod-shift-y, 0%)) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(calc(var(--pod-shift-y, 0%) - 8px)) scale(var(--pod-scale, 1));} }
+  @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(0) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(-8px) scale(var(--pod-scale, 1));} }
   /* halo d'energie autour du sujet, dans le verre */
   .pod-glow{ position:absolute; left:50%; bottom:18%; width:60%; height:56%; transform:translateX(-50%); border-radius:50%; z-index:2;
     background:radial-gradient(ellipse at 50% 60%, color-mix(in oklab, var(--podc) 75%, transparent), transparent 70%);
@@ -4979,14 +4979,9 @@ function podFigSrc(url){
   }
   return _podSrcMap[url] || url;
 }
-// Ajustements manuels par personnage (cale sur l'URL de la decoupe pod) :
-// certains sujets tres larges touchent les bords du tube et paraissent "coupes".
-const POD_FIT_OVERRIDES = {};
-POD_FIT_OVERRIDES[CHAR_POD_IMG.char12] = { scale:.88, shiftY:'2%' }; // Thanos : silhouette tres large, on laisse de l'air
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
   try{
-    const ov = POD_FIT_OVERRIDES[img.src] || null;
     const maxSide = 240;
     const ratio = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.max(1, Math.round(img.naturalWidth * ratio));
@@ -5005,16 +5000,11 @@ function fitPodFigure(img){
     // le sujet est contenu par la boite : on prend la contrainte la plus stricte (hauteur ou largeur)
     // les visuels de capsule sont deja normalises en amont : on corrige juste les cas extremes
     const byH=.84/Math.max(.28,usefulH), byW=1.02/Math.max(.28,usefulW);
-    let scale=Math.min(1.22, Math.max(.96, Math.min(byH, byW)));
+    const scale=Math.min(1.22, Math.max(.96, Math.min(byH, byW)));
     const center=((minX+maxX)/2)/w;
-    let shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
-    if(ov){
-      if(ov.scale) scale = Math.min(scale, ov.scale);
-      if(ov.shiftX) shift += parseFloat(ov.shiftX) || 0;
-    }
+    const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
     img.style.setProperty('--pod-scale',scale.toFixed(3));
     img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
-    img.style.setProperty('--pod-shift-y', ov && ov.shiftY ? ov.shiftY : '0%');
   }catch(e){ img.style.setProperty('--pod-scale','1.02'); }
 }
 function mountIncubatorPod(root){
@@ -5037,7 +5027,6 @@ function mountIncubatorPod(root){
       pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
       fig.style.setProperty('--pod-scale','1');
       fig.style.setProperty('--pod-shift-x','0px');
-      fig.style.setProperty('--pod-shift-y','0%');
       fig.onload = ()=>fitPodFigure(fig);
       fig.src = podFigSrc(c.img);
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
