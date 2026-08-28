@@ -8051,20 +8051,28 @@ function startBattle(mission, done){
      tourner indefiniment sans jamais dire qui a gagne. */
   const watchdogTimer = setInterval(()=>{
     if(!document.body.contains(ov)){ clearInterval(watchdogTimer); return; }
-    const stalled = st.busy && (Date.now() - st.lastProgressAt) > 6000;
-    const looping = st.turnCallCount > 40; // beaucoup plus de tours que ce qu'un vrai combat ne devrait jamais avoir
-    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 12000; // cycle sans jamais redonner la main au joueur
-    if((stalled || looping || neverYourTurn) && !document.getElementById('btlStuckHelp')){
+    /* On ne force JAMAIS la fin d'un combat qui avance : tant que le joueur a la main (st.busy
+       false) ou que les tours s'enchainent, on laisse le combat aller jusqu'au KO. Le filet ne
+       sert qu'a un vrai gel (aucune progression pendant tres longtemps alors que le joueur n'a
+       pas la main). */
+    const frozen = st.busy && (Date.now() - st.lastProgressAt) > 25000;
+    if(frozen && !document.getElementById('btlStuckHelp')){
       const logBox = ov.querySelector('.btl-log');
       const msg = document.createElement('div');
       msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
-      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - conclusion forcee dans quelques secondes...' : 'The fight seems stuck - forcing an outcome in a few seconds...';
+      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - reprise du combat...' : 'The fight seems stuck - resuming...';
       if(logBox) logBox.insertAdjacentElement('afterend', msg);
       setTimeout(()=>{
-        if(document.body.contains(ov)){ clearInterval(watchdogTimer); finish(Math.random() < 0.55); }
-      }, 2500);
+        const m = document.getElementById('btlStuckHelp'); if(m) m.remove();
+        if(!document.body.contains(ov)) return;
+        /* On relance le tour en cours au lieu de couper le combat. */
+        if(allFoesDown()){ clearInterval(watchdogTimer); finish(true); return; }
+        if(playerDown()){ clearInterval(watchdogTimer); finish(false); return; }
+        st.lastProgressAt = Date.now();
+        try{ runTurn(); }catch(e){}
+      }, 1800);
     }
-  }, 2000);
+  }, 3000);
 
   const ov = document.createElement('div');
   ov.className = 'btl-overlay has-stage intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
