@@ -4643,6 +4643,7 @@ function screenDuelSimulator(){
       </div>
       <p class="lead" style="margin-top:12px; text-align:center;">${fr?'Vainqueur :':'Winner:'} <b style="color:${wCol};">${fr?wc.fr:wc.en}</b>. ${verdict}</p>
     </div>`;
+    META.totalDuelSimWins = (META.totalDuelSimWins||0) + 1; saveMetaProgress();
   };
   d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'welcome'; render(); };
   return d;
@@ -4705,7 +4706,9 @@ async function resetMetaProgress(){
   META.charactersPlayed = [];
   META.tierUnlocked = 1;
   META.tierBase = null;
-  try{ evaluateUnlocks(); }catch(e){}
+  META.totalMenteesTrained = 0; META.totalDuelSimWins = 0; META.totalInvestigationsSolved = 0;
+  META.totalPressEventsHandled = 0; META.totalSideSwitches = 0; META.totalRivalWins = 0;
+  META.distinctFactionsJoined = []; META.bestGemsCount = 0;
   await saveMetaProgress();
 }
 function showResetConfirm(){
@@ -4844,6 +4847,7 @@ function screenPressEvent(){
       Object.entries(c.eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
       showImpact(Object.entries(c.eff||{}).map(([k,v])=>({ label:t(k)||k, delta:v })),
         fr?'Reaction publique':'Public reaction');
+      META.totalPressEventsHandled = (META.totalPressEventsHandled||0) + 1; saveMetaProgress();
       nextMission();
     };
   });
@@ -4979,6 +4983,7 @@ function screenInvestigation(){
       Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
       showImpact(Object.entries(eff||{}).map(([k,v])=>({ label:t(k)||k, delta:v })),
         win ? (fr?iv.successFr:iv.successEn) : (fr?iv.failFr:iv.failEn));
+      if(win){ META.totalInvestigationsSolved = (META.totalInvestigationsSolved||0) + 1; saveMetaProgress(); }
       S.currentInvestigation = null;
       nextMission();
     };
@@ -5253,7 +5258,9 @@ function applyPreset(p){
 const META_KEY = 'meta:unlockProgress';
 let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:false, gotVoidCompletion:false, loaded:false,
   achievements:{}, ngPlusBonus:null, totalFightsWon:0, totalCivilsSaved:0, totalBetrayals:0, artifactsFoundEver:[],
-  everHadRomance:false, everJoinedFaction:false, everFoundedFaction:false, everHadMentee:false, everGotGem:false, everSurvivedRivalClash:false };
+  everHadRomance:false, everJoinedFaction:false, everFoundedFaction:false, everHadMentee:false, everGotGem:false, everSurvivedRivalClash:false,
+  totalMenteesTrained:0, totalDuelSimWins:0, totalInvestigationsSolved:0, totalPressEventsHandled:0,
+  totalSideSwitches:0, totalRivalWins:0, distinctFactionsJoined:[], bestGemsCount:0, totalDuelSimPlayed:0 };
 async function loadMetaProgress(){
   if(!window.storage){ META.loaded = true; return META; }
   try{
@@ -5261,7 +5268,6 @@ async function loadMetaProgress(){
     if(r && r.value) Object.assign(META, JSON.parse(r.value));
   }catch(e){ /* aucune progression enregistree pour l'instant */ }
   META.loaded = true;
-  try{ evaluateUnlocks(); }catch(e){}
   return META;
 }
 async function saveMetaProgress(){
@@ -5279,6 +5285,15 @@ function recordCareerForMeta(){
   if(S.voidCompletionDone) META.gotVoidCompletion = true;
   META.totalFightsWon = (META.totalFightsWon||0) + (S.combat.won||0);
   META.totalBetrayals = (META.totalBetrayals||0) + (S.turningPoints?S.turningPoints.length:0);
+  /* Compteurs des 62 objectifs individuels de deblocage. */
+  META.totalMenteesTrained = (META.totalMenteesTrained||0) + (S.mentees?S.mentees.length:0);
+  META.totalSideSwitches = (META.totalSideSwitches||0) + (S.turningPoints?S.turningPoints.length:0);
+  META.bestGemsCount = Math.max(META.bestGemsCount||0, (S.eclats?S.eclats.length:0));
+  META.distinctFactionsJoined = META.distinctFactionsJoined || [];
+  if(S.team && S.team.side && S.team.tier){
+    const factionKey = S.team.side + '_' + S.team.tier;
+    if(!META.distinctFactionsJoined.includes(factionKey)) META.distinctFactionsJoined.push(factionKey);
+  }
   (S.artifacts||[]).forEach(id=>{ if(!META.artifactsFoundEver.includes(id)) META.artifactsFoundEver.push(id); });
   /* Jalons varies pour l'echelle de deblocage : vie amoureuse, appartenance/creation de faction,
      mentorat, obtention d'une Gemme, survie a une altercation avec le rival. */
@@ -5331,7 +5346,6 @@ function recordCareerForMeta(){
   META.charactersPlayed = META.charactersPlayed || [];
   if(S.presetId && !META.charactersPlayed.includes(S.presetId)) META.charactersPlayed.push(S.presetId);
   checkTrophies();
-  evaluateUnlocks();
   /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
   if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
     META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
@@ -5440,114 +5454,82 @@ function markMet(keys){
 }
 function hasMetChar(key){ return (S.metCharacters||[]).includes(key); }
 const UNLOCK_TIERS = [
-  { ids:['hawkeye','rocket'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
-  { ids:['daredevil','yelena'], condFr:'Terminer 1 carriere au total', condEn:'Complete 1 career total', check:(m)=>(m.careersCompleted||0)>=1 },
-  { ids:['marsh','falcon'], condFr:'Atteindre 2 etoiles dans une carriere', condEn:'Reach 2 stars in a career', check:(m)=>(m.bestStars||0)>=2 },
-  { ids:['mantis','starlord'], condFr:'Terminer 2 carrieres au total', condEn:'Complete 2 careers total', check:(m)=>(m.careersCompleted||0)>=2 },
-  { ids:['kaerus','bucky'], condFr:'Vivre une relation amoureuse', condEn:'Live through a romantic relationship', check:(m)=>!!m.everHadRomance },
-  { ids:['wasp','aegis'], condFr:'Terminer 3 carrieres au total', condEn:'Complete 3 careers total', check:(m)=>(m.careersCompleted||0)>=3 },
-  { ids:['mystique','pyro'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
-  { ids:['cull','proxima'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['corvus','docock'], condFr:'Terminer une carriere d\'au moins 10 ans', condEn:'Complete a career of at least 10 years', check:(m)=>(m.longestCareerYears||0)>=10 },
-  { ids:['mysterio','nebula'], condFr:'Terminer 4 carrieres au total', condEn:'Complete 4 careers total', check:(m)=>(m.careersCompleted||0)>=4 },
-  { ids:['drax','cyclops'], condFr:'Former une recrue', condEn:'Train a recruit', check:(m)=>!!m.everHadMentee },
-  { ids:['groot','gamora'], condFr:'Atteindre 4 etoiles dans une carriere', condEn:'Reach 4 stars in a career', check:(m)=>(m.bestStars||0)>=4 },
-  { ids:['sable','ebonymaw'], condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years', check:(m)=>(m.longestCareerYears||0)>=15 },
-  { ids:['fuchsia','deadpool'], condFr:'Terminer 5 carrieres au total', condEn:'Complete 5 careers total', check:(m)=>(m.careersCompleted||0)>=5 },
-  { ids:['sylvie','wolverine'], condFr:'Obtenir une Gemme d\'Infinite', condEn:'Obtain an Infinity Gem', check:(m)=>!!m.everGotGem },
-  { ids:['thething','antman'], condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career', check:(m)=>(m.bestStars||0)>=5 },
-  { ids:['kidspider','theg'], condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years', check:(m)=>(m.longestCareerYears||0)>=20 },
-  { ids:['siddartha','venom'], condFr:'Terminer 6 carrieres au total', condEn:'Complete 6 careers total', check:(m)=>(m.careersCompleted||0)>=6 },
-  { ids:['electro','telios'], condFr:'Fonder ta propre faction', condEn:'Found your own faction', check:(m)=>!!m.everFoundedFaction },
-  { ids:['mrfantastic','humantorch'], condFr:'Atteindre 6 etoiles dans une carriere', condEn:'Reach 6 stars in a career', check:(m)=>(m.bestStars||0)>=6 },
-  { ids:['volt','invisiblewoman'], condFr:'Terminer une carriere d\'au moins 25 ans', condEn:'Complete a career of at least 25 years', check:(m)=>(m.longestCareerYears||0)>=25 },
-  { ids:['storm','nihil'], condFr:'Terminer 7 carrieres au total', condEn:'Complete 7 careers total', check:(m)=>(m.careersCompleted||0)>=7 },
-  { ids:['aurelia','valkyr'], condFr:'Survivre a un affrontement decisif avec ton rival', condEn:'Survive a decisive clash with your rival', check:(m)=>!!m.everSurvivedRivalClash },
-  { ids:['profx','capmarvel'], condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career', check:(m)=>(m.bestStars||0)>=7 },
-  { ids:['obsidian','magneto'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
-  { ids:['apocalypse','gorr'], condFr:'Terminer 8 carrieres au total', condEn:'Complete 8 careers total', check:(m)=>(m.careersCompleted||0)>=8 },
-  { ids:['ferrum','mandate'], condFr:'Terminer une carriere d\'au moins 35 ans', condEn:'Complete a career of at least 35 years', check:(m)=>(m.longestCareerYears||0)>=35 },
-  { ids:['vaelor','solen'], condFr:'Terminer 9 carrieres au total', condEn:'Complete 9 careers total', check:(m)=>(m.careersCompleted||0)>=9 },
-  { ids:['vipera','nyx'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
-  { ids:['sepulcre','malachar'], condFr:'Terminer 10 carrieres au total', condEn:'Complete 10 careers total', check:(m)=>(m.careersCompleted||0)>=10 },
-  { ids:['jeangrey','boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
+  { ids:['hawkeye'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['rocket'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['daredevil'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['yelena'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['marsh'], condFr:'Terminer 1 carriere au total', condEn:'Complete 1 career total', check:(m)=>(m.careersCompleted||0)>=1 },
+  { ids:['falcon'], condFr:'Vivre une relation amoureuse', condEn:'Live through a romantic relationship', check:(m)=>!!m.everHadRomance },
+  { ids:['mantis'], condFr:'Sauver 75 lieux', condEn:'Save 75 locations', check:(m)=>(m.totalCivilsSaved||0)>=75 },
+  { ids:['starlord'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
+  { ids:['kaerus'], condFr:'Gagner 50 combats', condEn:'Win 50 fights', check:(m)=>(m.totalFightsWon||0)>=50 },
+  { ids:['bucky'], condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years', check:(m)=>(m.longestCareerYears||0)>=15 },
+  { ids:['wasp'], condFr:'Obtenir 1 artefact', condEn:'Obtain 1 artifact', check:(m)=>(m.artifactsFoundEver||[]).length>=1 },
+  { ids:['aegis'], condFr:'Former 10 recrues', condEn:'Train 10 recruits', check:(m)=>(m.totalMenteesTrained||0)>=10 },
+  { ids:['mystique'], condFr:'Atteindre 4 etoiles dans une carriere', condEn:'Reach 4 stars in a career', check:(m)=>(m.bestStars||0)>=4 },
+  { ids:['pyro'], condFr:'Gagner 30 duels dans le simulateur', condEn:'Win 30 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=30 },
+  { ids:['cull'], condFr:'Terminer une carriere d\'au moins 20 ans', condEn:'Complete a career of at least 20 years', check:(m)=>(m.longestCareerYears||0)>=20 },
+  { ids:['proxima'], condFr:'Obtenir la 1re Gemme d\'Infinite', condEn:'Obtain the 1st Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=1 },
+  { ids:['corvus'], condFr:'Resoudre 8 enquetes', condEn:'Solve 8 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=8 },
+  { ids:['docock'], condFr:'Gerer 30 evenements presse', condEn:'Handle 30 press events', check:(m)=>(m.totalPressEventsHandled||0)>=30 },
+  { ids:['mysterio'], condFr:'Gagner 150 combats', condEn:'Win 150 fights', check:(m)=>(m.totalFightsWon||0)>=150 },
+  { ids:['nebula'], condFr:'Terminer 15 carrieres au total', condEn:'Complete 15 careers total', check:(m)=>(m.careersCompleted||0)>=15 },
+  { ids:['drax'], condFr:'Changer de camp 3 fois', condEn:'Switch sides 3 times', check:(m)=>(m.totalSideSwitches||0)>=3 },
+  { ids:['cyclops'], condFr:'Obtenir la 2eme Gemme d\'Infinite', condEn:'Obtain the 2nd Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=2 },
+  { ids:['groot'], condFr:'Fonder ta propre faction', condEn:'Found your own faction', check:(m)=>!!m.everFoundedFaction },
+  { ids:['gamora'], condFr:'Terminer une carriere d\'au moins 25 ans', condEn:'Complete a career of at least 25 years', check:(m)=>(m.longestCareerYears||0)>=25 },
+  { ids:['sable'], condFr:'Obtenir 3 artefacts', condEn:'Obtain 3 artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=3 },
+  { ids:['ebonymaw'], condFr:'Atteindre 5 etoiles dans une carriere', condEn:'Reach 5 stars in a career', check:(m)=>(m.bestStars||0)>=5 },
+  { ids:['fuchsia'], condFr:'Rejoindre 5 factions differentes', condEn:'Join 5 different factions', check:(m)=>(m.distinctFactionsJoined||[]).length>=5 },
+  { ids:['deadpool'], condFr:'Sauver 250 lieux', condEn:'Save 250 locations', check:(m)=>(m.totalCivilsSaved||0)>=250 },
+  { ids:['sylvie'], condFr:'Survivre a un affrontement decisif avec ton rival', condEn:'Survive a decisive clash with your rival', check:(m)=>!!m.everSurvivedRivalClash },
+  { ids:['wolverine'], condFr:'Former 25 recrues', condEn:'Train 25 recruits', check:(m)=>(m.totalMenteesTrained||0)>=25 },
+  { ids:['thething'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
+  { ids:['antman'], condFr:'Gagner 400 combats', condEn:'Win 400 fights', check:(m)=>(m.totalFightsWon||0)>=400 },
+  { ids:['kidspider'], condFr:'Obtenir la 3eme Gemme d\'Infinite', condEn:'Obtain the 3rd Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=3 },
+  { ids:['theg'], condFr:'Rejoindre les 8 factions du jeu', condEn:'Join all 8 factions in the game', check:(m)=>(m.distinctFactionsJoined||[]).length>=8 },
+  { ids:['siddartha'], condFr:'Gagner 75 duels dans le simulateur', condEn:'Win 75 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=75 },
+  { ids:['venom'], condFr:'Terminer 25 carrieres au total', condEn:'Complete 25 careers total', check:(m)=>(m.careersCompleted||0)>=25 },
+  { ids:['electro'], condFr:'Atteindre 6 etoiles dans une carriere', condEn:'Reach 6 stars in a career', check:(m)=>(m.bestStars||0)>=6 },
+  { ids:['telios'], condFr:'Changer de camp 6 fois', condEn:'Switch sides 6 times', check:(m)=>(m.totalSideSwitches||0)>=6 },
+  { ids:['mrfantastic'], condFr:'Resoudre 20 enquetes', condEn:'Solve 20 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=20 },
+  { ids:['humantorch'], condFr:'Terminer une carriere d\'au moins 35 ans', condEn:'Complete a career of at least 35 years', check:(m)=>(m.longestCareerYears||0)>=35 },
+  { ids:['volt'], condFr:'Obtenir la 4eme Gemme d\'Infinite', condEn:'Obtain the 4th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=4 },
+  { ids:['invisiblewoman'], condFr:'Gagner 800 combats', condEn:'Win 800 fights', check:(m)=>(m.totalFightsWon||0)>=800 },
+  { ids:['storm'], condFr:'Gerer 60 evenements presse', condEn:'Handle 60 press events', check:(m)=>(m.totalPressEventsHandled||0)>=60 },
+  { ids:['nihil'], condFr:'Vaincre ton rival 8 fois', condEn:'Defeat your rival 8 times', check:(m)=>(m.totalRivalWins||0)>=8 },
+  { ids:['aurelia'], condFr:'Obtenir 5 artefacts', condEn:'Obtain 5 artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=5 },
+  { ids:['valkyr'], condFr:'Terminer 40 carrieres au total', condEn:'Complete 40 careers total', check:(m)=>(m.careersCompleted||0)>=40 },
+  { ids:['profx'], condFr:'Atteindre 7 etoiles dans une carriere', condEn:'Reach 7 stars in a career', check:(m)=>(m.bestStars||0)>=7 },
+  { ids:['capmarvel'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
+  { ids:['obsidian'], condFr:'Obtenir la 5eme Gemme d\'Infinite', condEn:'Obtain the 5th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=5 },
+  { ids:['magneto'], condFr:'Changer de camp 10 fois', condEn:'Switch sides 10 times', check:(m)=>(m.totalSideSwitches||0)>=10 },
+  { ids:['apocalypse'], condFr:'Former 50 recrues', condEn:'Train 50 recruits', check:(m)=>(m.totalMenteesTrained||0)>=50 },
+  { ids:['gorr'], condFr:'Gagner 1500 combats', condEn:'Win 1500 fights', check:(m)=>(m.totalFightsWon||0)>=1500 },
+  { ids:['ferrum'], condFr:'Terminer une carriere d\'au moins 45 ans', condEn:'Complete a career of at least 45 years', check:(m)=>(m.longestCareerYears||0)>=45 },
+  { ids:['mandate'], condFr:'Vaincre ton rival 15 fois', condEn:'Defeat your rival 15 times', check:(m)=>(m.totalRivalWins||0)>=15 },
+  { ids:['vaelor'], condFr:'Gagner 150 duels dans le simulateur', condEn:'Win 150 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=150 },
+  { ids:['solen'], condFr:'Obtenir tous les artefacts', condEn:'Obtain all artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=7 },
+  { ids:['vipera'], condFr:'Obtenir la 6eme Gemme d\'Infinite', condEn:'Obtain the 6th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=6 },
+  { ids:['nyx'], condFr:'Terminer une carriere d\'au moins 50 ans', condEn:'Complete a career of at least 50 years', check:(m)=>(m.longestCareerYears||0)>=50 },
+  { ids:['sepulcre'], condFr:'Gagner 2500 combats', condEn:'Win 2500 fights', check:(m)=>(m.totalFightsWon||0)>=2500 },
+  { ids:['jeangrey'], condFr:'Terminer une carriere d\'au moins 55 ans', condEn:'Complete a career of at least 55 years', check:(m)=>(m.longestCareerYears||0)>=55 },
+  { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
+  { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
-/* Deblocage strictement sequentiel : un palier ne compte que si TOUS les paliers precedents sont deja
-   debloques. Meme une carriere a 8 etoiles ne saute jamais par-dessus les paliers du dessous. */
-/* Metrique cumulee associee a chaque palier (index 1..30 ; le palier 0 est offert). */
-const TIER_METRICS = [
-  null,
-  {key:'careersCompleted', target:1}, {key:'bestStars', target:2}, {key:'careersCompleted', target:2},
-  {key:'romanceCount', target:1}, {key:'careersCompleted', target:3}, {key:'factionJoins', target:1},
-  {key:'bestStars', target:3}, {key:'longestCareerYears', target:10}, {key:'careersCompleted', target:4},
-  {key:'menteeCount', target:1}, {key:'bestStars', target:4}, {key:'longestCareerYears', target:15},
-  {key:'careersCompleted', target:5}, {key:'gemCount', target:1}, {key:'bestStars', target:5},
-  {key:'longestCareerYears', target:20}, {key:'careersCompleted', target:6}, {key:'factionsFounded', target:1},
-  {key:'bestStars', target:6}, {key:'longestCareerYears', target:25}, {key:'careersCompleted', target:7},
-  {key:'rivalClashes', target:1}, {key:'bestStars', target:7}, {key:'longestCareerYears', target:30},
-  {key:'careersCompleted', target:8}, {key:'longestCareerYears', target:35}, {key:'careersCompleted', target:9},
-  {key:'longestCareerYears', target:40}, {key:'careersCompleted', target:10}, {key:'star8Count', target:1},
-];
-const TIER_METRIC_KEYS = ['careersCompleted','bestStars','longestCareerYears','romanceCount','factionJoins',
-  'menteeCount','gemCount','factionsFounded','rivalClashes','star8Count'];
 function metaVal(k){ return Number(META[k]||0); }
 function metaBump(k){ META[k] = metaVal(k) + 1; }
-function tierSnapshot(){ const s={}; TIER_METRIC_KEYS.forEach(k=>{ s[k] = metaVal(k); }); return s; }
-/* Deblocage strictement palier par palier : chaque palier ouvre exactement 2 personnages, et il faut une
-   NOUVELLE progression (au-dela du niveau atteint quand le palier est devenu actif) pour le franchir.
-   Impossible donc de debloquer plusieurs paliers d'un coup avec de l'historique deja accumule. */
-function evaluateUnlocks(){
-  let changed = false;
-  if(typeof META.tierUnlocked !== 'number' || META.tierUnlocked < 1){
-    /* Migration depuis l'ancien systeme : on garde le nombre de paliers deja acquis. */
-    let legacy = 0;
-    for(const t of UNLOCK_TIERS){ if(!t.check(META)) break; legacy++; }
-    /* Garde-fou anti-bug : l'ancien systeme pouvait liberer toute la chaine d'un coup. On plafonne la
-       reprise a une progression credible (1 palier par carriere terminee) pour repartir proprement. */
-    const cap = 1 + metaVal('careersCompleted');
-    META.tierUnlocked = Math.max(1, Math.min(legacy, cap, UNLOCK_TIERS.length));
-    META.tierBase = tierSnapshot();
-    changed = true;
-  }
-  if(!META.tierBase){ META.tierBase = tierSnapshot(); changed = true; }
-  while(META.tierUnlocked < UNLOCK_TIERS.length){
-    const m = TIER_METRICS[META.tierUnlocked];
-    if(!m) break;
-    const v = metaVal(m.key), base = Number(META.tierBase[m.key]||0);
-    /* Deux familles de metriques :
-       - compteurs cumulatifs (carrieres, romances, factions...) : il faut une unite de plus qu'a l'activation ;
-       - records (meilleur nombre d'etoiles, carriere la plus longue) : le record ne bouge pas si l'historique est
-         deja au-dessus, donc on valide des qu'une NOUVELLE carriere est terminee avec le record atteint. */
-    const isRecord = (m.key==='bestStars' || m.key==='longestCareerYears');
-    const progressed = isRecord
-      ? metaVal('careersCompleted') > Number(META.tierBase['careersCompleted']||0)
-      : v > base;
-    if(v >= m.target && progressed){
-      META.tierUnlocked++;
-      META.tierBase = tierSnapshot();
-      changed = true;
-    } else break;
-  }
-  if(changed) saveMetaProgress();
-  return changed;
-}
-function unlockedTierCount(){
-  if(typeof META.tierUnlocked !== 'number') evaluateUnlocks();
-  return Math.max(1, Math.min(META.tierUnlocked||1, UNLOCK_TIERS.length));
-}
 function unlockedPresetIds(){
-  const n = unlockedTierCount();
-  const out=[];
-  for(let i=0;i<n;i++) out.push(...UNLOCK_TIERS[i].ids);
-  return out;
+  return UNLOCK_TIERS.filter(t=>t.check(META)).flatMap(t=>t.ids);
 }
 function isPresetUnlocked(id){ return unlockedPresetIds().includes(id); }
-/* Raison de verrouillage : uniquement la vraie condition de deblocage du personnage. */
+/* Raison de deblocage : uniquement la vraie condition individuelle de ce personnage. Chaque
+   personnage se debloque independamment des autres, dans n'importe quel ordre - pas besoin
+   d'avoir debloque qui que ce soit d'autre avant. */
 function tierConditionFor(id){
   const fr = S.lang==='fr';
-  const idx = UNLOCK_TIERS.findIndex(t=>t.ids.includes(id));
-  if(idx<0) return fr ? 'Personnage secret' : 'Secret character';
-  const t = UNLOCK_TIERS[idx];
+  const t = UNLOCK_TIERS.find(t=>t.ids.includes(id));
+  if(!t) return fr ? 'Personnage secret' : 'Secret character';
   return fr ? t.condFr : t.condEn;
 }
 /* Ordre d'affichage du carrousel : 31 ecrans de 2 personnages, classes de la puissance la plus
@@ -8287,7 +8269,8 @@ function startBattle(mission, done){
        sert qu'a un vrai gel (aucune progression pendant tres longtemps alors que le joueur n'a
        pas la main). */
     const frozen = st.busy && (Date.now() - st.lastProgressAt) > 25000;
-    if(frozen && !document.getElementById('btlStuckHelp')){
+    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 20000; // cas verifie : le combat cycle sans jamais redonner la main au joueur
+    if((frozen || neverYourTurn) && !document.getElementById('btlStuckHelp')){
       const logBox = ov.querySelector('.btl-log');
       const msg = document.createElement('div');
       msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
@@ -8600,6 +8583,9 @@ function startBattle(mission, done){
     /* Reputation par faction : vaincre ou perdre contre un membre affecte ce que sa faction pense de toi. */
     if(foeKey && CHARACTERS[foeKey]){
       factionRepAdjust(canonName(foeKey), win ? -2 : 2);
+    }
+    if(win && foeKey && S.rivalKey && foeKey===S.rivalKey){
+      META.totalRivalWins = (META.totalRivalWins||0) + 1; saveMetaProgress();
     }
     let extraLine = '';
     if(fullSquadFight){
@@ -10506,7 +10492,7 @@ function handleRomanceEffect(rom, conv){
   /* Le jalon de deblocage (Red Skull / Bucky) doit etre acquis des que la relation existe
      vraiment, pas seulement si elle est encore active a la fin de la carriere. */
   if((r.love||0) > 0 || rom.advance){
-    if(!S.romanceCounted){ S.romanceCounted = true; META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); evaluateUnlocks(); saveMetaProgress(); }
+    if(!S.romanceCounted){ S.romanceCounted = true; META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); saveMetaProgress(); }
   }
   if(rom.advance){
     r.stage = rom.advance; r.lastYear = S.currentYear;
