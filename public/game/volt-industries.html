@@ -7685,17 +7685,28 @@ function buildBattleSquads(foeKey, mission){
     foePool = [foeRecruit].concat(foePool.filter(k=>k!==foeRecruit));
   }
   if(maxExtra<=0) return empty;
+  /* Couple : quand tu es en relation, la personne avec qui tu es en couple vient se battre a tes
+     cotes dans environ 40% des combats - meme si elle appartient au camp oppose (l'amour passe
+     avant le camp le temps du combat). */
+  let loverKey = null;
+  if(S.romance && S.romance.active && S.romance.charKey && S.romance.charKey!==foeKey
+     && CHARACTERS[S.romance.charKey] && Math.random() < 0.40){
+    loverKey = S.romance.charKey;
+    allyPool = [loverKey].concat(allyPool.filter(k=>k!==loverKey));
+    foePool = foePool.filter(k=>k!==loverKey);
+  }
   /* Ta recrue active doit etre a tes cotes dans environ 65% des combats : un tirage dedie avant
      le tirage normal de la taille d'escouade, pour garantir ce taux independamment du reste. */
   const menteeGuaranteed = mine.length>0 && Math.random() < 0.65;
   let allyPoolForFight = allyPool;
   if(mine.length>0 && !menteeGuaranteed) allyPoolForFight = allyPool.filter(k=>!mine.includes(k));
-  const capForRoll = Math.min(maxExtra, allyPoolForFight.length, foePool.length);
+  if(loverKey && !allyPoolForFight.includes(loverKey)) allyPoolForFight = [loverKey].concat(allyPoolForFight);
+  const capForRoll = Math.min(maxExtra, allyPoolForFight.length, Math.max(foePool.length, loverKey?1:0));
   const isCosmicScale = mission && (mission.scope||1) >= 7;
   let n;
   if(isCosmicScale){
     n = capForRoll; // menace cosmique : toute l'escouade disponible se presente, sans tirage
-  } else if(menteeGuaranteed && capForRoll>=1){
+  } else if((menteeGuaranteed || loverKey) && capForRoll>=1){
     n = clamp(1 + Math.round((capForRoll-1)*Math.pow(Math.random(),0.55)), 1, capForRoll);
   } else {
     n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
