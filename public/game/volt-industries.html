@@ -3899,6 +3899,22 @@ function renderCareerAutoWidget(){
   const startBtn = el.querySelector('#cawStart'); if(startBtn) startBtn.onclick = ()=>{ S.careerAuto = true; render(); };
   const stopBtn = el.querySelector('#cawStop'); if(stopBtn) stopBtn.onclick = ()=>{ S.careerAuto = false; render(); };
 }
+/* Clique un bouton de scenario et verifie 1,6 s plus tard que la partie a bien avance. Si l'ecran
+   est reste strictement identique (clic avale par une animation, handler perdu apres un re-render),
+   on relance une etape de simulation au lieu de rester bloque. */
+function autoAutoStateSig(){
+  return [S.screen, S.currentYear, S.currentMissionInYear, S.align, (S.log||[]).length,
+    document.getElementById('convOverlay')?1:0, document.querySelector('.btl-overlay')?1:0].join('|');
+}
+function autoClickAndWatch(btn){
+  if(!btn) return;
+  const sig = autoAutoStateSig();
+  btn.click();
+  setTimeout(()=>{
+    if(!S.careerAuto || S.screen==='end') return;
+    if(autoAutoStateSig() === sig) autoCareerStep();
+  }, 1600);
+}
 function autoCareerStep(){
   if(!S.careerAuto) return;
   if(S.screen==='end'){ S.careerAuto = false; return; }
