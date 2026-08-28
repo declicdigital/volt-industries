@@ -5360,7 +5360,10 @@ function evaluateUnlocks(){
     /* Migration depuis l'ancien systeme : on garde le nombre de paliers deja acquis. */
     let legacy = 0;
     for(const t of UNLOCK_TIERS){ if(!t.check(META)) break; legacy++; }
-    META.tierUnlocked = Math.max(1, Math.min(legacy, UNLOCK_TIERS.length));
+    /* Garde-fou anti-bug : l'ancien systeme pouvait liberer toute la chaine d'un coup. On plafonne la
+       reprise a une progression credible (1 palier par carriere terminee) pour repartir proprement. */
+    const cap = 1 + metaVal('careersCompleted');
+    META.tierUnlocked = Math.max(1, Math.min(legacy, cap, UNLOCK_TIERS.length));
     META.tierBase = tierSnapshot();
     changed = true;
   }
