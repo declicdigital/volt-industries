@@ -1179,8 +1179,8 @@ const CHAR_IMG = {
   char72:"/__l5e/assets-v1/1de3978b-a5a3-4a70-9fab-27de312833d4/Venom-2.png",
   char73:"/__l5e/assets-v1/1b79708e-1a20-4ca8-95c6-a59ba7632c7c/Wolverine-2.png",
   char74:"/__l5e/assets-v1/5af51748-6a76-4a8a-9798-010bf6723af6/Telios.png",
-  char75:"/__l5e/assets-v1/ddbb021e-4b35-4351-92d0-5f5c4dca522c/Bucky.png",
-  char76:"/__l5e/assets-v1/07271d38-3e46-4fd8-b982-b585cf023146/Drax.png",
+  char75:"/__l5e/assets-v1/52ec5702-e47f-4251-9836-5c87b3c15eeb/Bucky.png",
+  char76:"/__l5e/assets-v1/e1438d29-44eb-4c87-bb4a-17b47c4d4f26/Drax.png",
   char77:"/__l5e/assets-v1/e90be537-6c76-407b-99f4-59b4a21a3c12/Falcon.png",
   char78:"/__l5e/assets-v1/43b7abae-ce22-4e89-a20c-03546d5a325f/Hawkeye.png",
   char79:"/__l5e/assets-v1/205c1566-b204-4899-82f0-6e2097181793/Wasp.png",
@@ -3252,7 +3252,7 @@ const PRESETS = [
 ];
 
 /* Personnages jouables : les 22 personnages canon (11 heros, 11 villains). Deblocage progressif, voir UNLOCK_TIERS. */
-const SELECTABLE_IDS = ['hawkeye','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc'];
+const SELECTABLE_IDS = ['hawkeye','bucky','drax','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Hulk, Thanos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
@@ -3260,7 +3260,7 @@ const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1
 /* Personnages temporairement mis en pause : pas encore d'image disponible. Ils gardent toutes
    leurs donnees (puissance, moralite, coups) prets, mais n'apparaissent nulle part dans le jeu
    tant que ce n'est pas retire d'ici. */
-const DISABLED_CHARS = new Set(['bucky','drax']);
+const DISABLED_CHARS = new Set();
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img) && !DISABLED_CHARS.has(k));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
