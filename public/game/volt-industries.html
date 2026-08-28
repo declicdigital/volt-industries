@@ -873,37 +873,36 @@
     mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
-  .pod-fig{ position:absolute; left:50%; bottom:23%; transform:translateX(-50%); width:50%; height:56%; z-index:3;
+  .pod-fig{ position:absolute; left:50%; bottom:20%; transform:translateX(-50%); width:62%; height:66%; z-index:3;
     object-fit:contain; object-position:bottom center;
-    filter:saturate(1.02) contrast(.98) brightness(1.02)
-      drop-shadow(0 0 6px color-mix(in oklab, var(--podc) 60%, transparent))
-      drop-shadow(0 0 26px color-mix(in oklab, var(--podc) 45%, transparent))
-      drop-shadow(0 0 60px color-mix(in oklab, var(--podc) 30%, transparent))
-      blur(.35px);
-    -webkit-mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.55) 6%, #000 22% 66%, rgba(0,0,0,.45) 90%, transparent 100%),
-      radial-gradient(ellipse 78% 88% at 50% 52%, #000 55%, rgba(0,0,0,.6) 78%, transparent 100%);
-    mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.55) 6%, #000 22% 66%, rgba(0,0,0,.45) 90%, transparent 100%),
-      radial-gradient(ellipse 78% 88% at 50% 52%, #000 55%, rgba(0,0,0,.6) 78%, transparent 100%);
-    -webkit-mask-composite:source-in; mask-composite:intersect;
-    mix-blend-mode:screen; opacity:0; transition:opacity 1s ease; }
-  .pod-fig.on{ opacity:.94; animation:podFloat 6.5s ease-in-out infinite; }
+    filter:saturate(1.04) contrast(1.03) brightness(1.04)
+      drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
+      drop-shadow(0 0 14px color-mix(in oklab, var(--podc) 65%, transparent))
+      drop-shadow(0 0 44px color-mix(in oklab, var(--podc) 40%, transparent));
+    opacity:0; transition:opacity .9s ease; }
+  .pod-fig.on{ opacity:1; animation:podFloat 6.5s ease-in-out infinite; }
 
   /* fumee / vapeur qui monte en continu dans la capsule */
-  .pod-smoke{ position:absolute; left:14%; right:16%; top:8%; bottom:19%; z-index:5; pointer-events:none;
-    overflow:hidden; mix-blend-mode:screen; opacity:.5; }
-  .pod-smoke i{ position:absolute; left:0; right:0; height:70%; display:block;
-    background:radial-gradient(ellipse 34% 46% at 28% 70%, color-mix(in oklab, var(--podc) 46%, transparent), transparent 70%),
-      radial-gradient(ellipse 30% 40% at 66% 40%, color-mix(in oklab, var(--podc) 38%, transparent), transparent 72%),
-      radial-gradient(ellipse 44% 30% at 48% 88%, color-mix(in oklab, var(--podc) 30%, transparent), transparent 74%);
-    filter:blur(18px); animation:podSmokeUp 11s linear infinite; }
-  .pod-smoke i:nth-child(2){ animation-duration:15s; animation-delay:-5s; transform:scaleX(-1); opacity:.8; }
-  .pod-smoke i:nth-child(3){ animation-duration:8.5s; animation-delay:-3s; opacity:.6; filter:blur(26px); }
+  .pod-smoke{ position:absolute; left:15%; right:17%; top:9%; bottom:20%; z-index:4; pointer-events:none;
+    overflow:hidden; mix-blend-mode:screen; opacity:.62; }
+  .pod-smoke i{ position:absolute; left:-10%; right:-10%; top:0; height:100%; display:block; will-change:transform;
+    background:radial-gradient(ellipse 26% 20% at 30% 84%, color-mix(in oklab, var(--podc) 60%, transparent), transparent 70%),
+      radial-gradient(ellipse 22% 17% at 66% 62%, color-mix(in oklab, var(--podc) 50%, transparent), transparent 72%),
+      radial-gradient(ellipse 30% 14% at 48% 34%, color-mix(in oklab, var(--podc) 42%, transparent), transparent 74%),
+      radial-gradient(ellipse 18% 12% at 24% 14%, color-mix(in oklab, var(--podc) 34%, transparent), transparent 76%);
+    filter:blur(16px); animation:podSmokeUp 9s linear infinite; }
+  .pod-smoke i:nth-child(2){ animation-duration:13s; animation-delay:-4.5s; transform:scaleX(-1); filter:blur(24px); opacity:.85; }
+  .pod-smoke i:nth-child(3){ animation-duration:6.5s; animation-delay:-2.2s; filter:blur(30px); opacity:.6; }
   @keyframes podSmokeUp{
-    0%{ top:100%; opacity:0; }
-    12%{ opacity:.9; }
-    70%{ opacity:.7; }
-    100%{ top:-70%; opacity:0; } }
-
+    0%{ transform:translate3d(0,42%,0) scale(1.02); opacity:0; }
+    14%{ opacity:.95; }
+    72%{ opacity:.6; }
+    100%{ transform:translate3d(0,-96%,0) scale(1.16); opacity:0; } }
+  .pod-smoke i:nth-child(2){ animation-name:podSmokeUp2; }
+  @keyframes podSmokeUp2{
+    0%{ transform:scaleX(-1) translate3d(0,50%,0) scale(1); opacity:0; }
+    18%{ opacity:.8; }
+    100%{ transform:scaleX(-1) translate3d(0,-100%,0) scale(1.2); opacity:0; } }
   /* teinte du fluide par dessus le sujet pour le fondre dans la capsule */
   .pod-tint{ position:absolute; left:50%; bottom:20%; width:56%; height:62%; transform:translateX(-50%); z-index:4;
     pointer-events:none; border-radius:50% 50% 42% 42%/38% 38% 30% 30%;
@@ -4942,6 +4941,14 @@ function incubatorPodHTML(){
     </div>
    </div>
   </div>`;
+}
+let _podSrcMap = null;
+function podFigSrc(url){
+  if(!_podSrcMap){
+    _podSrcMap = {};
+    for(const k in CHAR_IMG){ if(CHAR_POD_IMG[k]) _podSrcMap[CHAR_IMG[k]] = CHAR_POD_IMG[k]; }
+  }
+  return _podSrcMap[url] || url;
 }
 function mountIncubatorPod(root){
   if(_podTimer){ clearInterval(_podTimer); _podTimer = null; }
