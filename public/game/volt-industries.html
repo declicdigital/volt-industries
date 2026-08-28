@@ -3952,15 +3952,22 @@ function autoCareerStep(){
       setTimeout(autoCareerStep, 400);
       return;
     }
-    /* Creer une faction et le choix retraite/temps supplementaire sont trop importants pour etre
-       repondus automatiquement : on arrete la simulation et on laisse la main. */
-    if(S.screen==='factionCreate' || S.screen==='careerDurationChoice'){
-      S.careerAuto = false; renderCareerAutoWidget();
-      return;
+    /* Ces ecrans etaient auparavant des points d'arret : la simulation se coupait plusieurs fois
+       par partie. On y repond maintenant par un choix par defaut non destructif (on continue). */
+    if(S.screen==='factionCreate'){
+      const skip = document.getElementById('skipFac');
+      if(skip){ skip.click(); return; }
+      setTimeout(autoCareerStep, 400); return;
+    }
+    if(S.screen==='careerDurationChoice'){
+      // Fin de la duree prevue : on cloture la carriere proprement plutot que de figer la simulation.
+      const stopHere = document.getElementById('stopHere');
+      if(stopHere){ stopHere.click(); return; }
+      setTimeout(autoCareerStep, 400); return;
     }
     if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='rivalClimax'){
       const cbox = document.getElementById('choices') || document.querySelector('.actions');
-      const btns = cbox ? Array.from(cbox.querySelectorAll('button')) : [];
+      const btns = cbox ? Array.from(cbox.querySelectorAll('button')).filter(b=>!b.disabled) : [];
       if(btns.length){ pick(btns).click(); return; }
       setTimeout(autoCareerStep, 400); return;
     }
@@ -3972,13 +3979,20 @@ function autoCareerStep(){
     if(S.screen==='yearbreak'){
       const retireNow = document.getElementById('retireNow');
       if(retireNow){
-        // La proposition de retraite/vie paisible est trop importante pour etre repondue automatiquement : on arrete la simulation et on laisse la main.
-        S.careerAuto = false; renderCareerAutoWidget();
-        return;
+        // On continue a vivre plutot que de couper la simulation sur cet ecran.
+        const peace = document.getElementById('livePeace');
+        if(peace){ peace.click(); return; }
+        setTimeout(autoCareerStep, 400); return;
       }
       const go = document.getElementById('go'); if(go){ go.click(); return; }
       setTimeout(autoCareerStep, 400); return;
     }
+    /* Filet general : tout autre ecran (bilan, evenement scenarise, etc.) est joue avec son bouton
+       principal. La simulation ne doit jamais se retrouver sans etape suivante planifiee. */
+    const anyBox = document.getElementById('choices') || document.querySelector('.actions');
+    const anyBtns = anyBox ? Array.from(anyBox.querySelectorAll('button')).filter(b=>!b.disabled && !/download|telecharg|export/i.test((b.id||'')+(b.className||''))) : [];
+    if(anyBtns.length){ anyBtns[0].click(); return; }
+    setTimeout(autoCareerStep, 500);
   }, 300);
 }
 function scheduleSaveGame(){
