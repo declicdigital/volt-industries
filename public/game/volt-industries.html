@@ -5287,6 +5287,14 @@ function recordCareerForMeta(){
   META.totalBetrayals = (META.totalBetrayals||0) + (S.turningPoints?S.turningPoints.length:0);
   /* Compteurs des 62 objectifs individuels de deblocage. */
   META.totalMenteesTrained = (META.totalMenteesTrained||0) + (S.mentees?S.mentees.length:0);
+  /* Bug corrige : ce compteur n'etait jamais incremente nulle part, meme si le bilan de fin de
+     carriere affichait bien un nombre de lieux sauves. On reutilise ici la meme logique de comptage
+     (dedoublonnage par lieu, ne garder que ceux marques "saved") pour rester coherent avec l'affichage. */
+  const finalZoneForLocs = zoneOf(S.align);
+  const uniqueLocsForMeta = {};
+  (S.locations||[]).forEach(l=>{ const key=l.type+':'+l.name; if(!uniqueLocsForMeta[key] || l.kind==='destroyed') uniqueLocsForMeta[key]=l; });
+  const savedCount = Object.values(uniqueLocsForMeta).filter(l=>l.kind==='saved' || (!l.kind && finalZoneForLocs!=='villain')).length;
+  META.totalCivilsSaved = (META.totalCivilsSaved||0) + savedCount;
   META.totalSideSwitches = (META.totalSideSwitches||0) + (S.turningPoints?S.turningPoints.length:0);
   META.bestGemsCount = Math.max(META.bestGemsCount||0, (S.eclats?S.eclats.length:0));
   META.distinctFactionsJoined = META.distinctFactionsJoined || [];
