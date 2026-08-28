@@ -7755,88 +7755,6 @@ const ASSIST_FR = ["{n} enchaine sur l'ouverture", "{n} surgit et frappe a decou
 const ASSIST_EN = ["{n} follows up on the opening", "{n} bursts in and lands a clean hit", "{n} covers your blind spot and fires", "{n} slams the target down", "{n} unloads everything left"];
 const FOEASSIST_FR = ["{n} te prend par derriere", "{n} entre dans la melee et te cueille", "{n} profite de ta garde basse", "{n} t'ecrase pendant que tu recules"];
 const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips you", "{n} punishes your low guard", "{n} crushes you as you back off"];
-function startBattle(mission, done){
-  const foeKey = battleFoeKey(mission);
-  applyCrossedMenteeBond(foeKey);
-  const foe = CHARACTERS[foeKey];
-  const foeName = S.lang==='fr'?foe.fr:foe.en;
-  const myName = S.heroName || (S.lang==='fr'?'Toi':'You');
-  const playerZone = zoneOf(S.align);
-  const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
-  const foeCol = convBeamColor(foe.align);
-  const form = battleForm();
-  const inj = injuryActive();
-  const ps = playerStrength(), fs = foeStrength(foeKey, mission);
-  const myMaxHP = Math.round(Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0)));
-  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
-  const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
-  const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
-  const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
-  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
-  /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
-  const scope = squadCapForStars();
-  const squads = buildBattleSquads(foeKey, mission);
-  /* Histoires entre personnages : si une fratrie/famille/rivalite canonique se retrouve reunie dans
-     ce combat (Thor/Loki/Hela, Gamora/Nebula, Reed/Doom, etc.), une ligne dediee le souligne. */
-  (function surfaceLoreClash(){
-    const present = [foeKey].concat(squads.allies, squads.foes).filter(Boolean);
-    if(S.playerCharKey) present.push(S.playerCharKey);
-    markMet(present);
-    const seen = new Set();
-    for(const link of LORE_LINKS){
-      const here = link.keys.filter(k=>present.includes(k));
-      if(here.length >= 2 && !seen.has(link.fr)){
-        seen.add(link.fr);
-        jarvisSay(link.fr, link.en, S.lang==='fr'?'histoire connue':'known history');
-        break; // une seule mention par combat, pour ne pas saturer
-      }
-    }
-  })();
-  const allyBonus = 1 + squads.allies.length * 0.03;
-  const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
-  const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
-  const foeExtras = buildRosterExtras(squads.foes, false);
-  const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
-
-  /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
-  function spdFor(entry){
-    if(entry.isPlayer) return 46 + Math.round(S.stats.courage*0.18) + Math.round(Math.random()*10);
-    return 26 + tierOfKey(entry.key)*0.4 + Math.round(Math.random()*12);
-  }
-  const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
-    .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
-    .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
-  const allyRoster = allyRosterRaw, foeRoster = foeRosterRaw;
-  /* Ordre d'initiative : chacun agit a son tour, du plus rapide au plus lent, sur toute la duree du combat. */
-  const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
-    .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
-    .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
-  /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
-     completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
-     sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
-     surveille les trois cas et on force une conclusion propre plutot que de laisser le combat
-     tourner indefiniment sans jamais dire qui a gagne. */
-  const watchdogTimer = setInterval(()=>{
-    if(!document.body.contains(ov)){ clearInterval(watchdogTimer); return; }
-    const stalled = st.busy && (Date.now() - st.lastProgressAt) > 6000;
-    const looping = st.turnCallCount > 40; // beaucoup plus de tours que ce qu'un vrai combat ne devrait jamais avoir
-    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 12000; // cycle sans jamais redonner la main au joueur
-    if((stalled || looping || neverYourTurn) && !document.getElementById('btlStuckHelp')){
-      const logBox = ov.querySelector('.btl-log');
-      const msg = document.createElement('div');
-      msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
-      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - conclusion forcee dans quelques secondes...' : 'The fight seems stuck - forcing an outcome in a few seconds...';
-      if(logBox) logBox.insertAdjacentElement('afterend', msg);
-      setTimeout(()=>{
-        if(document.body.contains(ov)){ clearInterval(watchdogTimer); finish(Math.random() < 0.55); }
-      }, 2500);
-    }
-  }, 2000);
-
   /* === DECOR DE COMBAT : environnement anime complet, un par ampleur de combat ===
      Chaque scope (1 quartier -> 7 multivers) monte un vrai environnement : ciel vivant,
      silhouettes d'architecture SVG en parallaxe sur 2-3 profondeurs, fenetres/lumieres
@@ -8061,6 +7979,88 @@ function startBattle(mission, done){
       <div class="st-vig"></div>
     </div>`;
   }
+function startBattle(mission, done){
+  const foeKey = battleFoeKey(mission);
+  applyCrossedMenteeBond(foeKey);
+  const foe = CHARACTERS[foeKey];
+  const foeName = S.lang==='fr'?foe.fr:foe.en;
+  const myName = S.heroName || (S.lang==='fr'?'Toi':'You');
+  const playerZone = zoneOf(S.align);
+  const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
+  const foeCol = convBeamColor(foe.align);
+  const form = battleForm();
+  const inj = injuryActive();
+  const ps = playerStrength(), fs = foeStrength(foeKey, mission);
+  const myMaxHP = Math.round(Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0)));
+  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
+  const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
+  const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
+  const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
+  if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
+  let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
+  /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
+  const scope = squadCapForStars();
+  const squads = buildBattleSquads(foeKey, mission);
+  /* Histoires entre personnages : si une fratrie/famille/rivalite canonique se retrouve reunie dans
+     ce combat (Thor/Loki/Hela, Gamora/Nebula, Reed/Doom, etc.), une ligne dediee le souligne. */
+  (function surfaceLoreClash(){
+    const present = [foeKey].concat(squads.allies, squads.foes).filter(Boolean);
+    if(S.playerCharKey) present.push(S.playerCharKey);
+    markMet(present);
+    const seen = new Set();
+    for(const link of LORE_LINKS){
+      const here = link.keys.filter(k=>present.includes(k));
+      if(here.length >= 2 && !seen.has(link.fr)){
+        seen.add(link.fr);
+        jarvisSay(link.fr, link.en, S.lang==='fr'?'histoire connue':'known history');
+        break; // une seule mention par combat, pour ne pas saturer
+      }
+    }
+  })();
+  const allyBonus = 1 + squads.allies.length * 0.03;
+  const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
+  const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
+  const foeExtras = buildRosterExtras(squads.foes, false);
+  const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
+
+  /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
+  function spdFor(entry){
+    if(entry.isPlayer) return 46 + Math.round(S.stats.courage*0.18) + Math.round(Math.random()*10);
+    return 26 + tierOfKey(entry.key)*0.4 + Math.round(Math.random()*12);
+  }
+  const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
+    .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
+  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
+    .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
+  allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
+  const allyRoster = allyRosterRaw, foeRoster = foeRosterRaw;
+  /* Ordre d'initiative : chacun agit a son tour, du plus rapide au plus lent, sur toute la duree du combat. */
+  const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
+    .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
+    .sort((a,b)=> b.ref.spd - a.ref.spd);
+  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
+     completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
+     sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
+     surveille les trois cas et on force une conclusion propre plutot que de laisser le combat
+     tourner indefiniment sans jamais dire qui a gagne. */
+  const watchdogTimer = setInterval(()=>{
+    if(!document.body.contains(ov)){ clearInterval(watchdogTimer); return; }
+    const stalled = st.busy && (Date.now() - st.lastProgressAt) > 6000;
+    const looping = st.turnCallCount > 40; // beaucoup plus de tours que ce qu'un vrai combat ne devrait jamais avoir
+    const neverYourTurn = (Date.now() - st.lastPlayerTurnAt) > 12000; // cycle sans jamais redonner la main au joueur
+    if((stalled || looping || neverYourTurn) && !document.getElementById('btlStuckHelp')){
+      const logBox = ov.querySelector('.btl-log');
+      const msg = document.createElement('div');
+      msg.id = 'btlStuckHelp'; msg.className = 'btl-move'; msg.style.cssText = 'margin-top:10px; text-align:center; border-color:#e8c96a; color:#e8c96a; pointer-events:none;';
+      msg.innerHTML = S.lang==='fr' ? 'Le combat semble bloque - conclusion forcee dans quelques secondes...' : 'The fight seems stuck - forcing an outcome in a few seconds...';
+      if(logBox) logBox.insertAdjacentElement('afterend', msg);
+      setTimeout(()=>{
+        if(document.body.contains(ov)){ clearInterval(watchdogTimer); finish(Math.random() < 0.55); }
+      }, 2500);
+    }
+  }, 2000);
+
   const ov = document.createElement('div');
   ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
