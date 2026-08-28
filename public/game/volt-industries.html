@@ -899,7 +899,7 @@
     background:linear-gradient(100deg, rgba(255,255,255,.10) 0 6%, transparent 16%, transparent 62%, rgba(255,255,255,.07) 74%, transparent 86%);
     border-radius:20px/8px; }
 
-  .pod-scan{ position:absolute; left:12%; right:15%; height:14%; z-index:5; pointer-events:none;
+  .pod-scan{ position:absolute; left:12%; right:15%; height:14%; z-index:7; pointer-events:none;
     background:linear-gradient(180deg, transparent, color-mix(in oklab, var(--podc) 30%, transparent), transparent);
     mix-blend-mode:screen; animation:podScan 5.2s linear infinite; }
   @keyframes podScan{ from{ top:4%; } to{ top:80%; } }
@@ -919,7 +919,7 @@
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
   }
   @media(prefers-reduced-motion:reduce){
-    .pod-glow,.pod-scan,.pod-fig.on,.pod-gauges i::after{ animation:none; }
+    .pod-glow,.pod-scan,.pod-fig.on,.pod-gauges i::after,.pod-mist,.pod-tint{ animation:none; }
   }
   /* ---------- Fond plein ecran : salle d'incubation (ecran d'accueil) ---------- */
   .lab-bg{ position:fixed; inset:0; z-index:-3; opacity:0; pointer-events:none; transition:opacity 1.1s ease;
@@ -4836,6 +4836,8 @@ function incubatorPodHTML(){
     <div class="pod-bg"></div>
     <div class="pod-glow"></div>
     <img class="pod-fig" id="podFig" alt="" decoding="async" />
+    <div class="pod-tint"></div>
+    <div class="pod-mist"></div>
     <div class="pod-glass"></div>
     <div class="pod-scan"></div>
     <div class="pod-base">
