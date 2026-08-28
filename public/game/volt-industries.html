@@ -4774,9 +4774,74 @@ function screenInvestigation(){
   });
   return d;
 }
+/* ---------- Vitrine d'incubation : decorative uniquement ---------- */
+let _podTimer = null;
+function podCharacterPool(){
+  const allowedImgs = new Set();
+  Object.keys(CHAR_IMG).forEach(k=>{
+    const m = /^char(\d+)$/.exec(k); if(!m) return;
+    const n = +m[1];
+    if(n <= 20 || (n >= 41 && n <= 71)) allowedImgs.add(CHAR_IMG[k]);
+  });
+  return Object.keys(CHARACTERS).filter(k=>{
+    const c = CHARACTERS[k];
+    if(!c || !c.img || !allowedImgs.has(c.img)) return false;
+    try{ if(typeof DISABLED_CHARS !== 'undefined' && DISABLED_CHARS.has(k)) return false; }catch(e){}
+    return true;
+  });
+}
+function podAuraColor(align){
+  return align === 'hero' ? '#3ba9ff' : align === 'villain' ? '#ff3b4e' : '#a855f7';
+}
+function incubatorPodHTML(){
+  return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff;">
+    <div class="pod-tube" id="podTube">
+      <div class="pod-glow"></div>
+      <div class="pod-arc"></div>
+      <img class="pod-fig" id="podFig" alt="" decoding="async" />
+      <div class="pod-scan"></div>
+    </div>
+    <div class="pod-base">
+      <div class="pod-name" id="podName">-</div>
+      <div class="pod-sub" id="podSub">capsule d'incubation</div>
+      <div class="pod-gauges"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>`;
+}
+function mountIncubatorPod(root){
+  if(_podTimer){ clearInterval(_podTimer); _podTimer = null; }
+  const pod = root.querySelector('.pod'); if(!pod) return;
+  const fig = pod.querySelector('#podFig'), nameEl = pod.querySelector('#podName'), subEl = pod.querySelector('#podSub');
+  const pool = podCharacterPool();
+  if(!pool.length){ pod.style.display='none'; return; }
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  let i = -1;
+  const isFr = S.lang === 'fr';
+  const step = ()=>{
+    i = (i + 1) % pool.length;
+    const c = CHARACTERS[pool[i]];
+    const col = podAuraColor(c.align);
+    fig.classList.remove('on');
+    setTimeout(()=>{
+      if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
+      pod.style.setProperty('--podc', col);
+      fig.src = c.img;
+      nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
+      subEl.textContent = c.align === 'hero' ? (isFr?'Specimen - Heros':'Specimen - Hero')
+        : c.align === 'villain' ? (isFr?'Specimen - Villain':'Specimen - Villain')
+        : (isFr?'Specimen - Independant':'Specimen - Independent');
+      fig.classList.add('on');
+    }, 420);
+  };
+  step();
+  _podTimer = setInterval(step, 4200);
+}
 function screenWelcome(){
   const d = document.createElement('div');
-  d.innerHTML = `<div style="display:flex;justify-content:center;margin-bottom:14px;">${wordmarkLogoSVG(150)}</div>
+  d.innerHTML = `<div class="welcome-layout">
+    <div class="wl-logo">${wordmarkLogoSVG(150)}</div>
+    <aside class="wl-pod">${incubatorPodHTML()}</aside>
+    <div class="wl-main">
     <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
     <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
     <div id="resumeBox"></div>
