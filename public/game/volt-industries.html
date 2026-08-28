@@ -3934,20 +3934,8 @@ function autoCareerStep(){
        suivent un combat resolu, sans jamais toucher aux coups eux-memes. */
     const btlOverlay = document.querySelector('.btl-overlay');
     if(btlOverlay){
-      if(S._btlWatchdogStart == null) S._btlWatchdogStart = Date.now();
-      /* Filet de securite : dans de rares cas, le moteur de combat peut se figer (course entre deux
-         tours). Plutot que de bloquer la simulation indefiniment, on force la resolution du combat
-         apres quelques secondes sans aucun progres. */
-      if(Date.now() - S._btlWatchdogStart > 9000){
-        S._btlWatchdogStart = null;
-        btlOverlay.remove();
-        document.querySelectorAll('.cine-overlay').forEach(el=>el.remove());
-        S.pendingBattleWin = Math.random() < 0.55;
-        if(S.pendingBattleWin) S.combat.won = (S.combat.won||0)+1; else S.combat.lost = (S.combat.lost||0)+1;
-        if(typeof handleZoneCheckAndContinue === 'function') handleZoneCheckAndContinue(); else nextMission();
-        setTimeout(autoCareerStep, 500);
-        return;
-      }
+      /* Un combat visible appartient exclusivement au moteur de combat. La simulation attend son
+         KO et son bilan : elle ne retire jamais l'overlay et ne fabrique jamais un resultat. */
       const continueBtns = Array.from(btlOverlay.querySelectorAll('.btl-move')).filter(b=>!b.disabled && /continu|ok|suivant|next|download|telecharg/i.test(b.id||''));
       const realContinue = continueBtns.filter(b=>!/download|telecharg/i.test(b.id||''));
       if(realContinue.length){ realContinue[0].click(); setTimeout(autoCareerStep, 500); return; }
@@ -8282,7 +8270,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -8601,6 +8589,8 @@ function startBattle(mission, done){
     setTimeout(()=>{ runTurn(); }, wait(1000));
   }
   function finish(win){
+    if(st.finished) return;
+    st.finished = true;
     clearInterval(watchdogTimer);
     st.busy = true; setMovesEnabled(false);
     /* Reputation par faction : vaincre ou perdre contre un membre affecte ce que sa faction pense de toi. */
@@ -8663,6 +8653,7 @@ function startBattle(mission, done){
   }
   /* Dispatcher de tour : chacun agit dans l'ordre d'initiative, joueur inclus. */
   function runTurn(){
+    if(st.finished || !document.body.contains(ov)) return;
     st.lastProgressAt = Date.now();
     st.turnCallCount = (st.turnCallCount||0) + 1;
     if(allFoesDown()){ finish(true); return; }
