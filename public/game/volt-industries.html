@@ -535,7 +535,9 @@
   .btl-epic-flash.go.small{ animation: epicFlashSmall .3s ease; background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.28), transparent 60%); }
   @keyframes epicFlashGo{ 0%{ opacity:0;} 12%{ opacity:1;} 100%{ opacity:0;} }
   @keyframes epicFlashSmall{ 0%{ opacity:0;} 20%{ opacity:1;} 100%{ opacity:0;} }
-  .btl-set{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+  .btl-set{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .btl-overlay.has-stage{ background:#04070d; background-image:none; }
+  .btl-overlay.has-stage > *:not(.btl-set){ position:relative; z-index:2; }
   /* ==== DECORS DE COMBAT : environnements animes multi-couches (scope 1 -> 7) ====
      Tout est genere en CSS/SVG (aucune video, aucun canvas) : chaque decor empile
      un ciel vivant, 2-3 plans d'architecture en parallaxe, des lumieres qui respirent,
@@ -8066,7 +8068,7 @@ function startBattle(mission, done){
   }, 2000);
 
   const ov = document.createElement('div');
-  ov.className = 'btl-overlay intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
+  ov.className = 'btl-overlay has-stage intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
     ${battleStageHTML(scope)}
     <div class="btl-epic-flash"></div>
