@@ -3885,6 +3885,10 @@ function render(){
   scheduleSaveGame();
 }
 let _saveTimer = null;
+/* Verrou purement technique, volontairement hors de S : il ne doit jamais etre sauvegarde avec
+   la carriere. Un verrou memorise a true rendait le bouton Simulation visuellement actif mais
+   bloquait definitivement sa premiere etape apres certaines sauvegardes/reprises. */
+let _autoStepPending = false;
 /* ---------- Simulation de carriere : joue automatiquement les questions et les combats (x4), arretable a tout moment ---------- */
 function renderCareerAutoWidget(){
   let el = document.getElementById('careerAutoWidget');
@@ -3896,8 +3900,8 @@ function renderCareerAutoWidget(){
   el.innerHTML = S.careerAuto
     ? `<span class="caw-dot"></span><span class="caw-label">${isFr?'SIMULATION EN COURS':'SIMULATING'}</span><button class="caw-btn" id="cawStop">${isFr?'ARRETER':'STOP'}</button>`
     : `<button class="caw-btn caw-start" id="cawStart">${isFr?'Simuler la carriere':'Simulate career'}</button>`;
-  const startBtn = el.querySelector('#cawStart'); if(startBtn) startBtn.onclick = ()=>{ S.careerAuto = true; render(); };
-  const stopBtn = el.querySelector('#cawStop'); if(stopBtn) stopBtn.onclick = ()=>{ S.careerAuto = false; render(); };
+  const startBtn = el.querySelector('#cawStart'); if(startBtn) startBtn.onclick = ()=>{ _autoStepPending = false; S.careerAuto = true; render(); };
+  const stopBtn = el.querySelector('#cawStop'); if(stopBtn) stopBtn.onclick = ()=>{ _autoStepPending = false; S.careerAuto = false; render(); };
 }
 /* Clique un bouton de scenario et verifie 1,6 s plus tard que la partie a bien avance. Si l'ecran
    est reste strictement identique (clic avale par une animation, handler perdu apres un re-render),
@@ -3918,10 +3922,10 @@ function autoClickAndWatch(btn){
 function autoCareerStep(){
   if(!S.careerAuto) return;
   if(S.screen==='end'){ S.careerAuto = false; return; }
-  if(S._autoStepPending) return;
-  S._autoStepPending = true;
+  if(_autoStepPending) return;
+  _autoStepPending = true;
   setTimeout(()=>{
-    S._autoStepPending = false;
+    _autoStepPending = false;
     if(!S.careerAuto || S.screen==='end') return;
     /* La cinematique de la 8eme etoile merite d'etre vue : on arrete la simulation net, sans
        jamais cliquer a travers automatiquement. */
