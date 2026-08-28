@@ -875,7 +875,7 @@
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
   .pod-fig{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:54%; height:60%; z-index:3;
     object-fit:contain; object-position:bottom center;
-    filter:saturate(1.04) contrast(1.03) brightness(1.04)
+    filter:saturate(1.06) contrast(1.06) brightness(1.16)
       drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
       drop-shadow(0 0 14px color-mix(in oklab, var(--podc) 65%, transparent))
       drop-shadow(0 0 44px color-mix(in oklab, var(--podc) 40%, transparent));
@@ -913,12 +913,12 @@
   .pod-tint{ position:absolute; left:50%; bottom:20%; width:56%; height:62%; transform:translateX(-50%); z-index:4;
     pointer-events:none; border-radius:50% 50% 42% 42%/38% 38% 30% 30%;
     background:radial-gradient(ellipse at 50% 55%, color-mix(in oklab, var(--podc) 42%, transparent), color-mix(in oklab, var(--podc) 16%, transparent) 62%, transparent 82%);
-    mix-blend-mode:screen; filter:blur(11px); opacity:.42; animation:podPulse 4.4s ease-in-out infinite; }
+    mix-blend-mode:screen; filter:blur(11px); opacity:.26; animation:podPulse 4.4s ease-in-out infinite; }
   /* brume/plasma devant le sujet */
   .pod-mist{ position:absolute; left:13%; right:15%; top:12%; bottom:20%; z-index:5; pointer-events:none;
     background:radial-gradient(ellipse 55% 30% at 42% 78%, color-mix(in oklab, var(--podc) 55%, transparent), transparent 72%),
       radial-gradient(ellipse 40% 22% at 62% 30%, color-mix(in oklab, var(--podc) 35%, transparent), transparent 70%);
-    mix-blend-mode:screen; filter:blur(16px); opacity:.38; animation:podMist 9s ease-in-out infinite alternate; }
+    mix-blend-mode:screen; filter:blur(16px); opacity:.24; animation:podMist 9s ease-in-out infinite alternate; }
   @keyframes podMist{ from{ transform:translateY(4px) scale(1); opacity:.45; } to{ transform:translateY(-6px) scale(1.05); opacity:.72; } }
   @keyframes podFloat{ 0%,100%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(0) scale(var(--pod-scale, 1));} 50%{ transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(-8px) scale(var(--pod-scale, 1));} }
   /* halo d'energie autour du sujet, dans le verre */
