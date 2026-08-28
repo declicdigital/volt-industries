@@ -873,37 +873,36 @@
     mix-blend-mode:screen; opacity:.98; transition:filter .9s ease; }
 
   /* sujet immerge : detour neon de la couleur du camp, bas dissous dans le plasma */
-  .pod-fig{ position:absolute; left:50%; bottom:23%; transform:translateX(-50%); width:50%; height:56%; z-index:3;
+  .pod-fig{ position:absolute; left:50%; bottom:20%; transform:translateX(-50%); width:62%; height:66%; z-index:3;
     object-fit:contain; object-position:bottom center;
-    filter:saturate(1.02) contrast(.98) brightness(1.02)
-      drop-shadow(0 0 6px color-mix(in oklab, var(--podc) 60%, transparent))
-      drop-shadow(0 0 26px color-mix(in oklab, var(--podc) 45%, transparent))
-      drop-shadow(0 0 60px color-mix(in oklab, var(--podc) 30%, transparent))
-      blur(.35px);
-    -webkit-mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.55) 6%, #000 22% 66%, rgba(0,0,0,.45) 90%, transparent 100%),
-      radial-gradient(ellipse 78% 88% at 50% 52%, #000 55%, rgba(0,0,0,.6) 78%, transparent 100%);
-    mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.55) 6%, #000 22% 66%, rgba(0,0,0,.45) 90%, transparent 100%),
-      radial-gradient(ellipse 78% 88% at 50% 52%, #000 55%, rgba(0,0,0,.6) 78%, transparent 100%);
-    -webkit-mask-composite:source-in; mask-composite:intersect;
-    mix-blend-mode:screen; opacity:0; transition:opacity 1s ease; }
-  .pod-fig.on{ opacity:.94; animation:podFloat 6.5s ease-in-out infinite; }
+    filter:saturate(1.04) contrast(1.03) brightness(1.04)
+      drop-shadow(0 0 3px color-mix(in oklab, var(--podc) 85%, transparent))
+      drop-shadow(0 0 14px color-mix(in oklab, var(--podc) 65%, transparent))
+      drop-shadow(0 0 44px color-mix(in oklab, var(--podc) 40%, transparent));
+    opacity:0; transition:opacity .9s ease; }
+  .pod-fig.on{ opacity:1; animation:podFloat 6.5s ease-in-out infinite; }
 
   /* fumee / vapeur qui monte en continu dans la capsule */
-  .pod-smoke{ position:absolute; left:14%; right:16%; top:8%; bottom:19%; z-index:5; pointer-events:none;
-    overflow:hidden; mix-blend-mode:screen; opacity:.5; }
-  .pod-smoke i{ position:absolute; left:0; right:0; height:70%; display:block;
-    background:radial-gradient(ellipse 34% 46% at 28% 70%, color-mix(in oklab, var(--podc) 46%, transparent), transparent 70%),
-      radial-gradient(ellipse 30% 40% at 66% 40%, color-mix(in oklab, var(--podc) 38%, transparent), transparent 72%),
-      radial-gradient(ellipse 44% 30% at 48% 88%, color-mix(in oklab, var(--podc) 30%, transparent), transparent 74%);
-    filter:blur(18px); animation:podSmokeUp 11s linear infinite; }
-  .pod-smoke i:nth-child(2){ animation-duration:15s; animation-delay:-5s; transform:scaleX(-1); opacity:.8; }
-  .pod-smoke i:nth-child(3){ animation-duration:8.5s; animation-delay:-3s; opacity:.6; filter:blur(26px); }
+  .pod-smoke{ position:absolute; left:15%; right:17%; top:9%; bottom:20%; z-index:4; pointer-events:none;
+    overflow:hidden; mix-blend-mode:screen; opacity:.62; }
+  .pod-smoke i{ position:absolute; left:-10%; right:-10%; top:0; height:100%; display:block; will-change:transform;
+    background:radial-gradient(ellipse 26% 20% at 30% 84%, color-mix(in oklab, var(--podc) 60%, transparent), transparent 70%),
+      radial-gradient(ellipse 22% 17% at 66% 62%, color-mix(in oklab, var(--podc) 50%, transparent), transparent 72%),
+      radial-gradient(ellipse 30% 14% at 48% 34%, color-mix(in oklab, var(--podc) 42%, transparent), transparent 74%),
+      radial-gradient(ellipse 18% 12% at 24% 14%, color-mix(in oklab, var(--podc) 34%, transparent), transparent 76%);
+    filter:blur(16px); animation:podSmokeUp 9s linear infinite; }
+  .pod-smoke i:nth-child(2){ animation-duration:13s; animation-delay:-4.5s; transform:scaleX(-1); filter:blur(24px); opacity:.85; }
+  .pod-smoke i:nth-child(3){ animation-duration:6.5s; animation-delay:-2.2s; filter:blur(30px); opacity:.6; }
   @keyframes podSmokeUp{
-    0%{ top:100%; opacity:0; }
-    12%{ opacity:.9; }
-    70%{ opacity:.7; }
-    100%{ top:-70%; opacity:0; } }
-
+    0%{ transform:translate3d(0,42%,0) scale(1.02); opacity:0; }
+    14%{ opacity:.95; }
+    72%{ opacity:.6; }
+    100%{ transform:translate3d(0,-96%,0) scale(1.16); opacity:0; } }
+  .pod-smoke i:nth-child(2){ animation-name:podSmokeUp2; }
+  @keyframes podSmokeUp2{
+    0%{ transform:scaleX(-1) translate3d(0,50%,0) scale(1); opacity:0; }
+    18%{ opacity:.8; }
+    100%{ transform:scaleX(-1) translate3d(0,-100%,0) scale(1.2); opacity:0; } }
   /* teinte du fluide par dessus le sujet pour le fondre dans la capsule */
   .pod-tint{ position:absolute; left:50%; bottom:20%; width:56%; height:62%; transform:translateX(-50%); z-index:4;
     pointer-events:none; border-radius:50% 50% 42% 42%/38% 38% 30% 30%;
@@ -1239,6 +1238,70 @@ const MORPHOLOGIES = [
 const GLOVES_OPTS=['none','standard','claws','armored']; const BOOTS_OPTS=['none','standard','thruster','armored'];
 const AURA_OPTS=['none','flame','electric','dark']; const WEAPON_OPTS=['none','sword','shield','spear'];
 
+const CHAR_POD_IMG = {
+  char1:"/__l5e/assets-v1/3b2f3ddb-87e7-450c-88b7-b4d66fe1bfbf/pod_char1.png",
+  char2:"/__l5e/assets-v1/7b57f700-499b-43f9-9e4b-9ea3d3a444bd/pod_char2.png",
+  char3:"/__l5e/assets-v1/b5531ea6-2105-43ea-a0af-b46b850d051f/pod_char3.png",
+  char4:"/__l5e/assets-v1/54c135c7-2921-4070-bc36-d72730fbfafc/pod_char4.png",
+  char5:"/__l5e/assets-v1/50d6797b-f865-48eb-9f24-f44d0bd64bd1/pod_char5.png",
+  char6:"/__l5e/assets-v1/2b2ee4f9-f3cd-4fa0-9305-eb902883ff29/pod_char6.png",
+  char7:"/__l5e/assets-v1/7efbf38e-c572-4f9e-983f-52f5fa5f319b/pod_char7.png",
+  char8:"/__l5e/assets-v1/2f1b3159-57ee-47bd-b584-8162da593fb1/pod_char8.png",
+  char9:"/__l5e/assets-v1/68fdc6f2-48e8-42dc-905a-ef8975f1444d/pod_char9.png",
+  char10:"/__l5e/assets-v1/2ff0d04b-b535-43dd-a51e-fb4ec7541dc0/pod_char10.png",
+  char11:"/__l5e/assets-v1/79e6d19b-5b3d-4ed4-ad93-4cb5ac3825ec/pod_char11.png",
+  char12:"/__l5e/assets-v1/cbe7fdbd-aa93-4f77-9b1d-609509db2191/pod_char12.png",
+  char13:"/__l5e/assets-v1/9c1b0d57-1e72-4520-8941-8484c22a91fd/pod_char13.png",
+  char14:"/__l5e/assets-v1/f033656a-c0c5-44c7-951c-ecfd21c4537c/pod_char14.png",
+  char15:"/__l5e/assets-v1/14fce0de-375f-4573-acb4-f1266965ea5d/pod_char15.png",
+  char16:"/__l5e/assets-v1/68098a2e-28e9-47b6-b3bd-abefd536b937/pod_char16.png",
+  char17:"/__l5e/assets-v1/7df971c7-d59f-4268-b352-c0629c7f7e55/pod_char17.png",
+  char18:"/__l5e/assets-v1/7d857c38-c014-433d-99de-592ecbae513d/pod_char18.png",
+  char19:"/__l5e/assets-v1/797cfa9b-761b-472c-8e5f-f284bb92feeb/pod_char19.png",
+  char20:"/__l5e/assets-v1/5197b1fb-03f7-42f8-a5a6-a49c9be4bdc2/pod_char20.png",
+  char41:"/__l5e/assets-v1/ea45b6fe-f0ef-4287-a2eb-adfb94bcf28b/pod_char41.png",
+  char42:"/__l5e/assets-v1/020a51a9-3b75-4d17-a7f8-8e2a5ca1f5bc/pod_char42.png",
+  char43:"/__l5e/assets-v1/a7d81d92-08a1-4ab1-9e9f-d2112a35231a/pod_char43.png",
+  char44:"/__l5e/assets-v1/e324b342-ef43-4480-950c-3d0002baafa7/pod_char44.png",
+  char45:"/__l5e/assets-v1/339cb260-7303-48ec-9dda-a5d278b565f0/pod_char45.png",
+  char46:"/__l5e/assets-v1/1d189246-1f66-44f4-881a-191f0b1977de/pod_char46.png",
+  char47:"/__l5e/assets-v1/ad37a7d9-3b0f-48d5-8b50-34ddea748da1/pod_char47.png",
+  char48:"/__l5e/assets-v1/6ab87d0d-56c9-4fed-9c75-7066c60c4bab/pod_char48.png",
+  char49:"/__l5e/assets-v1/eaf774d0-6a39-4d7f-88b1-c99b54a43531/pod_char49.png",
+  char50:"/__l5e/assets-v1/43219421-2e99-45d0-abc5-3753b3c35666/pod_char50.png",
+  char51:"/__l5e/assets-v1/91c8beb0-263a-4fd3-89b0-a538545a1f12/pod_char51.png",
+  char52:"/__l5e/assets-v1/88a4ece8-96d5-4e42-b4ed-034655742f50/pod_char52.png",
+  char53:"/__l5e/assets-v1/25216af5-86cb-4391-a813-4c81356fcad8/pod_char53.png",
+  char54:"/__l5e/assets-v1/196ed35b-5b9d-4d43-9c0d-f21c8ef7d247/pod_char54.png",
+  char55:"/__l5e/assets-v1/c0261fdd-e8d6-4cb1-b317-092df7f72422/pod_char55.png",
+  char56:"/__l5e/assets-v1/a130aa96-16de-4f18-a485-09feb9365558/pod_char56.png",
+  char57:"/__l5e/assets-v1/2d045c9a-96f8-4670-84c3-b2c5b19d0409/pod_char57.png",
+  char58:"/__l5e/assets-v1/abf5394d-3bbf-4a26-adae-46a8039bafb2/pod_char58.png",
+  char59:"/__l5e/assets-v1/d6cb6388-856d-421f-b8d9-943beb45ad41/pod_char59.png",
+  char60:"/__l5e/assets-v1/5c243995-3b12-4c26-9a16-942e691565cc/pod_char60.png",
+  char61:"/__l5e/assets-v1/8f1388ad-912a-4c29-949f-c420bc05babf/pod_char61.png",
+  char62:"/__l5e/assets-v1/0dff9b4c-f046-47e1-a75d-c8d8e394e00b/pod_char62.png",
+  char63:"/__l5e/assets-v1/70ed2e67-845e-46d1-965c-1e2efbddf35b/pod_char63.png",
+  char64:"/__l5e/assets-v1/9129683a-7e48-48cd-bc4c-156b0c74b672/pod_char64.png",
+  char65:"/__l5e/assets-v1/cf1e0715-fe37-4ddd-b969-651de4510e9d/pod_char65.png",
+  char66:"/__l5e/assets-v1/d6e91000-beb1-4606-9184-0367fb30d83e/pod_char66.png",
+  char67:"/__l5e/assets-v1/d44e09fb-0535-4f5d-b431-24ee4ed46bf9/pod_char67.png",
+  char68:"/__l5e/assets-v1/70e69017-45d8-455c-8304-31e107d5009a/pod_char68.png",
+  char69:"/__l5e/assets-v1/72ee7796-75e3-4779-99dc-e08d30ec91b2/pod_char69.png",
+  char70:"/__l5e/assets-v1/dd35f8b6-17a4-4353-8ca2-352c48645053/pod_char70.png",
+  char71:"/__l5e/assets-v1/014b89e1-7341-4176-a2df-317cf629a33d/pod_char71.png",
+  char72:"/__l5e/assets-v1/daf33cbf-98d6-4659-a43e-d5fbf5fbc3d8/pod_char72.png",
+  char73:"/__l5e/assets-v1/957ef03f-cbcb-4a94-9f38-0af833e0bbc1/pod_char73.png",
+  char74:"/__l5e/assets-v1/9aac78af-e271-4f16-ab3d-f2bde9fe8aef/pod_char74.png",
+  char75:"/__l5e/assets-v1/02251251-d4d6-44dd-bc81-52429b6bade9/pod_char75.png",
+  char76:"/__l5e/assets-v1/1b1061bf-add0-45c3-b2ac-86cd7e57c1c8/pod_char76.png",
+  char77:"/__l5e/assets-v1/3f092635-fc16-4147-99ca-37c56e430c73/pod_char77.png",
+  char78:"/__l5e/assets-v1/e352115d-3a39-413d-84d1-cabbc9d1a45b/pod_char78.png",
+  char79:"/__l5e/assets-v1/48fcc38a-785f-416d-bd4e-71a67e5ef6eb/pod_char79.png",
+  char80:"/__l5e/assets-v1/e6c6b6a6-604a-4366-aeb0-5ae7b6e867c2/pod_char80.png",
+  char81:"/__l5e/assets-v1/c99720e4-baf2-4693-bd09-874cf5332564/pod_char81.png",
+  char82:"/__l5e/assets-v1/826f7486-3508-4fc3-802a-253d2bc8f383/pod_char82.png"
+};
 const CHAR_IMG = {
   char1:"/__l5e/assets-v1/92f023c1-99a0-416c-8cad-1f2b589a327a/npc_ironboy.png",
   char2:"/__l5e/assets-v1/731224c8-9bcf-4dc5-bd9a-588e5bc9a7f4/npc_blackcat.png",
@@ -4879,6 +4942,14 @@ function incubatorPodHTML(){
    </div>
   </div>`;
 }
+let _podSrcMap = null;
+function podFigSrc(url){
+  if(!_podSrcMap){
+    _podSrcMap = {};
+    for(const k in CHAR_IMG){ if(CHAR_POD_IMG[k]) _podSrcMap[CHAR_IMG[k]] = CHAR_POD_IMG[k]; }
+  }
+  return _podSrcMap[url] || url;
+}
 function mountIncubatorPod(root){
   if(_podTimer){ clearInterval(_podTimer); _podTimer = null; }
   const pod = root.querySelector('.pod'); if(!pod) return;
@@ -4897,7 +4968,7 @@ function mountIncubatorPod(root){
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
       pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
-      fig.src = c.img;
+      fig.src = podFigSrc(c.img);
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
       subEl.textContent = c.align === 'hero' ? (isFr?'Specimen - Heros':'Specimen - Hero')
         : c.align === 'villain' ? (isFr?'Specimen - Villain':'Specimen - Villain')
