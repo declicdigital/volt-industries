@@ -5346,10 +5346,10 @@ function tierConditionFor(id){
   const t = UNLOCK_TIERS[idx];
   return S.lang==='fr' ? t.condFr : t.condEn;
 }
-/* Ordre d'affichage du carrousel : 11 ecrans de 2 personnages, classes de la puissance la plus
-   faible a la plus forte (Thor et Doctor Doom, les 2 plus puissants du jeu, tout a la fin). */
-const PAIR_HEROES   = ['hawkeye','daredevil','marsh','mantis','kaerus','wasp','mystique','cull','corvus','mysterio','drax','groot','sable','fuchsia','sylvie','thething','kidspider','siddartha','electro','mrfantastic','volt','storm','aurelia','profx','obsidian','apocalypse','ferrum','vaelor','vipera','sepulcre','malachar'];
-const PAIR_VILLAINS = ['rocket','yelena','falcon','starlord','bucky','aegis','pyro','proxima','docock','nebula','cyclops','gamora','ebonymaw','deadpool','wolverine','antman','theg','venom','telios','humantorch','invisiblewoman','nihil','valkyr','capmarvel','magneto','gorr','mandate','solen','nyx','jeangrey','boomnpc'];
+/* Ordre d'affichage du carrousel : 31 ecrans de 2 personnages, classes de la puissance la plus
+   faible a la plus forte (Galactus, Thanos, Jean Grey et Doctor Doom tout a la fin). */
+const PAIR_HEROES   = ['hawkeye','daredevil','marsh','mantis','kaerus','wasp','mystique','cull','corvus','mysterio','drax','groot','sable','fuchsia','sylvie','thething','kidspider','siddartha','electro','mrfantastic','volt','storm','aurelia','profx','obsidian','apocalypse','ferrum','vaelor','vipera','sepulcre','jeangrey'];
+const PAIR_VILLAINS = ['rocket','yelena','falcon','starlord','bucky','aegis','pyro','proxima','docock','nebula','cyclops','gamora','ebonymaw','deadpool','wolverine','antman','theg','venom','telios','humantorch','invisiblewoman','nihil','valkyr','capmarvel','magneto','gorr','mandate','solen','nyx','malachar','boomnpc'];
 function screenProfileChoice(){
   const d = document.createElement('div');
   d.innerHTML = `<span class="eyebrow">${t('profileChoiceTitle')}</span><h2>${t('profileChoiceTitle')}</h2><p class="lead">${t('profileChoiceLead')}</p>
