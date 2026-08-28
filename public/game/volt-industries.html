@@ -10362,7 +10362,7 @@ function handleRomanceEffect(rom, conv){
   /* Le jalon de deblocage (Red Skull / Bucky) doit etre acquis des que la relation existe
      vraiment, pas seulement si elle est encore active a la fin de la carriere. */
   if((r.love||0) > 0 || rom.advance){
-    if(!META.everHadRomance){ META.everHadRomance = true; saveMetaProgress(); checkTrophies(); }
+    if(!META.everHadRomance){ META.everHadRomance = true; metaBump('romanceCount'); checkTrophies(); evaluateUnlocks(); saveMetaProgress(); }
   }
   if(rom.advance){
     r.stage = rom.advance; r.lastYear = S.currentYear;
