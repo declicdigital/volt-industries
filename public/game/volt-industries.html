@@ -5284,7 +5284,7 @@ function recordCareerForMeta(){
   META.locationsEver = META.locationsEver || [];
   (S.locations||[]).forEach(l=>{ const n=l&&l.name; if(n && !META.locationsEver.includes(n)) META.locationsEver.push(n); });
   META.charactersPlayed = META.charactersPlayed || [];
-  if(S.charKey && !META.charactersPlayed.includes(S.charKey)) META.charactersPlayed.push(S.charKey);
+  if(S.presetId && !META.charactersPlayed.includes(S.presetId)) META.charactersPlayed.push(S.presetId);
   checkTrophies();
   evaluateUnlocks();
   /* Nouvelle Partie+ : une carriere remarquable laisse un petit heritage pour la suivante. */
@@ -5306,6 +5306,55 @@ const TROPHIES = [
   { id:'artifact_hunter', fr:'Chasseur de reliques', en:'Relic hunter', descFr:'Trouve 3 artefacts differents au fil de tes carrieres.', descEn:'Find 3 different artifacts across your careers.', check:(m)=>(m.artifactsFoundEver||[]).length>=3 },
   { id:'all_artifacts', fr:'Collection complete', en:'Complete collection', descFr:'Trouve tous les artefacts existants.', descEn:'Find every existing artifact.', check:(m)=>(m.artifactsFoundEver||[]).length>=ARTIFACTS.length },
   { id:'ten_careers', fr:'Multivers personnel', en:'Personal multiverse', descFr:'Termine 10 carrieres.', descEn:'Complete 10 careers.', check:(m)=>(m.careersCompleted||0)>=10 },
+  { id:'hundred_wins', fr:'Machine de guerre', en:'War machine', descFr:'Remporte 100 combats au total.', descEn:'Win 100 fights total.', check:(m)=>(m.totalFightsWon||0)>=100 },
+  { id:'two_fifty_wins', fr:'Force de la nature', en:'Force of nature', descFr:'Remporte 250 combats au total.', descEn:'Win 250 fights total.', check:(m)=>(m.totalFightsWon||0)>=250 },
+  { id:'ten_losses', fr:'Ecole de la douleur', en:'School of pain', descFr:'Perds 10 combats au total.', descEn:'Lose 10 fights total.', check:(m)=>(m.totalFightsLost||0)>=10 },
+  { id:'fifty_losses', fr:'Encaisseur', en:'Punching bag', descFr:'Perds 50 combats au total.', descEn:'Lose 50 fights total.', check:(m)=>(m.totalFightsLost||0)>=50 },
+  { id:'flawless', fr:'Sans une egratignure', en:'Without a scratch', descFr:'Termine une carriere avec au moins 5 combats et aucune defaite.', descEn:'Finish a career with 5+ fights and zero losses.', check:(m)=>(m.flawlessCareers||0)>=1 },
+  { id:'flawless_three', fr:'Invaincu chronique', en:'Chronically unbeaten', descFr:'Termine 3 carrieres sans aucune defaite.', descEn:'Finish 3 careers with zero losses.', check:(m)=>(m.flawlessCareers||0)>=3 },
+  { id:'missions_100', fr:'Sur le terrain', en:'In the field', descFr:'Accomplis 100 missions au total.', descEn:'Complete 100 missions total.', check:(m)=>(m.totalMissions||0)>=100 },
+  { id:'missions_400', fr:'Increvable', en:'Relentless', descFr:'Accomplis 400 missions au total.', descEn:'Complete 400 missions total.', check:(m)=>(m.totalMissions||0)>=400 },
+  { id:'years_200', fr:'Deux siecles d\'action', en:'Two centuries of action', descFr:'Cumule 200 annees de carriere.', descEn:'Accumulate 200 career years.', check:(m)=>(m.totalYearsLived||0)>=200 },
+  { id:'marathon', fr:'Marathonien', en:'Marathoner', descFr:'Termine une carriere de 40 ans ou plus.', descEn:'Complete a career of 40+ years.', check:(m)=>(m.marathonCareers||0)>=1 },
+  { id:'full_fifty', fr:'Jusqu\'au bout', en:'All the way', descFr:'Atteins 50 ans de carriere.', descEn:'Reach 50 career years.', check:(m)=>(m.longestCareerYears||0)>=50 },
+  { id:'twenty_careers', fr:'Boucle temporelle', en:'Time loop', descFr:'Termine 20 carrieres.', descEn:'Complete 20 careers.', check:(m)=>(m.careersCompleted||0)>=20 },
+  { id:'star_three', fr:'On parle de toi', en:'People talk about you', descFr:'Atteins 3 etoiles dans une carriere.', descEn:'Reach 3 stars in a career.', check:(m)=>(m.bestStars||0)>=3 },
+  { id:'star_five', fr:'Icone mondiale', en:'Global icon', descFr:'Atteins 5 etoiles dans une carriere.', descEn:'Reach 5 stars in a career.', check:(m)=>(m.bestStars||0)>=5 },
+  { id:'star_seven', fr:'Echelle cosmique', en:'Cosmic scale', descFr:'Atteins 7 etoiles dans une carriere.', descEn:'Reach 7 stars in a career.', check:(m)=>(m.bestStars||0)>=7 },
+  { id:'star_five_x3', fr:'Regularite d\'elite', en:'Elite consistency', descFr:'Atteins 5 etoiles dans 3 carrieres differentes.', descEn:'Reach 5 stars in 3 different careers.', check:(m)=>(m.starFiveCareers||0)>=3 },
+  { id:'eighth_star_x3', fr:'Panthéon', en:'Pantheon', descFr:'Obtiens la 8eme etoile dans 3 carrieres.', descEn:'Get the 8th star in 3 careers.', check:(m)=>(m.star8Count||0)>=3 },
+  { id:'pure_hero', fr:'Lumiere absolue', en:'Absolute light', descFr:'Atteins un alignement heroique de 90 ou plus.', descEn:'Reach a heroic alignment of 90+.', check:(m)=>(m.bestAlignGood||0)>=90 },
+  { id:'pure_villain', fr:'Tenebres absolues', en:'Absolute darkness', descFr:'Atteins un alignement villain de -90 ou moins.', descEn:'Reach a villain alignment of -90 or lower.', check:(m)=>(m.bestAlignEvil||0)<=-90 },
+  { id:'gray_path', fr:'Zone grise', en:'Gray zone', descFr:'Termine 3 carrieres en restant moralement ambigu.', descEn:'Finish 3 careers staying morally ambiguous.', check:(m)=>(m.neutralCareers||0)>=3 },
+  { id:'both_sides', fr:'Les deux visages', en:'Both faces', descFr:'Termine au moins une carriere en heros et une en villain.', descEn:'Finish at least one hero career and one villain career.', check:(m)=>(m.heroCareers||0)>=1 && (m.villainCareers||0)>=1 },
+  { id:'loyal', fr:'Fidele a sa parole', en:'True to your word', descFr:'Termine 3 carrieres sans jamais changer de camp.', descEn:'Finish 3 careers without ever switching sides.', check:(m)=>(m.loyalCareers||0)>=3 },
+  { id:'ten_betrayals', fr:'Girouette legendaire', en:'Legendary weathervane', descFr:'Change de camp 10 fois au total.', descEn:'Switch sides 10 times total.', check:(m)=>(m.totalBetrayals||0)>=10 },
+  { id:'brain_90', fr:'Cerveau surdimensionne', en:'Oversized brain', descFr:'Atteins 90 en intelligence.', descEn:'Reach 90 intelligence.', check:(m)=>(m.bestIntelligence||0)>=90 },
+  { id:'courage_90', fr:'Coeur d\'acier', en:'Heart of steel', descFr:'Atteins 90 en courage.', descEn:'Reach 90 courage.', check:(m)=>(m.bestCourage||0)>=90 },
+  { id:'fame_90', fr:'Star planetaire', en:'Planetary star', descFr:'Atteins 90 en popularite.', descEn:'Reach 90 popularity.', check:(m)=>(m.bestPopularity||0)>=90 },
+  { id:'skills_five', fr:'Arsenal personnel', en:'Personal arsenal', descFr:'Apprends 5 capacites dans une seule carriere.', descEn:'Learn 5 abilities in a single career.', check:(m)=>(m.maxSkillsInCareer||0)>=5 },
+  { id:'skills_twenty', fr:'Eleve eternel', en:'Eternal student', descFr:'Apprends 20 capacites au total.', descEn:'Learn 20 abilities total.', check:(m)=>(m.totalSkillsLearned||0)>=20 },
+  { id:'mentor_first', fr:'Passer le flambeau', en:'Passing the torch', descFr:'Forme ton premier protege.', descEn:'Train your first mentee.', check:(m)=>!!m.everHadMentee },
+  { id:'mentor_three', fr:'Fondateur d\'ecole', en:'School founder', descFr:'Forme 3 proteges dans une meme carriere.', descEn:'Train 3 mentees in a single career.', check:(m)=>(m.maxMenteesInCareer||0)>=3 },
+  { id:'mentor_ten', fr:'Toute une generation', en:'A whole generation', descFr:'Forme 10 proteges au total.', descEn:'Train 10 mentees total.', check:(m)=>(m.totalMentees||0)>=10 },
+  { id:'gem_three', fr:'Collectionneur cosmique', en:'Cosmic collector', descFr:'Detiens 3 Gemmes dans une meme carriere.', descEn:'Hold 3 Gems in a single career.', check:(m)=>(m.maxGemsInCareer||0)>=3 },
+  { id:'gem_ten', fr:'Aimant a Gemmes', en:'Gem magnet', descFr:'Obtiens 10 Gemmes au total.', descEn:'Obtain 10 Gems total.', check:(m)=>(m.totalGemsFound||0)>=10 },
+  { id:'cosmic_wins', fr:'Au-dela du ciel', en:'Beyond the sky', descFr:'Remporte 5 combats d\'envergure cosmique.', descEn:'Win 5 cosmic-scale fights.', check:(m)=>(m.totalCosmicWins||0)>=5 },
+  { id:'multiverse_wins', fr:'Briseur de realites', en:'Reality breaker', descFr:'Remporte 3 combats a l\'echelle du multivers.', descEn:'Win 3 multiverse-scale fights.', check:(m)=>(m.totalMultiverseWins||0)>=3 },
+  { id:'faction_member', fr:'Sous la banniere', en:'Under the banner', descFr:'Rejoins une faction.', descEn:'Join a faction.', check:(m)=>!!m.everJoinedFaction },
+  { id:'faction_founder', fr:'Ton propre drapeau', en:'Your own flag', descFr:'Fonde ta propre faction.', descEn:'Found your own faction.', check:(m)=>!!m.everFoundedFaction },
+  { id:'faction_three', fr:'Chasseur de banniere', en:'Banner hopper', descFr:'Rejoins une faction dans 3 carrieres differentes.', descEn:'Join a faction in 3 different careers.', check:(m)=>(m.factionJoins||0)>=3 },
+  { id:'in_love', fr:'Coeur pris', en:'Heart taken', descFr:'Vis une vraie relation amoureuse.', descEn:'Live through a real romance.', check:(m)=>!!m.everHadRomance },
+  { id:'great_love', fr:'Grand amour', en:'Great love', descFr:'Atteins un lien amoureux tres fort.', descEn:'Reach a very strong romantic bond.', check:(m)=>(m.maxLove||0)>=70 },
+  { id:'rival_survivor', fr:'Face a ton reflet', en:'Facing your reflection', descFr:'Survis a un affrontement avec ton rival.', descEn:'Survive a clash with your rival.', check:(m)=>!!m.everSurvivedRivalClash },
+  { id:'rival_five', fr:'Rivalite eternelle', en:'Eternal rivalry', descFr:'Affronte ton rival dans 5 carrieres.', descEn:'Face your rival in 5 careers.', check:(m)=>(m.rivalClashes||0)>=5 },
+  { id:'fallen', fr:'Mort au combat', en:'Died in action', descFr:'Perds la vie au cours d\'une carriere.', descEn:'Lose your life during a career.', check:(m)=>(m.totalDeaths||0)>=1 },
+  { id:'survivor_ten', fr:'Retraite meritee', en:'Well-earned retirement', descFr:'Termine 10 carrieres sans mourir.', descEn:'Finish 10 careers without dying.', check:(m)=>(m.survivedCareers||0)>=10 },
+  { id:'roster_five', fr:'Casting varie', en:'Varied casting', descFr:'Joue 5 personnages differents.', descEn:'Play 5 different characters.', check:(m)=>(m.charactersPlayed||[]).length>=5 },
+  { id:'roster_fifteen', fr:'Maitre du roster', en:'Roster master', descFr:'Joue 15 personnages differents.', descEn:'Play 15 different characters.', check:(m)=>(m.charactersPlayed||[]).length>=15 },
+  { id:'globetrotter', fr:'Globe-trotter', en:'Globetrotter', descFr:'Interviens dans 30 lieux differents.', descEn:'Operate in 30 different locations.', check:(m)=>(m.locationsEver||[]).length>=30 },
+  { id:'unlock_ten', fr:'Recrutement actif', en:'Active recruitment', descFr:'Debloque 10 paliers de personnages.', descEn:'Unlock 10 character tiers.', check:(m)=>(m.tierUnlocked||1)>=10 },
+  { id:'unlock_all', fr:'Roster complet', en:'Full roster', descFr:'Debloque tous les personnages du jeu.', descEn:'Unlock every character in the game.', check:(m)=>(m.tierUnlocked||1)>=UNLOCK_TIERS.length },
 ];
 function checkTrophies(){
   TROPHIES.forEach(tr=>{
