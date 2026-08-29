@@ -5250,15 +5250,38 @@ function screenWelcome(){
     <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
     <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
     <div id="resumeBox"></div>
-    <div class="actions" style="justify-content:center;"><button class="btn cyan" id="go">${t('start')} -></button></div>
-    <div class="actions" style="justify-content:center; gap:8px; flex-wrap:wrap; margin-top:6px;">
-      <button class="btn ghost" id="goCodex" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Codex':'Codex'}</button>
-      <button class="btn ghost" id="goDuel" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Simulateur de duel':'Duel simulator'}</button>
-      <button class="btn ghost" id="goTrophies" style="font-size:12px; padding:8px 14px;">${S.lang==='fr'?'Trophees':'Trophies'}</button>
+    <div class="hud-console">
+      <div class="hud-console-top">
+        <span class="hcs-dot"></span>
+        <span class="hcs-title">JARVIS</span>
+        <span class="hcs-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="hcs-status">${S.lang==='fr'?'SYSTEMES EN LIGNE':'SYSTEMS ONLINE'}</span>
+      </div>
+      <button class="hud-primary" id="go">
+        <span class="hp-sweep"></span>
+        <span class="hp-label">${t('start')}</span>
+        <span class="hp-sub">${S.lang==='fr'?'INITIALISER LE PROTOCOLE':'INITIALIZE PROTOCOL'}</span>
+        <span class="hp-arrow">&#10142;</span>
+      </button>
+      <div class="hud-modules">
+        <button class="hud-mod" id="goCodex">
+          <span class="hm-ico">&#9635;</span>
+          <span class="hm-txt"><b>Codex</b><i>${S.lang==='fr'?'BASE DE DONNEES':'DATABASE'}</i></span>
+        </button>
+        <button class="hud-mod" id="goDuel">
+          <span class="hm-ico">&#9876;</span>
+          <span class="hm-txt"><b>${S.lang==='fr'?'Simulateur de duel':'Duel simulator'}</b><i>${S.lang==='fr'?'ARENE VIRTUELLE':'VIRTUAL ARENA'}</i></span>
+        </button>
+        <button class="hud-mod" id="goTrophies">
+          <span class="hm-ico">&#9733;</span>
+          <span class="hm-txt"><b>${S.lang==='fr'?'Trophees':'Trophies'}</b><i>${S.lang==='fr'?'HAUTS FAITS':'ACHIEVEMENTS'}</i></span>
+        </button>
+      </div>
+      <button class="hud-danger" id="goReset">
+        <span class="hd-ico">&#9888;</span>${S.lang==='fr'?'Reinitialiser la progression':'Reset progress'}
+      </button>
     </div>
-    <div class="actions" style="justify-content:center; margin-top:4px;">
-      <button class="btn ghost" id="goReset" style="font-size:11px; padding:6px 12px; color:#ff5c6e; border-color:rgba(255,92,110,.35);">${S.lang==='fr'?'Reinitialiser la progression':'Reset progress'}</button>
-    </div>
+
     <h3 style="margin-top:36px; text-align:center;">${S.lang==='fr'?'Journal des carrieres precedentes':'Previous careers log'}</h3>
     <div id="historyBox" style="margin-top:10px;"><p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Chargement...':'Loading...'}</p></div>
     </div>
