@@ -8944,7 +8944,7 @@ function afterMissionRender(mission){
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>{ safeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); return; }
   if(shouldBattle(mission)){
     S.pendingBattleWin = null;
-    startBattle(mission, (win, foeKey, permaDeath)=>{ S.pendingBattleWin = win; S.lastBattleFoeKey = foeKey;
+    const launch = ()=> startBattle(mission, (win, foeKey, permaDeath)=>{ S.pendingBattleWin = win; S.lastBattleFoeKey = foeKey;
       if(permaDeath || S.dead){
         S.yearsHistory.push({ year:S.currentYear, entries:S.currentYearEntries.slice(), endAlign:S.align }); S.currentYearEntries = [];
         S.screen='end'; render(); return;
@@ -8953,14 +8953,16 @@ function afterMissionRender(mission){
       else jarvisSay("Tu as perdu l'echange. Je stabilise tes constantes, on rejoue ca a froid.","You lost the exchange. Stabilizing your vitals - we'll review it cold.", S.lang==='fr'?'defaite enregistree':'loss logged');
       safeTriggerConversation();
       if(S.careerAuto) autoCareerStep(); });
+    // La cinematique d'ampleur ("MONDE / UNIVERS ... COMBAT") ne s'affiche que juste avant un combat reellement joue
+    const epicnessB = missionEpicness(mission);
+    if(epicnessB!=='none'){ const dur = showCombatCinematic(mission, epicnessB); setTimeout(launch, dur+150); }
+    else launch();
     return;
   }
   if(mission && mission.type==='combat'){ S.pendingBattleWin = resolveBattleOffscreen(mission); }
-  const epicness = missionEpicness(mission);
-
-  if(epicness!=='none'){ const dur = showCombatCinematic(mission, epicness); setTimeout(()=>{ safeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); }
-  else { safeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }
+  safeTriggerConversation(); if(S.careerAuto) autoCareerStep();
 }
+
 function screenMission(){
   const d = document.createElement('div'); const m = S.currentMission;
   const missionsThisYear = S.missionsPlan[S.currentYear-1];
