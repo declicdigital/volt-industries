@@ -55,7 +55,11 @@
   .palsel .swatch{ width:20px; height:20px; border-radius:50%; border:1.5px solid var(--line); cursor:pointer; padding:0; transition:transform .12s, box-shadow .12s; }
   .palsel .swatch:hover{ transform:scale(1.15); }
   .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
-  @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
+  @media(max-width:560px){
+    .palsel .swatch{ width:17px; height:17px; }
+    .langsel button{ padding:5px 10px; }
+    .topbar .brand svg{ width:auto; height:34px; }
+  }
   .rank-badge{ position:fixed; top:16px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
@@ -4509,13 +4513,14 @@ function drawVoltWordmark(x, ox, oy, h, glow){
   x.fillStyle = grad;
   const poly = (pts)=>{ x.beginPath(); pts.forEach((p,i)=> i? x.lineTo(X(p[0]),Y(p[1])) : x.moveTo(X(p[0]),Y(p[1]))); x.closePath(); x.fill(); };
   poly([[0,10],[14,10],[27,50],[40,10],[54,10],[33,72],[21,72]]);
-  // Eclair/barre dans le O : dessine d'abord la barre, puis l'anneau par-dessus
-  // pour que le centre de la barre soit visible a travers le trou du O.
-  poly([[65.5,76],[96.5,2],[103,5],[72,79]]);
+  // Anneau du O puis deux segments distincts : la coupure centrale reste
+  // volontairement large et parfaitement visible, meme dans le petit header.
   x.beginPath();
   x.arc(X(84), Y(40), 32*k, 0, Math.PI*2);
   x.arc(X(84), Y(40), 18.5*k, 0, Math.PI*2, true);
   x.fill('evenodd');
+  poly([[96.5,2],[103,5],[91.3,33],[83.5,33]]);
+  poly([[78,46],[85.8,46],[72,79],[65.5,76]]);
   poly([[128,10],[142,10],[142,58],[168,58],[168,72],[128,72]]);
   poly([[174,10],[228,10],[228,24],[208,24],[208,72],[194,72],[194,24],[174,24]]);
   x.restore();
@@ -4539,8 +4544,9 @@ function wordmarkLogoSVG(heightPx){
     </defs>
     <g filter="url(#${uid}f)" fill="url(#${uid}s)">
       <polygon points="0,10 14,10 27,50 40,10 54,10 33,72 21,72"/>
-      <polygon points="65.5,76 96.5,2 103,5 72,79"/>
       <path d="M84 8a32 32 0 1 0 0 64 32 32 0 0 0 0-64zm0 13.5a18.5 18.5 0 1 1 0 37 18.5 18.5 0 0 1 0-37z"/>
+      <polygon points="96.5,2 103,5 91.3,33 83.5,33"/>
+      <polygon points="78,46 85.8,46 72,79 65.5,76"/>
       <polygon points="128,10 142,10 142,58 168,58 168,72 128,72"/>
       <polygon points="174,10 228,10 228,24 208,24 208,72 194,72 194,24 174,24"/>
       <g>
