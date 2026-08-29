@@ -871,7 +871,7 @@
     --podc:#a855f7; --podhue:0deg; }
   /* la capsule se fond dans le fond du jeu : pas de cadre dur, pas de rectangle */
   .pod-scene{ position:relative; width:auto; height:min(60vh, 780px); aspect-ratio:800/1200; max-width:100%; margin:0 auto; overflow:visible; }
-  .pod-bg{ position:absolute; inset:0;
+  .pod-bg{ position:absolute; inset:0; z-index:3;
     background:url("/game/new-incubator-transparent.png") center bottom/contain no-repeat;
     filter:hue-rotate(var(--podhue)) saturate(1.08) contrast(1.04)
       drop-shadow(0 0 60px var(--podc))
