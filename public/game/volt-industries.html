@@ -1069,6 +1069,17 @@
     .pod-mist{ left:22%; right:22%; top:12%; bottom:18%; }
     .pod-glass{ left:22%; right:22%; top:8%; bottom:17%; }
     .pod-base{ left:10%; right:10%; bottom:2%; padding:6px 9px; }
+    /* Safari iOS finit par tuer l'onglet quand les nombreux flous plein ecran restent animes.
+       Sur mobile, on conserve le rendu lumineux mais avec des calques statiques et composites. */
+    body{ background-attachment:scroll; }
+    .bg-grid,.glow-orb,.particle-layer{ animation:none !important; }
+    .pod-smoke i:nth-child(2),.pod-smoke i:nth-child(3){ display:none; }
+    .pod-smoke i{ filter:blur(12px); animation-duration:11s; }
+    .pod-mist{ filter:blur(10px); animation-duration:14s; }
+    .pod-glow{ filter:blur(14px); animation-duration:6s; }
+    .pod-tint{ filter:blur(8px); }
+    .pod-scan,.pod-gauges i::after{ animation-duration:8s; }
+    .pod-bg{ filter:hue-rotate(var(--podhue)) saturate(1.06) contrast(1.03) drop-shadow(0 0 28px var(--podc)); }
   }
   @media(prefers-reduced-motion:reduce){
     .pod-glow,.pod-scan,.pod-fig.on,.pod-gauges i::after,.pod-mist,.pod-tint,.pod-smoke i{ animation:none; }
@@ -5293,7 +5304,12 @@ function mountIncubatorPod(root){
   if(_podTimer){ clearInterval(_podTimer); _podTimer = null; }
   const pod = root.querySelector('.pod'); if(!pod) return;
   const fig = pod.querySelector('#podFig'), nameEl = pod.querySelector('#podName'), subEl = pod.querySelector('#podSub');
-  const pool = podCharacterPool();
+  const allCharacters = podCharacterPool();
+  /* Un cycle sans fin sur les 51 portraits force Safari mobile a garder des dizaines de grandes
+     images decodees en memoire. Un echantillon renouvele a chaque retour a l'accueil garde la
+     vitrine variee sans faire grossir l'onglet jusqu'au rechargement force. */
+  const mobilePod = window.matchMedia && window.matchMedia('(max-width: 560px)').matches;
+  const pool = mobilePod ? allCharacters.sort(()=>Math.random()-.5).slice(0,12) : allCharacters;
   if(!pool.length){ pod.style.display='none'; return; }
   for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
   let i = -1;
@@ -5321,7 +5337,7 @@ function mountIncubatorPod(root){
     }, 420);
   };
   step();
-  _podTimer = setInterval(step, 4200);
+  _podTimer = setInterval(step, mobilePod ? 6500 : 4200);
 }
 function screenWelcome(){
   const d = document.createElement('div');
