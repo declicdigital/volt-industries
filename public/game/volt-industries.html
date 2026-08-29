@@ -4539,8 +4539,38 @@ function avatarBoxInner(){
   return `<div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
     <div class="hud-label">${S.heroName || '???'}</div><div id="avatarBox">${avatarVisual()}</div>`;
 }
+function playerPodPanel(){
+  if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
+  const fr = S.lang === 'fr';
+  const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
+  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
+  const col = podAuraColor(al);
+  const hue = al === 'hero' ? '-72deg' : al === 'villain' ? '86deg' : '0deg';
+  const sub = al === 'hero' ? (fr?'Specimen - Heros':'Specimen - Hero')
+    : al === 'villain' ? (fr?'Specimen - Villain':'Specimen - Villain')
+    : (fr?'Specimen - Independant':'Specimen - Independent');
+  const src = podFigSrc(S.portrait);
+  return `<div class="pod pod-player" aria-hidden="true" style="--podc:${col}; --podhue:${hue};">
+   <div class="pod-scene">
+    <div class="pod-bg"></div>
+    <div class="pod-glow"></div>
+    <img class="pod-fig on" alt="" decoding="async" data-pod-key="${S.playerCharKey||''}" src="${src}" onload="try{this.dataset.podKey=this.getAttribute('data-pod-key')||'';fitPodFigure(this);}catch(e){}" />
+    <div class="pod-tint"></div>
+    <div class="pod-mist"></div>
+    <div class="pod-smoke"><i></i><i></i><i></i></div>
+    <div class="pod-glass"></div>
+    <div class="pod-scan"></div>
+    <div class="pod-base">
+      <div class="pod-name">${S.heroName || '???'}</div>
+      <div class="pod-sub">${sub}</div>
+      <div class="pod-gauges"><i></i><i></i><i></i><i></i></div>
+    </div>
+   </div>
+  </div>`;
+}
 function sideAvatarPanel(){
-  return `<div class="avatar-wrap">${avatarBoxInner()}</div>
+  return `${playerPodPanel()}
+
     <div class="sidebar-stats">
       <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), Math.round(computePowerLevel()), 'var(--green)')}</div>
       <div class="statbar">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
