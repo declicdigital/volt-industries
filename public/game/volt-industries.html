@@ -298,24 +298,29 @@
 
   .scratch-card{ border:1.5px dashed var(--accent); border-radius:16px; padding:22px; text-align:center; cursor:pointer; background: var(--accent-soft); margin-bottom:18px; }
   .scratch-card .pname{ font-weight:900; font-size:16px; }
-  .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
-  .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.78); backdrop-filter:blur(6px); }
-  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:760px; width:100%; min-height:min(360px, 70vh); max-height:min(540px, 86vh); box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; }
+  .conv-overlay{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; isolation:isolate; }
+  .conv-backdrop{ position:absolute; inset:0; background:rgba(3,6,13,.88); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .conv-card{ position:relative; z-index:2; background:var(--panel); border:1.5px solid var(--line); border-radius:20px; padding:0; max-width:760px; width:100%; min-height:min(360px, 70vh); max-height:min(540px, 86vh); box-shadow:0 30px 80px -20px rgba(0,0,0,.8); animation:rise .3s ease; overflow:hidden; display:flex; align-items:stretch; gap:0; transform:translateZ(0); }
   .conv-stage{ position:relative; flex:0 0 38%; min-height:0; align-self:stretch; background:radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--cp-color) 26%, transparent), rgba(0,0,0,.55) 70%); overflow:hidden; }
-  .conv-body{ flex:1 1 auto; padding:24px; display:flex; flex-direction:column; justify-content:center; min-width:0; overflow-y:auto; }
+  .conv-body{ flex:1 1 auto; padding:24px; display:flex; flex-direction:column; justify-content:center; min-width:0; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--panel); }
   .conv-charname{ font-weight:900; font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-  .conv-dot{ width:10px; height:10px; border-radius:50%; }
+  .conv-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
   .conv-line{ font-size:16px; line-height:1.6; color:var(--ink); min-height:70px; }
+  #convChoices{ display:flex; flex-direction:column; }
   @media (max-width:720px){
     .conv-overlay{ padding:12px; }
-    .conv-card{ flex-direction:column; max-width:440px; min-height:0; max-height:92vh; }
-    .conv-stage{ flex:0 0 auto; height:min(38vh, 240px); min-height:0; }
+    .conv-card{ flex-direction:column; max-width:440px; min-height:0; max-height:92vh; animation:none; }
+    .conv-backdrop{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(3,6,13,.94); }
+    .conv-stage{ flex:0 0 auto; height:min(34vh, 220px); min-height:0; }
     .conv-stage .conv-portrait img{ object-position:50% 8%; }
-    .conv-body{ padding:16px 16px 18px; justify-content:flex-start; }
-    .conv-line{ font-size:14.5px; min-height:0; }
+    .conv-body{ padding:16px 16px 18px; justify-content:flex-start; flex:1 1 auto; }
+    .conv-line{ font-size:14.5px; min-height:0; margin-bottom:4px; }
     .conv-charname{ font-size:12px; margin-bottom:8px; }
     .conv-stage .conv-portrait .cp-glyph{ font-size:64px; }
+    .choice{ padding:13px 15px; font-size:14px; margin-top:10px; }
+    .choice:hover{ transform:none; }
   }
+
   @media (max-width:720px) and (orientation:landscape){
     .conv-card{ flex-direction:row; max-width:640px; min-height:0; }
     .conv-stage{ flex:0 0 34%; height:auto; }
