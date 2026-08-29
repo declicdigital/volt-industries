@@ -68,7 +68,11 @@
     letter-spacing:.5px; color:var(--ink); cursor:pointer; transition:.15s; white-space:nowrap; }
   .caw-btn:hover{ border-color:var(--accent); }
   .caw-btn.caw-start{ background:var(--accent); color:#04070d; border-color:var(--accent); }
-  @media (max-width:560px){ .career-auto-widget{ left:8px; top:8px; padding:6px 8px; } .caw-label{ display:none; } .caw-btn{ font-size:9.5px; padding:5px 8px; } }
+  @media (max-width:720px){
+    .career-auto-widget{ top:auto; bottom:calc(12px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); padding:6px 10px; }
+    .caw-label{ font-size:9px; }
+    .caw-btn{ font-size:9.5px; padding:6px 10px; }
+  }
   .rank-badge .rname{ font-size:12px; font-weight:800; color:var(--ink); letter-spacing:1px; }
   .rank-badge .rlabel{ font-size:9.5px; font-weight:800; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-top:2px;}
   .rank-badge .stars{ margin-top:4px; font-size:15px; letter-spacing:2px; }
