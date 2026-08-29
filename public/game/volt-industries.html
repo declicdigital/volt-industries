@@ -872,7 +872,7 @@
   /* la capsule se fond dans le fond du jeu : pas de cadre dur, pas de rectangle */
   .pod-scene{ position:relative; width:auto; height:min(60vh, 780px); aspect-ratio:800/1200; max-width:100%; margin:0 auto; overflow:visible; }
   .pod-bg{ position:absolute; inset:0; z-index:2;
-    background:url("/game/new-incubator-transparent.png?v=3") center bottom/contain no-repeat;
+    background:url("/game/new-incubator-transparent.png?v=4") center bottom/contain no-repeat;
     filter:hue-rotate(var(--podhue)) saturate(1.08) contrast(1.04)
       drop-shadow(0 0 60px var(--podc))
       drop-shadow(0 24px 70px rgba(0,0,0,.75));
@@ -965,7 +965,7 @@
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
   }
   .pod-player{ margin:0 auto; max-width:300px; }
-  .pod-player .pod-scene{ width:100%; height:auto; aspect-ratio:800/1120; overflow:hidden; }
+  .pod-player .pod-scene{ width:100%; height:auto; aspect-ratio:800/1120; overflow:visible; }
   .pod-player .pod-bg{ background-size:contain; }
   .pod-player .pod-fig{ width:52%; height:66%; bottom:18%; }
   @media (max-width:920px){
@@ -978,7 +978,7 @@
     .wl-logo{ height:82px; align-items:center; overflow:visible; }
     .wl-logo svg{ width:auto; height:92px; max-width:76vw; transform:translateX(11%); }
     .wl-pod{ width:100%; max-width:360px; }
-    .pod-scene{ width:100%; height:auto; max-height:none; aspect-ratio:800/1120; overflow:hidden; }
+    .pod-scene{ width:100%; height:auto; max-height:none; aspect-ratio:800/1120; overflow:visible; }
     .pod-bg{ background-size:contain; }
     .pod-fig{ width:52%; height:66%; bottom:18%; }
     .pod-glow{ left:50%; bottom:17%; width:54%; height:64%; }
@@ -3905,8 +3905,8 @@ const app = document.getElementById('app');
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
-  /* la capsule s'affiche sur le fond du jeu, pas dans une salle a part */
-  document.body.classList.remove('lab-scene');
+  /* L'accueil reste immerge dans le laboratoire, sans enfermer la capsule dans un cadre. */
+  document.body.classList.toggle('lab-scene', S.screen === 'welcome');
 
   const oldToast = document.getElementById('impactToast'); if(oldToast) oldToast.remove();
   const oldRankToast = document.getElementById('rankUpToast'); if(oldRankToast) oldRankToast.remove();
