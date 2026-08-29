@@ -6885,8 +6885,11 @@ function showScopeCinematic(level){
   if(S.scopeCineSeen[lv]) return 0;
   S.scopeCineSeen[lv] = true;
   const cls = lv>=7 ? 'cosmic' : (lv>=6 ? 'system' : 'epic');
-  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + cls;
+  const isVillain = zoneOf(S.align)==='villain';
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + cls + (isVillain?' villain':'');
+  const starsLabel = S.lang==='fr' ? `${lv} ÉTOILE${lv>1?'S':''}` : `${lv} STAR${lv>1?'S':''}`;
   overlay.innerHTML = `<div class="cine-flash"></div>${lv>=5?'<div class="cine-rays"></div>':''}<div class="cine-content">
+      <div class="cine-stars">&#9733; ${starsLabel} &#9733;</div>
       <div class="cine-scope">${scopeLabel(lv).toUpperCase()}</div>
       <div class="cine-title">${S.lang==='fr'?line.fr:line.en}</div>
     </div>`;
