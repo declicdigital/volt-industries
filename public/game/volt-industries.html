@@ -10884,7 +10884,7 @@ function screenEnd(){
       return isFr?`Les archives, elles, retiennent surtout une longue serie de revers.`:`The archives, however, mostly remember a long run of setbacks.`;
     })()}</p>
     ${(S.team && teamNameEnd) ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
-      <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84)}</div>
+      <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84) || factionEmblemSVG(S.team.side, 5, 84)}</div>
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
