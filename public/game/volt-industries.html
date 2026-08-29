@@ -3487,7 +3487,7 @@ function freshState(lang){
     romance:null, romanceHistory:[], lastRomanceYear:null,
     romanceFate: Math.random() < (0.30 + Math.random()*0.30),
     romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
-    lastStars:1, savedToHistory:false,
+    lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
@@ -4079,7 +4079,7 @@ function renderRankBadge(){
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
     <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
   el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
-  if(stars > S.lastStars){ showRankUpToast(stars, zone); }
+  if(stars > S.lastStars){ showRankUpToast(stars, zone); showScopeCinematic(stars); }
   S.lastStars = stars;
 }
 function showRankUpToast(stars, zone){
@@ -6271,7 +6271,7 @@ function buildCareerPlan(){
   S.dead = false; S.deathInfo = null;
   S.activeConversation = null; S.convLineIndex = 0; S.usedConvIds = []; S.lastConvYear = null; S.missionsSinceConv = 0; S.usedFrag = {};
   S.usedChoicePhrases = { bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }; S.usedTextIdx = {};
-  S.lastStars = 1;
+  S.lastStars = 1; S.scopeCineSeen = {};
   S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
   S.usedPivotalIds = []; S.usedBreakthroughIds = []; S.usedIntrigueIds = [];
   S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null;
@@ -6858,8 +6858,6 @@ function nextMission(){
 }
 function missionEpicness(mission){
   if(!mission || mission.type!=='combat') return 'none';
-  if((mission.scope||1)>=7) return 'cosmic';
-  if((mission.scope||1)>=6) return 'system';
   if((mission.danger||0)>=3 || (mission.scope||1)>=5) return 'epic';
   if((mission.danger||0)>=2) return 'major';
   return 'none';
@@ -6868,6 +6866,40 @@ const SYSTEM_LABELS_FR = ['L\'UNIVERS ENTIER VACILLE','DES REALITES ENTIERES SON
 const SYSTEM_LABELS_EN = ['THE WHOLE UNIVERSE SHUDDERS','ENTIRE REALITIES ARE AT STAKE','THE SCALE GOES BEYOND ANYTHING YOU KNOW','UNIVERSAL ALERT'];
 const COSMIC_LABELS_FR = ['ONDE DE CHOC MULTIVERSELLE','LE MULTIVERS SE DECHIRE','L\'AMPLEUR DEPASSE TOUT CE QUE TU AS VECU','LA REALITE ELLE-MEME VACILLE'];
 const COSMIC_LABELS_EN = ['MULTIVERSAL SHOCKWAVE','THE MULTIVERSE TEARS OPEN','A SCALE BEYOND ANYTHING YOU\'VE FACED','REALITY ITSELF SHAKES'];
+
+/* ---------- Cinematique d'echelle : uniquement a la premiere obtention de l'etoile dans la carriere ---------- */
+const SCOPE_CINE_LINES = {
+  2:{ fr:"TOUTE LA VILLE PARLE DE TOI", en:"THE WHOLE CITY IS TALKING" },
+  3:{ fr:"LE PAYS ENTIER A LES YEUX SUR TOI", en:"THE ENTIRE COUNTRY IS WATCHING" },
+  4:{ fr:"UN CONTINENT RETIENT SON SOUFFLE", en:"A CONTINENT HOLDS ITS BREATH" },
+  5:{ fr:"LE MONDE ENTIER BASCULE", en:"THE WHOLE WORLD IS SHIFTING" },
+  6:{ fr:"DES REALITES ENTIERES SONT EN JEU", en:"ENTIRE REALITIES ARE AT STAKE" },
+  7:{ fr:"LE MULTIVERS SE DECHIRE", en:"THE MULTIVERSE TEARS OPEN" },
+};
+function showScopeCinematic(level){
+  const lv = clamp(Number(level)||1,1,7);
+  const line = SCOPE_CINE_LINES[lv]; if(!line) return 0;
+  if(!S.scopeCineSeen) S.scopeCineSeen = {};
+  if(S.scopeCineSeen[lv]) return 0;
+  S.scopeCineSeen[lv] = true;
+  const cls = lv>=7 ? 'cosmic' : (lv>=6 ? 'system' : 'epic');
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + cls;
+  overlay.innerHTML = `<div class="cine-flash"></div>${lv>=5?'<div class="cine-rays"></div>':''}<div class="cine-content">
+      <div class="cine-scope">${scopeLabel(lv).toUpperCase()}</div>
+      <div class="cine-title">${S.lang==='fr'?line.fr:line.en}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  if(lv>=7) document.body.classList.add('shake-cosmic');
+  else if(lv>=6) document.body.classList.add('shake-system');
+  else document.body.classList.add('shake');
+  const dur = lv>=7 ? 3000 : (lv>=6 ? 2600 : 2000);
+  setTimeout(()=>{
+    overlay.classList.add('cine-out');
+    document.body.classList.remove('shake'); document.body.classList.remove('shake-system'); document.body.classList.remove('shake-cosmic');
+    setTimeout(()=>overlay.remove(), 500);
+  }, dur);
+  return dur;
+}
 function showCombatCinematic(mission, epicness){
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + epicness;
   const isCosmic = epicness==='cosmic', isSystem = epicness==='system';
