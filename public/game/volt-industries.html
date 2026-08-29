@@ -3910,7 +3910,8 @@ const app = document.getElementById('app');
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
-  document.body.classList.toggle('lab-scene', S.screen === 'welcome');
+  /* la capsule s'affiche sur le fond du jeu, pas dans une salle a part */
+  document.body.classList.remove('lab-scene');
 
   const oldToast = document.getElementById('impactToast'); if(oldToast) oldToast.remove();
   const oldRankToast = document.getElementById('rankUpToast'); if(oldRankToast) oldRankToast.remove();
