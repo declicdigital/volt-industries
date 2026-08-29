@@ -27,6 +27,9 @@
     color:var(--ink); font-family: -apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
     min-height:100vh; overflow-x:hidden; position:relative; transition: background-color 1.4s ease;
   }
+  .bg-grid{ position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 46px 46px; mask-image: radial-gradient(ellipse 100% 90% at 50% 10%, black 30%, transparent 85%); -webkit-mask-image: radial-gradient(ellipse 100% 90% at 50% 10%, black 30%, transparent 85%); animation: gridshift 30s linear infinite; }
   @keyframes gridshift{ from{ background-position:0 0,0 0;} to{ background-position:46px 46px,-46px 46px; } }
   .scanline{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5; background: repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0px, transparent 1px, transparent 3px); }
   .glow-orb{ position:fixed; border-radius:50%; filter: blur(90px); opacity:.28; z-index:0; animation: float 14s ease-in-out infinite; transition: background 1s ease;}
