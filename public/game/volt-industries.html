@@ -10873,9 +10873,9 @@ function screenEnd(){
       if(cs.total>=40) return isFr?`Les archives soulignent surtout les occasions manquees.`:`The archives mostly underline the missed opportunities.`;
       return isFr?`Les archives, elles, retiennent surtout une longue serie de revers.`:`The archives, however, mostly remember a long run of setbacks.`;
     })()}</p>
-    ${S.team ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
+    ${(S.team && teamNameEnd) ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84)}</div>
-      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${factionName(S.team.side,S.team.tier)}</div></div>` : ''}
+      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${eclatsDetail}
