@@ -4032,7 +4032,7 @@ function autoCareerStep(){
       S.careerAuto = false; renderCareerAutoWidget();
       return;
     }
-    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='rivalClimax'){
+    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='investigationResult' || S.screen==='rivalClimax'){
       const cbox = document.getElementById('choices') || document.querySelector('.actions');
       const btns = cbox ? Array.from(cbox.querySelectorAll('button')).filter(b=>!b.disabled) : [];
       if(btns.length){ autoClickAndWatch(pick(btns)); return; }
