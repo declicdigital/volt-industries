@@ -4032,7 +4032,7 @@ function autoCareerStep(){
       S.careerAuto = false; renderCareerAutoWidget();
       return;
     }
-    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='rivalClimax'){
+    if(S.screen==='mission' || S.screen==='mentor' || S.screen==='training' || S.screen==='pressEvent' || S.screen==='investigation' || S.screen==='investigationResult' || S.screen==='rivalClimax'){
       const cbox = document.getElementById('choices') || document.querySelector('.actions');
       const btns = cbox ? Array.from(cbox.querySelectorAll('button')).filter(b=>!b.disabled) : [];
       if(btns.length){ autoClickAndWatch(pick(btns)); return; }
@@ -4416,7 +4416,7 @@ function screenContent(){
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
     codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies, rivalDossier:screenRivalDossier, rivalClimax:screenRivalClimax,
     careerDurationChoice:screenCareerDurationChoice,
-    pressEvent:screenPressEvent, investigation:screenInvestigation };
+    pressEvent:screenPressEvent, investigation:screenInvestigation, investigationResult:screenInvestigationResult };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -5024,13 +5024,48 @@ function screenInvestigation(){
       const win = i === iv.correct;
       const eff = win ? iv.successEff : iv.failEff;
       Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
-      showImpact(Object.entries(eff||{}).map(([k,v])=>({ label:t(k)||k, delta:v })),
-        win ? (fr?iv.successFr:iv.successEn) : (fr?iv.failFr:iv.failEn));
       if(win){ META.totalInvestigationsSolved = (META.totalInvestigationsSolved||0) + 1; saveMetaProgress(); }
-      S.currentInvestigation = null;
-      nextMission();
+      S.screen = 'investigationResult';
+      S.investigationResult = {
+        win,
+        answer: suspects[iv.correct],
+        picked: suspects[i],
+        text: win ? (fr?iv.successFr:iv.successEn) : (fr?iv.failFr:iv.failEn),
+        eff: eff || {}
+      };
+      render();
     };
   });
+  return d;
+}
+/* Resultat d'enquete : toujours affiche explicitement (reussite/echec + impact) avant de continuer. */
+function screenInvestigationResult(){
+  const d = document.createElement('div'); const fr = S.lang==='fr';
+  const R = S.investigationResult;
+  if(!R){ S.investigationResult = null; nextMission(); return d; }
+  const col = R.win ? 'var(--green, #4ade80)' : 'var(--red)';
+  const rows = Object.entries(R.eff).map(([k,v])=>{
+    const up = v > 0;
+    return `<div style="display:flex; justify-content:space-between; gap:12px; padding:9px 14px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.02);">
+      <span style="font-size:12.5px; letter-spacing:1px; text-transform:uppercase; font-weight:800; color:var(--dim);">${t(k)||k}</span>
+      <span style="font-size:13px; font-weight:900; color:${up?'var(--green, #4ade80)':'var(--red)'};">${up?'+':''}${v}</span>
+    </div>`;
+  }).join('');
+  d.innerHTML = `<span class="eyebrow" style="color:${col};">${fr?'ENQUETE':'INVESTIGATION'}</span>
+    <h2 style="color:${col};">${R.win ? (fr?'DEDUCTION EXACTE':'CORRECT DEDUCTION') : (fr?'MAUVAISE PISTE':'WRONG LEAD')}</h2>
+    <p class="lead">${R.text||''}</p>
+    <div style="margin-top:12px; padding:12px 14px; border-radius:12px; border:1px solid ${col}; background:rgba(255,255,255,.02);">
+      <div style="font-size:9.5px; letter-spacing:1.4px; font-weight:800; color:var(--dim);">${fr?'TA CONCLUSION':'YOUR CONCLUSION'}</div>
+      <div style="font-size:13.5px; margin-top:3px;">${R.picked}</div>
+      ${!R.win ? `<div style="font-size:9.5px; letter-spacing:1.4px; font-weight:800; color:var(--dim); margin-top:9px;">${fr?'LE COUPABLE ETAIT':'THE CULPRIT WAS'}</div>
+      <div style="font-size:13.5px; margin-top:3px;">${R.answer}</div>` : ''}
+    </div>
+    ${rows ? `<p class="lead" style="margin-top:14px; font-weight:700;">${fr?'Impact sur ta carriere':'Career impact'}</p>
+    <div style="display:flex; flex-direction:column; gap:7px;">${rows}</div>` : ''}
+    <div class="actions"><button class="btn cyan" id="ivrNext">${fr?'Continuer':'Continue'} -></button></div>`;
+  d.querySelector('#ivrNext').onclick = ()=>{
+    S.investigationResult = null; S.currentInvestigation = null; nextMission();
+  };
   return d;
 }
 /* ---------- Vitrine d'incubation : decorative uniquement ---------- */
@@ -6309,7 +6344,7 @@ function buildCareerPlan(){
   S.lastStars = 1; S.scopeCineSeen = {};
   S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
   S.usedPivotalIds = []; S.usedBreakthroughIds = []; S.usedIntrigueIds = [];
-  S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null;
+  S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null; S.investigationResult = null;
   S.customFactions = []; S.factionFounders = null; S.factionFounderSide = null;
   S.orientationCount = 0; S.lastOrientationYear = null;
   /* ====================================================================================== */
