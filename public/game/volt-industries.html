@@ -4500,15 +4500,31 @@ function checkFactionExpulsion(){
 }
 function wordmarkLogoSVG(heightPx){
   const uid = 'wm'+Math.random().toString(36).slice(2,7);
-  const w = Math.round(heightPx*1.85);
-  return `<svg width="${w}" height="${heightPx}" viewBox="0 0 185 100" xmlns="http://www.w3.org/2000/svg">
+  const w = Math.round(heightPx*2.16);
+  /* Wordmark officiel VOLT INDUSTRIES : lettres geometriques argentees,
+     le O barre d'un eclair diagonal. Trace vectoriel (aucune police requise). */
+  return `<svg width="${w}" height="${heightPx}" viewBox="0 0 238 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VOLT INDUSTRIES">
     <defs>
-      <linearGradient id="${uid}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent-dark)"/></linearGradient>
-      <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="${uid}s" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="38%" stop-color="#eef6ff"/>
+        <stop offset="62%" stop-color="#b9cadd"/>
+        <stop offset="100%" stop-color="#e8f2ff"/>
+      </linearGradient>
+      <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#7fc8ff" flood-opacity="0.75"/>
+      </filter>
     </defs>
-    <text x="4" y="56" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" font-size="52" letter-spacing="-1" fill="url(#${uid}g)" filter="url(#${uid}f)">VOLT</text>
-    <text x="6" y="82" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-style="italic" font-size="17" letter-spacing="7" fill="url(#${uid}g)">INDUSTRIES</text>
-    <line x1="4" y1="88" x2="181" y2="88" stroke="url(#${uid}g)" stroke-width="2.5" opacity="0.8"/>
+    <g filter="url(#${uid}f)" fill="url(#${uid}s)">
+      <polygon points="0,10 14,10 27,50 40,10 54,10 33,72 21,72"/>
+      <path d="M84 8a32 32 0 1 0 0 64 32 32 0 0 0 0-64zm0 13.5a18.5 18.5 0 1 1 0 37 18.5 18.5 0 0 1 0-37z"/>
+      <polygon points="65.5,76 96.5,2 103,5 72,79"/>
+      <polygon points="128,10 142,10 142,58 168,58 168,72 128,72"/>
+      <polygon points="174,10 228,10 228,24 208,24 208,72 194,72 194,24 174,24"/>
+      <g>
+        <text x="1" y="103" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="20" letter-spacing="7.6" fill="url(#${uid}s)">INDUSTRIES</text>
+      </g>
+    </g>
   </svg>`;
 }
 function topbar(){
