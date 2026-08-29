@@ -1005,6 +1005,9 @@
   body.lab-scene .card{ background:transparent; border-color:transparent; backdrop-filter:none; box-shadow:none; }
   body.lab-scene .pod-scene{ isolation:isolate; }
   body.lab-scene #app{ position:relative; z-index:1; }
+  /* jamais de rectangle autour de la capsule, quel que soit l'ecran ou l'instant */
+  .wl-pod, .wl-pod > .card, .card:has(> .pod), .card:has(> .pod-player), .pod, .pod-scene{
+    background:transparent !important; border-color:transparent !important; box-shadow:none !important; backdrop-filter:none !important; }
 </style>
 </head>
 <body>
