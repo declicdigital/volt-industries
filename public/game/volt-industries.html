@@ -1576,17 +1576,27 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
    Une fois S.team rejoint, le joueur doit croiser en priorite les membres de SA faction
    (combats, conversations, missions), sans que ce soit jamais exclusif : d'autres
    factions du meme camp (hero ou villain) restent presentes en renfort/second plan. */
+/* Resolution robuste d'une faction : il n'existe que 8 factions (4 hero + 4 villain), indexees
+   par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
+   de renvoyer un bandeau vide sans nom ni logo. */
+function facAt(side, tier){
+  const arr = FACTIONS[side]; if(!arr) return null;
+  let i = Number(tier); if(!isFinite(i)) return null;
+  if(i > arr.length-1) i = arr.length-1;
+  while(i >= 0 && !arr[i]) i--;
+  return i >= 0 ? arr[i] : null;
+}
 /* Cles-personnages appartenant a la faction actuelle du joueur (vide si aucune faction rejointe). */
 function myFactionMemberKeys(){
   if(!S.team) return [];
-  const fac = FACTIONS[S.team.side] && FACTIONS[S.team.side][S.team.tier];
+  const fac = facAt(S.team.side, S.team.tier);
   if(!fac) return [];
   return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
 }
 /* Le chef de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
 function myFactionLeaderKey(){
   if(!S.team) return null;
-  const fac = FACTIONS[S.team.side] && FACTIONS[S.team.side][S.team.tier];
+  const fac = facAt(S.team.side, S.team.tier);
   if(!fac || !fac.leader) return null;
   return Object.keys(CHARACTERS).find(k=>canonName(k)===fac.leader) || null;
 }
@@ -1670,7 +1680,7 @@ function customFactionEmblemSVG(side, size){
   </svg>`;
 }
 function factionEmblemSVG(side, tier, size){
-  const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return '';
+  const fac = facAt(side, tier); if(!fac) return '';
   const uid = 'fe'+Math.random().toString(36).slice(2,7);
   const isHero = side==='hero';
   const c1 = isHero ? '#5fd4ff' : '#ff7b8c', c2 = isHero ? '#0088cc' : '#a5122f', dark = isHero ? '#04263a' : '#3a0a14';
@@ -1841,7 +1851,7 @@ function factionEmblemSVG(side, tier, size){
   </svg>`;
 
 }
-function factionName(side, tier){ const fac = FACTIONS[side] && FACTIONS[side][tier]; if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
+function factionName(side, tier){ const fac = facAt(side, tier); if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
 
 const MISSIONS = [
   { id:'sauvetage', type:'rescue', danger:1, scope:2, tagFr:'Catastrophe', tagEn:'Disaster',
