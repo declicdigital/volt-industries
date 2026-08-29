@@ -3768,7 +3768,7 @@ function foeStrength(foeKey, mission){
   const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
   const danger = (mission && mission.danger) || 1;
-  const scope = (mission && mission.scope) || 1;
+  const scope = capScope((mission && mission.scope) || 1);
   /* Le rival grandit avec toi : plus tu progresses, plus il progresse aussi. */
   const rivalBonus = (foeKey===S.rivalKey) ? computeStars()*3 + (S.rivalDarkened ? 18 : 0) : 0;
   /* La puissance propre du personnage (0-100) doit rester le facteur dominant : Red Skull reste
@@ -4306,7 +4306,7 @@ function screenRivalClimax(){
         nextMission();
       } else {
         S.rivalDarkened = (ch.action==='darkduel');
-        const scope = clamp(computeStars(), 2, 7);
+        const scope = capScope(computeStars());
         const climaxMission = { charKey:S.rivalKey, danger:4, scope, choices:[], tagFr:'Affrontement decisif', tagEn:'Decisive clash', location:{ name:randLocationName(scope), type:scope } };
         S.currentMission = climaxMission; S.pendingBattleWin = null;
         /* Filet de securite : si quoi que ce soit echoue au lancement du combat, le joueur ne doit
@@ -6614,7 +6614,7 @@ function startEclatQuest(){
   if(!avail.length) return false;
   const shard = pick(avail);
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-  const scope = clamp(computeStars(), 2, 7);
+  const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
   // Le detenteur est toujours le meme pour une Gemme donnee, sauf si elle a deja change de main (echec precedent).
@@ -6662,7 +6662,7 @@ function startEclatReclaimQuest(){
   const shardName = S.lang==='fr'?shard.frName:shard.enName;
   const holderName = S.lang==='fr'?holderChar.fr:holderChar.en;
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-  const scope = clamp(computeStars(), 2, 7);
+  const scope = capScope(computeStars());
   const m = {
     id:'eclat_reclaim', type:'combat', danger:3, scope, eclatReclaim:shard.id, charKey:holderKey,
     tagFr:'Reprise d\'Infinite', tagEn:'Infinity Reclaim',
@@ -9017,7 +9017,7 @@ function applyMentorChoice(choice, name){
   const m = S.currentMission || {};
   const key = m.recruitKey || null;
   if(choice.forceBattle && key){
-    const pseudoMission = { type:'combat', danger:2, scope: clamp(computeStars(),1,7), charKey:key };
+    const pseudoMission = { type:'combat', danger:2, scope: capScope(computeStars()), charKey:key };
     S.pendingBattleWin = null;
     startBattle(pseudoMission, (win)=>{
       S.pendingBattleWin = win;
