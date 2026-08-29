@@ -2955,8 +2955,15 @@ const LOC_BY_SCOPE = [
   ['Xandar','Morag','Vormir','Titan','Sakaar','Hala','Knowhere','Ego','Contraxia','Berhert','Lamentis-1','Counter-Earth','Talokan','Ta Lo','Zenn-La','Aladna','Tarnax','Klyntar','Battleworld','Weirdworld','Mojoworld','Savage Land'],
   ['Multivers','Terre-616','Terre-838','Terre-1610','Terre-65','Terre-42','Terre-928','Terre-10005','Terre-90214','Terre-2149','Terre-295'],
 ];
+/* Plafond d'echelle : aucune mission/lieu ne peut afficher une echelle superieure au rang (etoiles)
+   actuel du joueur. Multivers n'apparait qu'a 7 etoiles, Univers a 6+, Monde a 5+, etc. */
+function capScope(level){
+  const stars = (typeof computeStars === 'function') ? clamp(computeStars(),1,7) : 7;
+  const lv = clamp(Number(level)||1,1,7);
+  return Math.min(lv, stars);
+}
 function randLocationName(level){
-  const lv = clamp(Number(level)||(1+Math.floor(Math.random()*7)),1,7);
+  const lv = capScope(Number(level)||(1+Math.floor(Math.random()*7)));
   const list = LOC_BY_SCOPE[lv];
   return list[Math.floor(Math.random()*list.length)];
 }
@@ -6741,7 +6748,9 @@ function startGrandEvent(){
   const foeKey = pool.length ? pick(pool) : null;
   const villainSide = mySide==='villain';
   // Un evenement majeur depasse toujours ton niveau habituel, mais reste cohesif avec ton rang actuel (pas un bond a l'aveugle vers le cosmique).
-  const eventScope = clamp(computeStars() + 2, 4, 7);
+  /* Coherence d'echelle : un evenement majeur ne depasse JAMAIS ton rang actuel (Multivers = 7 etoiles,
+     Univers = 6+, etc.). Il se joue au niveau de ton rang, parfois juste en dessous. */
+  const eventScope = capScope(computeStars());
   const m = {
     id:'grand_event', type:'combat', danger:3, scope:eventScope, grandEvent:true, charKey:foeKey,
     tagFr:'EVENEMENT MAJEUR', tagEn:'MAJOR EVENT',
