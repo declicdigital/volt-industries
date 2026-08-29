@@ -4566,7 +4566,7 @@ function playerPodPanel(){
   const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
   const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
   const col = podAuraColor(al);
-  const hue = al === 'hero' ? '-72deg' : al === 'villain' ? '86deg' : '0deg';
+  const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
   const sub = al === 'hero' ? (fr?'Specimen - Heros':'Specimen - Hero')
     : al === 'villain' ? (fr?'Specimen - Villain':'Specimen - Villain')
     : (fr?'Specimen - Independant':'Specimen - Independent');
@@ -5139,7 +5139,7 @@ function podAuraColor(align){
   return align === 'hero' ? '#3ba9ff' : align === 'villain' ? '#ff3b4e' : '#a855f7';
 }
 function incubatorPodHTML(){
-  return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff; --podhue:-72deg;">
+  return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff; --podhue:0deg;">
    <div class="pod-scene">
     <div class="pod-bg"></div>
     <div class="pod-glow"></div>
@@ -5224,7 +5224,7 @@ function mountIncubatorPod(root){
     setTimeout(()=>{
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
-      pod.style.setProperty('--podhue', c.align === 'hero' ? '-72deg' : c.align === 'villain' ? '86deg' : '0deg');
+      pod.style.setProperty('--podhue', c.align === 'hero' ? '0deg' : c.align === 'villain' ? '140deg' : '60deg');
       fig.style.setProperty('--pod-scale','1');
       fig.style.setProperty('--pod-shift-x','0px');
       fig.style.setProperty('--pod-shift-y','0px');
