@@ -399,6 +399,8 @@
   .cine-content{ position:relative; z-index:2; text-align:center; }
   .cine-scope{ font-size:12px; letter-spacing:6px; font-weight:800; color:var(--accent); text-shadow:0 0 16px var(--accent); margin-bottom:10px; animation: cineFadeUp .5s ease; }
   .cine-title{ font-size: clamp(26px,6vw,54px); font-weight:900; letter-spacing:2px; color:#fff; text-transform:uppercase; text-shadow:0 0 30px var(--accent), 0 0 60px var(--accent); animation: cineZoom .6s cubic-bezier(.2,.8,.3,1); }
+  .cine-stars{ font-size:clamp(18px,3.4vw,30px); font-weight:900; letter-spacing:3px; color:var(--gold); text-shadow:0 0 18px var(--gold), 0 0 40px rgba(255,176,32,.45); margin-bottom:8px; animation: cineFadeUp .55s ease; }
+  .cine-overlay.villain-8 .cine-stars, .cine-overlay.cosmic.villain .cine-stars{ color:var(--red); text-shadow:0 0 18px var(--red), 0 0 40px rgba(255,59,92,.45); }
   .cine-overlay.epic .cine-title{ animation: cineZoomBig .8s cubic-bezier(.2,.8,.3,1); }
   @keyframes cineIn{ from{opacity:0;} to{opacity:1;} }
   @keyframes cineOut{ to{opacity:0;} }
@@ -6883,8 +6885,11 @@ function showScopeCinematic(level){
   if(S.scopeCineSeen[lv]) return 0;
   S.scopeCineSeen[lv] = true;
   const cls = lv>=7 ? 'cosmic' : (lv>=6 ? 'system' : 'epic');
-  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + cls;
+  const isVillain = zoneOf(S.align)==='villain';
+  const overlay = document.createElement('div'); overlay.className = 'cine-overlay ' + cls + (isVillain?' villain':'');
+  const starsLabel = S.lang==='fr' ? `${lv} ÉTOILE${lv>1?'S':''}` : `${lv} STAR${lv>1?'S':''}`;
   overlay.innerHTML = `<div class="cine-flash"></div>${lv>=5?'<div class="cine-rays"></div>':''}<div class="cine-content">
+      <div class="cine-stars">&#9733; ${starsLabel} &#9733;</div>
       <div class="cine-scope">${scopeLabel(lv).toUpperCase()}</div>
       <div class="cine-title">${S.lang==='fr'?line.fr:line.en}</div>
     </div>`;
