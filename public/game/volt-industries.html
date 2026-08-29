@@ -4540,7 +4540,7 @@ function avatarBoxInner(){
 function sideAvatarPanel(){
   return `<div class="avatar-wrap">${avatarBoxInner()}</div>
     <div class="sidebar-stats">
-      <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), computePowerLevel(), 'var(--green)')}</div>
+      <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), Math.round(computePowerLevel()), 'var(--green)')}</div>
       <div class="statbar">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
       <div class="align-track"><div class="align-dot" style="left:${clamp((S.align+100)/2,0,100)}%;"></div></div>
       <div class="slabel" style="margin-top:6px; text-align:center;">${careerScore().total}<span style="color:var(--dim);">/100</span></div>
@@ -10859,7 +10859,7 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${fights? winPct+'%':'-'}</div><div class="klabel">${isFr?'Taux de victoire':'Win rate'}</div></div>
     <div class="kpi"><div class="kval">${S.skills.length}</div><div class="klabel">${isFr?'Techniques rares':'Rare techniques'}</div></div>
     <div class="kpi"><div class="kval">${S.turningPoints.length}</div><div class="klabel">${isFr?'Basculements':'Side switches'}</div></div>
-    <div class="kpi"><div class="kval">${computePowerLevel()}</div><div class="klabel">${t('power')}</div></div>
+    <div class="kpi"><div class="kval">${Math.round(computePowerLevel())}</div><div class="klabel">${t('power')}</div></div>
     <div class="kpi"><div class="kval">${statAvg}</div><div class="klabel">${isFr?'Moyenne des stats':'Average stats'}</div></div>
     <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?"Histoires d'amour":'Romances'}</div></div></div>
     <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
@@ -10940,7 +10940,7 @@ function screenEnd(){
       { v:S.combat.won, l:t('fightsWon') },
       { v:S.combat.lost, l:t('fightsLost') },
       { v:(fights? winPct+'%':'-'), l:isFr?'Taux de victoire':'Win rate' },
-      { v:computePowerLevel(), l:t('power') },
+      { v:Math.round(computePowerLevel()), l:t('power') },
       { v:S.skills.length, l:isFr?'Techniques rares':'Rare techniques' },
       { v:S.turningPoints.length, l:isFr?'Basculements':'Side switches' },
     ], verdicts, alignLabel, faction:(S.team?factionName(S.team.side,S.team.tier):null), gradeCol };
