@@ -325,37 +325,63 @@
   .hcs-wave i:nth-child(8){ animation-delay:.56s } .hcs-wave i:nth-child(9){ animation-delay:.64s }
   .hcs-wave i:nth-child(10){ animation-delay:.72s }
   @keyframes hcsWave{ 0%,100%{ height:22%; opacity:.5 } 50%{ height:100%; opacity:1 } }
-  .hud-primary{ position:relative; overflow:hidden; display:block; width:100%; margin-top:12px; cursor:pointer; text-align:left;
-    padding:14px 52px 13px 18px; border-radius:14px; color:#03070f;
-    border:1px solid color-mix(in oklab, var(--accent) 60%, transparent);
-    background:linear-gradient(135deg, var(--accent), var(--accent-dark));
-    box-shadow:0 14px 34px -14px var(--accent); transition:.16s; }
-  .hud-primary:hover{ transform:translateY(-2px); box-shadow:0 18px 42px -12px var(--accent); }
-  .hud-primary .hp-label{ display:block; font-size:17px; font-weight:900; letter-spacing:1px; }
-  .hud-primary .hp-sub{ display:block; margin-top:2px; font-size:9px; font-weight:800; letter-spacing:2px; opacity:.72; }
-  .hud-primary .hp-arrow{ position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; }
-  .hud-primary .hp-sweep{ position:absolute; top:0; bottom:0; width:36%; left:-40%; pointer-events:none;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent); animation:hpSweep 3.4s ease-in-out infinite; }
+  /* --- Boutons D.A. i-tech / JARVIS : coins biseautés, brackets HUD, typo mono --- */
+  .hud-primary, .hud-mod, .hud-danger{ font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; }
+  .hud-primary{ position:relative; overflow:hidden; display:block; width:100%; margin-top:14px; cursor:pointer; text-align:left;
+    padding:15px 54px 14px 20px; border-radius:0; color:var(--accent);
+    clip-path:polygon(0 12px, 12px 0, calc(100% - 22px) 0, 100% 22px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 22px 100%, 0 calc(100% - 22px));
+    border:0; background:
+      linear-gradient(180deg, color-mix(in oklab, var(--accent) 22%, transparent), color-mix(in oklab, var(--accent) 6%, transparent)),
+      repeating-linear-gradient(0deg, color-mix(in oklab, var(--accent) 10%, transparent) 0 1px, transparent 1px 5px),
+      rgba(4,9,18,.72);
+    box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--accent) 55%, transparent), inset 0 0 30px -14px var(--accent), 0 16px 40px -22px var(--accent);
+    transition:.16s; }
+  .hud-primary::before{ content:''; position:absolute; left:8px; top:8px; width:14px; height:14px; pointer-events:none;
+    border-left:2px solid var(--accent); border-top:2px solid var(--accent); opacity:.85; }
+  .hud-primary::after{ content:''; position:absolute; right:8px; bottom:8px; width:14px; height:14px; pointer-events:none;
+    border-right:2px solid var(--accent); border-bottom:2px solid var(--accent); opacity:.85; }
+  .hud-primary:hover{ transform:translateY(-2px); background:
+      linear-gradient(180deg, color-mix(in oklab, var(--accent) 34%, transparent), color-mix(in oklab, var(--accent) 10%, transparent)),
+      repeating-linear-gradient(0deg, color-mix(in oklab, var(--accent) 14%, transparent) 0 1px, transparent 1px 5px),
+      rgba(4,9,18,.72);
+    box-shadow:inset 0 0 0 1px var(--accent), inset 0 0 34px -10px var(--accent), 0 20px 46px -18px var(--accent); }
+  .hud-primary .hp-label{ display:block; font-size:16px; font-weight:900; letter-spacing:3px; text-transform:uppercase;
+    text-shadow:0 0 16px color-mix(in oklab, var(--accent) 70%, transparent); }
+  .hud-primary .hp-sub{ display:block; margin-top:3px; font-size:8.5px; font-weight:700; letter-spacing:2.6px; text-transform:uppercase; color:var(--dim); }
+  .hud-primary .hp-arrow{ position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--accent);
+    text-shadow:0 0 14px var(--accent); }
+  .hud-primary .hp-sweep{ position:absolute; top:0; bottom:0; width:26%; left:-40%; pointer-events:none;
+    background:linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 40%, transparent), transparent); animation:hpSweep 3.4s ease-in-out infinite; }
   @keyframes hpSweep{ 0%{ left:-40% } 55%,100%{ left:120% } }
-  .hud-modules{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:10px; }
-  .hud-mod{ position:relative; cursor:pointer; text-align:left; display:flex; align-items:center; gap:8px; padding:10px 10px;
-    border-radius:12px; color:var(--ink); border:1px solid color-mix(in oklab, var(--accent) 26%, transparent);
-    background:rgba(255,255,255,.03); transition:.15s; }
-  .hud-mod:hover{ border-color:var(--accent); background:color-mix(in oklab, var(--accent) 12%, transparent); transform:translateY(-2px); }
+  .hud-modules{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
+  .hud-mod{ position:relative; overflow:hidden; cursor:pointer; text-align:left; display:flex; align-items:center; gap:9px; padding:11px 10px 11px 12px;
+    border-radius:0; color:var(--ink); border:0;
+    clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012)), rgba(4,9,18,.6);
+    box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent); transition:.15s; }
+  .hud-mod::before{ content:''; position:absolute; left:0; top:14%; bottom:14%; width:2px; background:var(--accent); opacity:.55; box-shadow:0 0 10px var(--accent); }
+  .hud-mod:hover{ transform:translateY(-2px);
+    background:linear-gradient(180deg, color-mix(in oklab, var(--accent) 16%, transparent), rgba(255,255,255,.02)), rgba(4,9,18,.6);
+    box-shadow:inset 0 0 0 1px var(--accent), 0 12px 26px -18px var(--accent); }
+  .hud-mod:hover::before{ opacity:1 }
   .hud-mod .hm-ico{ flex:0 0 auto; font-size:14px; color:var(--accent); text-shadow:0 0 12px var(--accent); }
   .hud-mod .hm-txt{ min-width:0; display:block; }
-  .hud-mod .hm-txt b{ display:block; font-size:11.5px; font-weight:900; letter-spacing:.3px; line-height:1.2; }
-  .hud-mod .hm-txt i{ display:block; font-style:normal; margin-top:2px; font-size:7.8px; font-weight:800; letter-spacing:1.3px; color:var(--dim); }
-  .hud-danger{ display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:10px; cursor:pointer;
-    padding:8px 12px; border-radius:11px; font-size:10.5px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
-    color:#ff7684; background:rgba(255,59,92,.06); border:1px dashed rgba(255,92,110,.4); transition:.15s; }
-  .hud-danger:hover{ background:rgba(255,59,92,.14); border-style:solid; color:#ffa7b1; }
+  .hud-mod .hm-txt b{ display:block; font-size:10.5px; font-weight:900; letter-spacing:1.6px; text-transform:uppercase; line-height:1.25; }
+  .hud-mod .hm-txt i{ display:block; font-style:normal; margin-top:2px; font-size:7.4px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); }
+  .hud-danger{ position:relative; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px; cursor:pointer;
+    padding:9px 12px; border-radius:0; font-size:9.5px; font-weight:800; letter-spacing:2.4px; text-transform:uppercase;
+    clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    color:#ff8391; border:0;
+    background:repeating-linear-gradient(135deg, rgba(255,59,92,.12) 0 6px, rgba(255,59,92,.03) 6px 12px);
+    box-shadow:inset 0 0 0 1px rgba(255,92,110,.45); transition:.15s; }
+  .hud-danger:hover{ color:#ffb3bb; box-shadow:inset 0 0 0 1px rgba(255,92,110,.9), 0 10px 24px -18px #ff3b5c; }
   @media (max-width:560px){
     .hud-console{ max-width:100%; padding:12px 10px 10px; }
     .hud-modules{ grid-template-columns:1fr; gap:7px; }
-    .hud-primary{ padding:13px 44px 12px 14px; }
-    .hud-primary .hp-label{ font-size:15.5px; }
+    .hud-primary{ padding:13px 46px 12px 16px; }
+    .hud-primary .hp-label{ font-size:14px; letter-spacing:2.2px; }
   }
+
 
 
   .scratch-card{ border:1.5px dashed var(--accent); border-radius:16px; padding:22px; text-align:center; cursor:pointer; background: var(--accent-soft); margin-bottom:18px; }
