@@ -4509,11 +4509,13 @@ function drawVoltWordmark(x, ox, oy, h, glow){
   x.fillStyle = grad;
   const poly = (pts)=>{ x.beginPath(); pts.forEach((p,i)=> i? x.lineTo(X(p[0]),Y(p[1])) : x.moveTo(X(p[0]),Y(p[1]))); x.closePath(); x.fill(); };
   poly([[0,10],[14,10],[27,50],[40,10],[54,10],[33,72],[21,72]]);
+  // Eclair/barre dans le O : dessine d'abord la barre, puis l'anneau par-dessus
+  // pour que le centre de la barre soit visible a travers le trou du O.
+  poly([[65.5,76],[96.5,2],[103,5],[72,79]]);
   x.beginPath();
   x.arc(X(84), Y(40), 32*k, 0, Math.PI*2);
   x.arc(X(84), Y(40), 18.5*k, 0, Math.PI*2, true);
   x.fill('evenodd');
-  poly([[65.5,76],[96.5,2],[103,5],[72,79]]);
   poly([[128,10],[142,10],[142,58],[168,58],[168,72],[128,72]]);
   poly([[174,10],[228,10],[228,24],[208,24],[208,72],[194,72],[194,24],[174,24]]);
   x.restore();
