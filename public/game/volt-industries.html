@@ -869,14 +869,19 @@
   }
   .pod{ position:relative; user-select:none; pointer-events:none; -webkit-user-select:none;
     --podc:#a855f7; --podhue:0deg; }
-  /* la capsule sort du decor : pas de cadre, pas de fond, elle se fond dans l'image de la salle */
+  /* la capsule se fond dans le fond du jeu : pas de cadre dur, pas de rectangle */
   .pod-scene{ position:relative; width:auto; height:min(60vh, 780px); aspect-ratio:800/1200; max-width:100%; margin:0 auto; overflow:visible; }
   .pod-bg{ position:absolute; inset:0;
     background:url("/__l5e/assets-v1/29a29267-9e8c-49ba-80c3-74812be9fa6a/new-incubator.png") center bottom/contain no-repeat;
     filter:hue-rotate(var(--podhue)) saturate(1.08) contrast(1.04)
       drop-shadow(0 0 60px var(--podc))
       drop-shadow(0 24px 70px rgba(0,0,0,.75));
-    mix-blend-mode:normal; opacity:.98; transition:filter .9s ease; }
+    mix-blend-mode:normal; opacity:.98; transition:filter .9s ease;
+    border-radius:28px;
+    -webkit-mask-image:radial-gradient(ellipse 72% 86% at 50% 52%, #000 58%, rgba(0,0,0,.82) 74%, rgba(0,0,0,.45) 88%, transparent 100%);
+    mask-image:radial-gradient(ellipse 72% 86% at 50% 52%, #000 58%, rgba(0,0,0,.82) 74%, rgba(0,0,0,.45) 88%, transparent 100%);
+    -webkit-mask-composite:source-in;
+    mask-composite:intersect; }
 
   /* sujet immerge : calé au centre du tube de verre, bords fondus dans le plasma */
   .pod-fig{ position:absolute; left:50%; bottom:20%; transform:translateX(-50%) translateX(var(--pod-shift-x, 0px)) translateY(var(--pod-shift-y, 0px)) scale(var(--pod-scale, 1)); transform-origin:50% 92%; width:46%; height:62%; z-index:3;
