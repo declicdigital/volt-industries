@@ -3897,9 +3897,11 @@ function foeStrength(foeKey, mission){
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus);
 }
 function winOdds(foeKey, mission){
+  /* Courbe plus raide (diviseur 7 au lieu de 9) et plafond de victoire abaisse a 88% :
+     meme nettement plus fort, tu ne gagnes jamais a coup sur. */
   const diff = playerStrength() - foeStrength(foeKey, mission);
-  const p = 1/(1+Math.exp(-diff/9));
-  return clamp(p, 0.08, 0.93);
+  const p = 1/(1+Math.exp(-diff/7));
+  return clamp(p, 0.05, 0.88);
 }
 
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
@@ -8046,8 +8048,8 @@ function resolveBattleOffscreen(mission){
   const f = battleForm();
   const inj = injuryActive();
   const pl = computePowerLevel ? computePowerLevel() : 50;
-  let odds = winOdds(foeKey, mission) + f.momentum*0.02 - Math.max(0,f.streak)*0.015;
-  odds = clamp(odds, 0.06, 0.94);
+  let odds = winOdds(foeKey, mission) + f.momentum*0.012 - Math.max(0,f.streak)*0.03;
+  odds = clamp(odds, 0.04, 0.88);
 
 
   const win = Math.random() < odds;
