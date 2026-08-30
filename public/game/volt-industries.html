@@ -9116,7 +9116,7 @@ function startBattle(mission, done){
     const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*0.7);
     const mult = idx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
     const d = dmgOf(m, power, mult);
-    const targetAllyIdx = pickAllyTarget();
+    const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
     const targetName = allyRoster[targetAllyIdx].name;
