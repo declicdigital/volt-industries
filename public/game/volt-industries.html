@@ -12,7 +12,7 @@
     --accent:#00c2ff; --accent-dark:#0088cc; --accent-soft: rgba(0,194,255,.15);
     --gold:#ffb020; --red:#ff3b5c; --green:#22c98a;
     --bg0:#03060d; --bg1:#070c18;
-    --panel: rgba(14,20,34,.72); --line: rgba(120,180,255,.18);
+    --panel: rgba(14,20,34,.82); --line: rgba(120,180,255,.18);
     --ink:#eef3fb; --dim:#8ea0bd;
   }
   *{box-sizing:border-box;}
@@ -305,6 +305,13 @@
   .pgal .pitem.sel{ border-color:var(--accent); box-shadow:0 0 20px -6px var(--accent); }
   .pgal .pitem.none{ display:flex; align-items:center; justify-content:center; text-align:center; font-size:10.5px; font-weight:800; color:var(--dim); padding:6px; }
 
+  /* ---- Cadre tech autour du titre d'accueil : fond opaque + coins HUD, comme un panneau/bouton
+     de la salle d'incubation, pour que le texte reste net quel que soit le decor derriere. ---- */
+  .tech-frame{ position:relative; margin:0 auto 18px; max-width:560px; padding:22px 26px;
+    border-radius:18px; border:1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+    background:linear-gradient(180deg, color-mix(in oklab, var(--accent) 10%, transparent), rgba(6,10,20,.78));
+    box-shadow:0 0 44px -20px var(--accent), inset 0 1px 0 rgba(255,255,255,.06); }
+  .tech-frame .hud-corner{ opacity:.85; }
   /* ---- Console JARVIS de l'accueil ---- */
   .hud-console{ position:relative; margin:26px auto 0; max-width:520px; padding:14px 14px 12px; border-radius:20px;
     border:1px solid color-mix(in oklab, var(--accent) 30%, transparent);
@@ -1091,10 +1098,10 @@
   /* ---------- Fond plein ecran : salle d'incubation (ecran d'accueil) ---------- */
   .lab-bg{ position:fixed; inset:0; z-index:0; opacity:0; pointer-events:none; transition:opacity 1.1s ease;
     background:url("/__l5e/assets-v1/ca775f8b-a6b3-4511-9e1e-44be0e1c2b55/lab-room.jpg") center center/cover no-repeat;
-    filter:saturate(.72) contrast(.92) brightness(.42); }
+    filter:saturate(.85) contrast(.95) brightness(.68); }
   .lab-bg::after{ content:""; position:absolute; inset:0;
-    background:radial-gradient(ellipse 70% 60% at 50% 42%, rgba(0,0,0,.45), rgba(3,4,10,.88) 78%),
-      linear-gradient(180deg, rgba(3,4,10,.82), rgba(3,4,10,.62) 45%, rgba(3,4,10,.92)); }
+    background:radial-gradient(ellipse 70% 60% at 50% 42%, rgba(0,0,0,.28), rgba(3,4,10,.62) 78%),
+      linear-gradient(180deg, rgba(3,4,10,.58), rgba(3,4,10,.4) 45%, rgba(3,4,10,.68)); }
   body.lab-scene .lab-bg{ opacity:1; }
   body.lab-scene .bg-grid{ opacity:.08; }
   body.lab-scene .glow-orb{ opacity:0; }
@@ -5499,8 +5506,11 @@ function screenWelcome(){
     <div class="wl-logo">${wordmarkLogoSVG(150)}</div>
     <aside class="wl-pod">${incubatorPodHTML()}</aside>
     <div class="wl-main">
-    <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
-    <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
+    <div class="tech-frame">
+      <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
+      <span class="eyebrow" style="text-align:center; display:block;">${t('welcomeEyebrow')}</span>
+      <h1 style="text-align:center;">${t('welcomeTitle')}</h1><p class="lead" style="margin:0 auto; text-align:center;">${t('welcomeLead')}</p>
+    </div>
     <div id="resumeBox"></div>
     <div class="hud-console">
       <div class="hud-console-top">
