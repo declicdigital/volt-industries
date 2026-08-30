@@ -3897,9 +3897,11 @@ function foeStrength(foeKey, mission){
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus);
 }
 function winOdds(foeKey, mission){
+  /* Courbe plus raide (diviseur 7 au lieu de 9) et plafond de victoire abaisse a 88% :
+     meme nettement plus fort, tu ne gagnes jamais a coup sur. */
   const diff = playerStrength() - foeStrength(foeKey, mission);
-  const p = 1/(1+Math.exp(-diff/9));
-  return clamp(p, 0.08, 0.93);
+  const p = 1/(1+Math.exp(-diff/7));
+  return clamp(p, 0.05, 0.88);
 }
 
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
@@ -8046,8 +8048,8 @@ function resolveBattleOffscreen(mission){
   const f = battleForm();
   const inj = injuryActive();
   const pl = computePowerLevel ? computePowerLevel() : 50;
-  let odds = winOdds(foeKey, mission) + f.momentum*0.02 - Math.max(0,f.streak)*0.015;
-  odds = clamp(odds, 0.06, 0.94);
+  let odds = winOdds(foeKey, mission) + f.momentum*0.012 - Math.max(0,f.streak)*0.03;
+  odds = clamp(odds, 0.04, 0.88);
 
 
   const win = Math.random() < odds;
@@ -8578,12 +8580,21 @@ function startBattle(mission, done){
      vrai multiplicateur final : le plafond de Doom reste toujours nettement au-dessus de celui d'un
      personnage faible, quel que soit son niveau de competences accumulees. */
   const charPowerScale = 0.45 + (charTier(S.playerCharKey)||50)/100 * 1.25;
-  const baseHP = Math.max(55, 96 + (ps-55)*0.7 + form.momentum*4 - (inj?inj.sev*10:0));
+  /* Difficulte relevee : le joueur partait avec trop de PV et des degats trop superieurs a ceux
+     de l'adversaire, d'ou des victoires quasi systematiques. Corrections :
+     - PV joueur reduits (base 88 au lieu de 96, pente 0.55 au lieu de 0.7, momentum *3 au lieu de *4)
+     - avantage de puissance plafonne plus bas (+0.22 au lieu de +0.28)
+     - PV adversaires augmentes (pente 2.1, streak *4)
+     - puissance adverse augmentee (base 48, pente 0.72, streak *3)
+     - effet "a ton niveau" : plus tu es fort par rapport a l'adversaire, plus celui-ci tape fort
+       (jusqu'a +45% de degats), pour eviter que les gros personnages ecrasent tout le monde. */
+  const baseHP = Math.max(50, 88 + (ps-55)*0.55 + form.momentum*3 - (inj?inj.sev*10:0));
   const myMaxHP = Math.round(baseHP * charPowerScale);
-  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.22, 0.28)) * (inj ? (1 - inj.sev*0.12) : 1);
-  const foeTier = Math.round((fs-40)*1.9 + Math.max(0, form.streak)*3);
-  const foePower = Math.round(44 + fs*0.6 + Math.max(0, form.streak)*2);
-  const foeDmgMult = 1 + Math.max(0, form.streak)*0.025 + (Math.random()*0.16 - 0.06);
+  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.24, 0.22)) * (inj ? (1 - inj.sev*0.12) : 1);
+  const foeTier = Math.round((fs-40)*2.1 + Math.max(0, form.streak)*4);
+  const foePower = Math.round(48 + fs*0.72 + Math.max(0, form.streak)*3);
+  const rubberBand = 1 + clamp((ps-fs)/140, 0, 0.45);
+  const foeDmgMult = (1 + Math.max(0, form.streak)*0.03 + (Math.random()*0.18 - 0.05)) * rubberBand;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
@@ -9081,15 +9092,16 @@ function startBattle(mission, done){
   }
   function foeAIMoveFor(fk, actor){
     const fm = fk ? foeMovesFor(fk) : foeMoves;
-    /* Defenses : un adversaire blesse privilegie son coup defensif/soin s'il en a un. */
-    if(actor && actor.hp/actor.maxHp < 0.45 && Math.random()<0.55){
+    /* Defenses : un adversaire blesse privilegie son coup defensif/soin s'il en a un -
+       declenche plus tot (55% PV) et plus souvent (70%). */
+    if(actor && actor.hp/actor.maxHp < 0.55 && Math.random()<0.7){
       const defs = fm.filter(mm=>mm.heal);
       if(defs.length) return pick(defs);
     }
-    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.3;
-    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.7) return best; }
+    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.35;
+    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.85) return best; }
     const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
-    return Math.random()<0.6 ? weighted[0] : pick(fm);
+    return Math.random()<0.72 ? weighted[0] : pick(fm);
   }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
@@ -9106,15 +9118,17 @@ function startBattle(mission, done){
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
-    if(st.dodgeNext || Math.random() > m.acc){
+    /* Precision adverse legerement superieure a la valeur affichee : les adversaires ratent
+       moins souvent que le joueur (bonus +0.07, plafonne a 0.97). */
+    if(st.dodgeNext || Math.random() > Math.min(0.97, m.acc + 0.07)){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
       setTimeout(runTurn, wait(900));
       return;
     }
-    const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*0.7);
-    const mult = idx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
+    const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
+    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
