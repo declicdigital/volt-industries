@@ -1544,6 +1544,76 @@ const CHAR_IMG = {
   nv4:"/game/villains/v4.png", nv5:"/game/villains/v5.png", nv6:"/game/villains/v6.png",
   nv7:"/game/villains/v7.png", nv8:"/game/villains/v8.png", nv9:"/game/villains/v9.png",
 };
+const CHAR_ARCHETYPE = {
+  aegis:{fr:'Guerrier', en:'Warrior'},
+  antman:{fr:'Tech', en:'Tech'},
+  apocalypse:{fr:'Mutant', en:'Mutant'},
+  aurelia:{fr:'Divin', en:'Divine'},
+  boomnpc:{fr:'Tech', en:'Tech'},
+  bucky:{fr:'Guerrier', en:'Warrior'},
+  capmarvel:{fr:'Cosmique', en:'Cosmic'},
+  corvus:{fr:'Guerrier', en:'Warrior'},
+  cull:{fr:'Colosse', en:'Colossus'},
+  cyclops:{fr:'Mutant', en:'Mutant'},
+  daredevil:{fr:'Guerrier', en:'Warrior'},
+  deadpool:{fr:'Guerrier', en:'Warrior'},
+  docock:{fr:'Genie', en:'Genius'},
+  drax:{fr:'Colosse', en:'Colossus'},
+  ebonymaw:{fr:'Mystique', en:'Mystic'},
+  electro:{fr:'Tech', en:'Tech'},
+  falcon:{fr:'Tech', en:'Tech'},
+  ferrum:{fr:'Colosse', en:'Colossus'},
+  fuchsia:{fr:'Genie', en:'Genius'},
+  gamora:{fr:'Guerriere', en:'Warrior'},
+  gorr:{fr:'Divin', en:'Divine'},
+  groot:{fr:'Colosse', en:'Colossus'},
+  hawkeye:{fr:'Guerrier', en:'Warrior'},
+  humantorch:{fr:'Cosmique', en:'Cosmic'},
+  invisiblewoman:{fr:'Cosmique', en:'Cosmic'},
+  jeangrey:{fr:'Mutant', en:'Mutant'},
+  kaerus:{fr:'Guerrier', en:'Warrior'},
+  kidspider:{fr:'Guerrier', en:'Warrior'},
+  lorelei:{fr:'Tech', en:'Tech'},
+  magneto:{fr:'Mutant', en:'Mutant'},
+  malachar:{fr:'Cosmique', en:'Cosmic'},
+  mandate:{fr:'Tech', en:'Tech'},
+  mantis:{fr:'Mystique', en:'Mystic'},
+  marsh:{fr:'Guerriere', en:'Warrior'},
+  mrfantastic:{fr:'Genie', en:'Genius'},
+  mysterio:{fr:'Genie', en:'Genius'},
+  mystique:{fr:'Mutant', en:'Mutant'},
+  nebula:{fr:'Tech', en:'Tech'},
+  nihil:{fr:'Cosmique', en:'Cosmic'},
+  nyx:{fr:'Mystique', en:'Mystic'},
+  obsidian:{fr:'Tech', en:'Tech'},
+  profx:{fr:'Mutant', en:'Mutant'},
+  proxima:{fr:'Guerriere', en:'Warrior'},
+  pyro:{fr:'Mutant', en:'Mutant'},
+  rocket:{fr:'Genie', en:'Genius'},
+  sable:{fr:'Guerrier', en:'Warrior'},
+  sepulcre:{fr:'Cosmique', en:'Cosmic'},
+  siddartha:{fr:'Tech', en:'Tech'},
+  solen:{fr:'Mystique', en:'Mystic'},
+  starlord:{fr:'Guerrier', en:'Warrior'},
+  storm:{fr:'Mutant', en:'Mutant'},
+  sylvie:{fr:'Mystique', en:'Mystic'},
+  telios:{fr:'Divin', en:'Divine'},
+  theg:{fr:'Tech', en:'Tech'},
+  thething:{fr:'Colosse', en:'Colossus'},
+  vaelor:{fr:'Divin', en:'Divine'},
+  venom:{fr:'Colosse', en:'Colossus'},
+  vipera:{fr:'Mystique', en:'Mystic'},
+  volt:{fr:'Tech', en:'Tech'},
+  wasp:{fr:'Tech', en:'Tech'},
+  wolverine:{fr:'Mutant', en:'Mutant'},
+  yelena:{fr:'Guerriere', en:'Warrior'},
+};
+function specimenLabel(charKey, align, fr){
+  const arch = CHAR_ARCHETYPE[charKey];
+  const label = arch ? (fr?arch.fr:arch.en) : (fr?'Specimen':'Specimen');
+  if(align==='neutral') return label + (fr?' - Independant':' - Independent');
+  return label;
+}
 const CHARACTERS = {
   theg:{fr:"The G",en:"The G",canon:"The G",align:'neutral', sex:'m', img:CHAR_IMG.char10},
   volt:{fr:"Iron Man",en:"Iron Man",canon:"Iron Man",align:'hero', sex:'m', img:CHAR_IMG.char1}, vaelor:{fr:"Thor",en:"Thor",canon:"Thor",align:'hero', sex:'m', img:CHAR_IMG.char5},
@@ -4704,9 +4774,7 @@ function playerPodPanel(){
   const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
   const col = podAuraColor(al);
   const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
-  const sub = al === 'hero' ? (fr?'Specimen - Heros':'Specimen - Hero')
-    : al === 'villain' ? (fr?'Specimen - Villain':'Specimen - Villain')
-    : (fr?'Specimen - Independant':'Specimen - Independent');
+  const sub = specimenLabel(S.playerCharKey, al, fr);
   const src = podFigSrc(S.portrait);
   return `<div class="pod pod-player" aria-hidden="true" style="--podc:${col}; --podhue:${hue};">
    <div class="pod-scene">
@@ -5374,9 +5442,7 @@ function mountIncubatorPod(root){
       fig.onload = ()=>fitPodFigure(fig);
       fig.src = podFigSrc(c.img);
       nameEl.textContent = (isFr ? c.fr : c.en) || c.canon || '';
-      subEl.textContent = c.align === 'hero' ? (isFr?'Specimen - Heros':'Specimen - Hero')
-        : c.align === 'villain' ? (isFr?'Specimen - Villain':'Specimen - Villain')
-        : (isFr?'Specimen - Independant':'Specimen - Independent');
+      subEl.textContent = specimenLabel(pool[i], c.align, isFr);
       fig.classList.add('on');
     }, 420);
   };
@@ -6523,6 +6589,7 @@ function buildCareerPlan(){
      taux fixe a 30%. */
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
   S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
+  S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
   S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
@@ -6743,6 +6810,39 @@ function shouldTriggerRecruitArc(){
   if(!livingMentees().length) return false;
   if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 1) return false;
   return Math.random() < 0.55;
+}
+/* ---------- Entrainement au combat avec tes recrues : un vrai duel (1 ou 2 contre toi), sans
+   aucun risque de mort permanente, distinct des vraies missions et du systeme narratif ci-dessus. */
+function shouldTriggerTrainingSpar(){
+  if(!livingMentees().filter(m=>!m.graduated).length) return false;
+  if(S.lastTrainingSparYear!=null && (S.currentYear - S.lastTrainingSparYear) < 2) return false;
+  return Math.random() < 0.30;
+}
+function startTrainingSpar(){
+  const cands = livingMentees().filter(m=>!m.graduated); if(!cands.length) return false;
+  S.lastTrainingSparYear = S.currentYear;
+  /* Un contre un dans la plupart des cas, parfois les deux recrues en meme temps si tu en as deux. */
+  const two = cands.length>=2 && Math.random()<0.35;
+  const chosen = two ? shuffle(cands.slice()).slice(0,2) : [pick(cands)];
+  const names = chosen.map(m=>{ const c=CHARACTERS[m.charKey]; return S.lang==='fr'?c.fr:c.en; });
+  const scope = clamp(computeStars(), 2, 5); // toujours un cadre modeste, jamais d'ampleur cosmique pour un entrainement
+  const mission = {
+    id:'training_spar', type:'combat', danger:1, scope, isTraining:true, choices:[],
+    charKey: chosen[0].charKey, trainingFoes: chosen.map(m=>m.charKey),
+    tagFr:'Entrainement', tagEn:'Training session',
+    fr: two ? `Tu proposes a ${names[0]} et ${names[1]} un entrainement double, pour les preparer a affronter plusieurs adversaires a la fois.`
+            : `Tu proposes a ${names[0]} une seance d'entrainement au combat, en conditions reelles mais sans danger.`,
+    en: two ? `You offer ${names[0]} and ${names[1]} a double sparring session, to prepare them for facing multiple opponents at once.`
+            : `You offer ${names[0]} a real combat training session, in realistic but safe conditions.`,
+    location:{ name: (S.lang==='fr'?'Salle d\'entrainement':'Training room'), type:scope },
+  };
+  S.currentMission = mission; S.pendingBattleWin = null; S.screen='mission'; render();
+  startBattle(mission, (win)=>{
+    /* L'issue du sparring influence un peu la progression de la recrue, sans jamais la blesser. */
+    chosen.forEach(m=>{ m.xp = (m.xp||0) + (win ? 1 : 2); }); // perdre face a sa propre recrue reste formateur pour elle
+    handleZoneCheckAndContinue();
+  });
+  return true;
 }
 function startMentorScene(){
   const cands = recruitCandidates(); if(!cands.length) return false;
@@ -7136,6 +7236,7 @@ function nextMission(){
   if(!S.peacefulEra && shouldTriggerEclatReclaim() && startEclatReclaimQuest()) return;
   if(shouldTriggerCrossedMenteeArc() && startCrossedMenteeArc()){ S.lastCrossedArcYear = S.currentYear; return; }
   if(shouldTriggerMentor() && startMentorScene()) return;
+  if(shouldTriggerTrainingSpar() && startTrainingSpar()) return;
   if(shouldTriggerRecruitArc() && startRecruitArc()) return;
   const foundArtifact = maybeFindArtifact();
   if(foundArtifact){ showArtifactFound(foundArtifact, ()=>{ nextMission(); }); return; }
@@ -7801,6 +7902,70 @@ function impactFromEff(eff, alignDelta){
   return items;
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
+const CHAR_MOVES = {
+  theg:{ atk:[{fr:'Decharge de Volt',en:'Volt discharge',p:31,acc:0.83},{fr:'Poing electrique',en:'Electric punch',p:26,acc:0.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:0.87}], def:[{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1.0, heal:16},{fr:'Second souffle',en:'Second wind',p:10,acc:1.0, heal:20},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  volt:{ atk:[{fr:'Repulseur',en:'Repulsor',p:27,acc:0.9},{fr:'Salve energetique',en:'Energy volley',p:24,acc:0.95},{fr:'Frappe calculee',en:'Calculated strike',p:29,acc:0.87}], def:[{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1.0, heal:15},{fr:'Bouclier photonique',en:'Photon shield',p:15,acc:1.0, heal:15},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  vaelor:{ atk:[{fr:'Marteau tournoyant',en:'Whirling hammer',p:30,acc:0.85},{fr:'Foudre canalisee',en:'Channelled lightning',p:31,acc:0.82},{fr:'Tempete du nord',en:'Northern storm',p:34,acc:0.74}], def:[{fr:'Souffle du guerrier',en:'Warrior breath',p:10,acc:1.0, heal:14},{fr:'Peau d\'Asgard',en:'Asgardian hide',p:14,acc:1.0, heal:18},{fr:'Aura sacree',en:'Sacred aura',p:0,acc:1.0, heal:13}] },
+  marsh:{ atk:[{fr:'Rafale de coups',en:'Blitz combo',p:22,acc:0.97},{fr:'Lecture des failles',en:'Weak-point read',p:21,acc:1.0},{fr:'Frappe supersonique',en:'Supersonic strike',p:32,acc:0.78}], def:[{fr:'Riposte anticipee',en:'Preempted riposte',p:14,acc:1.0, heal:15},{fr:'Esquive chronometree',en:'Timed evasion',p:9,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  nyx:{ atk:[{fr:'Sorts hexes',en:'Hex bolts',p:26,acc:0.9},{fr:'Leurre miroir',en:'Mirror decoy',p:21,acc:0.95},{fr:'Rafale chaotique',en:'Chaos burst',p:31,acc:0.82}], def:[{fr:'Champ de distorsion',en:'Distortion field',p:15,acc:1.0, heal:15},{fr:'Bulle de chaos protectrice',en:'Protective chaos bubble',p:9,acc:1.0, heal:21},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  aegis:{ atk:[{fr:'Ricochet',en:'Ricochet',p:27,acc:0.9},{fr:'Coup de bouclier',en:'Shield bash',p:29,acc:0.87},{fr:'Charge du sentinelle',en:'Sentinel charge',p:24,acc:0.94}], def:[{fr:'Mur de bouclier',en:'Shield wall',p:16,acc:1.0, heal:14},{fr:'Encaissement inebranlable',en:'Unshakeable block',p:12,acc:1.0, heal:20},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  ferrum:{ atk:[{fr:'Poing devastateur',en:'Devastating fist',p:33,acc:0.8},{fr:'Ecrasement au sol',en:'Ground smash',p:29,acc:0.87},{fr:'Bond rageur',en:'Furious leap',p:25,acc:0.92}], def:[{fr:'Rage stabilisee',en:'Stabilized rage',p:14,acc:1.0, heal:18},{fr:'Regeneration furieuse',en:'Furious regeneration',p:10,acc:1.0, heal:22},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  solen:{ atk:[{fr:'Lame d\'Agamotto',en:'Blade of Agamotto',p:27,acc:0.9},{fr:'Illusion dimensionnelle',en:'Dimensional illusion',p:21,acc:0.95},{fr:'Portail d\'assaut',en:'Assault portal',p:33,acc:0.76}], def:[{fr:'Bouclier des Vishanti',en:'Vishanti shield',p:15,acc:1.0, heal:16},{fr:'Retour dimensionnel',en:'Dimensional retreat',p:10,acc:1.0, heal:19},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  sable:{ atk:[{fr:'Griffes de vibranium',en:'Vibranium claws',p:28,acc:0.88},{fr:'Sens felins',en:'Feline senses',p:21,acc:1.0},{fr:'Charge du protecteur',en:'Protector\'s charge',p:25,acc:0.92}], def:[{fr:'Combinaison absorbante',en:'Kinetic-absorbing suit',p:14,acc:1.0, heal:16},{fr:'Reflexes felins',en:'Feline reflexes',p:9,acc:1.0, heal:20},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  siddartha:{ atk:[{fr:'Verbe du prophete',en:'Prophet\'s word',p:28,acc:0.92},{fr:'Emprise mentale',en:'Mind hold',p:26,acc:0.9},{fr:'Vision de siecles',en:'Vision of centuries',p:22,acc:0.95}], def:[{fr:'Cercle de disciples',en:'Circle of disciples',p:16,acc:1.0, heal:18},{fr:'Serenite du prophete',en:'Prophet\'s serenity',p:11,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  malachar:{ atk:[{fr:'Lame sans-dieu',en:'Godless blade',p:34,acc:0.8},{fr:'Frappe titanesque',en:'Titan strike',p:31,acc:0.83},{fr:'Malediction',en:'Curse',p:26,acc:0.9}], def:[{fr:'Endurance de Titan',en:'Titan endurance',p:14,acc:1.0, heal:16},{fr:'Regeneration titanesque',en:'Titan regeneration',p:10,acc:1.0, heal:22},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  mandate:{ atk:[{fr:'Rayon chronal',en:'Chronal beam',p:29,acc:0.88},{fr:'Barrage de garde',en:'Guard barrage',p:24,acc:0.94},{fr:'Decret d\'acier',en:'Steel decree',p:31,acc:0.8}], def:[{fr:'Bouclier temporel',en:'Temporal shield',p:14,acc:1.0, heal:15},{fr:'Reforme forcee',en:'Forced reform',p:9,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  obsidian:{ atk:[{fr:'Eclat obsidien',en:'Obsidian shard',p:27,acc:0.9},{fr:'Rayon adamantium',en:'Adamantium beam',p:31,acc:0.83},{fr:'Essaim de drones',en:'Drone swarm',p:24,acc:0.94}], def:[{fr:'Carapace noire',en:'Black carapace',p:12,acc:1.0, heal:16},{fr:'Auto-reparation',en:'Self-repair',p:9,acc:1.0, heal:21},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  kaerus:{ atk:[{fr:'Rayon du crane',en:'Skull ray',p:29,acc:0.88},{fr:'Frappe tactique',en:'Tactical strike',p:24,acc:0.94},{fr:'Barrage HYDRA',en:'HYDRA barrage',p:33,acc:0.76}], def:[{fr:'Armure blindee',en:'Armored plating',p:16,acc:1.0, heal:15},{fr:'Diagnostic reparateur',en:'Repair diagnostic',p:10,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  aurelia:{ atk:[{fr:'Lame d\'outre-tombe',en:'Blade from beyond',p:26,acc:0.92},{fr:'Rites necromantiques',en:'Necromantic rites',p:29,acc:0.86},{fr:'Legion de Hel',en:'Legion of Hel',p:31,acc:0.82}], def:[{fr:'Voile des morts',en:'Veil of the dead',p:14,acc:1.0, heal:17},{fr:'Regeneration divine',en:'Divine regeneration',p:10,acc:1.0, heal:21},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  vipera:{ atk:[{fr:'Venin paralysant',en:'Paralytic venom',p:25,acc:0.94},{fr:'Morsure eclair',en:'Flash bite',p:30,acc:0.84},{fr:'Illusions jumelles',en:'Twin illusions',p:22,acc:0.95}], def:[{fr:'Mue',en:'Molt',p:12,acc:1.0, heal:15},{fr:'Double du dieu rusé',en:'Trickster\'s double',p:9,acc:1.0, heal:21},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  sepulcre:{ atk:[{fr:'Sceptre cosmique',en:'Cosmic scepter',p:29,acc:0.87},{fr:'Requiem des mondes',en:'Requiem of worlds',p:34,acc:0.74},{fr:'Devoreur d\'energie',en:'Energy devourer',p:23,acc:0.95}], def:[{fr:'Densite cosmique',en:'Cosmic density',p:16,acc:1.0, heal:18},{fr:'Regeneration stellaire',en:'Stellar regeneration',p:11,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  nihil:{ atk:[{fr:'Rayon du sceptre cosmique',en:'Cosmic scepter beam',p:28,acc:0.9},{fr:'Neant rampant',en:'Creeping void',p:33,acc:0.77},{fr:'Vol devastateur',en:'Devastating flight',p:23,acc:0.95}], def:[{fr:'Carapace insectoide',en:'Insectoid carapace',p:16,acc:1.0, heal:16},{fr:'Regeneration exosquelette',en:'Exoskeleton regeneration',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  fuchsia:{ atk:[{fr:'Bombes citrouilles',en:'Pumpkin bombs',p:28,acc:0.88},{fr:'Rire toxique',en:'Toxic laughter',p:24,acc:0.94},{fr:'Rafale du glider',en:'Glider strafe',p:32,acc:0.78}], def:[{fr:'Planeur defensif',en:'Defensive glider',p:14,acc:1.0, heal:15},{fr:'Cabriole esquive',en:'Dodge cartwheel',p:9,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  lorelei:{ atk:[{fr:'Rayon du plexus solaire',en:'Solar plexus beam',p:29,acc:0.88},{fr:'Frappe densifiee',en:'Density strike',p:26,acc:0.92},{fr:'Traversee dephasee',en:'Phase-through strike',p:33,acc:0.78}], def:[{fr:'Densite blindee',en:'Armored density',p:14,acc:1.0, heal:16},{fr:'Densite variable',en:'Variable density',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  kidspider:{ atk:[{fr:'Toile immobilisante',en:'Web trap',p:22,acc:1.0},{fr:'Combo acrobatique',en:'Acrobatic combo',p:26,acc:0.93},{fr:'Bond mural',en:'Wall leap',p:31,acc:0.8}], def:[{fr:'Sens d\'araignee',en:'Spider-sense',p:14,acc:1.0, heal:15},{fr:'Souplesse increvable',en:'Unbreakable agility',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  boomnpc:{ atk:[{fr:'Rayon d\'armure',en:'Armor beam',p:28,acc:0.89},{fr:'Sortileges de Latveria',en:'Latverian spells',p:31,acc:0.82},{fr:'Foudre arcanique',en:'Arcane lightning',p:26,acc:0.9}], def:[{fr:'Champ de force du trone',en:'Throne force field',p:16,acc:1.0, heal:16},{fr:'Auto-reparation blindee',en:'Armored self-repair',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  cyclops:{ atk:[{fr:'Rayon optique',en:'Optic blast',p:29,acc:0.89},{fr:'Frappe calculee',en:'Calculated strike',p:25,acc:0.94},{fr:'Rafale ciblee',en:'Targeted volley',p:31,acc:0.83}], def:[{fr:'Visiere de controle',en:'Control visor',p:14,acc:1.0, heal:15},{fr:'Recalibrage tactique',en:'Tactical recalibration',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  daredevil:{ atk:[{fr:'Baton triple',en:'Billy club combo',p:26,acc:0.93},{fr:'Sens radar',en:'Radar sense',p:22,acc:1.0},{fr:'Enchainement aveugle',en:'Blind flurry',p:30,acc:0.85}], def:[{fr:'Esquive sensorielle',en:'Sensory dodge',p:14,acc:1.0, heal:15},{fr:'Concentration totale',en:'Total focus',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  deadpool:{ atk:[{fr:'Duo de sabres',en:'Twin swords',p:27,acc:0.9},{fr:'Rafale de pistolets',en:'Pistol barrage',p:24,acc:0.94},{fr:'Coup fourbe',en:'Cheap shot',p:31,acc:0.82}], def:[{fr:'Regeneration comique',en:'Comic regeneration',p:16,acc:1.0, heal:20},{fr:'Reassemblage total',en:'Full reassembly',p:12,acc:1.0, heal:24},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  docock:{ atk:[{fr:'Bras mecaniques',en:'Mechanical arms',p:28,acc:0.89},{fr:'Etreinte d\'acier',en:'Steel grip',p:31,acc:0.82},{fr:'Fusion nucleaire instable',en:'Unstable fusion',p:24,acc:0.93}], def:[{fr:'Carapace blindee',en:'Armored carapace',p:15,acc:1.0, heal:16},{fr:'Reparation mecanique',en:'Mechanical repair',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  pyro:{ atk:[{fr:'Vague de flammes',en:'Wave of flame',p:26,acc:0.9},{fr:'Cercle de feu',en:'Ring of fire',p:22,acc:0.96},{fr:'Serpents ardents',en:'Fire serpents',p:30,acc:0.83}], def:[{fr:'Rideau de fumee',en:'Smoke screen',p:13,acc:1.0, heal:14},{fr:'Repli fumigene',en:'Smoke retreat',p:9,acc:1.0, heal:19},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  antman:{ atk:[{fr:'Coup geant',en:'Giant-size punch',p:31,acc:0.82},{fr:'Piqure microscopique',en:'Microscopic sting',p:23,acc:0.97},{fr:'Charge Pym',en:'Pym charge',p:26,acc:0.9}], def:[{fr:'Esquive sub-atomique',en:'Subatomic dodge',p:14,acc:1.0, heal:16},{fr:'Reduction tactique',en:'Tactical shrink',p:10,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  apocalypse:{ atk:[{fr:'Poing des anciens',en:'Fist of the ancients',p:32,acc:0.8},{fr:'Absorption de pouvoir',en:'Power absorption',p:29,acc:0.86},{fr:'Rayon technoorganique',en:'Techno-organic beam',p:27,acc:0.89}], def:[{fr:'Carapace millenaire',en:'Millennia-old carapace',p:16,acc:1.0, heal:18},{fr:'Regeneration ancienne',en:'Ancient regeneration',p:11,acc:1.0, heal:22},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  capmarvel:{ atk:[{fr:'Rafale photonique',en:'Photon blast',p:30,acc:0.85},{fr:'Frappe supersonique',en:'Supersonic strike',p:27,acc:0.9},{fr:'Vol de percussion',en:'Ramming flight',p:24,acc:0.94}], def:[{fr:'Absorption d\'energie',en:'Energy absorption',p:15,acc:1.0, heal:17},{fr:'Regeneration photonique',en:'Photonic regeneration',p:10,acc:1.0, heal:21},{fr:'Aura sacree',en:'Sacred aura',p:0,acc:1.0, heal:13}] },
+  corvus:{ atk:[{fr:'Taillade de glaive',en:'Glaive slash',p:28,acc:0.88},{fr:'Estoc empoisonne',en:'Poisoned thrust',p:25,acc:0.93},{fr:'Moulinet devastateur',en:'Devastating spin',p:31,acc:0.81}], def:[{fr:'Regeneration du glaive',en:'Glaive regeneration',p:15,acc:1.0, heal:17},{fr:'Endurance de l\'ordre',en:'Order\'s endurance',p:10,acc:1.0, heal:20},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  cull:{ atk:[{fr:'Massue colossale',en:'Colossal mace',p:33,acc:0.78},{fr:'Charge brutale',en:'Brutal charge',p:29,acc:0.85},{fr:'Ecrasement au sol',en:'Ground crush',p:25,acc:0.92}], def:[{fr:'Carapace impenetrable',en:'Impenetrable hide',p:17,acc:1.0, heal:19},{fr:'Regeneration brute',en:'Brute regeneration',p:11,acc:1.0, heal:22},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  groot:{ atk:[{fr:'Branches tranchantes',en:'Sharp branches',p:27,acc:0.9},{fr:'Etreinte vegetale',en:'Vegetal grip',p:24,acc:0.94},{fr:'Racines surgissantes',en:'Erupting roots',p:29,acc:0.86}], def:[{fr:'Ecorce durcie',en:'Hardened bark',p:16,acc:1.0, heal:18},{fr:'Repousse integrale',en:'Full regrowth',p:12,acc:1.0, heal:24},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  jeangrey:{ atk:[{fr:'Vague telepathique',en:'Telepathic wave',p:26,acc:0.92},{fr:'Projection telekinetique',en:'Telekinetic throw',p:24,acc:0.94},{fr:'Explosion psychique',en:'Psychic burst',p:30,acc:0.83}], def:[{fr:'Bouclier mental',en:'Mental shield',p:16,acc:1.0, heal:17},{fr:'Retrait mental',en:'Mental withdrawal',p:11,acc:1.0, heal:21},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
+  thething:{ atk:[{fr:'Poing de pierre',en:'Rock fist',p:31,acc:0.82},{fr:'Ecrasement massif',en:'Massive crush',p:28,acc:0.87},{fr:'Projection au sol',en:'Ground throw',p:25,acc:0.92}], def:[{fr:'Peau rocheuse',en:'Rocky hide',p:17,acc:1.0, heal:19},{fr:'Endurance de pierre',en:'Stone endurance',p:11,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  magneto:{ atk:[{fr:'Projectiles metalliques',en:'Metal projectiles',p:28,acc:0.88},{fr:'Champ magnetique',en:'Magnetic field',p:24,acc:0.94},{fr:'Vortex electromagnetique',en:'Electromagnetic vortex',p:31,acc:0.81}], def:[{fr:'Armure metallique',en:'Metal armor',p:16,acc:1.0, heal:17},{fr:'Bouclier de fer',en:'Iron shield',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  ebonymaw:{ atk:[{fr:'Suggestion mentale',en:'Mental suggestion',p:25,acc:0.93},{fr:'Lien telekinetique',en:'Telekinetic bind',p:22,acc:0.96},{fr:'Manipulation totale',en:'Total manipulation',p:28,acc:0.87}], def:[{fr:'Voile protecteur',en:'Protective veil',p:14,acc:1.0, heal:15},{fr:'Retrait de l\'esprit',en:'Mind retreat',p:9,acc:1.0, heal:19},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
+  electro:{ atk:[{fr:'Decharge electrique',en:'Electric shock',p:28,acc:0.88},{fr:'Arc voltaique',en:'Voltaic arc',p:24,acc:0.94},{fr:'Surtension',en:'Power surge',p:31,acc:0.81}], def:[{fr:'Champ isolant',en:'Insulating field',p:14,acc:1.0, heal:15},{fr:'Recharge statique',en:'Static recharge',p:9,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  invisiblewoman:{ atk:[{fr:'Frappe invisible',en:'Invisible strike',p:26,acc:0.92},{fr:'Projectile de force',en:'Force projectile',p:24,acc:0.94},{fr:'Bulle offensive',en:'Offensive bubble',p:28,acc:0.87}], def:[{fr:'Champ de force',en:'Force field',p:17,acc:1.0, heal:18},{fr:'Bouclier total',en:'Total shield',p:12,acc:1.0, heal:22},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
+  gamora:{ atk:[{fr:'Lame Godslayer',en:'Godslayer blade',p:30,acc:0.84},{fr:'Enchainement d\'assassin',en:'Assassin combo',p:26,acc:0.91},{fr:'Frappe silencieuse',en:'Silent strike',p:24,acc:0.95}], def:[{fr:'Reflexes d\'elite',en:'Elite reflexes',p:14,acc:1.0, heal:15},{fr:'Esquive parfaite',en:'Perfect evasion',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  gorr:{ atk:[{fr:'Morsure du Necros',en:'Necrosword bite',p:29,acc:0.86},{fr:'Tentacules d\'ombre',en:'Shadow tendrils',p:26,acc:0.9},{fr:'Invocation spectrale',en:'Spectral summon',p:23,acc:0.95}], def:[{fr:'Voile des ombres',en:'Veil of shadows',p:14,acc:1.0, heal:16},{fr:'Dissolution dans l\'ombre',en:'Dissolve into shadow',p:10,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  humantorch:{ atk:[{fr:'Boule de feu',en:'Fireball',p:27,acc:0.9},{fr:'Piquet enflamme',en:'Flaming dive',p:31,acc:0.81},{fr:'Cercle ardent',en:'Blazing ring',p:23,acc:0.95}], def:[{fr:'Bouclier de flammes',en:'Flame shield',p:14,acc:1.0, heal:15},{fr:'Extinction tactique',en:'Tactical extinguish',p:9,acc:1.0, heal:19},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  storm:{ atk:[{fr:'Coup de foudre',en:'Lightning strike',p:29,acc:0.87},{fr:'Rafale de vent',en:'Wind gust',p:24,acc:0.94},{fr:'Tornade ciblee',en:'Targeted tornado',p:32,acc:0.79}], def:[{fr:'Voile de brume',en:'Mist veil',p:15,acc:1.0, heal:16},{fr:'Calme avant la tempete',en:'Calm before the storm',p:10,acc:1.0, heal:20},{fr:'Aura sacree',en:'Sacred aura',p:0,acc:1.0, heal:13}] },
+  mrfantastic:{ atk:[{fr:'Poing elastique',en:'Elastic punch',p:26,acc:0.92},{fr:'Etreinte extensible',en:'Stretching grip',p:23,acc:0.96},{fr:'Bouclier deployable',en:'Deployable shield',p:21,acc:1.0}], def:[{fr:'Absorption elastique',en:'Elastic absorption',p:16,acc:1.0, heal:17},{fr:'Reforme totale',en:'Total reshape',p:11,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  mysterio:{ atk:[{fr:'Illusion de combat',en:'Combat illusion',p:24,acc:0.94},{fr:'Nuage toxique',en:'Toxic cloud',p:22,acc:0.96},{fr:'Double holographique',en:'Holographic double',p:27,acc:0.89}], def:[{fr:'Ecran de fumee',en:'Smoke screen',p:14,acc:1.0, heal:15},{fr:'Disparition scenique',en:'Stage vanish',p:9,acc:1.0, heal:19},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  mystique:{ atk:[{fr:'Griffes changeantes',en:'Shifting claws',p:26,acc:0.92},{fr:'Coup du sosie',en:'Doppelganger strike',p:24,acc:0.94},{fr:'Infiltration eclair',en:'Lightning infiltration',p:22,acc:0.97}], def:[{fr:'Mue defensive',en:'Defensive shift',p:15,acc:1.0, heal:16},{fr:'Camouflage total',en:'Total camouflage',p:10,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  nebula:{ atk:[{fr:'Lame cybernetique',en:'Cybernetic blade',p:28,acc:0.88},{fr:'Rafale de precision',en:'Precision volley',p:25,acc:0.93},{fr:'Bond mecanique',en:'Mechanical leap',p:23,acc:0.96}], def:[{fr:'Plaques blindees',en:'Armor plating',p:15,acc:1.0, heal:16},{fr:'Auto-reparation cybernetique',en:'Cybernetic self-repair',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  profx:{ atk:[{fr:'Vague mentale',en:'Mental wave',p:27,acc:0.91},{fr:'Suggestion paralysante',en:'Paralyzing suggestion',p:24,acc:0.94},{fr:'Projection Cerebro',en:'Cerebro projection',p:22,acc:0.96}], def:[{fr:'Bouclier psychique',en:'Psychic shield',p:16,acc:1.0, heal:17},{fr:'Retrait telepathique',en:'Telepathic withdrawal',p:11,acc:1.0, heal:21},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
+  proxima:{ atk:[{fr:'Lance empoisonnee',en:'Poisoned spear',p:30,acc:0.83},{fr:'Enchainement rapide',en:'Rapid combo',p:26,acc:0.91},{fr:'Estoc precis',en:'Precise thrust',p:24,acc:0.95}], def:[{fr:'Reflexes de guerriere',en:'Warrior reflexes',p:14,acc:1.0, heal:16},{fr:'Esquive militaire',en:'Military dodge',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  rocket:{ atk:[{fr:'Rafale de mitraillette',en:'Machine-gun burst',p:25,acc:0.93},{fr:'Grenade bricolee',en:'Homemade grenade',p:28,acc:0.87},{fr:'Piege explosif',en:'Explosive trap',p:22,acc:0.96}], def:[{fr:'Gadget defensif',en:'Defensive gadget',p:15,acc:1.0, heal:16},{fr:'Repli technique',en:'Technical retreat',p:9,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  starlord:{ atk:[{fr:'Pistolets a element',en:'Element guns',p:26,acc:0.92},{fr:'Charge des bottes-reacteurs',en:'Jet boot charge',p:23,acc:0.96},{fr:'Rafale double',en:'Double volley',p:24,acc:0.94}], def:[{fr:'Esquive propulsee',en:'Propelled dodge',p:14,acc:1.0, heal:15},{fr:'Manoeuvre d\'evasion',en:'Evasive maneuver',p:9,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  telios:{ atk:[{fr:'Rayon cosmique',en:'Cosmic beam',p:30,acc:0.86},{fr:'Frappe stellaire',en:'Stellar strike',p:27,acc:0.9},{fr:'Rire tonitruant',en:'Booming laugh',p:24,acc:0.94}], def:[{fr:'Bouclier divin',en:'Divine shield',p:16,acc:1.0, heal:18},{fr:'Regeneration cosmique',en:'Cosmic regeneration',p:11,acc:1.0, heal:22},{fr:'Aura sacree',en:'Sacred aura',p:0,acc:1.0, heal:13}] },
+  wolverine:{ atk:[{fr:'Griffes d\'adamantium',en:'Adamantium claws',p:30,acc:0.85},{fr:'Enchainement feral',en:'Feral combo',p:26,acc:0.92},{fr:'Charge berserker',en:'Berserker charge',p:24,acc:0.94}], def:[{fr:'Facteur auto-guerisseur',en:'Healing factor',p:16,acc:1.0, heal:22},{fr:'Regeneration extreme',en:'Extreme regeneration',p:12,acc:1.0, heal:26},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  venom:{ atk:[{fr:'Tentacules symbiotes',en:'Symbiote tendrils',p:29,acc:0.87},{fr:'Morsure feroce',en:'Ferocious bite',p:27,acc:0.89},{fr:'Etreinte noire',en:'Black embrace',p:24,acc:0.94}], def:[{fr:'Camouflage organique',en:'Organic camouflage',p:15,acc:1.0, heal:18},{fr:'Regeneration symbiotique',en:'Symbiotic regeneration',p:11,acc:1.0, heal:23},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  drax:{ atk:[{fr:'Poing devastateur',en:'Devastating fist',p:32,acc:0.8},{fr:'Charge frontale',en:'Frontal charge',p:28,acc:0.86},{fr:'Ecrasement au sol',en:'Ground crush',p:25,acc:0.92}], def:[{fr:'Peau tatouee resistante',en:'Resilient tattooed skin',p:16,acc:1.0, heal:18},{fr:'Endurance litterale',en:'Literal endurance',p:11,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  falcon:{ atk:[{fr:'Rafale d\'ailes',en:'Wing barrage',p:26,acc:0.91},{fr:'Piquet aerien',en:'Aerial dive',p:24,acc:0.94},{fr:'Redwing en soutien',en:'Redwing support',p:22,acc:0.97}], def:[{fr:'Bouclier de plumes',en:'Feather shield',p:14,acc:1.0, heal:16},{fr:'Manoeuvre evasive',en:'Evasive maneuver',p:9,acc:1.0, heal:19},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  hawkeye:{ atk:[{fr:'Tir de precision',en:'Precision shot',p:27,acc:0.91},{fr:'Fleche explosive',en:'Explosive arrow',p:29,acc:0.85},{fr:'Triple tir',en:'Triple shot',p:23,acc:0.96}], def:[{fr:'Roulade tactique',en:'Tactical roll',p:14,acc:1.0, heal:15},{fr:'Repli furtif',en:'Stealth retreat',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  wasp:{ atk:[{fr:'Dards energetiques',en:'Energy stingers',p:26,acc:0.92},{fr:'Frappe miniature',en:'Miniature strike',p:23,acc:0.96},{fr:'Charge geante',en:'Giant charge',p:28,acc:0.87}], def:[{fr:'Reduction defensive',en:'Defensive shrink',p:15,acc:1.0, heal:16},{fr:'Recalibrage Pym',en:'Pym recalibration',p:10,acc:1.0, heal:20},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
+  yelena:{ atk:[{fr:'Enchainement d\'espionne',en:'Spy combo',p:24,acc:0.95},{fr:'Frappe silencieuse',en:'Silent strike',p:22,acc:0.97},{fr:'Combo d\'elite',en:'Elite combo',p:26,acc:0.91}], def:[{fr:'Reflexes de la Chambre Rouge',en:'Red Room reflexes',p:14,acc:1.0, heal:15},{fr:'Esquive chorégraphiée',en:'Choreographed dodge',p:9,acc:1.0, heal:19},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  mantis:{ atk:[{fr:'Toucher empathique',en:'Empathic touch',p:22,acc:1.0},{fr:'Sommeil force',en:'Forced sleep',p:24,acc:0.95},{fr:'Vague emotionnelle',en:'Emotional wave',p:21,acc:1.0}], def:[{fr:'Voile d\'empathie',en:'Veil of empathy',p:14,acc:1.0, heal:16},{fr:'Retrait empathique',en:'Empathic withdrawal',p:9,acc:1.0, heal:20},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
+  sylvie:{ atk:[{fr:'Poignard illusoire',en:'Illusory dagger',p:26,acc:0.92},{fr:'Double trompeur',en:'Deceptive double',p:24,acc:0.94},{fr:'Charme mental',en:'Mental charm',p:22,acc:0.97}], def:[{fr:'Voile de deguisement',en:'Disguise veil',p:15,acc:1.0, heal:16},{fr:'Fuite dans le temps',en:'Flight through time',p:10,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
+  bucky:{ atk:[{fr:'Bras cybernetique',en:'Cybernetic arm',p:28,acc:0.88},{fr:'Tir de precision militaire',en:'Military precision shot',p:25,acc:0.93},{fr:'Combo du Soldat de l\'Hiver',en:'Winter Soldier combo',p:27,acc:0.89}], def:[{fr:'Plaque blindee',en:'Armored plating',p:15,acc:1.0, heal:16},{fr:'Recuperation du supersoldat',en:'Supersoldier recovery',p:10,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+};
 const FOE_MOVES = {
   theg:[{fr:'Decharge de Volt',en:'Volt discharge',p:31,acc:.83},{fr:'Poing electrique',en:'Electric punch',p:26,acc:.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:.87},{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1,heal:16},{fr:'Tempete electrique',en:'Electric storm',p:38,acc:.68},{fr:'Second souffle',en:'Second wind',p:10,acc:1,heal:20}],
   volt:[{fr:'Repulseur',en:'Repulsor',p:27,acc:.9},{fr:'Salve energetique',en:'Energy volley',p:24,acc:.95},{fr:'Frappe calculee',en:'Calculated strike',p:29,acc:.87},{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1,heal:15},{fr:'Surcharge du reacteur',en:'Reactor overload',p:36,acc:.7},{fr:'Bouclier photonique',en:'Photon shield',p:15,acc:1,heal:15}],
@@ -7874,29 +8039,44 @@ function foeMovesFor(key){
     : [{fr:'Frappe loyale',en:'Loyal strike',p:27,acc:.9},{fr:'Combo precis',en:'Precise combo',p:24,acc:.96},{fr:'Garde serree',en:'Tight guard',p:14,acc:1,heal:15},{fr:'Second souffle',en:'Second wind',p:9,acc:1,heal:20}];
 }
 function playerMoves(){
-  const powers = (S.powers||[]).slice(0,2);
+  const charPool = S.playerCharKey ? CHAR_MOVES[S.playerCharKey] : null;
   let atk = [];
   let def = [];
-  powers.forEach(id=>{
-    const m = MOVES_BY_POWER[id]; if(m) atk.push(m[0], m[1]);
-    const d = DEFENSE_MOVES_BY_POWER[id]; if(d) def.push(d[0], d[1]);
-  });
+  if(charPool){
+    /* Coups propres au personnage : au debut de la carriere, on tire une fois pour toutes soit
+       2 attaques + 2 defenses, soit 3 attaques + 1 defense, parmi ses 3+3 coups signature. */
+    if(!S.charMoveSplit) S.charMoveSplit = Math.random()<0.5 ? '2-2' : '3-1';
+    const nAtk = S.charMoveSplit === '3-1' ? 3 : 2;
+    const nDef = S.charMoveSplit === '3-1' ? 1 : 2;
+    atk = charPool.atk.slice(0, nAtk);
+    def = charPool.def.slice(0, nDef);
+  } else {
+    const powers = (S.powers||[]).slice(0,2);
+    powers.forEach(id=>{
+      const m = MOVES_BY_POWER[id]; if(m) atk.push(m[0], m[1]);
+      const d = DEFENSE_MOVES_BY_POWER[id]; if(d) def.push(d[0], d[1]);
+    });
+  }
   // Les competences apprises (Vibranium, foudre, etc.) remplacent en priorite les attaques : ce sont tes coups les plus forts.
   const skillMoves = learnedSkills().map(sk=>sk.move);
   atk = skillMoves.concat(atk);
   /* Gabarit de base : 3 attaques + 1 defense (2+2 pour les sorciers/mystiques, qui misent plus sur la
      protection). Chaque technique apprise en formation debloque un emplacement supplementaire, jusqu'a
-     6 coups au total : 4 attaques + 2 defenses (3 attaques + 3 defenses pour les mystiques). */
+     6 coups au total : 4 attaques + 2 defenses (3 attaques + 3 defenses pour les mystiques).
+     Avec un personnage dote de coups propres, la base suit plutot le tirage 2+2/3+1 fait plus haut,
+     et peut encore grandir avec les competences apprises jusqu'a 4 attaques + 3 defenses au total. */
   const isMystic = S.path === 'mystique';
-  const baseAtk = isMystic ? 2 : 3, baseDef = isMystic ? 2 : 1;
-  const maxAtk = isMystic ? 3 : 4, maxDef = isMystic ? 3 : 2;
+  const baseAtk = charPool ? (S.charMoveSplit==='3-1'?3:2) : (isMystic ? 2 : 3);
+  const baseDef = charPool ? (S.charMoveSplit==='3-1'?1:2) : (isMystic ? 2 : 1);
+  const maxAtk = charPool ? 4 : (isMystic ? 3 : 4);
+  const maxDef = charPool ? 3 : (isMystic ? 3 : 2);
   const learnedCount = learnedSkills().length;
   const atkCount = clamp(baseAtk + (learnedCount>=1?1:0), baseAtk, maxAtk);
   const defCount = clamp(baseDef + (learnedCount>=2?1:0), baseDef, maxDef);
   const atkOut = []; atk.forEach(m=>{ if(atkOut.length<atkCount && !atkOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
-  while(atkOut.length<atkCount) atkOut.push(BASIC_MOVES[atkOut.length%2]);
+  while(atkOut.length<atkCount) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
   const defOut = []; def.forEach(m=>{ if(defOut.length<defCount && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
-  while(defOut.length<defCount) defOut.push(DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
+  while(defOut.length<defCount) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
   // Les Gemmes d'Infinite obtenues ajoutent chacun un pouvoir special supplementaire, au-dela des coups habituels.
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
@@ -7973,7 +8153,14 @@ function loreAllyOf(charKey){
 }
 function pickOpponentKey(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-  const pool = otherCharKeys().filter(charUnlocked);
+  const crossed = crossedMentees();
+  const pool = otherCharKeys().filter(charUnlocked).filter(k=>{
+    /* Une recrue active et loyale ne doit jamais apparaitre comme adversaire aleatoire - seule une
+       recrue ayant reellement bascule de camp (crossedMentees ci-dessus) peut te faire face. */
+    const mentee = (S.mentees||[]).find(m=>m.charKey===k);
+    if(!mentee) return true;
+    return crossed.includes(mentee);
+  });
   /* Le rival revient plus souvent que n'importe quel autre adversaire - il est donc verifie en
      tout premier, avant meme le traitre ou les recrues passees a l'ennemi, pour que ce ne soit
      plus jamais eux qui lui volent la priorite. */
@@ -7986,7 +8173,6 @@ function pickOpponentKey(){
      elevees (18% et 22%), ce qui pouvait les faire revenir plus souvent que lui - a l'oppose de
      l'intention du jeu. Ils passent maintenant apres le rival, avec des chances reduites. */
   if(S.traitorKey && CHARACTERS[S.traitorKey] && Math.random()<0.08) return S.traitorKey;
-  const crossed = crossedMentees();
   if(crossed.length && Math.random()<0.10) return pick(crossed).charKey;
   /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
      dresser face a toi si tu incarnes l'un des deux. */
@@ -8168,6 +8354,11 @@ function npcRecruitFor(charKey){
 }
 function buildBattleSquads(foeKey, mission){
   const empty = { allies:[], foes:[] };
+  /* Entrainement dedie avec une ou deux recrues : escouade fixe et simple, sans passer par toute
+     la logique de faction/rivalite/romance qui n'a pas de sens pour une session d'entrainement. */
+  if(mission && mission.isTraining && mission.trainingFoes && mission.trainingFoes.length){
+    return { allies:[], foes: mission.trainingFoes.slice(1) };
+  }
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
@@ -8983,7 +9174,7 @@ function startBattle(mission, done){
                : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`)) + extraLine);
     const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
     let permaDeath = false;
-    if(!win && scope>=6){
+    if(!win && scope>=6 && !(mission && mission.isTraining)){
       const deathChance = 0.10 + (scope-6)*0.06;
       if(Math.random() < deathChance){
         permaDeath = true;
