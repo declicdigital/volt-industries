@@ -9079,8 +9079,13 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(850));
     }, wait(500));
   }
-  function foeAIMoveFor(fk){
+  function foeAIMoveFor(fk, actor){
     const fm = fk ? foeMovesFor(fk) : foeMoves;
+    /* Defenses : un adversaire blesse privilegie son coup defensif/soin s'il en a un. */
+    if(actor && actor.hp/actor.maxHp < 0.45 && Math.random()<0.55){
+      const defs = fm.filter(mm=>mm.heal);
+      if(defs.length) return pick(defs);
+    }
     const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.3;
     if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.7) return best; }
     const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
