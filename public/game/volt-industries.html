@@ -1545,43 +1545,43 @@ const CHAR_IMG = {
   nv7:"/game/villains/v7.png", nv8:"/game/villains/v8.png", nv9:"/game/villains/v9.png",
 };
 const CHAR_ARCHETYPE = {
-  aegis:{fr:'Guerrier', en:'Warrior'},
+  aegis:{fr:'Soldat', en:'Soldier'},
   antman:{fr:'Tech', en:'Tech'},
   apocalypse:{fr:'Mutant', en:'Mutant'},
   aurelia:{fr:'Divin', en:'Divine'},
   boomnpc:{fr:'Tech', en:'Tech'},
-  bucky:{fr:'Guerrier', en:'Warrior'},
+  bucky:{fr:'Soldat', en:'Soldier'},
   capmarvel:{fr:'Cosmique', en:'Cosmic'},
   corvus:{fr:'Guerrier', en:'Warrior'},
   cull:{fr:'Colosse', en:'Colossus'},
   cyclops:{fr:'Mutant', en:'Mutant'},
   daredevil:{fr:'Guerrier', en:'Warrior'},
-  deadpool:{fr:'Guerrier', en:'Warrior'},
+  deadpool:{fr:'Mercenaire', en:'Mercenary'},
   docock:{fr:'Genie', en:'Genius'},
   drax:{fr:'Colosse', en:'Colossus'},
-  ebonymaw:{fr:'Mystique', en:'Mystic'},
+  ebonymaw:{fr:'Psychique', en:'Psychic'},
   electro:{fr:'Tech', en:'Tech'},
   falcon:{fr:'Tech', en:'Tech'},
   ferrum:{fr:'Colosse', en:'Colossus'},
   fuchsia:{fr:'Genie', en:'Genius'},
   gamora:{fr:'Guerriere', en:'Warrior'},
   gorr:{fr:'Divin', en:'Divine'},
-  groot:{fr:'Colosse', en:'Colossus'},
-  hawkeye:{fr:'Guerrier', en:'Warrior'},
+  groot:{fr:'Vegetal', en:'Plant'},
+  hawkeye:{fr:'Tireur', en:'Marksman'},
   humantorch:{fr:'Cosmique', en:'Cosmic'},
   invisiblewoman:{fr:'Cosmique', en:'Cosmic'},
   jeangrey:{fr:'Mutant', en:'Mutant'},
-  kaerus:{fr:'Guerrier', en:'Warrior'},
+  kaerus:{fr:'Soldat', en:'Soldier'},
   kidspider:{fr:'Guerrier', en:'Warrior'},
   lorelei:{fr:'Tech', en:'Tech'},
   magneto:{fr:'Mutant', en:'Mutant'},
   malachar:{fr:'Cosmique', en:'Cosmic'},
   mandate:{fr:'Tech', en:'Tech'},
-  mantis:{fr:'Mystique', en:'Mystic'},
-  marsh:{fr:'Guerriere', en:'Warrior'},
+  mantis:{fr:'Psychique', en:'Psychic'},
+  marsh:{fr:'Espionne', en:'Spy'},
   mrfantastic:{fr:'Genie', en:'Genius'},
   mysterio:{fr:'Genie', en:'Genius'},
-  mystique:{fr:'Mutant', en:'Mutant'},
+  mystique:{fr:'Cameleon', en:'Chameleon'},
   nebula:{fr:'Tech', en:'Tech'},
   nihil:{fr:'Cosmique', en:'Cosmic'},
   nyx:{fr:'Mystique', en:'Mystic'},
@@ -1601,12 +1601,12 @@ const CHAR_ARCHETYPE = {
   theg:{fr:'Tech', en:'Tech'},
   thething:{fr:'Colosse', en:'Colossus'},
   vaelor:{fr:'Divin', en:'Divine'},
-  venom:{fr:'Colosse', en:'Colossus'},
+  venom:{fr:'Symbiote', en:'Symbiote'},
   vipera:{fr:'Mystique', en:'Mystic'},
   volt:{fr:'Tech', en:'Tech'},
   wasp:{fr:'Tech', en:'Tech'},
   wolverine:{fr:'Mutant', en:'Mutant'},
-  yelena:{fr:'Guerriere', en:'Warrior'},
+  yelena:{fr:'Espionne', en:'Spy'},
 };
 function specimenLabel(charKey, align, fr){
   const arch = CHAR_ARCHETYPE[charKey];
@@ -5155,95 +5155,119 @@ function screenPressEvent(){
 /* ============================ ENQUETES / MYSTERES ============================
    Des indices a recouper plutot qu'une menace a affronter : une mission a resoudre par la
    deduction, distincte du combat et des conversations. */
-const INVESTIGATIONS = [
-  { id:'inv_taupe',
-    introFr:"Des documents sensibles fuitent depuis trois semaines. Il te faut trouver la source avant que ca ne devienne incontrolable.",
-    introEn:"Sensitive documents have been leaking for three weeks. You need to find the source before it spirals out of control.",
-    cluesFr:["Le badge utilise pour l'acces correspond au niveau 3, pas au niveau 5 comme prevu.","Les fuites s'arretent toujours pile le week-end.","Un employe du niveau 3 a demande un conge la semaine des deux dernieres fuites."],
-    cluesEn:["The badge used for access matches level 3 clearance, not level 5 as expected.","The leaks always stop exactly on weekends.","A level-3 employee requested time off the week of the last two leaks."],
-    suspectsFr:["Le stagiaire du niveau 3","L'assistante de direction","Le responsable securite lui-meme"],
-    suspectsEn:["The level-3 intern","The executive assistant","The security chief himself"],
-    correct:0,
-    successFr:"Ta deduction est juste : confronte, le stagiaire craque et avoue tout.", successEn:"Your deduction is correct: confronted, the intern breaks down and confesses.",
-    failFr:"Tu accuses la mauvaise personne. La vraie taupe s'enfuit, plus prudente que jamais.", failEn:"You accuse the wrong person. The real mole slips away, more careful than ever.",
-    successEff:{intelligence:5, popularity:3}, failEff:{intelligence:-2, popularity:-3} },
-  { id:'inv_sabotage',
-    introFr:"Un equipement critique tombe en panne au pire moment, trop souvent pour etre un hasard.",
-    introEn:"Critical equipment keeps failing at the worst moment, too often to be a coincidence.",
-    cluesFr:["Les pannes touchent toujours le meme fournisseur de pieces.","Un technicien a acces a tout l'atelier, sans exception.","Les pannes ont commence juste apres l'arrivee d'un nouveau contrat concurrent."],
-    cluesEn:["The failures always involve the same parts supplier.","One technician has unrestricted access to the whole workshop.","The failures started right after a new competing contract was signed."],
-    suspectsFr:["Le nouveau technicien","Le fournisseur de pieces lui-meme","Un concurrent qui a paye en interne"],
-    suspectsEn:["The new technician","The parts supplier itself","A competitor who paid someone on the inside"],
-    correct:2,
-    successFr:"Bien vu : la piste remonte a un concurrent qui a graisse la patte d'un employe.", successEn:"Well spotted: the trail leads to a competitor who bribed an employee.",
-    failFr:"Tu perds du temps sur une fausse piste pendant que le vrai sabotage continue.", failEn:"You waste time on a false lead while the real sabotage continues.",
-    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-3} },
-  { id:'inv_disparition',
-    introFr:"Un civil important a disparu sans laisser de trace. Sa famille te supplie de l'aide.",
-    introEn:"An important civilian has vanished without a trace. Their family begs you for help.",
-    cluesFr:["Son telephone s'est eteint pres des anciens quais desaffectes.","Il avait recu des menaces d'un ancien associe une semaine avant.","Un temoin a vu une voiture inconnue garee devant chez lui la nuit des faits."],
-    cluesEn:["His phone went dark near the old disused docks.","He had received threats from a former associate a week before.","A witness saw an unfamiliar car parked outside his home that night."],
-    suspectsFr:["L'ancien associe menacant","Un enlevement crapuleux au hasard","Une fugue volontaire, personne ne l'a force"],
-    suspectsEn:["The threatening former associate","A random criminal kidnapping","A voluntary disappearance, nobody forced him"],
-    correct:0,
-    successFr:"Tu le retrouves a temps, retenu par son ancien associe pour une vieille dette.", successEn:"You find him in time, held by his former associate over an old debt.",
-    failFr:"Fausse piste : le temps perdu pourrait lui couter cher.", failEn:"Wrong lead: the lost time could cost him dearly.",
-    successEff:{courage:4, popularity:5}, failEff:{popularity:-4} },
-  { id:'inv_chantage',
-    introFr:"Quelqu'un fait chanter un membre respecte de la communaute avec des documents voles.",
-    introEn:"Someone is blackmailing a respected community member with stolen documents.",
-    cluesFr:["Les documents voles ne pouvaient venir que de trois personnes ayant l'acces.","Le maitre-chanteur exige un paiement en un lieu tres precis, filmé par une camera de securite voisine.","Un des trois suspects a soudain rembourse une grosse dette la semaine derniere."],
-    cluesEn:["The stolen documents could only have come from three people with access.","The blackmailer demands payment at a very specific spot, near a security camera.","One of the three suspects suddenly paid off a large debt last week."],
-    suspectsFr:["Un collegue proche jaloux","Un ancien employe licencie","La victime elle-meme, pour l'attention"],
-    suspectsEn:["A jealous close colleague","A recently fired former employee","The victim themself, seeking attention"],
+const INVESTIGATION_MACGUFFINS = [
+  {fr:'le Tesseract', frDe:'du Tesseract', en:'the Tesseract', enOf:'the Tesseract'},
+  {fr:'une Gemme d\'Infinite isolee', frDe:'de la Gemme d\'Infinite isolee', en:'an isolated Infinity Gem', enOf:'the isolated Infinity Gem'},
+  {fr:'un fragment du Sceptre Kree', frDe:'du fragment du Sceptre Kree', en:'a fragment of the Kree Scepter', enOf:'the Kree Scepter fragment'},
+  {fr:'un prototype d\'armure Stark', frDe:'du prototype d\'armure Stark', en:'a Stark armor prototype', enOf:'the Stark armor prototype'},
+  {fr:'un dossier HYDRA classe', frDe:'du dossier HYDRA classe', en:'a classified HYDRA file', enOf:'the classified HYDRA file'},
+  {fr:'un lingot de vibranium wakandien', frDe:'du lingot de vibranium wakandien', en:'a Wakandan vibranium ingot', enOf:'the Wakandan vibranium ingot'},
+  {fr:'une relique asgardienne', frDe:'de la relique asgardienne', en:'an Asgardian relic', enOf:'the Asgardian relic'},
+  {fr:'une arme Chitauri recuperee', frDe:'de l\'arme Chitauri recuperee', en:'a recovered Chitauri weapon', enOf:'the recovered Chitauri weapon'},
+  {fr:'un prototype AIM instable', frDe:'du prototype AIM instable', en:'an unstable A.I.M. prototype', enOf:'the unstable A.I.M. prototype'},
+  {fr:'un dossier noir du S.H.I.E.L.D.', frDe:'du dossier noir du S.H.I.E.L.D.', en:'a S.H.I.E.L.D. black file', enOf:'the S.H.I.E.L.D. black file'},
+  {fr:'un fragment de Celestial', frDe:'du fragment de Celestial', en:'a Celestial fragment', enOf:'the Celestial fragment'},
+  {fr:'une capsule du serum du super-soldat', frDe:'de la capsule du serum du super-soldat', en:'a super-soldier serum vial', enOf:'the super-soldier serum vial'},
+  {fr:'un cristal kree de stockage de conscience', frDe:'du cristal kree de stockage de conscience', en:'a Kree consciousness-storage crystal', enOf:'the Kree consciousness-storage crystal'},
+  {fr:'un coeur de reacteur Stark experimental', frDe:'du coeur de reacteur Stark experimental', en:'an experimental Stark reactor core', enOf:'the experimental Stark reactor core'},
+  {fr:'une cle dimensionnelle du Sanctum', frDe:'de la cle dimensionnelle du Sanctum', en:'a Sanctum dimensional key', enOf:'the Sanctum dimensional key'},
+  {fr:'une carte du multivers de Kang', frDe:'de la carte du multivers de Kang', en:'a Kang multiverse map', enOf:'the Kang multiverse map'},
+  {fr:'un oeuf d\'origine extraterrestre non identifiee', frDe:'de l\'oeuf d\'origine extraterrestre non identifiee', en:'an unidentified alien egg', enOf:'the unidentified alien egg'},
+  {fr:'un module de teleportation Chitauri', frDe:'du module de teleportation Chitauri', en:'a Chitauri teleportation module', enOf:'the Chitauri teleportation module'},
+  {fr:'des archives du programme Weapon X', frDe:'des archives du programme Weapon X', en:'Weapon X program archives', enOf:'the Weapon X program archives'},
+  {fr:'un noyau energetique d\'origine cosmique', frDe:'du noyau energetique d\'origine cosmique', en:'a cosmic-origin energy core', enOf:'the cosmic-origin energy core'},
+];
+const INVESTIGATION_SCENARIOS = [
+  {
+    introFr:(objFr,objFrDe)=>''+objFr+' a disparu d\'un site securise sans la moindre trace d\'effraction.', introEn:(objEn,objEnOf)=>''+objEn+' has vanished from a secure site without a single trace of forced entry.',
+    cluesFr:(objFr,objFrDe)=>['Aucun systeme d\'alarme n\'a ete declenche cette nuit-la.','Le code d\'acces utilise etait valide, mais attribue a une personne en conge ce jour-la.','Une camera voisine, en panne depuis peu, couvrait justement cette zone.'], cluesEn:(objEn,objEnOf)=>['No alarm system was triggered that night.','The access code used was valid, but assigned to someone on leave that day.','A nearby camera, recently out of order, happened to cover that exact zone.'],
+    suspectsFr:(objFr,objFrDe)=>['La personne officiellement en conge','Un technicien recemment renvoye','Un responsable haut place, au-dessus de tout soupcon'], suspectsEn:(objEn,objEnOf)=>['The person officially on leave','A recently fired technician','A high-ranking official, above suspicion'],
     correct:1,
-    successFr:"Confondu par la camera de securite, l'ancien employe avoue tout.", successEn:"Caught on the security camera, the former employee confesses everything.",
-    failFr:"Tu accuses a tort - le vrai maitre-chanteur frappe de nouveau, plus fort.", failEn:"You wrongly accuse someone - the real blackmailer strikes again, harder.",
-    successEff:{intelligence:5, popularity:4}, failEff:{popularity:-5} },
-  { id:'inv_double',
-    introFr:"Deux temoignages contradictoires se disputent la verite sur un incident recent.",
-    introEn:"Two contradictory testimonies are fighting over the truth of a recent incident.",
-    cluesFr:["Le premier temoin a un alibi verifiable, le second non.","Le second temoin a beaucoup a gagner si sa version est retenue.","Les images de videosurveillance, partiellement corrompues, semblent pencher vers un troisieme scenario."],
-    cluesEn:["The first witness has a verifiable alibi, the second does not.","The second witness has a lot to gain if their version is believed.","The partially corrupted security footage seems to lean toward a third scenario."],
-    suspectsFr:["Croire le premier temoin","Croire le second temoin","Chercher la verite ailleurs, entre les deux"],
-    suspectsEn:["Believe the first witness","Believe the second witness","Look for the truth elsewhere, between the two"],
+    successFr:(objFr,objFrDe)=>'Le technicien renvoye avait garde un acces qu\'on avait oublie de revoquer. Confondu par les preuves, il cede.', successEn:(objEn,objEnOf)=>'The fired technician had kept an access that was never revoked. Confronted with the evidence, he caves.',
+    failFr:(objFr,objFrDe)=>''+objFr+' a deja change plusieurs fois de mains avant que tu ne remontes la bonne piste.', failEn:(objEn,objEnOf)=>''+objEn+' has already changed hands several times before you find the right lead.',
+    successEff:{intelligence:5, popularity:3}, failEff:{intelligence:-2, popularity:-3},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Des rumeurs insistantes circulent : quelqu\'un negocie discretement la vente '+objFrDe+'.', introEn:(objEn,objEnOf)=>'Persistent rumors are circulating: someone is quietly negotiating the sale of '+objEnOf+'.',
+    cluesFr:(objFr,objFrDe)=>['L\'acheteur potentiel a exige une rencontre dans un endroit tres precis, hors de toute surveillance habituelle.','Le vendeur presume a soudainement rembourse une dette importante, sans explication.','Un intermediaire connu du milieu a ete apercu a proximite des deux parties.'], cluesEn:(objEn,objEnOf)=>['The potential buyer demanded a meeting in a very specific, unmonitored location.','The presumed seller suddenly paid off a large debt, with no explanation.','A known underworld middleman was spotted near both parties.'],
+    suspectsFr:(objFr,objFrDe)=>['Intercepter directement l\'acheteur','Remonter jusqu\'au vendeur endette','Suivre l\'intermediaire en premier'], suspectsEn:(objEn,objEnOf)=>['Intercept the buyer directly','Track down the indebted seller','Follow the middleman first'],
     correct:2,
-    successFr:"La verite etait plus nuancee que prevu - ta patience paie.", successEn:"The truth was more nuanced than expected - your patience pays off.",
-    failFr:"Tu prends parti trop vite, et la vraie version ne sort jamais au grand jour.", failEn:"You take sides too quickly, and the real version never comes to light.",
-    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-2} },
-  { id:'inv_relique',
-    introFr:"Un artefact ancien a ete vole dans un musee prive, sous haute securite.",
-    introEn:"An ancient artifact was stolen from a private museum under heavy security.",
-    cluesFr:["Aucune trace d'effraction n'a ete trouvee sur les lieux.","Le systeme de securite a ete desactive depuis l'interieur, avec un code valide.","Un seul employe avait ce niveau d'acces cette nuit-la."],
-    cluesEn:["No signs of forced entry were found at the scene.","The security system was disabled from the inside, with a valid code.","Only one employee had that level of access that night."],
-    suspectsFr:["L'employe avec le code valide","Un collectionneur prive obsessionnel","Le conservateur du musee lui-meme"],
-    suspectsEn:["The employee with the valid code","An obsessive private collector","The museum curator themself"],
+    successFr:(objFr,objFrDe)=>'L\'intermediaire te mene droit aux deux parties, en pleine transaction. '+objFr+' ne quittera pas la ville.', successEn:(objEn,objEnOf)=>'The middleman leads you straight to both parties, mid-transaction. '+objEn+' won\'t leave the city.',
+    failFr:(objFr,objFrDe)=>'La vente a deja eu lieu. '+objFr+' est maintenant entre des mains inconnues.', failEn:(objEn,objEnOf)=>'The sale has already happened. '+objEn+' is now in unknown hands.',
+    successEff:{courage:4, popularity:4}, failEff:{popularity:-5},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Le systeme de confinement '+objFrDe+' montre des signes d\'affaiblissement suspects, bien trop reguliers pour etre naturels.', introEn:(objEn,objEnOf)=>'The containment system for '+objEnOf+' shows suspiciously regular signs of weakening, too consistent to be natural.',
+    cluesFr:(objFr,objFrDe)=>['Les baisses d\'energie surviennent toujours a la meme heure, chaque semaine.','Un seul ingenieur a acces au systeme a cette heure precise.','Cet ingenieur a recemment change radicalement de train de vie.'], cluesEn:(objEn,objEnOf)=>['The energy drops always occur at the same time, every week.','Only one engineer has access to the system at that exact hour.','That engineer\'s lifestyle has recently changed drastically.'],
+    suspectsFr:(objFr,objFrDe)=>['L\'ingenieur en question','Un stagiaire sans lien apparent','Une defaillance purement mecanique, sans coupable'], suspectsEn:(objEn,objEnOf)=>['The engineer in question','An intern with no apparent link','A purely mechanical failure, no culprit'],
     correct:0,
-    successFr:"L'employe finit par ceder sous la pression et rend l'artefact.", successEn:"The employee eventually caves under pressure and returns the artifact.",
-    failFr:"Le veritable voleur a le temps de revendre l'artefact au marche noir.", failEn:"The real thief has time to sell the artifact on the black market.",
-    successEff:{intelligence:5, popularity:3}, failEff:{popularity:-3} },
-  { id:'inv_culte',
-    introFr:"Une serie de disparitions mineures pointe vers un groupe secret qui recrute discretement en ville.",
-    introEn:"A series of minor disappearances points to a secret group quietly recruiting in the city.",
-    cluesFr:["Toutes les victimes ont frequente le meme cafe dans les jours precedents.","Un symbole discret revient sur plusieurs affiches disparues depuis.","Un ancien membre du groupe accepte de parler, mais seulement en echange d'une protection."],
-    cluesEn:["All victims visited the same coffee shop in the days before.","A discreet symbol keeps appearing on posters that have since vanished.","A former group member agrees to talk, but only in exchange for protection."],
-    suspectsFr:["Infiltrer le groupe directement","Proteger l'ancien membre et l'ecouter","Ignorer et laisser faire la police locale"],
-    suspectsEn:["Infiltrate the group directly","Protect the former member and listen","Ignore it and let local police handle it"],
+    successFr:(objFr,objFrDe)=>'Confronte aux preuves, l\'ingenieur admet avoir saborde le systeme contre paiement.', successEn:(objEn,objEnOf)=>'Confronted with the evidence, the engineer admits to sabotaging the system for payment.',
+    failFr:(objFr,objFrDe)=>'Le sabotage continue, et '+objFr+' finit par s\'echapper du confinement.', failEn:(objEn,objEnOf)=>'The sabotage continues, and '+objEn+' eventually breaks free of containment.',
+    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-3, courage:-2},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Une copie tres convaincante '+objFrDe+' circule, semant la confusion sur laquelle est la veritable.', introEn:(objEn,objEnOf)=>'A very convincing copy of '+objEnOf+' is circulating, causing confusion over which one is real.',
+    cluesFr:(objFr,objFrDe)=>['La copie presente un defaut infime, invisible a l\'oeil nu mais mesurable.','Seul un laboratoire tres specifique possede l\'equipement pour fabriquer une copie aussi fine.','Ce laboratoire a recemment traite une commande urgente et confidentielle.'], cluesEn:(objEn,objEnOf)=>['The copy has a tiny flaw, invisible to the naked eye but measurable.','Only one very specific lab has the equipment to make such a fine copy.','That lab recently processed an urgent, confidential order.'],
+    suspectsFr:(objFr,objFrDe)=>['Le laboratoire lui-meme, a l\'insu de son proprietaire','Un client anonyme de ce laboratoire','Une coincidence, deux objets similaires existent naturellement'], suspectsEn:(objEn,objEnOf)=>['The lab itself, unknowingly','An anonymous client of that lab','A coincidence, two similar objects naturally exist'],
     correct:1,
-    successFr:"Le temoignage protege permet de demanteler le reseau de recrutement.", successEn:"The protected testimony helps dismantle the recruitment network.",
-    failFr:"Sans protection, le temoin disparait a son tour.", failEn:"Without protection, the witness disappears too.",
-    successEff:{courage:4, intelligence:3, popularity:3}, failEff:{popularity:-4} },
-  { id:'inv_technologique',
-    introFr:"Un prototype technologique sensible a fuite vers un acheteur inconnu sur le marche noir.",
-    introEn:"A sensitive tech prototype leaked to an unknown black market buyer.",
-    cluesFr:["Les plans ont ete copies depuis un poste de travail specifique, a une heure precise.","Une seule personne travaillait encore a ce poste a cette heure-la.","Cette meme personne a change de train de vie recemment, sans explication."],
-    cluesEn:["The plans were copied from a specific workstation, at a precise time.","Only one person was still working at that station at that hour.","That same person's lifestyle changed recently, with no clear explanation."],
-    suspectsFr:["L'ingenieur en question","Un stagiaire sans lien apparent","Une intrusion exterieure complexe"],
-    suspectsEn:["The engineer in question","An intern with no apparent connection","A complex outside intrusion"],
+    successFr:(objFr,objFrDe)=>'Le client anonyme est demasque : il esperait ecouler la vraie version pendant que la copie faisait diversion.', successEn:(objEn,objEnOf)=>'The anonymous client is unmasked: they hoped to move the real one while the copy served as a diversion.',
+    failFr:(objFr,objFrDe)=>'Tu perds un temps precieux a authentifier la mauvaise version.', failEn:(objEn,objEnOf)=>'You lose precious time authenticating the wrong version.',
+    successEff:{intelligence:5, popularity:3}, failEff:{intelligence:-3},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Quelqu\'un menace de reveler publiquement l\'emplacement exact '+objFrDe+', a moins d\'etre paye.', introEn:(objEn,objEnOf)=>'Someone is threatening to publicly reveal the exact location of '+objEnOf+', unless paid off.',
+    cluesFr:(objFr,objFrDe)=>['Le maitre-chanteur ne pouvait connaitre ce detail que via un acces interne restreint.','Trois personnes seulement avaient cet acces le mois dernier.','L\'une d\'elles a brusquement demissionne juste avant les premieres menaces.'], cluesEn:(objEn,objEnOf)=>['The blackmailer could only have known this detail through restricted internal access.','Only three people had that access last month.','One of them abruptly resigned right before the first threats.'],
+    suspectsFr:(objFr,objFrDe)=>['La personne demissionnaire','Un des deux autres, toujours en poste','Une fuite totalement exterieure, sans lien avec l\'equipe'], suspectsEn:(objEn,objEnOf)=>['The person who resigned','One of the other two, still employed','A completely external leak, unrelated to the team'],
     correct:0,
-    successFr:"Confronte aux preuves, l'ingenieur reconnait avoir vendu les plans.", successEn:"Confronted with the evidence, the engineer admits to selling the plans.",
-    failFr:"Tu perds la trace du prototype, revendu avant que tu ne puisses agir.", failEn:"You lose track of the prototype, sold off before you could act.",
-    successEff:{intelligence:6, popularity:2}, failEff:{intelligence:-3, popularity:-2} },
+    successFr:(objFr,objFrDe)=>'Retrouvee et confrontee, la personne demissionnaire renonce, prise de court.', successEn:(objEn,objEnOf)=>'Found and confronted, the person who resigned backs down, caught off guard.',
+    failFr:(objFr,objFrDe)=>'Le chantage se poursuit, et la pression monte sur tout le monde.', failEn:(objEn,objEnOf)=>'The blackmail continues, and pressure mounts on everyone involved.',
+    successEff:{intelligence:4, popularity:4}, failEff:{popularity:-6},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Deux services rivaux se disputent discretement le controle '+objFrDe+', chacun affirmant en avoir la garde legitime.', introEn:(objEn,objEnOf)=>'Two rival departments are quietly fighting over control of '+objEnOf+', each claiming rightful custody.',
+    cluesFr:(objFr,objFrDe)=>['Le premier service dispose de papiers en regle, mais recents.','Le second service a la garde physique depuis plus longtemps, sans papiers a jour.','Un document plus ancien que les deux, retrouve par hasard, tranche clairement la question.'], cluesEn:(objEn,objEnOf)=>['The first department has proper paperwork, but recently issued.','The second department has had physical custody longer, without updated paperwork.','An older document than both, found by chance, clearly settles the matter.'],
+    suspectsFr:(objFr,objFrDe)=>['Trancher en faveur du premier service','Trancher en faveur du second service','Se baser sur le document le plus ancien retrouve'], suspectsEn:(objEn,objEnOf)=>['Rule in favor of the first department','Rule in favor of the second department','Base the ruling on the older document found'],
+    correct:2,
+    successFr:(objFr,objFrDe)=>'Le document tranche sans appel : la garde '+objFrDe+' revient a qui de droit, et le conflit s\'apaise.', successEn:(objEn,objEnOf)=>'The document settles it beyond dispute: custody of '+objEnOf+' goes to its rightful owner, and the conflict cools down.',
+    failFr:(objFr,objFrDe)=>'Ta decision hative envenime la rivalite entre les deux services.', failEn:(objEn,objEnOf)=>'Your hasty decision inflames the rivalry between the two departments.',
+    successEff:{intelligence:5, popularity:2}, failEff:{popularity:-4},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Des rapports contradictoires circulent sur la veritable nature '+objFrDe+' - certains la disent inerte, d\'autres tres active.', introEn:(objEn,objEnOf)=>'Conflicting reports circulate about the true nature of '+objEnOf+' - some say it\'s inert, others say it\'s highly active.',
+    cluesFr:(objFr,objFrDe)=>['Les mesures d\'energie divergent selon qui les a prises.','Un seul appareil de mesure, mal etalonne, explique une partie de l\'ecart.','Mais un pic d\'activite bien reel a ete enregistre une nuit, sans explication technique.'], cluesEn:(objEn,objEnOf)=>['Energy readings differ depending on who took them.','One poorly calibrated device explains part of the discrepancy.','But one genuine activity spike was recorded one night, with no technical explanation.'],
+    suspectsFr:(objFr,objFrDe)=>['Le probleme vient uniquement de l\'appareil mal etalonne',''+objFr+' montre un vrai signe de reveil','Quelqu\'un a manipule les releves pour cacher un pic reel'], suspectsEn:(objEn,objEnOf)=>['The problem is purely the miscalibrated device',''+objEn+' is showing a genuine sign of awakening','Someone manipulated the readings to hide a real spike'],
+    correct:1,
+    successFr:(objFr,objFrDe)=>'Le signe de reveil est confirme : tu alertes les bonnes personnes juste a temps pour agir.', successEn:(objEn,objEnOf)=>'The sign of awakening is confirmed: you alert the right people just in time to act.',
+    failFr:(objFr,objFrDe)=>'Tu classes l\'affaire trop vite. '+objFr+' montre bientot des signes bien plus inquietants.', failEn:(objEn,objEnOf)=>'You close the case too quickly. '+objEn+' soon shows far more troubling signs.',
+    successEff:{intelligence:6, courage:3}, failEff:{intelligence:-3},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Un employe modele est retrouve dans un etat second, pres de l\'endroit ou '+objFr+' est conserve, sans souvenir de la nuit passee.', introEn:(objEn,objEnOf)=>'A model employee is found in a daze near where '+objEn+' is kept, with no memory of the past night.',
+    cluesFr:(objFr,objFrDe)=>['Ses vetements portent des traces d\'un residu energetique inconnu.','Les journaux d\'acces montrent qu\'il est entre seul, de son plein gre, a une heure inhabituelle.','Un autre employe rapporte l\'avoir entendu parler seul, la veille, d\'une voix qui n\'etait pas la sienne.'], cluesEn:(objEn,objEnOf)=>['His clothes carry traces of an unknown energy residue.','Access logs show he entered alone, willingly, at an unusual hour.','Another employee reports hearing him talk to himself the day before, in a voice that wasn\'t his own.'],
+    suspectsFr:(objFr,objFrDe)=>['Il a simplement ete victime d\'un accident technique','Il subit une influence exterieure liee '+objFrDe+'','Il ment et a organise cela lui-meme'], suspectsEn:(objEn,objEnOf)=>['He was simply the victim of a technical accident','He\'s under an outside influence linked to '+objEnOf+'','He\'s lying and staged this himself'],
+    correct:1,
+    successFr:(objFr,objFrDe)=>'L\'influence est confirmee et neutralisee a temps, avant qu\'elle ne se propage plus loin.', successEn:(objEn,objEnOf)=>'The influence is confirmed and neutralized in time, before it can spread any further.',
+    failFr:(objFr,objFrDe)=>'Personne ne prend la menace au serieux, et l\'influence continue de se propager en silence.', failEn:(objEn,objEnOf)=>'No one takes the threat seriously, and the influence keeps quietly spreading.',
+    successEff:{intelligence:5, courage:4, popularity:2}, failEff:{popularity:-4},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Un groupe inconnu revendique detenir des informations precises sur '+objFr+', sans qu\'on sache comment elles ont fuite.', introEn:(objEn,objEnOf)=>'An unknown group claims to hold precise information about '+objEn+', with no clue how it leaked.',
+    cluesFr:(objFr,objFrDe)=>['Les details reveles par le groupe sont exacts, mais partiels - comme extraits d\'un rapport incomplet.','Seul un rapport bien precis correspond a ces details manquants.','Ce rapport n\'a jamais quitte les mains d\'un tout petit nombre de personnes autorisees.'], cluesEn:(objEn,objEnOf)=>['The details revealed by the group are accurate but partial - as if pulled from an incomplete report.','Only one very specific report matches those missing details.','That report never left the hands of a very small number of authorized people.'],
+    suspectsFr:(objFr,objFrDe)=>['Une des personnes autorisees, corrompue','Une interception technique du rapport a distance','Le groupe bluffe et n\'a en realite rien d\'exact'], suspectsEn:(objEn,objEnOf)=>['One of the authorized people, corrupted','A remote technical interception of the report','The group is bluffing and has nothing accurate at all'],
+    correct:0,
+    successFr:(objFr,objFrDe)=>'La personne corrompue est identifiee avant d\'avoir pu en reveler davantage.', successEn:(objEn,objEnOf)=>'The corrupted individual is identified before they can reveal anything more.',
+    failFr:(objFr,objFrDe)=>'D\'autres details, plus sensibles encore, finissent par fuiter a leur tour.', failEn:(objEn,objEnOf)=>'Even more sensitive details end up leaking too.',
+    successEff:{intelligence:6, popularity:3}, failEff:{popularity:-5},
+  },
+  {
+    introFr:(objFr,objFrDe)=>'Un transport cense acheminer '+objFr+' vers un site plus sur n\'est jamais arrive a destination.', introEn:(objEn,objEnOf)=>'A transport meant to move '+objEn+' to a safer site never arrived at its destination.',
+    cluesFr:(objFr,objFrDe)=>['Le vehicule a ete retrouve vide, sans signe de lutte apparent.','Le trajet a devie de son itineraire prevu a un point tres precis.','Ce point correspond exactement a une zone sous la responsabilite d\'un seul superviseur.'], cluesEn:(objEn,objEnOf)=>['The vehicle was found empty, with no apparent signs of struggle.','The route deviated from its planned path at one very specific point.','That point exactly matches an area under the responsibility of a single supervisor.'],
+    suspectsFr:(objFr,objFrDe)=>['Ce superviseur a organise le detournement','Une attaque exterieure a intercepte le convoi a cet endroit precis','Le chauffeur a improvise un changement d\'itineraire, en toute bonne foi'], suspectsEn:(objEn,objEnOf)=>['That supervisor orchestrated the hijacking','An outside attack intercepted the convoy at that exact spot','The driver improvised a route change, in good faith'],
+    correct:0,
+    successFr:(objFr,objFrDe)=>'Le superviseur, confronte aux faits, revele ou '+objFr+' a ete cachee.', successEn:(objEn,objEnOf)=>'The supervisor, confronted with the facts, reveals where '+objEn+' was hidden.',
+    failFr:(objFr,objFrDe)=>'La piste se refroidit, et '+objFr+' reste introuvable pendant longtemps.', failEn:(objEn,objEnOf)=>'The trail goes cold, and '+objEn+' remains missing for a long time.',
+    successEff:{courage:4, intelligence:4, popularity:2}, failEff:{popularity:-4},
+  },
 ];
 function shouldTriggerInvestigation(){
   if((S.currentYear||1) < 2) return false;
@@ -5253,11 +5277,32 @@ function shouldTriggerInvestigation(){
 function screenInvestigation(){
   const d = document.createElement('div'); const fr = S.lang==='fr';
   if(!S.currentInvestigation){
+    /* Genere a la volee parmi INVESTIGATION_MACGUFFINS x INVESTIGATION_SCENARIOS (200 combinaisons
+       possibles) plutot que de piocher dans une poignee d'enquetes fixes : de quoi ne (presque)
+       jamais retomber sur la meme avant tres longtemps. */
     if(!S.usedInvestigationIds) S.usedInvestigationIds = [];
-    let pool = INVESTIGATIONS.filter(iv=>!S.usedInvestigationIds.includes(iv.id));
-    if(!pool.length){ S.usedInvestigationIds = []; pool = INVESTIGATIONS; }
-    const iv = pick(pool); S.usedInvestigationIds.push(iv.id); S.lastInvestigationYear = S.currentYear;
-    S.currentInvestigation = iv;
+    const totalCombos = INVESTIGATION_MACGUFFINS.length * INVESTIGATION_SCENARIOS.length;
+    if(S.usedInvestigationIds.length >= totalCombos) S.usedInvestigationIds = [];
+    let comboId, objIdx, scIdx;
+    do {
+      objIdx = randInt(0, INVESTIGATION_MACGUFFINS.length-1);
+      scIdx = randInt(0, INVESTIGATION_SCENARIOS.length-1);
+      comboId = objIdx+'_'+scIdx;
+    } while(S.usedInvestigationIds.includes(comboId));
+    S.usedInvestigationIds.push(comboId);
+    S.lastInvestigationYear = S.currentYear;
+    const obj = INVESTIGATION_MACGUFFINS[objIdx];
+    const sc = INVESTIGATION_SCENARIOS[scIdx];
+    S.currentInvestigation = {
+      id: comboId,
+      introFr: sc.introFr(obj.fr, obj.frDe), introEn: sc.introEn(obj.en, obj.enOf),
+      cluesFr: sc.cluesFr(obj.fr, obj.frDe), cluesEn: sc.cluesEn(obj.en, obj.enOf),
+      suspectsFr: sc.suspectsFr(obj.fr, obj.frDe), suspectsEn: sc.suspectsEn(obj.en, obj.enOf),
+      correct: sc.correct,
+      successFr: sc.successFr(obj.fr, obj.frDe), successEn: sc.successEn(obj.en, obj.enOf),
+      failFr: sc.failFr(obj.fr, obj.frDe), failEn: sc.failEn(obj.en, obj.enOf),
+      successEff: sc.successEff, failEff: sc.failEff,
+    };
   }
   const iv = S.currentInvestigation;
   const clues = fr?iv.cluesFr:iv.cluesEn;
@@ -5417,11 +5462,10 @@ function mountIncubatorPod(root){
   const pod = root.querySelector('.pod'); if(!pod) return;
   const fig = pod.querySelector('#podFig'), nameEl = pod.querySelector('#podName'), subEl = pod.querySelector('#podSub');
   const allCharacters = podCharacterPool();
-  /* Un cycle sans fin sur les 51 portraits force Safari mobile a garder des dizaines de grandes
-     images decodees en memoire. Un echantillon renouvele a chaque retour a l'accueil garde la
-     vitrine variee sans faire grossir l'onglet jusqu'au rechargement force. */
+  /* Les 62 personnages jouables defilent partout, PC comme mobile - melanges sans repetition avant
+     d'avoir tous ete montres une fois. */
+  const pool = allCharacters;
   const mobilePod = window.matchMedia && window.matchMedia('(max-width: 560px)').matches;
-  const pool = mobilePod ? allCharacters.sort(()=>Math.random()-.5).slice(0,12) : allCharacters;
   if(!pool.length){ pod.style.display='none'; return; }
   for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
   let i = -1;
