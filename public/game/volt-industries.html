@@ -9104,7 +9104,7 @@ function startBattle(mission, done){
   function doFoeAct(idx){
     const actor = foeRoster[idx];
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
-    const m = foeAIMoveFor(actor.key);
+    const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
     if(st.dodgeNext || Math.random() > m.acc){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
