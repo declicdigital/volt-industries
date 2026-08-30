@@ -9090,15 +9090,16 @@ function startBattle(mission, done){
   }
   function foeAIMoveFor(fk, actor){
     const fm = fk ? foeMovesFor(fk) : foeMoves;
-    /* Defenses : un adversaire blesse privilegie son coup defensif/soin s'il en a un. */
-    if(actor && actor.hp/actor.maxHp < 0.45 && Math.random()<0.55){
+    /* Defenses : un adversaire blesse privilegie son coup defensif/soin s'il en a un -
+       declenche plus tot (55% PV) et plus souvent (70%). */
+    if(actor && actor.hp/actor.maxHp < 0.55 && Math.random()<0.7){
       const defs = fm.filter(mm=>mm.heal);
       if(defs.length) return pick(defs);
     }
-    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.3;
-    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.7) return best; }
+    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.35;
+    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.85) return best; }
     const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
-    return Math.random()<0.6 ? weighted[0] : pick(fm);
+    return Math.random()<0.72 ? weighted[0] : pick(fm);
   }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
@@ -9115,15 +9116,17 @@ function startBattle(mission, done){
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
-    if(st.dodgeNext || Math.random() > m.acc){
+    /* Precision adverse legerement superieure a la valeur affichee : les adversaires ratent
+       moins souvent que le joueur (bonus +0.07, plafonne a 0.97). */
+    if(st.dodgeNext || Math.random() > Math.min(0.97, m.acc + 0.07)){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
       setTimeout(runTurn, wait(900));
       return;
     }
-    const power = idx===0 ? foePower : (44 + tierOfKey(actor.key)*0.7);
-    const mult = idx===0 ? foeDmgMult : (0.9 + Math.random()*0.3);
+    const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
+    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
