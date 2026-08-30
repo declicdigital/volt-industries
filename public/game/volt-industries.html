@@ -9120,7 +9120,8 @@ function startBattle(mission, done){
     dealToAlly(targetAllyIdx, d, actor.col);
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
     const targetName = allyRoster[targetAllyIdx].name;
-    setLog(S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`);
+    setLog((S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`)
+      + (m.heal ? (S.lang==='fr'?` Il recupere ${m.heal} PV.`:` He recovers ${m.heal} HP.`) : ''));
     setTimeout(runTurn, wait(950));
   }
   function playerTurn(i){
