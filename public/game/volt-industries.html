@@ -9067,7 +9067,7 @@ function startBattle(mission, done){
     const aliveFoes = livingIdx(foeRoster);
     if(!aliveFoes.length){ finish(true); return; }
     let atkIdx;
-    if(Math.random()<0.5 && !foeRoster[idx].ko) atkIdx = idx;
+    if(Math.random()<0.5 && foeRoster[idx] && !foeRoster[idx].ko) atkIdx = idx;
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
