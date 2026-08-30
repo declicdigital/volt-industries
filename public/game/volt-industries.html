@@ -9086,12 +9086,14 @@ function startBattle(mission, done){
     const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
     return Math.random()<0.6 ? weighted[0] : pick(fm);
   }
-  function pickAllyTarget(){
+  function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
-    const aliveExtras = allyRoster.map((e,i)=>i).filter(i=>i>0 && !allyRoster[i].ko);
-    /* Cible equilibree : 50% toi, 50% un autre membre de l'escouade au hasard - pas que toi systematiquement. */
-    if(aliveExtras.length && Math.random()<0.5) return pick(aliveExtras);
-    return 0;
+    const aliveAll = livingIdx(allyRoster);
+    if(!aliveAll.length) return 0;
+    /* Ciblage symetrique : 50% l'allie juste en face de cet adversaire dans l'alignement,
+       50% un autre membre de l'escouade au hasard (toi inclus). */
+    if(forIdx!=null && Math.random()<0.5 && allyRoster[forIdx] && !allyRoster[forIdx].ko) return forIdx;
+    return pick(aliveAll);
   }
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
