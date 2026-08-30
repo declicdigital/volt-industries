@@ -1611,8 +1611,8 @@ const CHAR_ARCHETYPE = {
 function specimenLabel(charKey, align, fr){
   const arch = CHAR_ARCHETYPE[charKey];
   const label = arch ? (fr?arch.fr:arch.en) : (fr?'Specimen':'Specimen');
-  if(align==='neutral') return label + (fr?' - Independant':' - Independent');
-  return label;
+  const sideLabel = align==='hero' ? (fr?'Heros':'Hero') : align==='villain' ? 'Villain' : (fr?'Independant':'Independent');
+  return label + ' - ' + sideLabel;
 }
 const CHARACTERS = {
   theg:{fr:"The G",en:"The G",canon:"The G",align:'neutral', sex:'m', img:CHAR_IMG.char10},
