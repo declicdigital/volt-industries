@@ -12420,6 +12420,7 @@ function jarvisHUD(){
       <div class="jv-body" id="jvBody"></div>
       <div class="jv-meta"><span id="jvTag">// uplink 99.7 fm</span><button class="jv-mute" id="jvMute"></button></div>`;
     document.body.appendChild(el);
+    makeHudDraggable(el, 'jarvis');
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
   }
   jvSkin(el);
