@@ -9819,11 +9819,13 @@ function startBattle(mission, done){
       const ready = acts >= SPECIAL_CHARGE;
       const pct = Math.round(Math.min(1, acts/SPECIAL_CHARGE)*100);
       if(ready){
-        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
-          <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.16); box-shadow:0 0 16px -7px #9a6bff;">
+          <span class="btl-move-badge" style="color:#c3a6ff; border-color:#9a6bff;">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
+          <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
           <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
       } else {
-        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.04); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
+        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.06); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
+          <span class="btl-move-badge" style="color:#c3a6ff; border-color:rgba(154,107,255,.5);">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
           <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
           <span>${S.lang==='fr'?`Charge ${acts}/${SPECIAL_CHARGE} - encore ${SPECIAL_CHARGE-acts} tour(s) de combat`:`Charge ${acts}/${SPECIAL_CHARGE} - ${SPECIAL_CHARGE-acts} more turn(s)`}</span>
           <i style="position:absolute; left:0; bottom:0; height:3px; width:${pct}%; background:#9a6bff; box-shadow:0 0 8px #9a6bff;"></i></div>`;
