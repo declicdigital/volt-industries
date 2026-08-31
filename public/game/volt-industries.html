@@ -10112,6 +10112,7 @@ function startBattle(mission, done){
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
     const actor = foeRoster[idx];
+    if(npcSpecialTry('foe', idx)) return;
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
