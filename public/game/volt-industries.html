@@ -1601,15 +1601,15 @@ const CHAR_ARCHETYPE = {
   wong:{fr:'Mystique', en:'Mystic'},
   shuri:{fr:'Genie', en:'Genius'},
   shangchi:{fr:'Guerrier', en:'Warrior'},
-  usagent:{fr:'Soldat', en:'Soldier'},
-  redguardian:{fr:'Soldat', en:'Soldier'},
+  usagent:{fr:'Guerrier', en:'Warrior'},
+  redguardian:{fr:'Guerrier', en:'Warrior'},
   ghost:{fr:'Tech', en:'Tech'},
-  aegis:{fr:'Soldat', en:'Soldier'},
+  aegis:{fr:'Guerrier', en:'Warrior'},
   antman:{fr:'Tech', en:'Tech'},
   apocalypse:{fr:'Mutant', en:'Mutant'},
   aurelia:{fr:'Divin', en:'Divine'},
   boomnpc:{fr:'Tech', en:'Tech'},
-  bucky:{fr:'Soldat', en:'Soldier'},
+  bucky:{fr:'Guerrier', en:'Warrior'},
   capmarvel:{fr:'Cosmique', en:'Cosmic'},
   corvus:{fr:'Guerrier', en:'Warrior'},
   cull:{fr:'Colosse', en:'Colossus'},
@@ -1625,12 +1625,12 @@ const CHAR_ARCHETYPE = {
   fuchsia:{fr:'Genie', en:'Genius'},
   gamora:{fr:'Guerriere', en:'Warrior'},
   gorr:{fr:'Divin', en:'Divine'},
-  groot:{fr:'Vegetal', en:'Plant'},
+  groot:{fr:'Colosse', en:'Colossus'},
   hawkeye:{fr:'Tireur', en:'Marksman'},
   humantorch:{fr:'Cosmique', en:'Cosmic'},
   invisiblewoman:{fr:'Cosmique', en:'Cosmic'},
   jeangrey:{fr:'Mutant', en:'Mutant'},
-  kaerus:{fr:'Soldat', en:'Soldier'},
+  kaerus:{fr:'Guerrier', en:'Warrior'},
   kidspider:{fr:'Arachnide', en:'Arachnid'},
   lorelei:{fr:'Tech', en:'Tech'},
   magneto:{fr:'Mutant', en:'Mutant'},
@@ -6077,6 +6077,10 @@ function recordCareerForMeta(){
   const years = S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear);
   META.longestCareerYears = Math.max(META.longestCareerYears||0, years||0);
   META.bestStars = Math.max(META.bestStars||0, computeStars());
+  /* Deux nouvelles dimensions de suivi, jamais utilisees jusqu'ici : le total cumule (pas le
+     meilleur d'une seule carriere) d'etoiles et d'annees, toutes carrieres confondues. */
+  META.totalStarsEarned = (META.totalStarsEarned||0) + computeStars();
+  META.totalYearsLived = (META.totalYearsLived||0) + (S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear));
   if(S.eighthStar) META.got8thStar = true;
   if(S.voidCompletionDone) META.gotVoidCompletion = true;
   META.totalFightsWon = (META.totalFightsWon||0) + (S.combat.won||0);
@@ -6319,18 +6323,18 @@ const UNLOCK_TIERS = [
   { ids:['sepulcre'], condFr:'Gagner 2500 combats', condEn:'Win 2500 fights', check:(m)=>(m.totalFightsWon||0)>=2500 },
   { ids:['jeangrey'], condFr:'Terminer une carriere d\'au moins 55 ans', condEn:'Complete a career of at least 55 years', check:(m)=>(m.longestCareerYears||0)>=55 },
   { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
+  { ids:['sentry'], condFr:'Cumuler 150 etoiles au total (toutes carrieres confondues)', condEn:'Accumulate 150 stars total (across all careers)', check:(m)=>(m.totalStarsEarned||0)>=150 },
+  { ids:['silversurfer'], condFr:'Jouer avec 40 personnages differents', condEn:'Play as 40 different characters', check:(m)=>(m.charactersPlayed||[]).length>=40 },
+  { ids:['emmafrost'], condFr:'Cumuler 75 annees vecues au total', condEn:'Live 75 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=75 },
+  { ids:['clea'], condFr:'Cumuler 45 etoiles au total', condEn:'Accumulate 45 stars total', check:(m)=>(m.totalStarsEarned||0)>=45 },
+  { ids:['america'], condFr:'Jouer avec 15 personnages differents', condEn:'Play as 15 different characters', check:(m)=>(m.charactersPlayed||[]).length>=15 },
+  { ids:['wong'], condFr:'Cumuler 90 annees vecues au total', condEn:'Live 90 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=90 },
+  { ids:['shuri'], condFr:'Jouer avec 10 personnages differents', condEn:'Play as 10 different characters', check:(m)=>(m.charactersPlayed||[]).length>=10 },
+  { ids:['shangchi'], condFr:'Cumuler 25 etoiles au total', condEn:'Accumulate 25 stars total', check:(m)=>(m.totalStarsEarned||0)>=25 },
+  { ids:['usagent'], condFr:'Cumuler 50 annees vecues au total', condEn:'Live 50 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=50 },
+  { ids:['redguardian'], condFr:'Jouer avec 5 personnages differents', condEn:'Play as 5 different characters', check:(m)=>(m.charactersPlayed||[]).length>=5 },
+  { ids:['ghost'], condFr:'Cumuler 30 etoiles au total', condEn:'Accumulate 30 stars total', check:(m)=>(m.totalStarsEarned||0)>=30 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
-  { ids:['sentry'], condFr:'Terminer 35 carrieres au total', condEn:'Complete 35 careers total', check:(m)=>(m.careersCompleted||0)>=35 },
-  { ids:['silversurfer'], condFr:'Gagner 1000 combats', condEn:'Win 1000 fights', check:(m)=>(m.totalFightsWon||0)>=1000 },
-  { ids:['emmafrost'], condFr:'Former 5 recrues', condEn:'Train 5 recruits', check:(m)=>(m.totalMenteesTrained||0)>=5 },
-  { ids:['clea'], condFr:'Changer de camp 2 fois', condEn:'Switch sides 2 times', check:(m)=>(m.totalSideSwitches||0)>=2 },
-  { ids:['america'], condFr:'Vaincre ton rival 5 fois', condEn:'Defeat your rival 5 times', check:(m)=>(m.totalRivalWins||0)>=5 },
-  { ids:['wong'], condFr:'Gagner 600 combats', condEn:'Win 600 fights', check:(m)=>(m.totalFightsWon||0)>=600 },
-  { ids:['shuri'], condFr:'Gerer 15 evenements presse', condEn:'Handle 15 press events', check:(m)=>(m.totalPressEventsHandled||0)>=15 },
-  { ids:['shangchi'], condFr:'Resoudre 4 enquetes', condEn:'Solve 4 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=4 },
-  { ids:['usagent'], condFr:'Gagner 10 duels dans le simulateur', condEn:'Win 10 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=10 },
-  { ids:['redguardian'], condFr:'Sauver 150 lieux', condEn:'Save 150 locations', check:(m)=>(m.totalCivilsSaved||0)>=150 },
-  { ids:['ghost'], condFr:'Terminer 6 carrieres au total', condEn:'Complete 6 careers total', check:(m)=>(m.careersCompleted||0)>=6 },
 ];
 function metaVal(k){ return Number(META[k]||0); }
 function metaBump(k){ META[k] = metaVal(k) + 1; }
