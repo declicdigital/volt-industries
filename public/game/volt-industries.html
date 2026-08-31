@@ -4477,12 +4477,27 @@ const AudioEngine = (function(){
     if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
   function setMode(newMode){ crossTo(newMode); }
+  /* iOS/Safari ignore purement et simplement l'ecriture de .volume : baisser le volume a 0 ne
+     coupait donc rien sur telephone. On coupe donc reellement le lecteur (muted + pause). */
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
     const id = ++transitionId;
-    fadeTo(muted ? 0 : (stingKey ? STING_VOL : LOOP_VOL), 300, id);
+    player.muted = m;
+    if(m){
+      rememberPosition();
+      player.onended = null;
+      stingKey = null;
+      try{ player.pause(); }catch(e){}
+      try{ player.volume = 0; }catch(e){}
+      try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+    } else {
+      const resume = currentLoopKey;
+      if(resume){ activeKey = null; currentLoopKey = null; crossTo(resume); }
+      else fadeTo(LOOP_VOL, 300, id);
+    }
   }
+
   function isMuted(){ return muted; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
