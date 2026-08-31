@@ -4410,11 +4410,18 @@ const AudioEngine = (function(){
     const outgoing = activeDeck, incoming = idleDeck;
     activeDeck = incoming; idleDeck = outgoing;
     if(incoming.src !== location.origin + src && !incoming.src.endsWith(src)) incoming.src = src;
-    /* Le combat n'attaque pas au tout debut de la piste, mais 8 secondes dedans - avec un fondu
-       plus court et discret, plutot que le fondu standard des autres transitions. */
-    const startAt = key==='combat' ? 8 : 0;
+    /* Reprise a la position memorisee si la piste a deja joue ; sinon, le combat attaque
+       8 secondes dedans - avec un fondu plus court et discret que la transition standard. */
+    incoming._key = key;
+    const resumeAt = positions[key];
     const fadeMs = key==='combat' ? 500 : FADE_MS;
-    const setStart = ()=>{ try{ incoming.currentTime = startAt; }catch(e){} };
+    const setStart = ()=>{
+      try{
+        let t = (typeof resumeAt==='number' && resumeAt > 0.5) ? resumeAt : (key==='combat' ? 8 : 0);
+        if(incoming.duration && t >= incoming.duration - 2) t = 0; // piste quasiment finie : on reboucle proprement
+        incoming.currentTime = t;
+      }catch(e){}
+    };
     if(incoming.readyState >= 1) setStart();
     else incoming.addEventListener('loadedmetadata', setStart, { once:true });
     incoming.volume = 0;
