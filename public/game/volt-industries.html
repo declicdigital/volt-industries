@@ -10066,7 +10066,7 @@ function startBattle(mission, done){
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5)));
+    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * (ally._rallied?1.25:1)));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       dealToFoe(atkIdx, d, ally.col);
@@ -10127,7 +10127,7 @@ function startBattle(mission, done){
       return;
     }
     const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
+    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * (actor._rallied?1.25:1);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
