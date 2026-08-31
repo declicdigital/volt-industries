@@ -608,6 +608,9 @@
   .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:flex-start; overflow-y:auto; padding-top:4vh;
     padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
     background:#04070d; background-image:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
+  /* Les enfants directs ne doivent JAMAIS se compresser : sinon le contenu est ecrase
+     a la hauteur de l'ecran et les dernieres attaques restent inaccessibles (plus de scroll). */
+  .btl-overlay > *{ flex-shrink:0; }
   @media (max-width:560px){
     .btl-overlay{ padding-top:2vh; padding-bottom:calc(200px + env(safe-area-inset-bottom, 0px)); }
   }
@@ -4360,7 +4363,18 @@ const AudioEngine = (function(){
   const LOOP_VOL = 0.55, STING_VOL = 0.85;
 
   const deckA = new Audio(); const deckB = new Audio();
-  [deckA, deckB].forEach(d=>{ d.loop = true; d.volume = 0; d.preload = 'auto'; });
+  /* Position de lecture memorisee par piste : quand une musique est coupee (changement
+     d'ecran, sting, combat...), elle reprend la ou elle en etait, jamais au debut. */
+  const positions = {};
+  [deckA, deckB].forEach(d=>{
+    d.loop = true; d.volume = 0; d.preload = 'auto';
+    let lastSave = 0;
+    d.addEventListener('timeupdate', ()=>{
+      const now = Date.now();
+      if(now - lastSave > 1500 && d._key){ lastSave = now; positions[d._key] = d.currentTime; }
+    });
+    d.addEventListener('pause', ()=>{ if(d._key && d.currentTime > 0.5) positions[d._key] = d.currentTime; });
+  });
   let activeDeck = deckA, idleDeck = deckB;
   let currentLoopKey = null; // 'welcome' | 'ambient' | 'combat' | null
   let pendingLoopKey = null; // la boucle a reprendre une fois le sting termine
@@ -4396,11 +4410,18 @@ const AudioEngine = (function(){
     const outgoing = activeDeck, incoming = idleDeck;
     activeDeck = incoming; idleDeck = outgoing;
     if(incoming.src !== location.origin + src && !incoming.src.endsWith(src)) incoming.src = src;
-    /* Le combat n'attaque pas au tout debut de la piste, mais 8 secondes dedans - avec un fondu
-       plus court et discret, plutot que le fondu standard des autres transitions. */
-    const startAt = key==='combat' ? 8 : 0;
+    /* Reprise a la position memorisee si la piste a deja joue ; sinon, le combat attaque
+       8 secondes dedans - avec un fondu plus court et discret que la transition standard. */
+    incoming._key = key;
+    const resumeAt = positions[key];
     const fadeMs = key==='combat' ? 500 : FADE_MS;
-    const setStart = ()=>{ try{ incoming.currentTime = startAt; }catch(e){} };
+    const setStart = ()=>{
+      try{
+        let t = (typeof resumeAt==='number' && resumeAt > 0.5) ? resumeAt : (key==='combat' ? 8 : 0);
+        if(incoming.duration && t >= incoming.duration - 2) t = 0; // piste quasiment finie : on reboucle proprement
+        incoming.currentTime = t;
+      }catch(e){}
+    };
     if(incoming.readyState >= 1) setStart();
     else incoming.addEventListener('loadedmetadata', setStart, { once:true });
     incoming.volume = 0;
