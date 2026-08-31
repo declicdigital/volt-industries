@@ -5751,7 +5751,7 @@ function podCharacterPool(){
   Object.keys(CHAR_IMG).forEach(k=>{
     const m = /^char(\d+)$/.exec(k); if(!m) return;
     const n = +m[1];
-    if(n <= 20 || (n >= 41 && n <= 82)) allowedImgs.add(CHAR_IMG[k]);
+    if(n <= 20 || (n >= 41 && n <= 93)) allowedImgs.add(CHAR_IMG[k]);
   });
   return Object.keys(CHARACTERS).filter(k=>{
     const c = CHARACTERS[k];
@@ -6320,17 +6320,17 @@ const UNLOCK_TIERS = [
   { ids:['jeangrey'], condFr:'Terminer une carriere d\'au moins 55 ans', condEn:'Complete a career of at least 55 years', check:(m)=>(m.longestCareerYears||0)>=55 },
   { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
-  { ids:['sentry'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['silversurfer'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['emmafrost'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['clea'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['america'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['wong'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['shuri'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['shangchi'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['usagent'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['redguardian'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
-  { ids:['ghost'], condFr:'Atteindre 3 etoiles dans une carriere', condEn:'Reach 3 stars in a career', check:(m)=>(m.bestStars||0)>=3 },
+  { ids:['sentry'], condFr:'Terminer 35 carrieres au total', condEn:'Complete 35 careers total', check:(m)=>(m.careersCompleted||0)>=35 },
+  { ids:['silversurfer'], condFr:'Gagner 1000 combats', condEn:'Win 1000 fights', check:(m)=>(m.totalFightsWon||0)>=1000 },
+  { ids:['emmafrost'], condFr:'Former 5 recrues', condEn:'Train 5 recruits', check:(m)=>(m.totalMenteesTrained||0)>=5 },
+  { ids:['clea'], condFr:'Changer de camp 2 fois', condEn:'Switch sides 2 times', check:(m)=>(m.totalSideSwitches||0)>=2 },
+  { ids:['america'], condFr:'Terminer une carriere d\'au moins 12 ans', condEn:'Complete a career of at least 12 years', check:(m)=>(m.longestCareerYears||0)>=12 },
+  { ids:['wong'], condFr:'Obtenir 2 artefacts', condEn:'Obtain 2 artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=2 },
+  { ids:['shuri'], condFr:'Gerer 15 evenements presse', condEn:'Handle 15 press events', check:(m)=>(m.totalPressEventsHandled||0)>=15 },
+  { ids:['shangchi'], condFr:'Resoudre 4 enquetes', condEn:'Solve 4 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=4 },
+  { ids:['usagent'], condFr:'Gagner 10 duels dans le simulateur', condEn:'Win 10 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=10 },
+  { ids:['redguardian'], condFr:'Sauver 150 lieux', condEn:'Save 150 locations', check:(m)=>(m.totalCivilsSaved||0)>=150 },
+  { ids:['ghost'], condFr:'Terminer 6 carrieres au total', condEn:'Complete 6 careers total', check:(m)=>(m.careersCompleted||0)>=6 },
 ];
 function metaVal(k){ return Number(META[k]||0); }
 function metaBump(k){ META[k] = metaVal(k) + 1; }
