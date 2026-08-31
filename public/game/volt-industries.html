@@ -1794,9 +1794,9 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
 /* ============================ FACTIONS (equipes reelles, jamais neutres) ============================
    Une faction = une equipe / organisation avec un camp obligatoire (hero ou villain).
    On ne peut integrer une faction qu'a partir de la 4e etoile : les index 1-3 sont donc vides. */
-const FACTION_MIN_STARS = 4;
+const FACTION_MIN_STARS = 2;
 const FACTIONS = {
-  hero: [ null,
+  hero: [ null, null,
     { id:'thunderbolts', fr:'THUNDERBOLTS', en:'THUNDERBOLTS', icon:'void', leader:'Bucky', leader2:'Yelena',
       members:['Sentry','U.S. Agent','Ghost','Red Guardian','Bucky','Yelena'] },
     { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'rings', leader:'Mister Fantastic',
@@ -1857,7 +1857,7 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
    (combats, conversations, missions), sans que ce soit jamais exclusif : d'autres
    factions du meme camp (hero ou villain) restent presentes en renfort/second plan. */
 /* Resolution robuste d'une faction : il n'existe que 8 factions (4 hero + 4 villain), indexees
-   par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
+   par palier 2..6. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
    de renvoyer un bandeau vide sans nom ni logo. */
 function facAt(side, tier){
   const arr = FACTIONS[side]; if(!arr) return null;
@@ -5209,7 +5209,7 @@ function statBar(label, val, color){ return `<div class="stat"><div class="slabe
 function screenCodex(){
   const d = document.createElement('div'); const fr = S.lang==='fr';
   const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
-  const allKeys = Object.keys(CHARACTERS);
+  const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
   const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
   const repHtml = allFactions.map(f=>{
