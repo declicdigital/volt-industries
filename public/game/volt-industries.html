@@ -48,6 +48,12 @@
   .brand:hover{ opacity:.8; }
   .logo-mark{ width:34px; height:34px; filter: drop-shadow(0 0 8px var(--accent)); flex-shrink:0; }
   .langsel{ display:flex; gap:6px; }
+  .audio-toggle-btn{ width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.03); border:1.5px solid color-mix(in oklab, var(--accent) 45%, transparent);
+    color:var(--accent); cursor:pointer; transition:.18s; box-shadow:0 0 12px -6px var(--accent), inset 0 0 8px -4px var(--accent); }
+  .audio-toggle-btn:hover{ border-color:var(--accent); box-shadow:0 0 16px -4px var(--accent), inset 0 0 10px -4px var(--accent); transform:scale(1.06); }
+  .audio-toggle-btn.muted{ color:var(--dim); border-color:var(--line); box-shadow:none; }
+  .audio-toggle-btn.muted:hover{ border-color:var(--dim); box-shadow:none; transform:none; }
   .langsel button{ border:1px solid var(--line); background:rgba(255,255,255,.03); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer; color:var(--dim); }
   .langsel button.active{ background:var(--accent); color:#03060d; border-color:var(--accent);}
   .topopts{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
@@ -56,7 +62,7 @@
   .palsel .swatch:hover{ transform:scale(1.15); }
   .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
   @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
-  .rank-badge{ position:fixed; top:16px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
+  .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:14px; padding:8px 10px; display:flex; align-items:center; gap:8px; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
@@ -72,6 +78,7 @@
     .career-auto-widget{ top:auto; bottom:calc(28px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); padding:6px 10px; }
     .caw-label{ font-size:9px; }
     .caw-btn{ font-size:9.5px; padding:6px 10px; }
+    .rank-badge{ top:96px; padding:8px 12px; }
   }
   .rank-badge .rname{ font-size:12px; font-weight:800; color:var(--ink); letter-spacing:1px; }
   .rank-badge .rlabel{ font-size:9.5px; font-weight:800; letter-spacing:1.5px; color:var(--dim); text-transform:uppercase; margin-top:2px;}
@@ -1579,7 +1586,7 @@ const CHAR_ARCHETYPE = {
   invisiblewoman:{fr:'Cosmique', en:'Cosmic'},
   jeangrey:{fr:'Mutant', en:'Mutant'},
   kaerus:{fr:'Soldat', en:'Soldier'},
-  kidspider:{fr:'Guerrier', en:'Warrior'},
+  kidspider:{fr:'Arachnide', en:'Arachnid'},
   lorelei:{fr:'Tech', en:'Tech'},
   magneto:{fr:'Mutant', en:'Mutant'},
   malachar:{fr:'Cosmique', en:'Cosmic'},
@@ -1608,7 +1615,7 @@ const CHAR_ARCHETYPE = {
   theg:{fr:'Tech', en:'Tech'},
   thething:{fr:'Colosse', en:'Colossus'},
   vaelor:{fr:'Divin', en:'Divine'},
-  venom:{fr:'Symbiote', en:'Symbiote'},
+  venom:{fr:'Arachnide', en:'Arachnid'},
   vipera:{fr:'Mystique', en:'Mystic'},
   volt:{fr:'Tech', en:'Tech'},
   wasp:{fr:'Tech', en:'Tech'},
@@ -4125,6 +4132,9 @@ document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') Au
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
+  /* Filet de securite : quel que soit le chemin qui a mene ici (reprise de partie, retour du
+     codex...), la musique d'ambiance est la bonne par defaut hors accueil et hors combat reel. */
+  if(S.screen !== 'welcome' && !document.querySelector('.btl-overlay')) AudioEngine.setMode('ambient');
   /* L'accueil reste immerge dans le laboratoire, sans enfermer la capsule dans un cadre. */
   document.body.classList.toggle('lab-scene', S.screen === 'welcome');
 
@@ -4162,106 +4172,114 @@ function render(){
      plus marquee, une touche de dissonance pour la tension.
    - La preference muet/volume est memorisee (localStorage) et respectee partout.
    ==================================================================================== */
+/* ====================================================================================
+   MOTEUR AUDIO : vraies pistes musicales (dossier /game/audio/), avec fondus enchaines
+   propres entre chaque transition - jamais deux pistes qui se chevauchent brutalement,
+   toujours l'une qui descend pendant que l'autre monte (ou redescend a zero puis remonte
+   pour les "stings" ponctuels comme une gemme obtenue).
+   - Accueil : welcome-loop.mp3, en boucle tant qu'on reste sur l'ecran.
+   - Reste du jeu (missions, ecrans hors combat) : ambient-loop.mp3, en boucle.
+   - Combat : combat-loop.mp3, en boucle, le temps du combat.
+   - Gemme obtenue : gem-obtained.mp3, jouee une seule fois (le temps de l'annonce), la
+     boucle de fond s'efface pendant ce temps puis reprend en fondu a la fin.
+   - 8eme etoile : eighth-star.mp3, meme logique, sting unique.
+   - Voix JARVIS : synthese vocale du navigateur, inchangee, sur un canal a part (aucun
+     conflit avec les pistes musicales).
+   ==================================================================================== */
 const AudioEngine = (function(){
-  let ctx = null, masterGain = null, musicGain = null, started = false;
-  let mode = 'ambient'; // 'ambient' | 'combat'
-  let padOscs = [], arpTimer = null, pulseTimer = null, noiseTimer = null;
+  const AUDIO_BASE = '/game/audio/';
+  const TRACKS = {
+    welcome: AUDIO_BASE+'welcome-loop.mp3',
+    ambient: AUDIO_BASE+'ambient-loop.mp3',
+    combat: AUDIO_BASE+'combat-loop.mp3',
+  };
+  const STINGS = {
+    gem: AUDIO_BASE+'gem-obtained.mp3',
+    eighthStar: AUDIO_BASE+'eighth-star.mp3',
+  };
+  const FADE_MS = 900;
+  const LOOP_VOL = 0.55, STING_VOL = 0.85;
+
+  const deckA = new Audio(); const deckB = new Audio();
+  [deckA, deckB].forEach(d=>{ d.loop = true; d.volume = 0; d.preload = 'auto'; });
+  let activeDeck = deckA, idleDeck = deckB;
+  let currentLoopKey = null; // 'welcome' | 'ambient' | 'combat' | null
+  let pendingLoopKey = null; // la boucle a reprendre une fois le sting termine
+  let stingAudio = null;
   let muted = false;
   try{ muted = localStorage.getItem('volt_audio_muted') === '1'; }catch(e){}
+  let unlocked = false; // les navigateurs bloquent la lecture avant un geste utilisateur
 
-  function ensureCtx(){
-    if(ctx) return ctx;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if(!AC) return null;
-    ctx = new AC();
-    masterGain = ctx.createGain(); masterGain.gain.value = muted ? 0 : 0.85; masterGain.connect(ctx.destination);
-    musicGain = ctx.createGain(); musicGain.gain.value = 1; musicGain.connect(masterGain);
-    return ctx;
+  function fadeTo(audio, targetVol, ms, onDone){
+    const gen = (audio._fadeGen = (audio._fadeGen||0) + 1);
+    const startVol = audio.volume, startTime = performance.now();
+    const effTarget = muted ? 0 : targetVol;
+    function step(now){
+      if(audio._fadeGen !== gen) return; // une autre transition a pris le relais
+      const t = Math.min(1, (now-startTime)/ms);
+      audio.volume = startVol + (effTarget-startVol)*t;
+      if(t<1) requestAnimationFrame(step);
+      else if(onDone) onDone();
+    }
+    requestAnimationFrame(step);
   }
 
-  // Accords "tech" : gamme lydienne, evocatrice et jamais tout a fait resolue.
-  const AMBIENT_CHORDS = [[130.81,164.81,196.00,246.94],[146.83,174.61,220.00,261.63],[164.81,196.00,246.94,293.66],[123.47,155.56,185.00,233.08]];
-  const COMBAT_CHORDS = [[110.00,138.59,164.81,196.00],[98.00,123.47,146.83,174.61],[123.47,155.56,185.00,220.00]];
-  let chordIdx = 0, chordTimer = null;
+  function crossTo(key){
+    if(!unlocked || stingAudio) { pendingLoopKey = key; currentLoopKey = key; return; }
+    if(currentLoopKey === key) return;
+    currentLoopKey = key;
+    const src = TRACKS[key];
+    if(!src) return;
+    const outgoing = activeDeck, incoming = idleDeck;
+    activeDeck = incoming; idleDeck = outgoing;
+    if(incoming.src !== location.origin + src && !incoming.src.endsWith(src)) incoming.src = src;
+    incoming.currentTime = 0;
+    incoming.volume = 0;
+    try{ const p = incoming.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    fadeTo(incoming, LOOP_VOL, FADE_MS);
+    fadeTo(outgoing, 0, FADE_MS, ()=>{ outgoing.pause(); });
+  }
 
-  function stopPads(){
-    padOscs.forEach(o=>{ try{ o.osc.stop(); }catch(e){} });
-    padOscs = [];
+  function playSting(key){
+    if(!unlocked) return;
+    const src = STINGS[key]; if(!src) return;
+    pendingLoopKey = currentLoopKey;
+    fadeTo(activeDeck, 0, 500, ()=>{ activeDeck.pause(); });
+    fadeTo(idleDeck, 0, 500, ()=>{ idleDeck.pause(); });
+    if(stingAudio){ stingAudio.pause(); stingAudio.onended = null; }
+    stingAudio = new Audio(src);
+    stingAudio.loop = false; stingAudio.volume = muted ? 0 : STING_VOL;
+    try{ const p = stingAudio.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    stingAudio.onended = ()=>{
+      stingAudio = null;
+      if(pendingLoopKey){ currentLoopKey = null; crossTo(pendingLoopKey); pendingLoopKey = null; }
+    };
   }
-  function playChord(freqs, dur){
-    if(!ctx) return;
-    const now = ctx.currentTime;
-    freqs.forEach((f,i)=>{
-      const osc = ctx.createOscillator(); osc.type = i===0 ? 'triangle' : 'sine';
-      const g = ctx.createGain(); g.gain.value = 0;
-      osc.frequency.value = f;
-      osc.connect(g); g.connect(musicGain);
-      g.gain.linearRampToValueAtTime(0.34/freqs.length, now+1.4);
-      g.gain.linearRampToValueAtTime(0, now+dur-1.2);
-      osc.start(now); osc.stop(now+dur);
-      padOscs.push({osc, g});
-    });
-  }
-  function scheduleChords(){
-    const chords = mode==='combat' ? COMBAT_CHORDS : AMBIENT_CHORDS;
-    const dur = mode==='combat' ? 5.2 : 8.5;
-    playChord(chords[chordIdx % chords.length], dur+0.6);
-    chordIdx++;
-    chordTimer = setTimeout(scheduleChords, dur*1000);
-  }
-  function scheduleArp(){
-    if(!ctx) return;
-    const chords = mode==='combat' ? COMBAT_CHORDS : AMBIENT_CHORDS;
-    const base = chords[(chordIdx-1+chords.length) % chords.length];
-    const note = base[Math.floor(Math.random()*base.length)] * (Math.random()<0.5?2:4);
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = note;
-    const g = ctx.createGain(); g.gain.value = 0;
-    osc.connect(g); g.connect(musicGain);
-    g.gain.linearRampToValueAtTime(mode==='combat'?0.16:0.11, now+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+0.7);
-    osc.start(now); osc.stop(now+0.75);
-    const nextDelay = mode==='combat' ? (180+Math.random()*220) : (500+Math.random()*900);
-    arpTimer = setTimeout(scheduleArp, nextDelay);
-  }
-  function scheduleCombatPulse(){
-    if(!ctx || mode!=='combat') return;
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 55;
-    const g = ctx.createGain(); g.gain.value = 0;
-    osc.connect(g); g.connect(musicGain);
-    g.gain.linearRampToValueAtTime(0.22, now+0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+0.35);
-    osc.start(now); osc.stop(now+0.4);
-    pulseTimer = setTimeout(scheduleCombatPulse, 480);
+  /* A appeler quand l'ecran d'annonce (gemme/8eme etoile) se ferme, au cas ou le joueur
+     l'aurait fermee avant la fin naturelle du sting - la musique de fond reprend alors direct. */
+  function stopSting(){
+    if(!stingAudio) return;
+    fadeTo(stingAudio, 0, 500, ()=>{ if(stingAudio){ stingAudio.pause(); stingAudio=null; } });
+    if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
 
   function start(){
-    if(!ensureCtx()) return;
-    if(started) return;
-    started = true;
-    const go = ()=>{ scheduleChords(); scheduleArp(); };
-    if(ctx.state==='suspended') ctx.resume().then(go).catch(go);
-    else go();
+    if(unlocked) return;
+    unlocked = true;
+    if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
-  function setMode(newMode){
-    if(mode===newMode) return;
-    mode = newMode;
-    clearTimeout(chordTimer); clearTimeout(arpTimer); clearTimeout(pulseTimer);
-    chordIdx = 0;
-    if(!ctx) return;
-    scheduleChords(); scheduleArp();
-    if(mode==='combat') scheduleCombatPulse();
-  }
+  function setMode(newMode){ crossTo(newMode); }
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
-    if(masterGain) masterGain.gain.linearRampToValueAtTime(m?0:0.5, (ctx?ctx.currentTime:0)+0.3);
+    const target = muted ? 0 : LOOP_VOL;
+    if(activeDeck.paused===false || activeDeck.volume>0) fadeTo(activeDeck, target, 300);
+    if(stingAudio) fadeTo(stingAudio, muted?0:STING_VOL, 300);
   }
   function isMuted(){ return muted; }
 
-  /* Voix JARVIS : synthese vocale native du navigateur, timbre ajuste pour sonner plus
-     robotique/IA (grave, debit mesure). Aucun fichier audio necessaire. */
+  /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
+     avec les pistes musicales ci-dessus. */
   function speak(text, lang){
     if(muted) return;
     if(!('speechSynthesis' in window)) return;
@@ -4277,7 +4295,7 @@ const AudioEngine = (function(){
     }catch(e){}
   }
 
-  return { start, setMode, setMuted, isMuted, speak };
+  return { start, setMode, playSting, stopSting, setMuted, isMuted, speak };
 })();
 let _saveTimer = null;
 /* Verrou purement technique, volontairement hors de S : il ne doit jamais etre sauvegarde avec
@@ -4787,17 +4805,40 @@ function wordmarkLogoSVG(heightPx){
     </g>
   </svg>`;
 }
+/* Icone son : onde sonore animee (barres qui pulsent) quand actif, version statique barree quand
+   coupe - un SVG dessine a la main plutot qu'un emoji, pour un rendu identique partout et un style
+   plus i-tech/IA coherent avec le reste de l'interface. */
+function audioIconSVG(muted){
+  if(muted){
+    return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="3" y="9" width="3" height="3.6" rx=".8"></rect><rect x="7.4" y="7" width="3" height="7.6" rx=".8"></rect>
+      <rect x="11.8" y="4.5" width="3" height="12.6" rx=".8" opacity=".35"></rect>
+      <line x1="17" y1="6" x2="22" y2="18" stroke="#ff5c6e"></line><line x1="22" y1="6" x2="17" y2="18" stroke="#ff5c6e"></line>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <rect x="3" y="9" width="3" height="3.6" rx=".8"><animate attributeName="height" values="3.6;10;3.6" dur="1.1s" repeatCount="indefinite"/><animate attributeName="y" values="9;6;9" dur="1.1s" repeatCount="indefinite"/></rect>
+    <rect x="7.4" y="7" width="3" height="7.6" rx=".8"><animate attributeName="height" values="7.6;15.5;7.6" dur="1.3s" repeatCount="indefinite"/><animate attributeName="y" values="7;3.3;7" dur="1.3s" repeatCount="indefinite"/></rect>
+    <rect x="11.8" y="4.5" width="3" height="12.6" rx=".8"><animate attributeName="height" values="12.6;5.5;12.6" dur="0.9s" repeatCount="indefinite"/><animate attributeName="y" values="4.5;9.3;4.5" dur="0.9s" repeatCount="indefinite"/></rect>
+    <rect x="16.2" y="6.8" width="3" height="8" rx=".8"><animate attributeName="height" values="8;16;8" dur="1.2s" repeatCount="indefinite"/><animate attributeName="y" values="6.8;2.8;6.8" dur="1.2s" repeatCount="indefinite"/></rect>
+  </svg>`;
+}
 function topbar(){
   const bar = document.createElement('div'); bar.className='topbar';
   const swatches = PALETTES.map(p=>`<button class="swatch ${S.palette===p.id?'active':''}" data-pal="${p.id}" title="${S.lang==='fr'?p.fr:p.en}" style="background:${p.swatch};"></button>`).join('');
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(36)}</div>
     <div class="topopts">
       <div class="palsel">${swatches}</div>
-      <button id="audioToggle" class="langsel" style="padding:0 10px; cursor:pointer;" title="${S.lang==='fr'?'Son':'Sound'}">${AudioEngine.isMuted()?'&#128263;':'&#128266;'}</button>
+      <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isMuted()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isMuted())}</button>
       <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>
     </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
-  bar.querySelector('#audioToggle').onclick = (e)=>{ AudioEngine.setMuted(!AudioEngine.isMuted()); e.target.innerHTML = AudioEngine.isMuted()?'&#128263;':'&#128266;'; };
+  bar.querySelector('#audioToggle').onclick = (e)=>{
+    AudioEngine.setMuted(!AudioEngine.isMuted());
+    const btn = e.currentTarget;
+    btn.classList.toggle('muted', AudioEngine.isMuted());
+    btn.innerHTML = audioIconSVG(AudioEngine.isMuted());
+  };
   bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
   bar.querySelectorAll('.palsel .swatch').forEach(b=>{ b.onclick=()=>{ S.palette=b.dataset.pal; try{ localStorage.setItem('vi_palette', S.palette); }catch(e){} applyTheme(); render(); }; });
   return bar;
@@ -5706,6 +5747,7 @@ function screenWelcome(){
     </div>
   </div>`;
   mountIncubatorPod(d);
+  AudioEngine.setMode('welcome');
   /* La musique ne peut demarrer qu'apres un geste de l'utilisateur (regle des navigateurs) :
      le tout premier clic sur l'accueil, quel qu'il soit, la declenche. */
   if(!d.dataset.audioBound){
@@ -5713,15 +5755,15 @@ function screenWelcome(){
     d.addEventListener('click', ()=>{ AudioEngine.start(); }, { once:true });
   }
   d.querySelector('#go').onclick = ()=>{
-    AudioEngine.start();
+    AudioEngine.start(); AudioEngine.setMode('ambient');
     const fr = S.lang==='fr';
     const greetFr = ["Systemes en ligne. Pret quand vous l'etes.","Bienvenue au laboratoire. Choisissons votre specimen.","Tous les indicateurs sont au vert. On peut y aller."];
     const greetEn = ["Systems online. Ready when you are.","Welcome to the lab. Let's choose your specimen.","All indicators green. We're good to go."];
     AudioEngine.speak(pick(fr?greetFr:greetEn), S.lang);
     S.screen='profileChoice'; render();
   };
-  d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
-  d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
+  d.querySelector('#goCodex').onclick = ()=>{ AudioEngine.setMode('ambient'); S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
+  d.querySelector('#goDuel').onclick = ()=>{ AudioEngine.setMode('ambient'); S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
   d.querySelector('#goTrophies').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='trophies'; render(); };
   d.querySelector('#goReset').onclick = ()=>{ showResetConfirm(); };
   loadCareerHistory(d.querySelector('#historyBox'));
@@ -7283,6 +7325,7 @@ function eclatBadgeRowHTML(){
   return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>`;
 }
 function showEclatCinematic(shard, cb){
+  AudioEngine.playSting('gem');
   const isFr = S.lang==='fr';
   const cfg = ECLAT_CINE_CONFIG[shard.id] || { icon:'&#9733;', bgClass:'' };
   const name = isFr ? shard.frName : shard.enName;
@@ -7299,7 +7342,7 @@ function showEclatCinematic(shard, cb){
       <button class="btl-move" id="eclatCineContinue" style="min-width:160px; margin-top:14px; border-color:${shard.col};"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
     </div>`;
   document.body.appendChild(overlay);
-  const advance = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
+  const advance = ()=>{ AudioEngine.stopSting(); overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
   overlay.querySelector('#eclatCineContinue').onclick = advance;
   if(S.careerAuto) setTimeout(advance, 1400);
 }
@@ -7859,6 +7902,7 @@ function downloadVoidCard(){
   });
 }
 function showEighthStarCinematic(cb){
+  AudioEngine.playSting('eighthStar');
   const isFr = S.lang==='fr'; const zone = zoneOf(S.align);
   const villain = zone==='villain';
   const title = villain ? (isFr?'LE MULTIVERS EST TOMBE':'THE MULTIVERSE HAS FALLEN') : (isFr?'LE MULTIVERS EST SAUVE':'THE MULTIVERSE IS SAVED');
@@ -7879,7 +7923,7 @@ function showEighthStarCinematic(cb){
   document.body.classList.add('shake-cosmic');
   setTimeout(()=>{ document.body.classList.remove('shake-cosmic'); }, 2200);
   overlay.querySelector('#star8Download').onclick = downloadTrophyCard;
-  const advance8 = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
+  const advance8 = ()=>{ AudioEngine.stopSting(); overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
   overlay.querySelector('#star8Continue').onclick = advance8;
   if(S.careerAuto) setTimeout(advance8, 1200);
 }
