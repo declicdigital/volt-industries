@@ -4362,84 +4362,112 @@ const AudioEngine = (function(){
   const FADE_MS = 900;
   const LOOP_VOL = 0.55, STING_VOL = 0.85;
 
-  /* Une piste = un lecteur dedie, jamais recycle. On ne touche JAMAIS a currentTime :
-     couper une musique, c'est simplement la mettre en pause ; la relancer reprend
-     naturellement la ou elle en etait, et elle continue de defiler jusqu'au bout. */
-  const decks = {};
-  function deckFor(key){
-    if(decks[key]) return decks[key];
-    const d = new Audio(TRACKS[key]);
-    d.loop = true; d.volume = 0; d.preload = 'auto';
-    decks[key] = d;
-    return d;
-  }
+  /* Un seul lecteur musical physique. C'est volontaire : plusieurs elements Audio et leurs
+     callbacks de fondu pouvaient survivre a une transition, lancer une seconde piste deux
+     secondes plus tard, puis couper celle qui jouait. Les positions sont conservees par piste,
+     mais une seule source peut desormais produire du son a un instant donne. */
+  const player = new Audio();
+  player.preload = 'auto';
+  player.loop = true;
+  player.volume = 0;
+  const positions = {};
   let currentLoopKey = null; // 'welcome' | 'ambient' | 'combat' | null
   let pendingLoopKey = null; // la boucle a reprendre une fois le sting termine
-  let stingAudio = null;
-  let stingStartedAt = 0;
+  let activeKey = null;      // cle reellement chargee dans le lecteur unique
+  let stingKey = null;
+  let transitionId = 0;
   let muted = false;
   try{ muted = localStorage.getItem('volt_audio_muted') === '1'; }catch(e){}
   let unlocked = false; // les navigateurs bloquent la lecture avant un geste utilisateur
 
-  function fadeTo(audio, targetVol, ms, onDone){
-    const gen = (audio._fadeGen = (audio._fadeGen||0) + 1);
-    const startVol = audio.volume, startTime = performance.now();
+  function fadeTo(targetVol, ms, id, onDone){
+    const startVol = player.volume, startTime = performance.now();
     const effTarget = muted ? 0 : targetVol;
     function step(now){
-      if(audio._fadeGen !== gen) return; // une autre transition a pris le relais
+      if(id !== transitionId) return;
       const t = Math.min(1, (now-startTime)/ms);
-      audio.volume = Math.max(0, Math.min(1, startVol + (effTarget-startVol)*t));
+      player.volume = Math.max(0, Math.min(1, startVol + (effTarget-startVol)*t));
       if(t<1) requestAnimationFrame(step);
       else if(onDone) onDone();
     }
     requestAnimationFrame(step);
   }
 
-  let lastCrossAt = 0;
-  function crossTo(key){
-    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
-    if(!unlocked || stingBlocking) { pendingLoopKey = key; currentLoopKey = key; return; }
-    if(currentLoopKey === key && decks[key] && !decks[key].paused) return;
-    if(!TRACKS[key]) return;
-    currentLoopKey = key;
-    lastCrossAt = Date.now();
-    const incoming = deckFor(key);
-    const fadeMs = key==='combat' ? 500 : FADE_MS;
-    Object.keys(decks).forEach(k=>{
-      if(k===key) return;
-      const d = decks[k];
-      if(d.paused && d.volume===0) return;
-      fadeTo(d, 0, fadeMs, ()=>{ d.pause(); }); // pause seule : la position est conservee
-    });
-    try{ const p = incoming.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
-    fadeTo(incoming, LOOP_VOL, fadeMs);
+  function rememberPosition(){
+    if(activeKey && !stingKey && Number.isFinite(player.currentTime)) positions[activeKey] = player.currentTime;
+  }
+  function loadAndPlay(key, src, loop, targetVol, id){
+    if(id !== transitionId) return;
+    activeKey = key;
+    player.pause();
+    player.loop = loop;
+    player.src = src;
+    player.load();
+    const begin = ()=>{
+      if(id !== transitionId || activeKey !== key) return;
+      player.removeEventListener('loadedmetadata', begin);
+      if(loop){
+        const saved = positions[key] || 0;
+        if(Number.isFinite(player.duration) && player.duration>0) player.currentTime = Math.min(saved, Math.max(0, player.duration-0.1));
+      }
+      player.volume = 0;
+      try{ const p = player.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+      fadeTo(targetVol, key==='combat'?500:FADE_MS, id);
+    };
+    if(player.readyState >= 1) begin();
+    else player.addEventListener('loadedmetadata', begin, { once:true });
   }
 
-  function pauseAllDecks(ms){
-    Object.keys(decks).forEach(k=>{ const d = decks[k]; fadeTo(d, 0, ms, ()=>{ d.pause(); }); });
+  function crossTo(key){
+    if(!TRACKS[key]) return;
+    currentLoopKey = key;
+    if(stingKey){ pendingLoopKey = key; return; }
+    if(!unlocked){ pendingLoopKey = key; return; }
+    if(activeKey === key){
+      if(player.paused){ try{ const p = player.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
+      const id = ++transitionId;
+      fadeTo(LOOP_VOL, 250, id);
+      return;
+    }
+    rememberPosition();
+    const id = ++transitionId;
+    const fadeMs = activeKey ? (key==='combat'?350:500) : 0;
+    const swap = ()=>loadAndPlay(key, TRACKS[key], true, LOOP_VOL, id);
+    if(fadeMs) fadeTo(0, fadeMs, id, swap); else swap();
   }
 
   function playSting(key){
     if(!unlocked) return;
     const src = STINGS[key]; if(!src) return;
     pendingLoopKey = currentLoopKey;
-    pauseAllDecks(500);
-    if(stingAudio){ stingAudio.pause(); stingAudio.onended = null; }
-    stingAudio = new Audio(src);
-    stingStartedAt = Date.now();
-    stingAudio.loop = false; stingAudio.volume = muted ? 0 : STING_VOL;
-    try{ const p = stingAudio.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
-    stingAudio.onended = ()=>{
-      stingAudio = null;
-      if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
+    rememberPosition();
+    stingKey = key;
+    const id = ++transitionId;
+    const startSting = ()=>{
+      loadAndPlay('sting:'+key, src, false, STING_VOL, id);
+      player.onended = ()=>{
+        if(id !== transitionId) return;
+        player.onended = null;
+        stingKey = null;
+        activeKey = null;
+        const resume = pendingLoopKey || currentLoopKey;
+        pendingLoopKey = null;
+        if(resume) crossTo(resume);
+      };
     };
+    fadeTo(0, 350, id, startSting);
   }
   /* A appeler quand l'ecran d'annonce (gemme/8eme etoile) se ferme, au cas ou le joueur
      l'aurait fermee avant la fin naturelle du sting - la musique de fond reprend alors direct. */
   function stopSting(){
-    if(!stingAudio) return;
-    fadeTo(stingAudio, 0, 500, ()=>{ if(stingAudio){ stingAudio.pause(); stingAudio=null; } });
-    if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
+    if(!stingKey) return;
+    const resume = pendingLoopKey || currentLoopKey;
+    pendingLoopKey = null;
+    stingKey = null;
+    player.onended = null;
+    activeKey = null;
+    const id = ++transitionId;
+    fadeTo(0, 350, id, ()=>{ if(id===transitionId && resume) crossTo(resume); });
   }
 
   function start(){
@@ -4451,9 +4479,8 @@ const AudioEngine = (function(){
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
-    const cur = currentLoopKey && decks[currentLoopKey];
-    if(cur) fadeTo(cur, muted ? 0 : LOOP_VOL, 300);
-    if(stingAudio) fadeTo(stingAudio, muted?0:STING_VOL, 300);
+    const id = ++transitionId;
+    fadeTo(muted ? 0 : (stingKey ? STING_VOL : LOOP_VOL), 300, id);
   }
   function isMuted(){ return muted; }
 
@@ -4474,17 +4501,12 @@ const AudioEngine = (function(){
     }catch(e){}
   }
 
-  /* Filet de securite : un onglet en arriere-plan peut geler un fondu en cours et laisser la
-     piste muette. On verifie l'etat reel et on rattrape le volume - sans jamais relancer la
-     piste depuis le debut. */
+  /* Filet de securite sans changement de source : il ne peut donc jamais lancer une autre piste. */
   function healthCheck(){
     if(muted || !unlocked || !currentLoopKey) return;
-    if(Date.now() - lastCrossAt < FADE_MS + 600) return;
-    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
-    if(stingBlocking) return;
-    const cur = decks[currentLoopKey]; if(!cur) return;
-    if(cur.paused){ try{ const p = cur.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
-    if(cur.volume < 0.02) fadeTo(cur, LOOP_VOL, 400);
+    if(stingKey || activeKey !== currentLoopKey) return;
+    if(player.paused){ try{ const p = player.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
+    if(player.volume < 0.02){ const id = ++transitionId; fadeTo(LOOP_VOL, 400, id); }
   }
   setInterval(healthCheck, 4000);
   if(typeof document!=='undefined'){
