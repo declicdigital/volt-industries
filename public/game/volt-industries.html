@@ -99,7 +99,7 @@
     box-shadow: 0 30px 70px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04); animation: rise .5s ease; }
   @keyframes rise{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
   h1{ font-size: clamp(26px, 4.5vw, 42px); letter-spacing:-1px; margin:0 0 8px; color:var(--ink);}
-  h2{ font-size:21px; margin:0 0 4px; letter-spacing:-0.4px; color:var(--ink);}
+  h2{ font-size:21px; line-height:1.3; margin:0 0 8px; letter-spacing:0; color:var(--ink); overflow-wrap:anywhere;}
   h3{ font-size:15.5px; margin:22px 0 6px; color:var(--ink); text-transform:uppercase; letter-spacing:1px;}
   .eyebrow{ text-transform:uppercase; font-size:11px; letter-spacing:3.5px; font-weight:800; color:var(--accent); margin-bottom:10px; display:block; text-shadow:0 0 12px var(--accent-soft); }
   p.lead{ color:var(--dim); font-size:15.5px; line-height:1.65; max-width:680px; }
@@ -155,6 +155,7 @@
   .choice.jv-reco{ border-color:var(--jvc, var(--accent)); box-shadow:0 0 24px -14px var(--jvc, var(--accent)); }
   .choice.jv-reco::after{ content:attr(data-reco); display:inline-block; margin-left:8px; font-size:9.5px; letter-spacing:1.6px;
     font-weight:900; color:var(--jvc, var(--accent)); vertical-align:middle; }
+  #choices{ display:flow-root; clear:both; }
   .log-entry{ border-left:3px solid var(--accent); padding:10px 16px; margin-bottom:10px; background:rgba(255,255,255,.02); border-radius:0 10px 10px 0; font-size:14px; color:#c3cee2;}
   .log-entry.villain{ border-left-color:var(--red); }
   .relwrap{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px;}
@@ -424,7 +425,11 @@
     .conv-line{ font-size:14.5px; min-height:0; margin-bottom:4px; }
     .conv-charname{ font-size:12px; margin-bottom:8px; }
     .conv-stage .conv-portrait .cp-glyph{ font-size:64px; }
-    .choice{ padding:13px 15px; font-size:14px; margin-top:10px; }
+    .main-col > .card h2{ font-size:19px; line-height:1.42; margin:8px 0 14px; min-height:max-content; position:relative; z-index:1; }
+    .mission-year,.mission-tag,.mission-loc{ line-height:1.45; overflow-wrap:anywhere; }
+    #choices{ padding-top:1px; position:relative; z-index:2; }
+    .choice{ min-height:0; height:auto; padding:13px 15px; font-size:14px; line-height:1.5; margin-top:10px; white-space:normal; overflow-wrap:anywhere; word-break:normal; }
+    .choice.jv-reco::after{ display:block; width:max-content; max-width:100%; margin:7px 0 0; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
     .choice:hover{ transform:none; }
   }
 
