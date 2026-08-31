@@ -62,6 +62,9 @@
   .palsel .swatch:hover{ transform:scale(1.15); }
   .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
   @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
+  .hud-drag{ touch-action:none; cursor:grab; }
+  .hud-drag.hud-dragging{ cursor:grabbing; opacity:.92; }
+  .hud-drag::after{ }
   .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
@@ -4491,12 +4494,69 @@ let _saveTimer = null;
    la carriere. Un verrou memorise a true rendait le bouton Simulation visuellement actif mais
    bloquait definitivement sa premiere etape apres certaines sauvegardes/reprises. */
 let _autoStepPending = false;
+/* ============================ HUD DEPLACABLE ============================
+   Le badge de rang, la console JARVIS/ULTRON et le bouton Simuler peuvent etre deplaces
+   librement pendant une partie ; la position est memorisee par element. */
+const HUD_POS_KEY = 'volt.hudPos.v1';
+function hudPosAll(){ try{ return JSON.parse(localStorage.getItem(HUD_POS_KEY)||'{}') || {}; }catch(e){ return {}; } }
+function hudPosSave(id, pos){ const all = hudPosAll(); all[id] = pos; try{ localStorage.setItem(HUD_POS_KEY, JSON.stringify(all)); }catch(e){} }
+function hudApplyPos(el, pos){
+  if(!el || !pos) return;
+  const r = el.getBoundingClientRect();
+  const maxX = Math.max(0, window.innerWidth - (r.width||80) - 4);
+  const maxY = Math.max(0, window.innerHeight - (r.height||40) - 4);
+  const x = Math.min(Math.max(0, pos.x), maxX), y = Math.min(Math.max(0, pos.y), maxY);
+  el.style.setProperty('left', x+'px', 'important');
+  el.style.setProperty('top', y+'px', 'important');
+  el.style.setProperty('right', 'auto', 'important');
+  el.style.setProperty('bottom', 'auto', 'important');
+  el.style.setProperty('transform', 'none', 'important');
+}
+function makeHudDraggable(el, id){
+  if(!el || el._hudDrag) return;
+  el._hudDrag = true;
+  el.classList.add('hud-drag');
+  const saved = hudPosAll()[id];
+  if(saved) requestAnimationFrame(()=>hudApplyPos(el, saved));
+  let sx=0, sy=0, ox=0, oy=0, moved=false, active=false;
+  el.addEventListener('pointerdown', (e)=>{
+    if(e.button!==undefined && e.button!==0) return;
+    const r = el.getBoundingClientRect();
+    sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top; moved=false; active=true;
+    el.setPointerCapture && el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', (e)=>{
+    if(!active) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!moved && Math.abs(dx)+Math.abs(dy) < 6) return;
+    if(!moved){ moved=true; el.classList.add('hud-dragging'); }
+    e.preventDefault();
+    hudApplyPos(el, { x: ox+dx, y: oy+dy });
+  });
+  const end = (e)=>{
+    if(!active) return; active=false;
+    el.classList.remove('hud-dragging');
+    if(moved){
+      const r = el.getBoundingClientRect();
+      hudPosSave(id, { x:r.left, y:r.top });
+      const kill = (ev)=>{ ev.stopPropagation(); ev.preventDefault(); };
+      el.addEventListener('click', kill, { capture:true, once:true });
+      setTimeout(()=>el.removeEventListener('click', kill, true), 60);
+    }
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+window.addEventListener('resize', ()=>{
+  const all = hudPosAll();
+  ['rankBadgeFixed','careerAutoWidget','jarvis'].forEach(id=>{ const el=document.getElementById(id); if(el && all[id]) hudApplyPos(el, all[id]); });
+});
 /* ---------- Simulation de carriere : joue automatiquement les questions et les combats (x4), arretable a tout moment ---------- */
 function renderCareerAutoWidget(){
   let el = document.getElementById('careerAutoWidget');
   const eligible = shouldShowSidebar() && S.screen!=='end' && S.firstMissionStarted;
   if(!eligible){ if(el) el.remove(); return; }
-  if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); }
+  if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); makeHudDraggable(el, 'careerAutoWidget'); }
   el.className = 'career-auto-widget' + (S.careerAuto ? ' running' : '');
   const isFr = S.lang==='fr';
   el.innerHTML = S.careerAuto
@@ -4642,7 +4702,7 @@ async function clearGameState(){
 function renderRankBadge(){
   let el = document.getElementById('rankBadgeFixed');
   if(!shouldShowSidebar()){ if(el) el.remove(); return; }
-  if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); }
+  if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); makeHudDraggable(el, 'rankBadgeFixed'); }
   const zone = zoneOf(S.align);
   const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
   const stars = computeStars();
