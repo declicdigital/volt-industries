@@ -1085,6 +1085,8 @@
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
   }
   .pod-player{ margin:0 auto; max-width:300px; }
+  @keyframes podSideSwap{ 0%{ filter:brightness(1.9) saturate(1.5); } 40%{ filter:brightness(1.25) saturate(1.2); } 100%{ filter:none; } }
+  .pod-player.pod-sideswap .pod-scene{ animation:podSideSwap 1.1s ease-out 1; }
   .pod-player .pod-scene{ width:100%; height:auto; aspect-ratio:800/1120; overflow:visible; }
   .pod-player .pod-bg{ background-size:contain; }
   .pod-player .pod-fig{ width:52%; height:66%; bottom:18%; }
@@ -4733,6 +4735,7 @@ function renderRankBadge(){
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
     <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
   el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
+  refreshPlayerPodSide();
   if(stars > S.lastStars){ showRankUpToast(stars, zone); showScopeCinematic(stars); }
   S.lastStars = stars;
 }
@@ -5224,10 +5227,12 @@ function avatarBoxInner(){
 function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
   const fr = S.lang === 'fr';
-  const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
-  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
+  /* La capsule du joueur en carriere suit TON camp actuel, pas l'alignement d'origine du personnage :
+     bleu si tu es heros, rouge si tu es villain, violet si tu es independant - et elle rebascule
+     autant de fois que tu changes de camp pendant la partie. */
+  const al = zoneOf(S.align);
   const col = podAuraColor(al);
-  const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
+  const hue = podAuraHue(al);
   const sub = specimenLabel(S.playerCharKey, al, fr);
   const src = podFigSrc(S.portrait);
   return `<div class="pod pod-player" aria-hidden="true" style="--podc:${col}; --podhue:${hue};">
@@ -5842,6 +5847,24 @@ function podCharacterPool(){
 function podAuraColor(align){
   return align === 'hero' ? '#3ba9ff' : align === 'villain' ? '#ff3b4e' : '#a855f7';
 }
+function podAuraHue(align){
+  return align === 'hero' ? '0deg' : align === 'villain' ? '140deg' : '60deg';
+}
+/* Mise a jour a chaud de la capsule du joueur : appelee a chaque rafraichissement du badge de rang,
+   donc a chaque fois que ton alignement bouge en cours de partie. */
+function refreshPlayerPodSide(){
+  const pod = document.querySelector('.pod-player'); if(!pod) return;
+  const al = zoneOf(S.align);
+  if(pod.dataset.side === al) return;
+  pod.dataset.side = al;
+  pod.style.setProperty('--podc', podAuraColor(al));
+  pod.style.setProperty('--podhue', podAuraHue(al));
+  const sub = pod.querySelector('.pod-sub');
+  if(sub) sub.textContent = specimenLabel(S.playerCharKey, al, S.lang==='fr');
+  pod.classList.remove('pod-sideswap');
+  void pod.offsetWidth;
+  pod.classList.add('pod-sideswap');
+}
 function incubatorPodHTML(){
   return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff; --podhue:0deg;">
    <div class="pod-scene">
@@ -5932,7 +5955,7 @@ function mountIncubatorPod(root){
     setTimeout(()=>{
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
-      pod.style.setProperty('--podhue', c.align === 'hero' ? '0deg' : c.align === 'villain' ? '140deg' : '60deg');
+          pod.style.setProperty('--podhue', podAuraHue(c.align));
       fig.style.setProperty('--pod-scale','1');
       fig.style.setProperty('--pod-shift-x','0px');
       fig.style.setProperty('--pod-shift-y','0px');
@@ -9970,8 +9993,13 @@ function startBattle(mission, done){
     if(!actor || actor.isPlayer || actor._specialUsed) return false;
     const sp = actor.key ? CHAR_SPECIAL[actor.key] : null;
     if(!sp) return false;
-    const hurt = actor.hp/actor.maxHp < 0.6;
-    if(Math.random() > (hurt ? 0.42 : 0.22)) return false;
+    /* Jamais au debut du combat, et jamais systematique : certains combattants ne sortiront pas leur
+       coup signature du tout, et ceux qui le font attendent que l'affrontement soit engage. */
+    if((st.turnCallCount||0) < 6) return false;
+    if(actor._specialWill === undefined) actor._specialWill = Math.random() < 0.65;
+    if(!actor._specialWill) return false;
+    const hurt = actor.hp/actor.maxHp < 0.55;
+    if(Math.random() > (hurt ? 0.3 : 0.12)) return false;
     actor._specialUsed = true;
     const label = S.lang==='fr'?sp.nameFr:sp.nameEn;
     const tier = tierOfKey(actor.key);
