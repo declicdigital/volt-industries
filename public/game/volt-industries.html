@@ -778,6 +778,11 @@
   }
   @keyframes ambientPulse{ 0%,100%{ opacity:.55;} 50%{ opacity:1;} }
   .btl-meta{ display:flex; flex-direction:column; gap:5px; }
+.arch-badge{ display:inline-block; vertical-align:middle; object-fit:contain; flex:0 0 auto;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,.6)) drop-shadow(0 0 6px rgba(0,229,255,.28)); }
+  .char-tile-photo .arch-badge{ position:absolute; right:5px; bottom:5px; z-index:4; }
+  .cdp-photo .arch-badge{ position:absolute; right:8px; bottom:8px; z-index:4; }
+  .pname{ display:flex; align-items:center; gap:8px; }
   .btl-name{ font-size:12px; font-weight:900; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 12px currentColor; }
   .btl-hpbar{ height:11px; border-radius:8px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; }
   .btl-hpfill{ height:100%; width:100%; border-radius:8px; transition:width .45s ease, background .45s ease; }
@@ -6460,7 +6465,7 @@ function screenProfileChoice(){
     const nm = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.nameFr:p.nameEn);
     return `<div class="char-tile ${unlocked?'':'locked'}" data-pid="${p.id}" style="--pc-color:${col};" tabindex="0">
       <div class="char-tile-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:`<span class="char-tile-initial">${nm.charAt(0)}</span>`}
-        ${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
+        ${archBadge(p.charKey, 30)}${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
       <div class="char-tile-dot" style="background:${col};"></div>
       <div class="char-tile-name">${nm}</div>
       ${unlocked?'':`<div class="char-tile-cond">${tierConditionWithProgress(p.id)}</div>`}
@@ -6484,7 +6489,7 @@ function screenProfileChoice(){
     const moralCol = morality>=4 ? '#7ef0c0' : (morality<=-4 ? '#ff5c6e' : '#e8c96a');
     panelEl.classList.add('open');
     panelEl.style.setProperty('--pc-color', col);
-    panelEl.innerHTML = `<div class="cdp-photo">${p.img?`<img src="${p.img}" alt="${nm}">`:''}<span class="preset-badge">${badge}</span></div>
+    panelEl.innerHTML = `<div class="cdp-photo">${p.img?`<img src="${p.img}" alt="${nm}">`:''}<span class="preset-badge">${badge}</span>${archBadge(p.charKey, 42)}</div>
       <div class="cdp-body">
         <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
         ${statLine(p.stats||{})}
@@ -9434,14 +9439,14 @@ function startBattle(mission, done){
     <div class="btl-spotlight">
       <div class="btl-fighter me">
         <div class="btl-frame" id="btlMeFrame" style="--cp-color:${myCol};">${avatarVisual()}</div>
-        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
+        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${archBadge(S.playerCharKey, 22)}${myName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlMeNum"></div></div>
       </div>
       <div class="btl-vs" id="btlVS">VS</div>
       <div class="btl-fighter foe">
         <div class="btl-frame" id="btlFoeFrame" style="--cp-color:${foeCol};">${battleFrameInner(foe)}</div>
-        <div class="btl-meta"><div class="btl-name" id="btlFoeSpotName" style="color:${foeCol};">${foeName}</div>
+        <div class="btl-meta"><div class="btl-name" id="btlFoeSpotName" style="color:${foeCol};">${archBadge(foeKey, 22)}${foeName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlFoeNum"></div></div>
       </div>
@@ -11874,7 +11879,7 @@ function renderConversationOverlay(){
     </div>
     <div class="conv-body">
       ${convCastHTML(conv, speakerKey)}
-      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
+      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}${archBadge(charKey, 24)}</div>
       <div class="conv-line">${lines[S.convLineIndex]}</div>
       ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}" style="--cp-color:${choiceColorFor(c)};">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
     </div>
