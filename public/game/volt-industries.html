@@ -609,6 +609,18 @@
     .btl-overlay{ padding-top:2vh; padding-bottom:calc(200px + env(safe-area-inset-bottom, 0px)); }
   }
 
+  .rally-picker{ position:absolute; inset:0; z-index:400; display:flex; align-items:center; justify-content:center;
+    background:rgba(3,6,13,.88); backdrop-filter:blur(6px); animation:cineIn .25s ease; }
+  .rally-picker-inner{ max-width:420px; width:90%; text-align:center; }
+  .rally-picker-title{ font-size:15px; font-weight:900; color:#fff; margin-bottom:16px; text-shadow:0 0 20px rgba(154,107,255,.5); }
+  .rally-picker-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .rally-cand{ cursor:pointer; border-radius:14px; overflow:hidden; border:1.5px solid var(--rc-color); background:rgba(255,255,255,.03);
+    padding-bottom:8px; text-align:center; transition:.15s; box-shadow:0 0 0 rgba(0,0,0,0); }
+  .rally-cand:hover{ box-shadow:0 0 16px -4px var(--rc-color); transform:translateY(-2px); }
+  .rally-cand img{ width:100%; aspect-ratio:1/1; object-fit:cover; object-position:50% 12%; display:block; }
+  .rally-cand-initial{ display:flex; align-items:center; justify-content:center; aspect-ratio:1/1; font-size:26px; font-weight:900; color:var(--rc-color); }
+  .rally-cand b{ display:block; font-size:11px; color:#fff; padding:6px 4px 0; }
+
   .btl-overlay.cosmic-battle{ background: radial-gradient(ellipse 120% 90% at 50% 0%, rgba(255,178,32,.12), transparent 60%), rgba(3,6,13,.97); box-shadow: inset 0 0 120px rgba(255,178,32,.18); }
   .btl-overlay.cosmic-battle .btl-frame{ box-shadow: 0 0 0 2px var(--gold), 0 0 34px rgba(255,178,32,.5); }
   .btl-overlay.cosmic-battle .btl-vs{ text-shadow:0 0 30px var(--gold), 0 0 60px var(--accent); }
@@ -1646,7 +1658,7 @@ const CHARACTERS = {
   sepulcre:{fr:"Galactus",en:"Galactus",canon:"Galactus",align:'neutral', sex:'m', img:CHAR_IMG.char16},
   nihil:{fr:"Annihilus",en:"Annihilus",canon:"Annihilus",align:'villain', sex:'m', img:CHAR_IMG.char18},
   fuchsia:{fr:"Green Goblin",en:"Green Goblin",canon:"Green Goblin",align:'villain', sex:'m', img:CHAR_IMG.char20},
-  boomnpc:{fr:"Doctor Doom",en:"Doctor Doom",canon:"Doctor Doom",align:'neutral', sex:'m', img:CHAR_IMG.char42},
+  boomnpc:{fr:"Doctor Doom",en:"Doctor Doom",canon:"Doctor Doom",align:'villain', sex:'m', img:CHAR_IMG.char42},
   lorelei:{fr:"Vision",en:"Vision",canon:"Vision",align:'hero', sex:'m', img:CHAR_IMG.char8},
   kidspider:{fr:"Spider-Man",en:"Spider-Man",canon:"Spider-Man",align:'hero', sex:'m', img:CHAR_IMG.char41},
   cyclops:{fr:"Cyclops",en:"Cyclops",canon:"Cyclops",align:'hero', sex:'m', img:CHAR_IMG.char43},
@@ -1737,7 +1749,7 @@ const FACTIONS = {
     { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet', leader:'Magneto',
       members:['Magneto','Mystique','Pyro'] },
     { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'coil', leader:'Doctor Doom',
-      members:['Doctor Doom','Red Skull'] },
+      members:['Doctor Doom','Red Skull','Loki','Corvus Glaive','Proxima Midnight','Green Goblin'] },
     { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'void', leader:'Thanos',
       members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian'] },
   ],
@@ -9196,7 +9208,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -9350,6 +9362,34 @@ function startBattle(mission, done){
       </div>
     </div>`;
   }
+  /* Petit ecran de choix pour Ralliement : le joueur choisit qui il appelle, parmi les candidats
+     eligibles (deja filtres avant l'appel : membres de la faction, ou personnages independants
+     si pas de faction). */
+  function showRallyPicker(candidateKeys, onChoose){
+    const fr = S.lang==='fr';
+    const pickerEl = document.createElement('div');
+    pickerEl.className = 'rally-picker';
+    pickerEl.innerHTML = `<div class="rally-picker-inner">
+      <div class="rally-picker-title">${fr?'Qui appelles-tu en renfort ?':'Who do you call in?'}</div>
+      <div class="rally-picker-grid">
+        ${candidateKeys.map(k=>{
+          const c = CHARACTERS[k]; const nm = fr?c.fr:c.en;
+          const col = convBeamColor(c.align);
+          return `<button class="rally-cand" data-k="${k}" style="--rc-color:${col};">
+            ${c.img?`<img src="${c.img}" alt="${nm}">`:`<span class="rally-cand-initial">${nm.charAt(0)}</span>`}
+            <b>${nm}</b>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+    ov.appendChild(pickerEl);
+    pickerEl.querySelectorAll('.rally-cand').forEach(btn=>{
+      btn.onclick = ()=>{
+        pickerEl.remove();
+        onChoose(btn.dataset.k);
+      };
+    });
+  }
   function renderRoster(side){
     const roster = side==='ally' ? allyRoster : foeRoster;
     const el = side==='ally' ? allyRosterEl : foeRosterEl;
@@ -9436,8 +9476,11 @@ function startBattle(mission, done){
                          : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
       const badge = m.shard ? (S.lang==='fr'?'ECLAT':'SHARD') : (isDef ? 'DEF' : (S.lang==='fr'?'ATQ':'ATK'));
       const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
-      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : '';
-      return `<button class="btl-move"${style} data-i="${i}"><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${sub}</span></button>`;
+      /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
+         l'enchainer deux fois de suite. */
+      const isLocked = st.lastPlayerMoveIdx === i;
+      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -9475,7 +9518,47 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(700));
     };
     const spBtn = movesEl.querySelector('#btlSpecial'); if(spBtn) spBtn.onclick = ()=>{
-      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.specialUsed = true;
+      if(st.busy) return;
+      if(special.type==='RALLY'){
+        /* Ralliement : on choisit qui on appelle, on ne pioche plus au hasard. En priorite les
+           membres de ta propre faction si tu en as une ; si tu n'en as pas, uniquement des
+           personnages independants (jamais n'importe qui du meme camp). */
+        const alreadyIn = new Set(allyRoster.map(e=>e.key).filter(Boolean));
+        let candidateKeys = [];
+        if(S.team && S.team.side && S.team.tier){
+          const faction = (FACTIONS[S.team.side]||[])[S.team.tier];
+          if(faction){
+            candidateKeys = faction.members.map(nm=>Object.keys(CHARACTERS).find(k=>CHARACTERS[k].fr===nm || CHARACTERS[k].en===nm))
+              .filter(k=>k && k!==S.playerCharKey && !alreadyIn.has(k));
+          }
+        } else {
+          candidateKeys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align==='neutral' && k!==S.playerCharKey && !alreadyIn.has(k) && !DISABLED_CHARS.has(k));
+        }
+        if(!candidateKeys.length){
+          st.busy = true; setMovesEnabled(false); st.specialUsed = true;
+          form.momentum = Math.min(6, (form.momentum||0) + 4);
+          setLog(S.lang==='fr'?`Personne de disponible a appeler pour l'instant. Une vague de determination galvanise chacun de tes coups suivants.`:`No one available to call right now. A wave of determination powers up every strike to come.`);
+          renderMoves();
+          setTimeout(runTurn, wait(900));
+          return;
+        }
+        showRallyPicker(candidateKeys.slice(0,4), (chosenKey)=>{
+          st.busy = true; setMovesEnabled(false); st.specialUsed = true;
+          const c = CHARACTERS[chosenKey];
+          const tier = tierOfKey(chosenKey);
+          const maxHp = Math.round(58 + tier*0.9);
+          const newAlly = { key:chosenKey, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp:maxHp, ko:false, dead:false, isPlayer:false };
+          newAlly.spd = spdFor(newAlly);
+          allyRoster.push(newAlly);
+          turnOrder.push({ side:'ally', idx:allyRoster.length-1, ref:newAlly });
+          renderRoster('ally');
+          setLog(S.lang==='fr'?`${newAlly.name} rejoint le combat a tes cotes. Superiorite numerique !`:`${newAlly.name} joins the fight at your side. Numerical superiority!`);
+          renderMoves();
+          setTimeout(runTurn, wait(900));
+        });
+        return;
+      }
+      st.busy = true; setMovesEnabled(false); st.specialUsed = true;
       const tIdx = st.targetIdx;
       const tName = foeRoster[tIdx] ? foeRoster[tIdx].name : foeName;
       if(special.type==='BANISH'){
@@ -9513,42 +9596,6 @@ function startBattle(mission, done){
         floatDmg(meSpotFrame, allyRoster[0].hp-before, '#7ef0c0', true);
         refreshEntry('ally', 0); refreshSpotlight();
         setLog(S.lang==='fr'?`L'energie de ${tName} se retourne contre lui/elle, et te revient.`:`${tName}'s own energy turns against them, and flows back to you.`);
-      } else if(special.type==='RALLY'){
-        /* Ralliement : un allie supplementaire rejoint reellement le combat, pas juste un boost de
-           stats - c'est un vrai combattant de plus qui agira a son tour, une vraie superiorite
-           numerique. En priorite un membre de ta propre faction si tu en as une, sinon n'importe
-           quel allie potentiel du meme camp que toi qui n'est pas deja present. */
-        const mySide2 = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
-        const alreadyIn = new Set(allyRoster.map(e=>e.key).filter(Boolean));
-        let candidateKey = null;
-        if(S.team && S.team.side && S.team.tier){
-          const faction = (FACTIONS[S.team.side]||[])[S.team.tier];
-          if(faction){
-            const factionKeys = faction.members.map(nm=>{
-              const found = Object.keys(CHARACTERS).find(k=>CHARACTERS[k].fr===nm || CHARACTERS[k].en===nm);
-              return found;
-            }).filter(k=>k && k!==S.playerCharKey && !alreadyIn.has(k));
-            if(factionKeys.length) candidateKey = pick(factionKeys);
-          }
-        }
-        if(!candidateKey){
-          const fallbackPool = otherCharKeys().filter(k=>CHARACTERS[k].align===mySide2 && k!==S.playerCharKey && !alreadyIn.has(k));
-          if(fallbackPool.length) candidateKey = pick(fallbackPool);
-        }
-        if(candidateKey){
-          const c = CHARACTERS[candidateKey];
-          const tier = tierOfKey(candidateKey);
-          const maxHp = Math.round(58 + tier*0.9);
-          const newAlly = { key:candidateKey, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp:maxHp, ko:false, dead:false, isPlayer:false };
-          newAlly.spd = spdFor(newAlly);
-          allyRoster.push(newAlly);
-          turnOrder.push({ side:'ally', idx:allyRoster.length-1, ref:newAlly });
-          renderRoster('ally');
-          setLog(S.lang==='fr'?`${newAlly.name} rejoint le combat a tes cotes. Superiorite numerique !`:`${newAlly.name} joins the fight at your side. Numerical superiority!`);
-        } else {
-          form.momentum = Math.min(6, (form.momentum||0) + 4);
-          setLog(S.lang==='fr'?`Une vague de determination galvanise chacun de tes coups suivants.`:`A wave of determination powers up every strike to come.`);
-        }
       }
       renderMoves();
       setTimeout(runTurn, wait(900));
@@ -9702,19 +9749,31 @@ function startBattle(mission, done){
     }, wait(500));
   }
   function foeAIMoveFor(fk, actor){
-    const fm = fk ? foeMovesFor(fk) : foeMoves;
+    const fmFull = fk ? foeMovesFor(fk) : foeMoves;
+    /* Verrou d'un tour : un adversaire ne peut jamais enchainer deux fois de suite le meme coup,
+       attaque comme defense - il doit varier, exactement comme le joueur. */
+    const fm = (actor && actor._lastMoveFr && fmFull.some(mm=>mm.fr!==actor._lastMoveFr))
+      ? fmFull.filter(mm=>mm.fr!==actor._lastMoveFr) : fmFull;
+    let chosen = null;
     /* Defenses : un adversaire blesse peut privilegier son coup defensif/soin s'il en a un -
-       mais pas a chaque tour ou il est blessé, sinon il finit presque toujours par se soigner
-       en boucle et devient increvable. Seuil plus bas (40% PV), chance plus mesuree (45%), et
-       jamais deux tours de soin de suite. */
-    if(actor && !actor._justHealed && actor.hp/actor.maxHp < 0.40 && Math.random()<0.45){
+       seuil mesure (40% PV, 45% de chance) pour ne pas devenir increvable. */
+    if(actor && actor.hp/actor.maxHp < 0.40 && Math.random()<0.45){
       const defs = fm.filter(mm=>mm.heal);
-      if(defs.length){ actor._justHealed = true; return pick(defs); }
-    } else if(actor){ actor._justHealed = false; }
-    const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.35;
-    if(lowFoe){ const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0]; if(Math.random()<0.85) return best; }
-    const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
-    return Math.random()<0.72 ? weighted[0] : pick(fm);
+      if(defs.length) chosen = pick(defs);
+    }
+    if(!chosen){
+      const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.35;
+      if(lowFoe){
+        const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0];
+        if(Math.random()<0.85) chosen = best;
+      }
+    }
+    if(!chosen){
+      const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
+      chosen = Math.random()<0.72 ? weighted[0] : pick(fm);
+    }
+    if(actor) actor._lastMoveFr = chosen.fr;
+    return chosen;
   }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
@@ -9753,7 +9812,9 @@ function startBattle(mission, done){
   }
   function playerTurn(i){
     if(st.busy) return;
+    if(i === st.lastPlayerMoveIdx) return; // verrou d'un tour : impossible d'enchainer le meme coup
     st.busy = true; setMovesEnabled(false);
+    st.lastPlayerMoveIdx = i;
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
