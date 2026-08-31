@@ -3746,7 +3746,7 @@ function computePowerLevel(){
      puissance stagner, voire decliner - jouer des combats ne suffit plus a lui seul a grandir. */
   const totalFights = (S.combat.won||0) + (S.combat.lost||0);
   const winRate = totalFights>0 ? (S.combat.won||0)/totalFights : 0.5;
-  const growth = clamp(Math.floor(S.totalMissionsDone/8) * (winRate-0.3)*1.5, -15, 30);
+  const growth = clamp(Math.floor(S.totalMissionsDone/8) * (winRate-0.3)*1.5, -10, 30);
   return clamp(charBase*0.75 + statBonus*0.6 + growth*0.9 + agingDelta(), 1, 100);
 }
 /* ---------- Vieillissement : certains gagnent en puissance avec l'age, d'autres declinent ---------- */
@@ -3757,12 +3757,10 @@ function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1
    - courbe d'age : prime a 35 ans, puis leger declin apres.
    - un personnage devenu tres fort peut depasser le plafond nominal. */
 function vitalityFactor(){
-  const won = (S.combat && S.combat.won) || 0, lost = (S.combat && S.combat.lost) || 0;
-  /* Bug corrige : le palmares et la courbe d'age partaient tous les deux si bas qu'une toute
-     nouvelle carriere demarrait avec a peine 43% des PV normaux (0.60*0.72), ce qui rendait la
-     toute premiere periode du jeu bien trop mortelle. Les points de depart remontent nettement,
-     la progression par les victoires et le pic a 35 ans restent inchanges. */
-  const record = clamp(0.80 + won*0.022 - lost*0.035, 0.55, 1.02);
+  /* Bug corrige : ce facteur reagissait DEJA au palmares (victoires/defaites), en plus de
+     computePowerLevel() qui fait exactement la meme chose - les deux se multipliaient entre eux,
+     ce qui pouvait faire chuter les PV bien trop bas apres une serie de defaites (l'un des deux
+     systemes suffit largement). Ne reste plus ici que l'age et la force globale du personnage. */
   // Age : 0.85 au debut de carriere -> 1.0 a 35 ans -> declin doux ensuite (plancher 0.85).
   const age = currentAge();
   const startAge = S.startAge || 24;
@@ -3777,7 +3775,7 @@ function vitalityFactor(){
   // Depassement possible si le personnage est devenu vraiment surpuissant.
   const ps = (typeof playerStrength==='function') ? playerStrength() : 55;
   const over = clamp((ps - 78)/22, 0, 1) * 0.18;
-  return clamp(record * ageF + over, 0.60, 1.25);
+  return clamp(ageF + over, 0.80, 1.25);
 }
 
 function agingProfile(){
@@ -8410,56 +8408,49 @@ function foeMovesFor(key){
 }
 function playerMoves(){
   const charPool = S.playerCharKey ? CHAR_MOVES[S.playerCharKey] : null;
-  let atk = [];
-  let def = [];
+  let baseAtkPool = [];
+  let baseDefPool = [];
   if(charPool){
-    /* Coups propres au personnage : au debut de la carriere, on tire une fois pour toutes soit
-       2 attaques + 2 defenses, soit 3 attaques + 1 defense, parmi ses 3+3 coups signature. */
     if(!S.charMoveSplit) S.charMoveSplit = Math.random()<0.5 ? '2-2' : '3-1';
-    const nAtk = S.charMoveSplit === '3-1' ? 3 : 2;
-    const nDef = S.charMoveSplit === '3-1' ? 1 : 2;
-    atk = charPool.atk.slice(0, nAtk);
-    def = charPool.def.slice(0, nDef);
+    baseAtkPool = charPool.atk.slice();
+    baseDefPool = charPool.def.slice();
   } else {
     const powers = (S.powers||[]).slice(0,2);
     powers.forEach(id=>{
-      const m = MOVES_BY_POWER[id]; if(m) atk.push(m[0], m[1]);
-      const d = DEFENSE_MOVES_BY_POWER[id]; if(d) def.push(d[0], d[1]);
+      const m = MOVES_BY_POWER[id]; if(m) baseAtkPool.push(m[0], m[1]);
+      const d = DEFENSE_MOVES_BY_POWER[id]; if(d) baseDefPool.push(d[0], d[1]);
     });
   }
-  // Les competences apprises (Vibranium, foudre, etc.) remplacent en priorite les attaques : ce sont tes coups les plus forts.
-  const skillMoves = learnedSkills().map(sk=>sk.move);
-  atk = skillMoves.concat(atk);
-  /* Gabarit de base : 4 coups au total des le debut de carriere (tirage 2+2 ou 3+1 fait plus haut,
-     ou 3+1/2+2 generique selon la voie pour les personnages sans pool dedie). Un emplacement
-     supplementaire s'ouvre tous les 7 ans passes dans la carriere (pas avant), jusqu'a 6 coups au
-     total (3 attaques + 3 defenses) - la progression ne depend plus des competences apprises. */
   const isMystic = S.path === 'mystique';
-  const baseAtk = charPool ? (S.charMoveSplit==='3-1'?3:2) : (isMystic ? 2 : 3);
-  const baseDef = charPool ? (S.charMoveSplit==='3-1'?1:2) : (isMystic ? 2 : 1);
-  const yearsIn = S.currentYear||1;
-  const extraSlots = yearsIn>=14 ? 2 : yearsIn>=7 ? 1 : 0;
-  let atkCount = baseAtk, defCount = baseDef;
-  for(let i=0;i<extraSlots;i++){
-    if(atkCount < 3 && (atkCount<=defCount || defCount>=3)) atkCount++;
-    else if(defCount < 3) defCount++;
-  }
-  atkCount = clamp(atkCount, baseAtk, 4); defCount = clamp(defCount, baseDef, 3);
-  const atkOut = []; atk.forEach(m=>{ if(atkOut.length<atkCount && !atkOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
-  while(atkOut.length<atkCount) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
-  const defOut = []; def.forEach(m=>{ if(defOut.length<defCount && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
-  while(defOut.length<defCount) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
-  // Les Gemmes d'Infinite obtenues ajoutent chacun un pouvoir special supplementaire, au-dela des coups habituels.
+  const skillMoves = learnedSkills().map(sk=>sk.move);
+  /* Chaque Gemme d'Infinite obtenue et chaque artefact trouve comptent desormais comme un coup
+     a part entiere, au meme titre que les autres - ils ne s'ajoutent plus par-dessus sans limite,
+     ils prennent leur place dans le total plafonne ci-dessous, en priorite (ce sont les coups les
+     plus rares et les plus puissants). */
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
     return Object.assign({ shard:true, shardCol:s.col, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
-  // Chaque artefact trouve ajoute lui aussi son propre coup special, en plus des coups habituels.
   const artifactMoves = (S.artifacts||[]).map(id=>{
     const a = ARTIFACTS.find(x=>x.id===id); if(!a) return null;
     return { fr:a.moveFr, en:a.moveEn, p:a.movePower||20, acc:.85, heal:a.heal||undefined, artifact:true, artifactCol:'#e8c96a' };
   }).filter(Boolean);
-  return atkOut.concat(defOut).concat(shardMoves).concat(artifactMoves);
+  /* Nombre total de coups (hors coup special, toujours a part, inamovible) : 4 des le debut de
+     carriere, +1 emplacement tous les 7 ans passes (pas avant), jusqu'a 6 au maximum. Une fois ce
+     plafond atteint, un nouveau coup (gemme, artefact, ou palier d'annees) prend la place d'un
+     coup de base plutot que de s'additionner - jamais plus de 6 coups reguliers au total. */
+  const yearsIn = S.currentYear||1;
+  const extraSlots = yearsIn>=14 ? 2 : yearsIn>=7 ? 1 : 0;
+  const maxTotal = clamp(4 + extraSlots, 4, 6);
+  const minDef = isMystic ? 2 : 1; // toujours au moins une defense disponible (deux pour les mystiques)
+  const priorityAtk = [].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool);
+  const priorityDef = [].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool);
+  const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
+  const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
+  while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
+  const atkOut = []; priorityAtk.forEach(m=>{ if(atkOut.length < (maxTotal-defOut.length) && !atkOut.some(x=>x.fr===m.fr) && !defOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
+  while(atkOut.length + defOut.length < maxTotal) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
+  return atkOut.concat(defOut);
 }
 /* Adversaire : 90% camp adverse, 10% querelle interne */
 function crossedMentees(){
@@ -9152,7 +9143,7 @@ function startBattle(mission, done){
      - puissance adverse augmentee (base 48, pente 0.72, streak *3)
      - effet "a ton niveau" : plus tu es fort par rapport a l'adversaire, plus celui-ci tape fort
        (jusqu'a +45% de degats), pour eviter que les gros personnages ecrasent tout le monde. */
-  const baseHP = Math.max(50, 88 + (ps-55)*0.48 + form.momentum*2.5 - (inj?inj.sev*10:0));
+  const baseHP = Math.max(75, 88 + (ps-55)*0.48 + form.momentum*2.5 - (inj?inj.sev*10:0));
   /* PV modules par la condition physique : minimum en debut de carriere, hausse progressive avec les
      victoires (baisse avec les defaites), prime a 35 ans puis leger declin. */
   const myMaxHP = Math.max(46, Math.round(baseHP * charPowerScale * vitalityFactor()));
