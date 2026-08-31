@@ -1085,6 +1085,8 @@
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
   }
   .pod-player{ margin:0 auto; max-width:300px; }
+  @keyframes podSideSwap{ 0%{ filter:brightness(1.9) saturate(1.5); } 40%{ filter:brightness(1.25) saturate(1.2); } 100%{ filter:none; } }
+  .pod-player.pod-sideswap .pod-scene{ animation:podSideSwap 1.1s ease-out 1; }
   .pod-player .pod-scene{ width:100%; height:auto; aspect-ratio:800/1120; overflow:visible; }
   .pod-player .pod-bg{ background-size:contain; }
   .pod-player .pod-fig{ width:52%; height:66%; bottom:18%; }
@@ -9991,8 +9993,13 @@ function startBattle(mission, done){
     if(!actor || actor.isPlayer || actor._specialUsed) return false;
     const sp = actor.key ? CHAR_SPECIAL[actor.key] : null;
     if(!sp) return false;
-    const hurt = actor.hp/actor.maxHp < 0.6;
-    if(Math.random() > (hurt ? 0.42 : 0.22)) return false;
+    /* Jamais au debut du combat, et jamais systematique : certains combattants ne sortiront pas leur
+       coup signature du tout, et ceux qui le font attendent que l'affrontement soit engage. */
+    if((st.turnCallCount||0) < 6) return false;
+    if(actor._specialWill === undefined) actor._specialWill = Math.random() < 0.65;
+    if(!actor._specialWill) return false;
+    const hurt = actor.hp/actor.maxHp < 0.55;
+    if(Math.random() > (hurt ? 0.3 : 0.12)) return false;
     actor._specialUsed = true;
     const label = S.lang==='fr'?sp.nameFr:sp.nameEn;
     const tier = tierOfKey(actor.key);
