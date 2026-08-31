@@ -9494,11 +9494,15 @@ function startBattle(mission, done){
     if(st.auto && !st.busy) maybeAutoPlay();
   };
   function autoChooseMoveIdx(){
+    /* Le dernier coup joue est en recharge : le mode auto doit obligatoirement en choisir un autre. */
+    const locked = st.lastPlayerMoveIdx;
+    const ok = i => i>=0 && i!==locked;
     const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < 0.35;
-    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal); if(healIdx>=0) return healIdx; }
-    let best = 0, bestScore = -1;
-    myMoves.forEach((m,i)=>{ if(m.heal) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
-    return best;
+    if(lowSelf){ const healIdx = myMoves.findIndex((m,i)=>m.heal && ok(i)); if(ok(healIdx)) return healIdx; }
+    let best = -1, bestScore = -1;
+    myMoves.forEach((m,i)=>{ if(m.heal || !ok(i)) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
+    if(best<0) myMoves.forEach((m,i)=>{ if(!ok(i)) return; const score = (m.p||0)*(m.acc||1) + (m.heal||0); if(score>bestScore){ bestScore=score; best=i; } });
+    return best<0 ? 0 : best;
   }
   function maybeAutoPlay(){
     if(S.careerAuto && !st.auto){
@@ -9882,7 +9886,7 @@ function startBattle(mission, done){
     if(!actor){ setTimeout(runTurn, wait(50)); return; }
     if(actor.side==='ally' && actor.ref.isPlayer){
       st.lastPlayerTurnAt = Date.now();
-      st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+      st.busy = false; renderMoves(); setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
       maybeAutoPlay();
       return;
     }
