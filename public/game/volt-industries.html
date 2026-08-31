@@ -4153,6 +4153,130 @@ function render(){
   if(S.careerAuto) autoCareerStep();
   scheduleSaveGame();
 }
+/* ====================================================================================
+   MOTEUR AUDIO : musique generative (aucun fichier externe - tout est synthetise en direct
+   via Web Audio API) + voix JARVIS via la synthese vocale du navigateur.
+   - Accueil / hors combat : nappe ambiante calme, tres i-tech, avec un arpege scintillant.
+   - Combat : meme univers sonore mais transforme - tempo plus rapide, pulsation basse
+     plus marquee, une touche de dissonance pour la tension.
+   - La preference muet/volume est memorisee (localStorage) et respectee partout.
+   ==================================================================================== */
+const AudioEngine = (function(){
+  let ctx = null, masterGain = null, musicGain = null, started = false;
+  let mode = 'ambient'; // 'ambient' | 'combat'
+  let padOscs = [], arpTimer = null, pulseTimer = null, noiseTimer = null;
+  let muted = false;
+  try{ muted = localStorage.getItem('volt_audio_muted') === '1'; }catch(e){}
+
+  function ensureCtx(){
+    if(ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    ctx = new AC();
+    masterGain = ctx.createGain(); masterGain.gain.value = muted ? 0 : 0.5; masterGain.connect(ctx.destination);
+    musicGain = ctx.createGain(); musicGain.gain.value = 0.22; musicGain.connect(masterGain);
+    return ctx;
+  }
+
+  // Accords "tech" : gamme lydienne, evocatrice et jamais tout a fait resolue.
+  const AMBIENT_CHORDS = [[130.81,164.81,196.00,246.94],[146.83,174.61,220.00,261.63],[164.81,196.00,246.94,293.66],[123.47,155.56,185.00,233.08]];
+  const COMBAT_CHORDS = [[110.00,138.59,164.81,196.00],[98.00,123.47,146.83,174.61],[123.47,155.56,185.00,220.00]];
+  let chordIdx = 0, chordTimer = null;
+
+  function stopPads(){
+    padOscs.forEach(o=>{ try{ o.osc.stop(); }catch(e){} });
+    padOscs = [];
+  }
+  function playChord(freqs, dur){
+    if(!ctx) return;
+    const now = ctx.currentTime;
+    freqs.forEach((f,i)=>{
+      const osc = ctx.createOscillator(); osc.type = i===0 ? 'triangle' : 'sine';
+      const g = ctx.createGain(); g.gain.value = 0;
+      osc.frequency.value = f;
+      osc.connect(g); g.connect(musicGain);
+      g.gain.linearRampToValueAtTime(0.09/freqs.length, now+1.4);
+      g.gain.linearRampToValueAtTime(0, now+dur-1.2);
+      osc.start(now); osc.stop(now+dur);
+      padOscs.push({osc, g});
+    });
+  }
+  function scheduleChords(){
+    const chords = mode==='combat' ? COMBAT_CHORDS : AMBIENT_CHORDS;
+    const dur = mode==='combat' ? 5.2 : 8.5;
+    playChord(chords[chordIdx % chords.length], dur+0.6);
+    chordIdx++;
+    chordTimer = setTimeout(scheduleChords, dur*1000);
+  }
+  function scheduleArp(){
+    if(!ctx) return;
+    const chords = mode==='combat' ? COMBAT_CHORDS : AMBIENT_CHORDS;
+    const base = chords[(chordIdx-1+chords.length) % chords.length];
+    const note = base[Math.floor(Math.random()*base.length)] * (Math.random()<0.5?2:4);
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = note;
+    const g = ctx.createGain(); g.gain.value = 0;
+    osc.connect(g); g.connect(musicGain);
+    g.gain.linearRampToValueAtTime(mode==='combat'?0.05:0.035, now+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.7);
+    osc.start(now); osc.stop(now+0.75);
+    const nextDelay = mode==='combat' ? (180+Math.random()*220) : (500+Math.random()*900);
+    arpTimer = setTimeout(scheduleArp, nextDelay);
+  }
+  function scheduleCombatPulse(){
+    if(!ctx || mode!=='combat') return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 55;
+    const g = ctx.createGain(); g.gain.value = 0;
+    osc.connect(g); g.connect(musicGain);
+    g.gain.linearRampToValueAtTime(0.10, now+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.35);
+    osc.start(now); osc.stop(now+0.4);
+    pulseTimer = setTimeout(scheduleCombatPulse, 480);
+  }
+
+  function start(){
+    if(!ensureCtx()) return;
+    if(ctx.state==='suspended') ctx.resume();
+    if(started) return;
+    started = true;
+    scheduleChords(); scheduleArp();
+  }
+  function setMode(newMode){
+    if(mode===newMode) return;
+    mode = newMode;
+    clearTimeout(chordTimer); clearTimeout(arpTimer); clearTimeout(pulseTimer);
+    chordIdx = 0;
+    if(!ctx) return;
+    scheduleChords(); scheduleArp();
+    if(mode==='combat') scheduleCombatPulse();
+  }
+  function setMuted(m){
+    muted = m;
+    try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
+    if(masterGain) masterGain.gain.linearRampToValueAtTime(m?0:0.5, (ctx?ctx.currentTime:0)+0.3);
+  }
+  function isMuted(){ return muted; }
+
+  /* Voix JARVIS : synthese vocale native du navigateur, timbre ajuste pour sonner plus
+     robotique/IA (grave, debit mesure). Aucun fichier audio necessaire. */
+  function speak(text, lang){
+    if(muted) return;
+    if(!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang==='fr' ? 'fr-FR' : 'en-US';
+      u.pitch = 0.75; u.rate = 0.95; u.volume = 0.85;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v=>v.lang && v.lang.startsWith(u.lang.slice(0,2)) && /male|homme|thomas|daniel|google/i.test(v.name));
+      if(preferred) u.voice = preferred;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  return { start, setMode, setMuted, isMuted, speak };
+})();
 let _saveTimer = null;
 /* Verrou purement technique, volontairement hors de S : il ne doit jamais etre sauvegarde avec
    la carriere. Un verrou memorise a true rendait le bouton Simulation visuellement actif mais
@@ -4667,9 +4791,11 @@ function topbar(){
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(36)}</div>
     <div class="topopts">
       <div class="palsel">${swatches}</div>
+      <button id="audioToggle" class="langsel" style="padding:0 10px; cursor:pointer;" title="${S.lang==='fr'?'Son':'Sound'}">${AudioEngine.isMuted()?'&#128263;':'&#128266;'}</button>
       <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>
     </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
+  bar.querySelector('#audioToggle').onclick = (e)=>{ AudioEngine.setMuted(!AudioEngine.isMuted()); e.target.innerHTML = AudioEngine.isMuted()?'&#128263;':'&#128266;'; };
   bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
   bar.querySelectorAll('.palsel .swatch').forEach(b=>{ b.onclick=()=>{ S.palette=b.dataset.pal; try{ localStorage.setItem('vi_palette', S.palette); }catch(e){} applyTheme(); render(); }; });
   return bar;
@@ -5578,7 +5704,20 @@ function screenWelcome(){
     </div>
   </div>`;
   mountIncubatorPod(d);
-  d.querySelector('#go').onclick = ()=>{ S.screen='profileChoice'; render(); };
+  /* La musique ne peut demarrer qu'apres un geste de l'utilisateur (regle des navigateurs) :
+     le tout premier clic sur l'accueil, quel qu'il soit, la declenche. */
+  if(!d.dataset.audioBound){
+    d.dataset.audioBound = '1';
+    d.addEventListener('click', ()=>{ AudioEngine.start(); }, { once:true });
+  }
+  d.querySelector('#go').onclick = ()=>{
+    AudioEngine.start();
+    const fr = S.lang==='fr';
+    const greetFr = ["Systemes en ligne. Pret quand vous l'etes.","Bienvenue au laboratoire. Choisissons votre specimen.","Tous les indicateurs sont au vert. On peut y aller."];
+    const greetEn = ["Systems online. Ready when you are.","Welcome to the lab. Let's choose your specimen.","All indicators green. We're good to go."];
+    AudioEngine.speak(pick(fr?greetFr:greetEn), S.lang);
+    S.screen='profileChoice'; render();
+  };
   d.querySelector('#goCodex').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='codex'; render(); };
   d.querySelector('#goDuel').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='duelSim'; render(); };
   d.querySelector('#goTrophies').onclick = ()=>{ S.pendingReturnScreen='welcome'; S.screen='trophies'; render(); };
@@ -8906,6 +9045,7 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
     </div>`;
   }
 function startBattle(mission, done){
+  AudioEngine.setMode('combat');
   const foeKey = battleFoeKey(mission);
   applyCrossedMenteeBond(foeKey);
   const foe = CHARACTERS[foeKey];
@@ -9337,6 +9477,7 @@ function startBattle(mission, done){
   function finish(win){
     if(st.finished) return;
     st.finished = true;
+    AudioEngine.setMode('ambient');
     clearInterval(watchdogTimer);
     st.busy = true; setMovesEnabled(false);
     /* Reputation par faction : vaincre ou perdre contre un membre affecte ce que sa faction pense de toi. */
