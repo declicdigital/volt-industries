@@ -8460,6 +8460,8 @@ function impactFromEff(eff, alignDelta){
   return items;
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
+/* Nombre de tours joues avant qu'une attaque signature ne soit disponible - joueur ET PNJ. */
+const SPECIAL_CHARGE = 4;
 const CHAR_SPECIAL = {
   hawkeye:{type:'RALLY', nameFr:'Signal de detresse', nameEn:'Distress signal', descFr:'Une fleche-signal qui appelle du renfort sur le champ de bataille.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
   rocket:{type:'RALLY', nameFr:'Appel des Gardiens', nameEn:'Call the Guardians', descFr:'Il siffle fort - et l\'un des siens rapplique aussitot.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
@@ -9482,7 +9484,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null, playerActs:0 };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -10007,7 +10009,8 @@ function startBattle(mission, done){
     if(!sp) return false;
     /* Jamais au debut du combat, et jamais systematique : certains combattants ne sortiront pas leur
        coup signature du tout, et ceux qui le font attendent que l'affrontement soit engage. */
-    if((st.turnCallCount||0) < 6) return false;
+    actor._acts = (actor._acts||0) + 1;
+    if(actor._acts <= SPECIAL_CHARGE) return false;
     if(actor._specialWill === undefined) actor._specialWill = Math.random() < 0.65;
     if(!actor._specialWill) return false;
     const hurt = actor.hp/actor.maxHp < 0.55;
@@ -10182,6 +10185,7 @@ function startBattle(mission, done){
     if(i === st.lastPlayerMoveIdx) return; // verrou d'un tour : impossible d'enchainer le meme coup
     st.busy = true; setMovesEnabled(false);
     st.lastPlayerMoveIdx = i;
+    st.playerActs = (st.playerActs||0) + 1;
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
