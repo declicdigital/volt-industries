@@ -5224,10 +5224,12 @@ function avatarBoxInner(){
 function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
   const fr = S.lang === 'fr';
-  const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
-  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
+  /* La capsule du joueur en carriere suit TON camp actuel, pas l'alignement d'origine du personnage :
+     bleu si tu es heros, rouge si tu es villain, violet si tu es independant - et elle rebascule
+     autant de fois que tu changes de camp pendant la partie. */
+  const al = zoneOf(S.align);
   const col = podAuraColor(al);
-  const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
+  const hue = podAuraHue(al);
   const sub = specimenLabel(S.playerCharKey, al, fr);
   const src = podFigSrc(S.portrait);
   return `<div class="pod pod-player" aria-hidden="true" style="--podc:${col}; --podhue:${hue};">
