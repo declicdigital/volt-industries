@@ -1563,7 +1563,7 @@ const CHAR_ARCHETYPE = {
   cull:{fr:'Colosse', en:'Colossus'},
   cyclops:{fr:'Mutant', en:'Mutant'},
   daredevil:{fr:'Guerrier', en:'Warrior'},
-  deadpool:{fr:'Mercenaire', en:'Mercenary'},
+  deadpool:{fr:'Mutant', en:'Mutant'},
   docock:{fr:'Genie', en:'Genius'},
   drax:{fr:'Colosse', en:'Colossus'},
   ebonymaw:{fr:'Psychique', en:'Psychic'},
@@ -3751,23 +3751,26 @@ function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1
    - un personnage devenu tres fort peut depasser le plafond nominal. */
 function vitalityFactor(){
   const won = (S.combat && S.combat.won) || 0, lost = (S.combat && S.combat.lost) || 0;
-  // Palmares : monte par paliers (~0.028/victoire) et redescend a chaque defaite (~0.045).
-  const record = clamp(0.60 + won*0.028 - lost*0.045, 0.48, 1.02);
-  // Age : 0.72 au debut de carriere -> 1.0 a 35 ans -> declin doux ensuite (plancher 0.78).
+  /* Bug corrige : le palmares et la courbe d'age partaient tous les deux si bas qu'une toute
+     nouvelle carriere demarrait avec a peine 43% des PV normaux (0.60*0.72), ce qui rendait la
+     toute premiere periode du jeu bien trop mortelle. Les points de depart remontent nettement,
+     la progression par les victoires et le pic a 35 ans restent inchanges. */
+  const record = clamp(0.80 + won*0.022 - lost*0.035, 0.55, 1.02);
+  // Age : 0.85 au debut de carriere -> 1.0 a 35 ans -> declin doux ensuite (plancher 0.85).
   const age = currentAge();
   const startAge = S.startAge || 24;
   let ageF;
   if(age <= 35){
     const span = Math.max(1, 35 - startAge);
-    ageF = 0.72 + (Math.min(age, 35) - startAge) / span * 0.28;
-    ageF = clamp(ageF, 0.72, 1.0);
+    ageF = 0.85 + (Math.min(age, 35) - startAge) / span * 0.15;
+    ageF = clamp(ageF, 0.85, 1.0);
   } else {
-    ageF = clamp(1.0 - (age - 35)*0.009, 0.78, 1.0);
+    ageF = clamp(1.0 - (age - 35)*0.007, 0.85, 1.0);
   }
   // Depassement possible si le personnage est devenu vraiment surpuissant.
   const ps = (typeof playerStrength==='function') ? playerStrength() : 55;
   const over = clamp((ps - 78)/22, 0, 1) * 0.18;
-  return clamp(record * ageF + over, 0.45, 1.25);
+  return clamp(record * ageF + over, 0.60, 1.25);
 }
 
 function agingProfile(){
@@ -4158,7 +4161,7 @@ let _autoStepPending = false;
 /* ---------- Simulation de carriere : joue automatiquement les questions et les combats (x4), arretable a tout moment ---------- */
 function renderCareerAutoWidget(){
   let el = document.getElementById('careerAutoWidget');
-  const eligible = shouldShowSidebar() && S.screen!=='end';
+  const eligible = shouldShowSidebar() && S.screen!=='end' && S.firstMissionStarted;
   if(!eligible){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); }
   el.className = 'career-auto-widget' + (S.careerAuto ? ' running' : '');
@@ -4486,7 +4489,7 @@ function maybeRivalAltercation(){
 function screenRivalClimax(){
   const d = document.createElement('div'); const isFr = S.lang==='fr';
   const c = CHARACTERS[S.rivalKey]; const name = isFr?c.fr:c.en;
-  const col = charColor(c.align);
+  const col = charColor(S.rivalSide || c.align);
   const bond = S.rivalBond||0;
   let titleFr, titleEn, bodyFr, bodyEn, choices;
   if(bond >= 8){
@@ -5076,7 +5079,7 @@ function screenRivalDossier(){
     d.querySelector('#back').onclick = ()=>{ S.screen = S.pendingReturnScreen || 'mission'; render(); };
     return d;
   }
-  const c = CHARACTERS[S.rivalKey]; const name = fr?c.fr:c.en; const col = charColor(c.align);
+  const c = CHARACTERS[S.rivalKey]; const name = fr?c.fr:c.en; const col = charColor(S.rivalSide || c.align);
   const bond = S.rivalBond||0;
   const bondLabel = bond>=8 ? (fr?'Respect grandissant':'Growing respect') : bond<=-8 ? (fr?'Haine pure':'Pure hatred') : bond>2 ? (fr?'Tension nuancee':'Nuanced tension') : bond<-2 ? (fr?'Rancoeur':'Resentment') : (fr?'Neutre':'Neutral');
   const bondPct = Math.round((bond+20)/40*100);
@@ -6670,6 +6673,7 @@ function buildCareerPlan(){
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
   S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
   S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
+  S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
@@ -6712,16 +6716,17 @@ function buildCareerPlan(){
   S.orientationCount = 0; S.lastOrientationYear = null;
   /* ====================================================================================== */
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
-  S.deathBudgetPerMission = 1 - Math.pow(0.90, 1/Math.max(1,totalPlanned));
-  /* Rival : un adversaire du camp oppose t'est assigne des le debut, choisi parmi ceux qui peuvent
-     apparaitre tot (palier de deblocage bas) pour qu'il t'accompagne toute la carriere. Il grandit
-     avec toi, tu le croises plus souvent, et il aura lui aussi sa propre recrue en temps voulu. */
+  S.deathBudgetPerMission = 1 - Math.pow(0.94, 1/Math.max(1,totalPlanned));
+  /* Rival : n'importe quel personnage que tu as deja debloque peut devenir ton rival, quelle que
+     soit sa nature de base (heros/villain/independant) - il passe automatiquement du cote oppose
+     au tien pour cette carriere, peu importe son camp canonique. */
   const myZone0 = zoneOf(S.align); const mySide0 = myZone0==='villain' ? 'villain' : 'hero';
   const oppSide0 = mySide0==='villain' ? 'hero' : 'villain';
-  const rivalPool = Object.keys(CHARACTERS)
-    .filter(k=>CHARACTERS[k].align===oppSide0 && k!==S.playerCharKey && !DISABLED_CHARS.has(k))
-    .sort((a,b)=>(CHAR_UNLOCK_TIER[a]||1)-(CHAR_UNLOCK_TIER[b]||1));
-  S.rivalKey = rivalPool.length ? rivalPool[randInt(0, Math.min(2, rivalPool.length-1))] : null;
+  const rivalPool = unlockedPresetIds()
+    .map(id=>{ const p = PRESETS.find(pp=>pp.id===id); return p ? p.charKey : null; })
+    .filter(k=>k && k!==S.playerCharKey && !DISABLED_CHARS.has(k));
+  S.rivalKey = rivalPool.length ? pick(rivalPool) : null;
+  S.rivalSide = oppSide0; // camp effectif force pour cette carriere, independant de son alignement canonique
   S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
   S.artifacts = []; S.factionRep = S.factionRep || {};
   /* Si tu incarnes un detenteur canonique d'une Gemme (Loki, Vision, Doctor Doom, Thanos, Doctor
@@ -6787,7 +6792,7 @@ function showRivalIntro(cb){
   if(!S.rivalKey || !CHARACTERS[S.rivalKey]){ cb(); return; }
   const isFr = S.lang==='fr';
   const c = CHARACTERS[S.rivalKey];
-  const col = charColor(c.align);
+  const col = charColor(S.rivalSide || c.align);
   const name = isFr ? c.fr : c.en;
   const hookFn = pick(isFr ? RIVAL_HOOK_FR : RIVAL_HOOK_EN);
   const hook = hookFn(name).replace(/il\/elle/g, c.sex==='f'?(isFr?'elle':'she'):(isFr?'il':'he'));
@@ -7300,6 +7305,7 @@ function checkFactionCreationOffer(){
 }
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
+  S.firstMissionStarted = true;
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
   const mentorSteps = Math.min(2, livingMentees().length);
@@ -7982,6 +7988,70 @@ function impactFromEff(eff, alignDelta){
   return items;
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
+const CHAR_SPECIAL = {
+  hawkeye:{type:'BIG_STRIKE', nameFr:'Fleche perforante', nameEn:'Piercing arrow', descFr:'Un tir calcule au millimetre pres, impossible a esquiver.', descEn:'A devastating, guaranteed hit on the current target.'},
+  rocket:{type:'AOE', nameFr:'Charge explosive', nameEn:'Explosive charge', descFr:'Une bombe artisanale qui touche tout le monde en face.', descEn:'Strikes every opponent on the field at once.'},
+  daredevil:{type:'STUN', nameFr:'Sens du diable', nameEn:'Devil\'s sense', descFr:'Il anticipe chaque mouvement et neutralise la riposte adverse.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  yelena:{type:'BIG_STRIKE', nameFr:'Frappe de la Veuve', nameEn:'Widow\'s strike', descFr:'Un enchainement de coups precis et sans pitie.', descEn:'A devastating, guaranteed hit on the current target.'},
+  marsh:{type:'STUN', nameFr:'Piqure paralysante', nameEn:'Paralyzing sting', descFr:'Un bracelet electrique qui coupe l\'adversaire de ses appuis.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  falcon:{type:'RALLY', nameFr:'Appui aerien', nameEn:'Aerial support', descFr:'Redwing balaie le champ de bataille et redonne l\'avantage.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
+  mantis:{type:'STUN', nameFr:'Sommeil empathique', nameEn:'Empathic sleep', descFr:'Un simple contact suffit a plonger l\'adversaire dans le sommeil.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  starlord:{type:'AOE', nameFr:'Salve a double pistolet', nameEn:'Twin blaster volley', descFr:'Deux pistolets element, une pluie de tirs sur tout le monde.', descEn:'Strikes every opponent on the field at once.'},
+  kaerus:{type:'DRAIN', nameFr:'Volonte du Crane', nameEn:'Skull\'s will', descFr:'Il puise dans la douleur adverse pour nourrir sa propre force.', descEn:'Damages the opponent and heals you for the same amount.'},
+  bucky:{type:'BIG_STRIKE', nameFr:'Bras de vibranium', nameEn:'Vibranium arm', descFr:'Un coup de poing capable de plier l\'acier.', descEn:'A devastating, guaranteed hit on the current target.'},
+  wasp:{type:'STUN', nameFr:'Piquere desorientante', nameEn:'Disorienting sting', descFr:'Elle retrecit, frappe un point sensible, et disparait aussitot.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  aegis:{type:'BIG_STRIKE', nameFr:'Lancer de bouclier ricochet', nameEn:'Ricochet shield throw', descFr:'Un lancer de bouclier calcule au millimetre, qui rebondit d\'adversaire en adversaire avant de revenir.', descEn:'A devastating, guaranteed hit on the current target.'},
+  mystique:{type:'BANISH', nameFr:'Substitution parfaite', nameEn:'Perfect substitution', descFr:'Elle prend une autre apparence et laisse l\'adversaire frapper dans le vide.', descEn:'Removes the opponent from the fight in one stroke.'},
+  pyro:{type:'AOE', nameFr:'Mur de flammes', nameEn:'Wall of flame', descFr:'Un rideau de feu qui engloutit tout le monde en face.', descEn:'Strikes every opponent on the field at once.'},
+  cull:{type:'BIG_STRIKE', nameFr:'Poigne ecrasante', nameEn:'Crushing grip', descFr:'Une prise si puissante qu\'elle brise toute resistance.', descEn:'A devastating, guaranteed hit on the current target.'},
+  proxima:{type:'BIG_STRIKE', nameFr:'Lance de Proxima', nameEn:'Proxima\'s spear', descFr:'Une lance qui ne rate jamais sa cible.', descEn:'A devastating, guaranteed hit on the current target.'},
+  corvus:{type:'BIG_STRIKE', nameFr:'Lame qui ne rate jamais', nameEn:'The blade that never misses', descFr:'Sa glaive tranche a travers n\'importe quelle defense.', descEn:'A devastating, guaranteed hit on the current target.'},
+  docock:{type:'AOE', nameFr:'Tentacules dechaines', nameEn:'Unleashed tentacles', descFr:'Quatre bras mecaniques frappent tout le monde a la fois.', descEn:'Strikes every opponent on the field at once.'},
+  mysterio:{type:'BANISH', nameFr:'Illusion totale', nameEn:'Total illusion', descFr:'L\'adversaire croit t\'avoir vaincu - il se bat contre une image.', descEn:'Removes the opponent from the fight in one stroke.'},
+  nebula:{type:'DRAIN', nameFr:'Greffe cybernetique vampirique', nameEn:'Vampiric cybernetic graft', descFr:'Ses implants pompent l\'energie vitale adverse.', descEn:'Damages the opponent and heals you for the same amount.'},
+  drax:{type:'BIG_STRIKE', nameFr:'Frappe de vengeance', nameEn:'Strike of vengeance', descFr:'Chaque coup porte le poids de sa rage retenue.', descEn:'A devastating, guaranteed hit on the current target.'},
+  cyclops:{type:'BIG_STRIKE', nameFr:'Rafale optique totale', nameEn:'Full optic blast', descFr:'Un rayon devastateur, sans retenue cette fois.', descEn:'A devastating, guaranteed hit on the current target.'},
+  groot:{type:'AOE', nameFr:'Racines enveloppantes', nameEn:'Enveloping roots', descFr:'Des racines jaillissent du sol et immobilisent tout le monde.', descEn:'Strikes every opponent on the field at once.'},
+  gamora:{type:'BIG_STRIKE', nameFr:'Lame de Thanos', nameEn:'Godslayer blade', descFr:'L\'arme la plus tranchante de la galaxie, maniee a la perfection.', descEn:'A devastating, guaranteed hit on the current target.'},
+  sable:{type:'RALLY', nameFr:'Rugissement de Wakanda', nameEn:'Roar of Wakanda', descFr:'L\'esprit des ancetres renforce chaque mouvement.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
+  ebonymaw:{type:'STUN', nameFr:'Emprise psychique totale', nameEn:'Total psychic grip', descFr:'Son esprit immobilise litteralement le corps adverse.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  fuchsia:{type:'AOE', nameFr:'Bombe a citrouille', nameEn:'Pumpkin bomb', descFr:'Un projectile ricoche et explose sur toute la zone.', descEn:'Strikes every opponent on the field at once.'},
+  deadpool:{type:'FULL_HEAL', nameFr:'Regeneration acceleree', nameEn:'Accelerated regeneration', descFr:'Son facteur auto-guerisseur referme toutes ses blessures d\'un coup.', descEn:'Restores you to full health in an instant.'},
+  sylvie:{type:'BANISH', nameFr:'Enchantement du temps', nameEn:'Time enchantment', descFr:'Elle fige un instant l\'adversaire hors du combat.', descEn:'Removes the opponent from the fight in one stroke.'},
+  wolverine:{type:'FULL_HEAL', nameFr:'Facteur auto-guerisseur', nameEn:'Healing factor', descFr:'Ses blessures se referment devant les yeux de l\'adversaire.', descEn:'Restores you to full health in an instant.'},
+  thething:{type:'BIG_STRIKE', nameFr:'C\'est l\'heure', nameEn:'It\'s clobberin\' time', descFr:'Un poing de pierre lance de toutes ses forces.', descEn:'A devastating, guaranteed hit on the current target.'},
+  antman:{type:'BIG_STRIKE', nameFr:'Frappe gigantesque', nameEn:'Giant-sized strike', descFr:'Il grandit soudain et ecrase tout sur son passage.', descEn:'A devastating, guaranteed hit on the current target.'},
+  kidspider:{type:'BIG_STRIKE', nameFr:'Instinct d\'araignee', nameEn:'Spider-sense', descFr:'Il anticipe chaque mouvement adverse et riposte avant meme que le coup ne parte.', descEn:'A devastating, guaranteed hit on the current target.'},
+  theg:{type:'BIG_STRIKE', nameFr:'Decharge du Noyau-G', nameEn:'G-Core Discharge', descFr:'Un dechargement electrique concentre, puise directement dans son coeur technologique.', descEn:'A devastating, guaranteed hit on the current target.'},
+  siddartha:{type:'STUN', nameFr:'Verbe hypnotique', nameEn:'Hypnotic word', descFr:'Ses mots s\'insinuent dans l\'esprit adverse et le figent.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  venom:{type:'DRAIN', nameFr:'Morsure symbiotique', nameEn:'Symbiotic bite', descFr:'Le symbiote se nourrit directement de l\'adversaire.', descEn:'Damages the opponent and heals you for the same amount.'},
+  electro:{type:'AOE', nameFr:'Decharge totale', nameEn:'Full discharge', descFr:'Un arc electrique qui traverse tout le monde en meme temps.', descEn:'Strikes every opponent on the field at once.'},
+  telios:{type:'BANISH', nameFr:'Jugement divin', nameEn:'Divine judgment', descFr:'Il bannit l\'adversaire d\'un geste, comme indigne de continuer.', descEn:'Removes the opponent from the fight in one stroke.'},
+  mrfantastic:{type:'STUN', nameFr:'Etreinte elastique', nameEn:'Elastic embrace', descFr:'Son corps s\'enroule et immobilise completement l\'adversaire.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  humantorch:{type:'AOE', nameFr:'Explosion solaire', nameEn:'Solar flare', descFr:'Une vague de flammes qui embrase toute la zone.', descEn:'Strikes every opponent on the field at once.'},
+  volt:{type:'BIG_STRIKE', nameFr:'Frappe unibeam', nameEn:'Unibeam strike', descFr:'Le reacteur arc libere toute sa puissance en un seul tir.', descEn:'A devastating, guaranteed hit on the current target.'},
+  invisiblewoman:{type:'BANISH', nameFr:'Bulle de force', nameEn:'Force bubble', descFr:'Un champ de force enferme l\'adversaire, hors d\'atteinte du combat.', descEn:'Removes the opponent from the fight in one stroke.'},
+  storm:{type:'AOE', nameFr:'Tempete dechainee', nameEn:'Unleashed storm', descFr:'La foudre et le vent frappent chaque adversaire a la fois.', descEn:'Strikes every opponent on the field at once.'},
+  nihil:{type:'DRAIN', nameFr:'Fleau de la Neguizone', nameEn:'Negative Zone plague', descFr:'Une energie corrosive qui affaiblit l\'adversaire et le nourrit.', descEn:'Damages the opponent and heals you for the same amount.'},
+  aurelia:{type:'BIG_STRIKE', nameFr:'Epee de Hel', nameEn:'Hel\'s sword', descFr:'Une lame invoquee du royaume des morts.', descEn:'A devastating, guaranteed hit on the current target.'},
+  lorelei:{type:'STUN', nameFr:'Densite phasee', nameEn:'Phased density', descFr:'Il traverse la garde adverse et la desactive de l\'interieur.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  profx:{type:'STUN', nameFr:'Domination mentale', nameEn:'Mental domination', descFr:'Son esprit prend brievement le controle du corps adverse.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  capmarvel:{type:'BIG_STRIKE', nameFr:'Photon Blast', nameEn:'Photon blast', descFr:'Toute son energie cosmique concentree en un seul tir.', descEn:'A devastating, guaranteed hit on the current target.'},
+  obsidian:{type:'AOE', nameFr:'Essaim de drones', nameEn:'Drone swarm', descFr:'Une nuee de drones frappe tout le monde en meme temps.', descEn:'Strikes every opponent on the field at once.'},
+  magneto:{type:'AOE', nameFr:'Tempete metallique', nameEn:'Metal storm', descFr:'Tout metal alentour se retourne contre chaque adversaire.', descEn:'Strikes every opponent on the field at once.'},
+  apocalypse:{type:'RALLY', nameFr:'Eveil ancestral', nameEn:'Ancestral awakening', descFr:'Des millenaires de force s\'eveillent d\'un coup en lui.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
+  gorr:{type:'DRAIN', nameFr:'Necro-epee', nameEn:'Necrosword', descFr:'Une lame vivante qui se nourrit de l\'essence adverse.', descEn:'Damages the opponent and heals you for the same amount.'},
+  ferrum:{type:'BIG_STRIKE', nameFr:'Plus il est en colere...', nameEn:'The angrier he gets...', descFr:'Toute sa rage concentree en un seul coup ravageur.', descEn:'A devastating, guaranteed hit on the current target.'},
+  mandate:{type:'STUN', nameFr:'Manipulation temporelle', nameEn:'Temporal manipulation', descFr:'Il ralentit l\'adversaire hors du flux normal du temps.', descEn:'Locks the opponent in place, skipping their next turn.'},
+  vaelor:{type:'BIG_STRIKE', nameFr:'Eclair d\'Asgard', nameEn:'Asgardian lightning', descFr:'La foudre s\'abat avec toute la puissance d\'un dieu.', descEn:'A devastating, guaranteed hit on the current target.'},
+  solen:{type:'BANISH', nameFr:'Portail vers l\'inconnu', nameEn:'Portal into the unknown', descFr:'Bannit l\'adversaire d\'un coup - mais 5% de chance que le portail t\'engloutisse a jamais', descEn:'Banishes the enemy in one strike - but a 5% chance the portal swallows you forever'},
+  vipera:{type:'BANISH', nameFr:'Illusion du dieu ruse', nameEn:'Trickster god\'s illusion', descFr:'L\'adversaire se bat contre un double, pendant que le vrai s\'efface.', descEn:'Removes the opponent from the fight in one stroke.'},
+  nyx:{type:'AOE', nameFr:'Chaos realite', nameEn:'Reality chaos', descFr:'Elle deforme la realite autour de chaque adversaire a la fois.', descEn:'Strikes every opponent on the field at once.'},
+  sepulcre:{type:'AOE', nameFr:'Faim cosmique', nameEn:'Cosmic hunger', descFr:'Une onde devorante qui frappe tout ce qui l\'entoure.', descEn:'Strikes every opponent on the field at once.'},
+  jeangrey:{type:'AOE', nameFr:'Feu de Phenix', nameEn:'Phoenix fire', descFr:'Une flamme cosmique embrase tous les adversaires a la fois.', descEn:'Strikes every opponent on the field at once.'},
+  malachar:{type:'BIG_STRIKE', nameFr:'Gantelet', nameEn:'The Gauntlet', descFr:'Un claquement de doigts, et l\'issue du combat bascule.', descEn:'A devastating, guaranteed hit on the current target.'},
+  boomnpc:{type:'RALLY', nameFr:'Volonte de fer', nameEn:'Iron will', descFr:'Sa determination inflexible galvanise chacun de ses coups suivants.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
+};
 const CHAR_MOVES = {
   theg:{ atk:[{fr:'Decharge de Volt',en:'Volt discharge',p:31,acc:0.83},{fr:'Poing electrique',en:'Electric punch',p:26,acc:0.9},{fr:'Uppercut sismique',en:'Seismic uppercut',p:29,acc:0.87}], def:[{fr:'Garde heroique',en:'Heroic guard',p:14,acc:1.0, heal:16},{fr:'Second souffle',en:'Second wind',p:10,acc:1.0, heal:20},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
   volt:{ atk:[{fr:'Repulseur',en:'Repulsor',p:27,acc:0.9},{fr:'Salve energetique',en:'Energy volley',p:24,acc:0.95},{fr:'Frappe calculee',en:'Calculated strike',p:29,acc:0.87}], def:[{fr:'Barriere arc',en:'Arc barrier',p:12,acc:1.0, heal:15},{fr:'Bouclier photonique',en:'Photon shield',p:15,acc:1.0, heal:15},{fr:'Protocole d\'urgence',en:'Emergency protocol',p:0,acc:1.0, heal:12}] },
@@ -8140,19 +8210,21 @@ function playerMoves(){
   // Les competences apprises (Vibranium, foudre, etc.) remplacent en priorite les attaques : ce sont tes coups les plus forts.
   const skillMoves = learnedSkills().map(sk=>sk.move);
   atk = skillMoves.concat(atk);
-  /* Gabarit de base : 3 attaques + 1 defense (2+2 pour les sorciers/mystiques, qui misent plus sur la
-     protection). Chaque technique apprise en formation debloque un emplacement supplementaire, jusqu'a
-     6 coups au total : 4 attaques + 2 defenses (3 attaques + 3 defenses pour les mystiques).
-     Avec un personnage dote de coups propres, la base suit plutot le tirage 2+2/3+1 fait plus haut,
-     et peut encore grandir avec les competences apprises jusqu'a 4 attaques + 3 defenses au total. */
+  /* Gabarit de base : 4 coups au total des le debut de carriere (tirage 2+2 ou 3+1 fait plus haut,
+     ou 3+1/2+2 generique selon la voie pour les personnages sans pool dedie). Un emplacement
+     supplementaire s'ouvre tous les 7 ans passes dans la carriere (pas avant), jusqu'a 6 coups au
+     total (3 attaques + 3 defenses) - la progression ne depend plus des competences apprises. */
   const isMystic = S.path === 'mystique';
   const baseAtk = charPool ? (S.charMoveSplit==='3-1'?3:2) : (isMystic ? 2 : 3);
   const baseDef = charPool ? (S.charMoveSplit==='3-1'?1:2) : (isMystic ? 2 : 1);
-  const maxAtk = charPool ? 4 : (isMystic ? 3 : 4);
-  const maxDef = charPool ? 3 : (isMystic ? 3 : 2);
-  const learnedCount = learnedSkills().length;
-  const atkCount = clamp(baseAtk + (learnedCount>=1?1:0), baseAtk, maxAtk);
-  const defCount = clamp(baseDef + (learnedCount>=2?1:0), baseDef, maxDef);
+  const yearsIn = S.currentYear||1;
+  const extraSlots = yearsIn>=14 ? 2 : yearsIn>=7 ? 1 : 0;
+  let atkCount = baseAtk, defCount = baseDef;
+  for(let i=0;i<extraSlots;i++){
+    if(atkCount < 3 && (atkCount<=defCount || defCount>=3)) atkCount++;
+    else if(defCount < 3) defCount++;
+  }
+  atkCount = clamp(atkCount, baseAtk, 4); defCount = clamp(defCount, baseDef, 3);
   const atkOut = []; atk.forEach(m=>{ if(atkOut.length<atkCount && !atkOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
   while(atkOut.length<atkCount) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
   const defOut = []; def.forEach(m=>{ if(defOut.length<defCount && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
@@ -8859,7 +8931,7 @@ function startBattle(mission, done){
      - puissance adverse augmentee (base 48, pente 0.72, streak *3)
      - effet "a ton niveau" : plus tu es fort par rapport a l'adversaire, plus celui-ci tape fort
        (jusqu'a +45% de degats), pour eviter que les gros personnages ecrasent tout le monde. */
-  const baseHP = Math.max(50, 88 + (ps-55)*0.40 + form.momentum*2 - (inj?inj.sev*10:0));
+  const baseHP = Math.max(50, 88 + (ps-55)*0.48 + form.momentum*2.5 - (inj?inj.sev*10:0));
   /* PV modules par la condition physique : minimum en debut de carriere, hausse progressive avec les
      victoires (baisse avec les defaites), prime a 35 ans puis leger declin. */
   const myMaxHP = Math.max(46, Math.round(baseHP * charPowerScale * vitalityFactor()));
@@ -8911,7 +8983,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, multiverseUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -9173,12 +9245,13 @@ function startBattle(mission, done){
         <b>${S.lang==='fr'?`Proteger ${menteeName}`:`Protect ${menteeName}`}</b>
         <span>${S.lang==='fr'?'Le prochain coup adverse te vise a sa place':'The next enemy hit targets you instead of them'}</span></button>`;
     }
-    /* Doctor Strange : portail vers l'inconnu. Ecarte l'adversaire d'un coup, mais 5% de chance que
-       le portail se retourne contre toi et t'engloutisse pour de bon - fin de carriere definitive. */
-    if(S.playerCharKey==='solen'){
-      movesEl.innerHTML += `<button class="btl-move transform" id="btlMultiverse" ${st.multiverseUsed?'disabled':''} style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08); opacity:${st.multiverseUsed?'.45':'1'};">
-        <b>${S.lang==='fr'?'Portail vers l\'inconnu':'Portal into the unknown'}</b>
-        <span>${st.multiverseUsed?(S.lang==='fr'?'Deja ouvert - ne peut etre utilise qu\'une fois par combat':'Already opened - can only be used once per battle'):(S.lang==='fr'?'Bannit l\'adversaire d\'un coup - mais 5% de chance que le portail t\'engloutisse a jamais':'Banishes the enemy in one strike - but a 5% chance the portal swallows you forever')}</span></button>`;
+    /* Attaque signature : un coup unique par personnage, utilisable une seule fois par combat,
+       qui disparait completement une fois utilise plutot que de rester affiche grise. */
+    const special = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
+    if(special && !st.specialUsed){
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+        <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+        <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
     }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
@@ -9188,23 +9261,54 @@ function startBattle(mission, done){
       setLog(S.lang==='fr'?`Tu te places devant ${allyRoster[protectIdx].name}, pret(e) a encaisser.`:`You step in front of ${allyRoster[protectIdx].name}, ready to take the hit.`);
       setTimeout(runTurn, wait(700));
     };
-    const mBtn = movesEl.querySelector('#btlMultiverse'); if(mBtn) mBtn.onclick = ()=>{
-      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.multiverseUsed = true;
-      if(Math.random() < 0.05){
-        const causeFr = 'aspire(e) par son propre portail, perdu(e) a jamais dans les plis du Multivers';
-        const causeEn = 'pulled through their own portal, lost forever in the folds of the Multiverse';
-        S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
-        setLog(S.lang==='fr'?'Le portail se retourne. Tu disparais entre les plis de la realite.':'The portal turns. You vanish between the folds of reality.');
-        setTimeout(()=>{ finish(false); }, wait(1200));
-        return;
+    const spBtn = movesEl.querySelector('#btlSpecial'); if(spBtn) spBtn.onclick = ()=>{
+      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.specialUsed = true;
+      const tIdx = st.targetIdx;
+      const tName = foeRoster[tIdx] ? foeRoster[tIdx].name : foeName;
+      if(special.type==='BANISH'){
+        /* Docteur Strange garde son risque narratif specifique (5% que le portail se retourne
+           contre lui) - les autres personnages bannissent leur cible sans ce risque. */
+        if(S.playerCharKey==='solen' && Math.random() < 0.05){
+          const causeFr = 'aspire(e) par son propre portail, perdu(e) a jamais dans les plis du Multivers';
+          const causeEn = 'pulled through their own portal, lost forever in the folds of the Multiverse';
+          S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
+          setLog(S.lang==='fr'?'Le portail se retourne. Tu disparais entre les plis de la realite.':'The portal turns. You vanish between the folds of reality.');
+          setTimeout(()=>{ finish(false); }, wait(1200));
+          return;
+        }
+        setLog(S.lang==='fr'?`${tName} est ecarte du combat d'un seul coup.`:`${tName} is taken out of the fight in one stroke.`);
+        dealToFoe(tIdx, 999, '#9a6bff');
+      } else if(special.type==='BIG_STRIKE' || special.type==='STUN'){
+        const dmg = Math.round(38 + playerStrength()*0.35);
+        setLog(S.lang==='fr'?`Un coup dececisif s'abat sur ${tName}.`:`A decisive blow lands on ${tName}.`);
+        dealToFoe(tIdx, dmg, '#9a6bff');
+      } else if(special.type==='AOE'){
+        setLog(S.lang==='fr'?`L'attaque frappe tous les adversaires a la fois.`:`The attack strikes every opponent at once.`);
+        const dmg = Math.round(22 + playerStrength()*0.22);
+        foeRoster.forEach((f,i)=>{ if(!f.ko) dealToFoe(i, dmg, '#9a6bff'); });
+      } else if(special.type==='FULL_HEAL'){
+        const before = allyRoster[0].hp;
+        allyRoster[0].hp = allyRoster[0].maxHp;
+        floatDmg(meSpotFrame, allyRoster[0].hp-before, '#7ef0c0', true);
+        refreshEntry('ally', 0); refreshSpotlight();
+        setLog(S.lang==='fr'?`Tes blessures se referment completement.`:`Your wounds close up completely.`);
+      } else if(special.type==='DRAIN'){
+        const dmg = Math.round(28 + playerStrength()*0.28);
+        dealToFoe(tIdx, dmg, '#9a6bff');
+        const before = allyRoster[0].hp;
+        allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + dmg);
+        floatDmg(meSpotFrame, allyRoster[0].hp-before, '#7ef0c0', true);
+        refreshEntry('ally', 0); refreshSpotlight();
+        setLog(S.lang==='fr'?`L'energie de ${tName} se retourne contre lui/elle, et te revient.`:`${tName}'s own energy turns against them, and flows back to you.`);
+      } else if(special.type==='RALLY'){
+        form.momentum = Math.min(6, (form.momentum||0) + 4);
+        setLog(S.lang==='fr'?`Une vague de determination galvanise chacun de tes coups suivants.`:`A wave of determination powers up every strike to come.`);
       }
-      const tName = foeRoster[st.targetIdx] ? foeRoster[st.targetIdx].name : foeName;
-      setLog(S.lang==='fr'?`Un portail s'ouvre sous ${tName}, qui disparait, hors de combat.`:`A portal opens beneath ${tName}, who vanishes, taken out of the fight.`);
-      dealToFoe(st.targetIdx, 999, '#9a6bff');
+      renderMoves();
       setTimeout(runTurn, wait(900));
     };
   }
-  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ if(b.id==='btlMultiverse' && st.multiverseUsed){ b.disabled = true; return; } b.disabled = !on; }); }
+  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ b.disabled = !on; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
     st.busy = true; setMovesEnabled(false);
@@ -9258,7 +9362,7 @@ function startBattle(mission, done){
     const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
     let permaDeath = false;
     if(!win && scope>=6 && !(mission && mission.isTraining)){
-      const deathChance = 0.10 + (scope-6)*0.06;
+      const deathChance = 0.06 + (scope-6)*0.04;
       if(Math.random() < deathChance){
         permaDeath = true;
         const causeFr = `terrasse(e) par ${foeName} lors d'un affrontement d'ampleur ${scopeLabel(scope).toLowerCase()}`;
