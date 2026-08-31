@@ -8911,7 +8911,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, multiverseUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now() };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -9175,10 +9175,10 @@ function startBattle(mission, done){
     }
     /* Doctor Strange : portail vers l'inconnu. Ecarte l'adversaire d'un coup, mais 5% de chance que
        le portail se retourne contre toi et t'engloutisse pour de bon - fin de carriere definitive. */
-    if(S.playerCharKey==='solen' && !st.multiverseUsed){
-      movesEl.innerHTML += `<button class="btl-move transform" id="btlMultiverse" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+    if(S.playerCharKey==='solen'){
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlMultiverse" ${st.multiverseUsed?'disabled':''} style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08); opacity:${st.multiverseUsed?'.45':'1'};">
         <b>${S.lang==='fr'?'Portail vers l\'inconnu':'Portal into the unknown'}</b>
-        <span>${S.lang==='fr'?'Bannit l\'adversaire d\'un coup - mais 5% de chance que le portail t\'engloutisse a jamais':'Banishes the enemy in one strike - but a 5% chance the portal swallows you forever'}</span></button>`;
+        <span>${st.multiverseUsed?(S.lang==='fr'?'Deja ouvert - ne peut etre utilise qu\'une fois par combat':'Already opened - can only be used once per battle'):(S.lang==='fr'?'Bannit l\'adversaire d\'un coup - mais 5% de chance que le portail t\'engloutisse a jamais':'Banishes the enemy in one strike - but a 5% chance the portal swallows you forever')}</span></button>`;
     }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
@@ -9204,7 +9204,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
     };
   }
-  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on); }
+  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ if(b.id==='btlMultiverse' && st.multiverseUsed){ b.disabled = true; return; } b.disabled = !on; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
     st.busy = true; setMovesEnabled(false);
