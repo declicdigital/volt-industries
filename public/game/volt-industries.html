@@ -3744,6 +3744,32 @@ function computePowerLevel(){
 }
 /* ---------- Vieillissement : certains gagnent en puissance avec l'age, d'autres declinent ---------- */
 function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1); }
+/* ---------- Condition physique (PV) : on demarre au minimum, on monte lentement ----------
+   - progression liee au palmares : chaque victoire fait monter la resistance, chaque defaite la fait
+     redescendre (elle ne peut donc pas grimper en 5 ans juste en jouant).
+   - courbe d'age : prime a 35 ans, puis leger declin apres.
+   - un personnage devenu tres fort peut depasser le plafond nominal. */
+function vitalityFactor(){
+  const won = (S.combat && S.combat.won) || 0, lost = (S.combat && S.combat.lost) || 0;
+  // Palmares : monte par paliers (~0.028/victoire) et redescend a chaque defaite (~0.045).
+  const record = clamp(0.60 + won*0.028 - lost*0.045, 0.48, 1.02);
+  // Age : 0.72 au debut de carriere -> 1.0 a 35 ans -> declin doux ensuite (plancher 0.78).
+  const age = currentAge();
+  const startAge = S.startAge || 24;
+  let ageF;
+  if(age <= 35){
+    const span = Math.max(1, 35 - startAge);
+    ageF = 0.72 + (Math.min(age, 35) - startAge) / span * 0.28;
+    ageF = clamp(ageF, 0.72, 1.0);
+  } else {
+    ageF = clamp(1.0 - (age - 35)*0.009, 0.78, 1.0);
+  }
+  // Depassement possible si le personnage est devenu vraiment surpuissant.
+  const ps = (typeof playerStrength==='function') ? playerStrength() : 55;
+  const over = clamp((ps - 78)/22, 0, 1) * 0.18;
+  return clamp(record * ageF + over, 0.45, 1.25);
+}
+
 function agingProfile(){
   const key = S.playerCharKey || S.heroName || 'x';
   const tier = (typeof charTier==='function') ? 0 : 0;
