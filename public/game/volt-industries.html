@@ -4400,6 +4400,7 @@ const AudioEngine = (function(){
   function loadAndPlay(key, src, loop, targetVol, id){
     if(id !== transitionId) return;
     activeKey = key;
+    player.muted = muted;
     player.pause();
     player.loop = loop;
     player.src = src;
@@ -4422,6 +4423,7 @@ const AudioEngine = (function(){
   function crossTo(key){
     if(!TRACKS[key]) return;
     currentLoopKey = key;
+    if(muted) return;
     if(stingKey){ pendingLoopKey = key; return; }
     if(!unlocked){ pendingLoopKey = key; return; }
     if(activeKey === key){
@@ -4438,7 +4440,7 @@ const AudioEngine = (function(){
   }
 
   function playSting(key){
-    if(!unlocked) return;
+    if(!unlocked || muted) return;
     const src = STINGS[key]; if(!src) return;
     pendingLoopKey = currentLoopKey;
     rememberPosition();
