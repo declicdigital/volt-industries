@@ -5181,7 +5181,7 @@ function playerPodPanel(){
     <div class="pod-glass"></div>
     <div class="pod-scan"></div>
     <div class="pod-base">
-      <div class="pod-name">${S.heroName || '???'}</div>
+      <div class="pod-name">${S.heroName || '???'} ${archBadge(S.playerCharKey, 22)}</div>
       <div class="pod-sub">${sub}</div>
       <div class="pod-gauges"><i></i><i></i><i></i><i></i></div>
     </div>
@@ -11879,7 +11879,7 @@ function renderConversationOverlay(){
     </div>
     <div class="conv-body">
       ${convCastHTML(conv, speakerKey)}
-      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}${archBadge(charKey, 24)}</div>
+      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}${archBadge(speakerKey, 24)}</div>
       <div class="conv-line">${lines[S.convLineIndex]}</div>
       ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}" style="--cp-color:${choiceColorFor(c)};">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
     </div>
