@@ -9896,7 +9896,7 @@ function startBattle(mission, done){
   function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ b.disabled = !on; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
-    st.busy = true; setMovesEnabled(false);
+    st.busy = true; setMovesEnabled(false); st.playerActs = (st.playerActs||0) + 1;
     st.transformed = true;
     const targetFoe = foeRoster[st.targetIdx] || foeRoster[0];
     allyRoster[0].transformedImg = targetFoe.img || foe.img;
@@ -9910,7 +9910,7 @@ function startBattle(mission, done){
   }
   function vanishMove(){
     if(st.busy || st.vanishUsed) return;
-    st.busy = true; setMovesEnabled(false);
+    st.busy = true; setMovesEnabled(false); st.playerActs = (st.playerActs||0) + 1;
     st.vanishUsed = true; st.dodgeNext = true;
     const heal = Math.round(allyRoster[0].maxHp*0.08);
     allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + heal);
