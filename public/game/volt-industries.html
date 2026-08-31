@@ -8859,8 +8859,11 @@ function startBattle(mission, done){
      - puissance adverse augmentee (base 48, pente 0.72, streak *3)
      - effet "a ton niveau" : plus tu es fort par rapport a l'adversaire, plus celui-ci tape fort
        (jusqu'a +45% de degats), pour eviter que les gros personnages ecrasent tout le monde. */
-  const baseHP = Math.max(50, 88 + (ps-55)*0.55 + form.momentum*3 - (inj?inj.sev*10:0));
-  const myMaxHP = Math.round(baseHP * charPowerScale);
+  const baseHP = Math.max(50, 88 + (ps-55)*0.40 + form.momentum*2 - (inj?inj.sev*10:0));
+  /* PV modules par la condition physique : minimum en debut de carriere, hausse progressive avec les
+     victoires (baisse avec les defaites), prime a 35 ans puis leger declin. */
+  const myMaxHP = Math.max(46, Math.round(baseHP * charPowerScale * vitalityFactor()));
+
   const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.24, 0.22)) * (inj ? (1 - inj.sev*0.12) : 1);
   const foeTier = Math.round((fs-40)*2.1 + Math.max(0, form.streak)*4);
   const foePower = Math.round(48 + fs*0.72 + Math.max(0, form.streak)*3);
