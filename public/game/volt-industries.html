@@ -1623,10 +1623,10 @@ const CHAR_ARCHETYPE = {
   falcon:{fr:'Tech', en:'Tech'},
   ferrum:{fr:'Colosse', en:'Colossus'},
   fuchsia:{fr:'Genie', en:'Genius'},
-  gamora:{fr:'Guerriere', en:'Warrior'},
+  gamora:{fr:'Guerrier', en:'Warrior'},
   gorr:{fr:'Divin', en:'Divine'},
   groot:{fr:'Colosse', en:'Colossus'},
-  hawkeye:{fr:'Tireur', en:'Marksman'},
+  hawkeye:{fr:'Guerrier', en:'Warrior'},
   humantorch:{fr:'Cosmique', en:'Cosmic'},
   invisiblewoman:{fr:'Cosmique', en:'Cosmic'},
   jeangrey:{fr:'Mutant', en:'Mutant'},
@@ -1640,13 +1640,13 @@ const CHAR_ARCHETYPE = {
   marsh:{fr:'Espionne', en:'Spy'},
   mrfantastic:{fr:'Genie', en:'Genius'},
   mysterio:{fr:'Genie', en:'Genius'},
-  mystique:{fr:'Cameleon', en:'Chameleon'},
+  mystique:{fr:'Mutant', en:'Mutant'},
   nebula:{fr:'Tech', en:'Tech'},
   nihil:{fr:'Cosmique', en:'Cosmic'},
   nyx:{fr:'Mystique', en:'Mystic'},
   obsidian:{fr:'Tech', en:'Tech'},
   profx:{fr:'Mutant', en:'Mutant'},
-  proxima:{fr:'Guerriere', en:'Warrior'},
+  proxima:{fr:'Guerrier', en:'Warrior'},
   pyro:{fr:'Mutant', en:'Mutant'},
   rocket:{fr:'Genie', en:'Genius'},
   sable:{fr:'Guerrier', en:'Warrior'},
@@ -1667,6 +1667,20 @@ const CHAR_ARCHETYPE = {
   wolverine:{fr:'Mutant', en:'Mutant'},
   yelena:{fr:'Espionne', en:'Spy'},
 };
+const ARCH_ICON = {
+  'Guerrier':'/game/arch/guerrier.png', 'Tech':'/game/arch/tech.png', 'Mutant':'/game/arch/mutant.png',
+  'Cosmique':'/game/arch/cosmique.png', 'Mystique':'/game/arch/mystique.png', 'Genie':'/game/arch/genie.png',
+  'Divin':'/game/arch/divin.png', 'Colosse':'/game/arch/colosse.png', 'Psychique':'/game/arch/psychique.png',
+  'Arachnide':'/game/arch/arachnide.png', 'Espionne':'/game/arch/espionne.png',
+};
+function archOf(charKey){ return CHAR_ARCHETYPE[charKey] || null; }
+function archBadge(charKey, size){
+  const a = archOf(charKey); if(!a) return '';
+  const src = ARCH_ICON[a.fr]; if(!src) return '';
+  const px = size || 26;
+  const label = (S && S.lang==='fr') ? a.fr : a.en;
+  return `<img class="arch-badge" src="${src}" alt="${label}" title="${label}" loading="lazy" style="width:${px}px;height:${px}px;">`;
+}
 function specimenLabel(charKey, align, fr){
   const arch = CHAR_ARCHETYPE[charKey];
   const label = arch ? (fr?arch.fr:arch.en) : (fr?'Specimen':'Specimen');
