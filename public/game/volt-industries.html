@@ -4225,11 +4225,13 @@ const AudioEngine = (function(){
     requestAnimationFrame(step);
   }
 
+  let lastCrossAt = 0;
   function crossTo(key){
     const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
     if(!unlocked || stingBlocking) { pendingLoopKey = key; currentLoopKey = key; return; }
     if(currentLoopKey === key) return;
     currentLoopKey = key;
+    lastCrossAt = Date.now();
     const src = TRACKS[key];
     if(!src) return;
     const outgoing = activeDeck, incoming = idleDeck;
@@ -4296,6 +4298,30 @@ const AudioEngine = (function(){
       if(preferred) u.voice = preferred;
       window.speechSynthesis.speak(u);
     }catch(e){}
+  }
+
+  /* Filet de securite : les navigateurs ralentissent ou suspendent les animations (dont nos
+     fondus) quand l'onglet passe en arriere-plan (changement d'onglet, verrouillage d'ecran...).
+     Un fondu interrompu en plein milieu peut rester bloque a mi-volume, voire a zero, pour de bon.
+     On verifie regulierement que l'etat reel correspond a ce qui est attendu, et on se corrige
+     tout seul si ce n'est pas le cas - plutot que de rester silencieux sans raison apparente. */
+  function healthCheck(){
+    if(muted || !unlocked || !currentLoopKey) return;
+    if(Date.now() - lastCrossAt < FADE_MS + 600) return; // laisse un fondu normal se terminer tranquillement
+    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
+    if(stingBlocking) return;
+    const shouldBePlaying = activeDeck.paused===false && activeDeck.volume>0.05;
+    const looksStuck = activeDeck.paused || activeDeck.volume < 0.02;
+    if(looksStuck && !shouldBePlaying){
+      const key = currentLoopKey; currentLoopKey = null;
+      activeDeck.pause(); idleDeck.pause();
+      activeDeck.volume = 0; idleDeck.volume = 0;
+      crossTo(key);
+    }
+  }
+  setInterval(healthCheck, 4000);
+  if(typeof document!=='undefined'){
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) healthCheck(); });
   }
 
   return { start, setMode, playSting, stopSting, setMuted, isMuted, speak };
