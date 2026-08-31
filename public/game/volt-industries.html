@@ -859,6 +859,7 @@
     .btl-move{ padding:8px 9px; }
     .btl-move b{ font-size:11.5px; }
     .btl-move span{ display:none; }
+    .btl-move span.btl-move-badge{ display:inline-block; font-size:8px; padding:1px 5px; margin-bottom:4px; }
   }
   /* --- Escouades de combat (visages allies / adverses) --- */
   .btl-squad{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin-top:2px; }
@@ -4399,6 +4400,7 @@ const AudioEngine = (function(){
   function loadAndPlay(key, src, loop, targetVol, id){
     if(id !== transitionId) return;
     activeKey = key;
+    player.muted = muted;
     player.pause();
     player.loop = loop;
     player.src = src;
@@ -4421,6 +4423,7 @@ const AudioEngine = (function(){
   function crossTo(key){
     if(!TRACKS[key]) return;
     currentLoopKey = key;
+    if(muted) return;
     if(stingKey){ pendingLoopKey = key; return; }
     if(!unlocked){ pendingLoopKey = key; return; }
     if(activeKey === key){
@@ -4437,7 +4440,7 @@ const AudioEngine = (function(){
   }
 
   function playSting(key){
-    if(!unlocked) return;
+    if(!unlocked || muted) return;
     const src = STINGS[key]; if(!src) return;
     pendingLoopKey = currentLoopKey;
     rememberPosition();
@@ -4476,12 +4479,27 @@ const AudioEngine = (function(){
     if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
   function setMode(newMode){ crossTo(newMode); }
+  /* iOS/Safari ignore purement et simplement l'ecriture de .volume : baisser le volume a 0 ne
+     coupait donc rien sur telephone. On coupe donc reellement le lecteur (muted + pause). */
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
     const id = ++transitionId;
-    fadeTo(muted ? 0 : (stingKey ? STING_VOL : LOOP_VOL), 300, id);
+    player.muted = m;
+    if(m){
+      rememberPosition();
+      player.onended = null;
+      stingKey = null;
+      try{ player.pause(); }catch(e){}
+      try{ player.volume = 0; }catch(e){}
+      try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+    } else {
+      const resume = currentLoopKey;
+      if(resume){ activeKey = null; currentLoopKey = null; crossTo(resume); }
+      else fadeTo(LOOP_VOL, 300, id);
+    }
   }
+
   function isMuted(){ return muted; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
@@ -9780,12 +9798,15 @@ function startBattle(mission, done){
       const sub = isDef ? (S.lang==='fr'?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
                          : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
       const badge = m.shard ? (S.lang==='fr'?'ECLAT':'SHARD') : (isDef ? 'DEF' : (S.lang==='fr'?'ATQ':'ATK'));
-      const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
+      /* Code couleur lisible meme sur mobile : vert = defense, rouge = attaque, couleur de la gemme = eclat. */
+      const col = m.shard ? (m.shardCol||'#c9a227') : (isDef ? '#4ee39a' : '#ff5a5a');
+      const badgeCol = col;
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
       const isLocked = st.lastPlayerMoveIdx === i;
-      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
-      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      const style = ` style="border-color:${col}; background:${col}1f; box-shadow:0 0 14px -7px ${col};${isLocked?' opacity:.4;':''}"`;
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b style="color:${col};">${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -9816,11 +9837,13 @@ function startBattle(mission, done){
       const ready = acts >= SPECIAL_CHARGE;
       const pct = Math.round(Math.min(1, acts/SPECIAL_CHARGE)*100);
       if(ready){
-        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
-          <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.16); box-shadow:0 0 16px -7px #9a6bff;">
+          <span class="btl-move-badge" style="color:#c3a6ff; border-color:#9a6bff;">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
+          <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
           <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
       } else {
-        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.04); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
+        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.06); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
+          <span class="btl-move-badge" style="color:#c3a6ff; border-color:rgba(154,107,255,.5);">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
           <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
           <span>${S.lang==='fr'?`Charge ${acts}/${SPECIAL_CHARGE} - encore ${SPECIAL_CHARGE-acts} tour(s) de combat`:`Charge ${acts}/${SPECIAL_CHARGE} - ${SPECIAL_CHARGE-acts} more turn(s)`}</span>
           <i style="position:absolute; left:0; bottom:0; height:3px; width:${pct}%; background:#9a6bff; box-shadow:0 0 8px #9a6bff;"></i></div>`;
