@@ -10026,6 +10026,7 @@ function startBattle(mission, done){
   /* Un membre de ton escouade (autre que toi) frappe la cible actuellement engagee. */
   function doAllyAct(idx){
     const ally = allyRoster[idx];
+    if(npcSpecialTry('ally', idx)) return;
     if(isWizardKey(ally.key)){
       const wounded = allyRoster.filter(a=>!a.ko && a.hp/a.maxHp < 0.75);
       if(wounded.length && Math.random()<0.4){
