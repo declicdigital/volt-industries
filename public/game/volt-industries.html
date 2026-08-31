@@ -9204,7 +9204,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
     };
   }
-  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>b.disabled = !on); }
+  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ if(b.id==='btlMultiverse' && st.multiverseUsed){ b.disabled = true; return; } b.disabled = !on; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
     st.busy = true; setMovesEnabled(false);
