@@ -4206,6 +4206,7 @@ const AudioEngine = (function(){
   let currentLoopKey = null; // 'welcome' | 'ambient' | 'combat' | null
   let pendingLoopKey = null; // la boucle a reprendre une fois le sting termine
   let stingAudio = null;
+  let stingStartedAt = 0;
   let muted = false;
   try{ muted = localStorage.getItem('volt_audio_muted') === '1'; }catch(e){}
   let unlocked = false; // les navigateurs bloquent la lecture avant un geste utilisateur
@@ -4225,7 +4226,8 @@ const AudioEngine = (function(){
   }
 
   function crossTo(key){
-    if(!unlocked || stingAudio) { pendingLoopKey = key; currentLoopKey = key; return; }
+    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
+    if(!unlocked || stingBlocking) { pendingLoopKey = key; currentLoopKey = key; return; }
     if(currentLoopKey === key) return;
     currentLoopKey = key;
     const src = TRACKS[key];
@@ -4248,6 +4250,7 @@ const AudioEngine = (function(){
     fadeTo(idleDeck, 0, 500, ()=>{ idleDeck.pause(); });
     if(stingAudio){ stingAudio.pause(); stingAudio.onended = null; }
     stingAudio = new Audio(src);
+    stingStartedAt = Date.now();
     stingAudio.loop = false; stingAudio.volume = muted ? 0 : STING_VOL;
     try{ const p = stingAudio.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
     stingAudio.onended = ()=>{
