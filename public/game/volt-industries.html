@@ -9944,6 +9944,14 @@ function startBattle(mission, done){
     if(playerDown()){ finish(false); return; }
     const actor = nextActor();
     if(!actor){ setTimeout(runTurn, wait(50)); return; }
+    /* Etourdissement : un combattant sonne (par un coup special adverse) passe son tour. */
+    if(actor.ref._stunTurns > 0){
+      actor.ref._stunTurns--;
+      st.busy = true; setMovesEnabled(false);
+      setLog(S.lang==='fr'?`${actor.ref.name} est sonne(e) et perd son tour.`:`${actor.ref.name} is stunned and loses a turn.`);
+      setTimeout(runTurn, wait(800));
+      return;
+    }
     if(actor.side==='ally' && actor.ref.isPlayer){
       st.lastPlayerTurnAt = Date.now();
       st.busy = false; renderMoves(); setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
@@ -9952,6 +9960,68 @@ function startBattle(mission, done){
     }
     st.busy = true; setMovesEnabled(false);
     if(actor.side==='ally') doAllyAct(actor.idx); else doFoeAct(actor.idx);
+  }
+  /* Coups speciaux des PNJ : alliés comme adversaires possedent leur attaque signature et peuvent
+     la declencher une seule fois par combat, exactement comme le joueur. Les adversaires deviennent
+     donc bien plus dangereux (degats lourds, etourdissement, drain, banissement, zone). */
+  function npcSpecialTry(side, idx){
+    const roster = side==='ally' ? allyRoster : foeRoster;
+    const actor = roster[idx];
+    if(!actor || actor.isPlayer || actor._specialUsed) return false;
+    const sp = actor.key ? CHAR_SPECIAL[actor.key] : null;
+    if(!sp) return false;
+    const hurt = actor.hp/actor.maxHp < 0.6;
+    if(Math.random() > (hurt ? 0.42 : 0.22)) return false;
+    actor._specialUsed = true;
+    const label = S.lang==='fr'?sp.nameFr:sp.nameEn;
+    const tier = tierOfKey(actor.key);
+    const foes = side==='ally' ? foeRoster : allyRoster;
+    const alive = livingIdx(foes);
+    if(!alive.length) return false;
+    let tIdx;
+    if(side==='foe') tIdx = pickAllyTarget(idx);
+    else tIdx = (foes[idx] && !foes[idx].ko) ? idx : pick(alive);
+    const hit = (i,d)=>{ if(side==='ally') dealToFoe(i, d, '#9a6bff'); else dealToAlly(i, d, '#9a6bff'); };
+    const tName = foes[tIdx] ? foes[tIdx].name : '';
+    flashSpotlight(side, actor);
+    setTimeout(()=>{
+      const head = S.lang==='fr'?`${actor.name} declenche ${label}`:`${actor.name} unleashes ${label}`;
+      if(sp.type==='BANISH'){
+        setLog(head + (S.lang==='fr'?` : ${tName} est ecarte(e) du combat.`:`: ${tName} is taken out of the fight.`));
+        hit(tIdx, 999);
+      } else if(sp.type==='BIG_STRIKE'){
+        const d = Math.round(30 + tier*0.42);
+        setLog(head + (S.lang==='fr'?` sur ${tName} : ${d} degats.`:` on ${tName}: ${d} damage.`));
+        hit(tIdx, d);
+      } else if(sp.type==='STUN'){
+        const d = Math.round(20 + tier*0.3);
+        if(foes[tIdx]) foes[tIdx]._stunTurns = 1;
+        setLog(head + (S.lang==='fr'?` : ${tName} encaisse ${d} degats et perdra son prochain tour.`:`: ${tName} takes ${d} damage and loses their next turn.`));
+        hit(tIdx, d);
+      } else if(sp.type==='AOE'){
+        const d = Math.round(16 + tier*0.24);
+        setLog(head + (S.lang==='fr'?` : tout le camp d'en face encaisse ${d} degats.`:`: the whole opposing side takes ${d} damage.`));
+        alive.forEach(i=>hit(i, d));
+      } else if(sp.type==='DRAIN'){
+        const d = Math.round(22 + tier*0.3);
+        hit(tIdx, d);
+        actor.hp = Math.min(actor.maxHp, actor.hp + d);
+        refreshEntry(side, idx); if(side==='foe' || idx>0) floatDmg(frameOf(side, idx), -d, actor.col);
+        setLog(head + (S.lang==='fr'?` : ${d} degats absorbes sur ${tName}, et autant de PV recuperes.`:`: ${d} damage drained from ${tName}, and as much HP recovered.`));
+      } else if(sp.type==='FULL_HEAL'){
+        const before = actor.hp; actor.hp = actor.maxHp;
+        refreshEntry(side, idx); floatDmg(frameOf(side, idx), -(actor.hp-before), '#7ef0c0');
+        setLog(head + (S.lang==='fr'?` : ses blessures se referment entierement.`:`: their wounds close up entirely.`));
+      } else { // RALLY et autres : galvanisation, coup renforce immediat
+        const d = Math.round(24 + tier*0.34);
+        actor._rallied = true;
+        setLog(head + (S.lang==='fr'?` : galvanise(e), il/elle frappe ${tName} pour ${d} degats.`:`: galvanized, they hit ${tName} for ${d} damage.`));
+        hit(tIdx, d);
+      }
+      if(side==='foe') refreshSpotlight();
+      setTimeout(runTurn, wait(950));
+    }, wait(520));
+    return true;
   }
   /* Un membre de ton escouade (autre que toi) frappe la cible actuellement engagee. */
   function doAllyAct(idx){
