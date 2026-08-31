@@ -9780,12 +9780,15 @@ function startBattle(mission, done){
       const sub = isDef ? (S.lang==='fr'?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
                          : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
       const badge = m.shard ? (S.lang==='fr'?'ECLAT':'SHARD') : (isDef ? 'DEF' : (S.lang==='fr'?'ATQ':'ATK'));
-      const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
+      /* Code couleur lisible meme sur mobile : vert = defense, rouge = attaque, couleur de la gemme = eclat. */
+      const col = m.shard ? (m.shardCol||'#c9a227') : (isDef ? '#4ee39a' : '#ff5a5a');
+      const badgeCol = col;
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
       const isLocked = st.lastPlayerMoveIdx === i;
-      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
-      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      const style = ` style="border-color:${col}; background:${col}1f; box-shadow:0 0 14px -7px ${col};${isLocked?' opacity:.4;':''}"`;
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b style="color:${col};">${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
