@@ -9780,12 +9780,24 @@ function startBattle(mission, done){
         <span>${S.lang==='fr'?'Le prochain coup adverse te vise a sa place':'The next enemy hit targets you instead of them'}</span></button>`;
     }
     /* Attaque signature : un coup unique par personnage, utilisable une seule fois par combat,
-       qui disparait completement une fois utilise plutot que de rester affiche grise. */
+       qui disparait completement une fois utilise plutot que de rester affiche grise.
+       Elle ne se debloque JAMAIS en debut de combat : il faut d'abord charger la jauge en jouant
+       SPECIAL_CHARGE tours, pour tous les personnages sans exception. */
     const special = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
     if(special && !st.specialUsed){
-      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
-        <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
-        <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
+      const acts = st.playerActs||0;
+      const ready = acts >= SPECIAL_CHARGE;
+      const pct = Math.round(Math.min(1, acts/SPECIAL_CHARGE)*100);
+      if(ready){
+        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+          <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+          <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
+      } else {
+        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.04); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
+          <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+          <span>${S.lang==='fr'?`Charge ${acts}/${SPECIAL_CHARGE} - encore ${SPECIAL_CHARGE-acts} tour(s) de combat`:`Charge ${acts}/${SPECIAL_CHARGE} - ${SPECIAL_CHARGE-acts} more turn(s)`}</span>
+          <i style="position:absolute; left:0; bottom:0; height:3px; width:${pct}%; background:#9a6bff; box-shadow:0 0 8px #9a6bff;"></i></div>`;
+      }
     }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
