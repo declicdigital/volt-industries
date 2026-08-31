@@ -4237,11 +4237,17 @@ const AudioEngine = (function(){
     const outgoing = activeDeck, incoming = idleDeck;
     activeDeck = incoming; idleDeck = outgoing;
     if(incoming.src !== location.origin + src && !incoming.src.endsWith(src)) incoming.src = src;
-    incoming.currentTime = 0;
+    /* Le combat n'attaque pas au tout debut de la piste, mais 8 secondes dedans - avec un fondu
+       plus court et discret, plutot que le fondu standard des autres transitions. */
+    const startAt = key==='combat' ? 8 : 0;
+    const fadeMs = key==='combat' ? 500 : FADE_MS;
+    const setStart = ()=>{ try{ incoming.currentTime = startAt; }catch(e){} };
+    if(incoming.readyState >= 1) setStart();
+    else incoming.addEventListener('loadedmetadata', setStart, { once:true });
     incoming.volume = 0;
     try{ const p = incoming.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
-    fadeTo(incoming, LOOP_VOL, FADE_MS);
-    fadeTo(outgoing, 0, FADE_MS, ()=>{ outgoing.pause(); });
+    fadeTo(incoming, LOOP_VOL, fadeMs);
+    fadeTo(outgoing, 0, fadeMs, ()=>{ outgoing.pause(); });
   }
 
   function playSting(key){
