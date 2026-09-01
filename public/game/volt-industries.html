@@ -9116,8 +9116,8 @@ function buildBattleSquads(foeKey, mission){
   const loreRest = attrOthers.filter(k=>loreMates.indexOf(k)<0);
   const attrOrLore = loreMates.length ? weightedFactionOrder(loreMates, loreRest, 0.7) : attrOthers;
   let allyPool = (facMates.length || attrMates.length || loreMates.length) ? weightedTripleOrder(facMates, attrMates, attrOrLore, 0.8, 0.6) : shuffle(sidePool);
-  /* Le chef de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
-     a ses cotes qu'avec n'importe quel autre membre de l'equipe. */
+  /* Le leader / maître de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
+     avec lui a tes cotes. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && allyPool.includes(leaderKey)) allyPool = [leaderKey].concat(allyPool.filter(k=>k!==leaderKey));
   /* Si tu as plusieurs recrues actives (2 maximum, puisqu'elles cessent de l'etre au bout de 5 ans) :
