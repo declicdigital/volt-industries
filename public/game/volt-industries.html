@@ -9726,6 +9726,7 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
     </div>`;
   }
 function startBattle(mission, done){
+  syncLiveAligns(); /* les cadres et faisceaux du combat suivent le camp actuel de chacun */
   AudioEngine.setMode('combat');
   const foeKey = battleFoeKey(mission);
   applyCrossedMenteeBond(foeKey);
