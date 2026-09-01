@@ -1842,7 +1842,25 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
 /* Resolution robuste d'une faction : il n'existe que 8 factions (4 hero + 4 villain), indexees
    par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
    de renvoyer un bandeau vide sans nom ni logo. */
+/* Etat d'origine des factions et des alignements : une Civil War les modifie definitivement pour la
+   carriere en cours, il faut donc pouvoir tout remettre a zero au demarrage d'une nouvelle carriere. */
+const FACTION_BASELINE = { hero:[], villain:[] };
+const ALIGN_BASELINE = {};
+function snapshotFactionBaseline(){
+  ['hero','villain'].forEach(side=>{
+    FACTION_BASELINE[side] = FACTIONS[side].map(f=> f ? f.members.slice() : null);
+  });
+  Object.keys(CHARACTERS).forEach(k=>{ ALIGN_BASELINE[k] = CHARACTERS[k].align; });
+}
+function restoreFactionBaseline(){
+  ['hero','villain'].forEach(side=>{
+    (FACTION_BASELINE[side]||[]).forEach((mem,i)=>{ if(mem && FACTIONS[side][i]) FACTIONS[side][i].members = mem.slice(); });
+  });
+  Object.keys(ALIGN_BASELINE).forEach(k=>{ if(CHARACTERS[k]) CHARACTERS[k].align = ALIGN_BASELINE[k]; });
+}
 function facAt(side, tier){
+  /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
+  if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
   const arr = FACTIONS[side]; if(!arr) return null;
   let i = Number(tier); if(!isFinite(i)) return null;
   if(i > arr.length-1) i = arr.length-1;
@@ -7230,6 +7248,10 @@ function buildCareerPlan(){
   S.rel = { volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 };
   S.log = [];
   S.team = null; S.usedMentorIds = []; S.usedArcIds = []; S.invitedTierHero = 0; S.invitedTierVillain = 0;
+  /* Nouvelle carriere : on efface toute trace d'une Civil War precedente (factions et camps d'origine). */
+  restoreFactionBaseline();
+  S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
+  S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null;
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -7740,19 +7762,76 @@ function grantEclatShard(shard){
     S.pendingVoidCompletion = true;
   }
 }
-/* CIVIL WAR : une seule fois par carriere au maximum, et seulement dans certaines carrieres.
-   Il faut une faction avec assez de combattants, et surtout une trajectoire ambigue (tes reponses
-   n'ont pas trace une ligne nette) : plus tu as doute dans tes choix, plus la fracture est probable. */
+/* CIVIL WAR : environ 3 carrieres sur 5 connaissent la fracture (tiree au sort une fois par carriere),
+   au maximum une fois par carriere. Il faut une faction avec assez de combattants ; une trajectoire
+   ambigue avance simplement l'annee de la rupture. */
 function shouldTriggerCivilWar(){
   if(S.civilWarDone) return false;
   if(!S.team) return false;
-  if(S.currentYear < 6) return false;
+  if(S.civilWarPlanned == null){
+    S.civilWarPlanned = Math.random() < 0.6; // 3 carrieres sur 5
+    const conviction = Math.abs(S.align||0);
+    const doubt = clamp((85 - conviction)/85, 0, 1);
+    S.civilWarYear = 6 + Math.floor((1-doubt)*6 + Math.random()*4); // trajectoire floue = fracture plus tot
+  }
+  if(!S.civilWarPlanned) return false;
+  if(S.currentYear < (S.civilWarYear||6)) return false;
   if(myFactionMemberKeys().filter(k=>k!==S.playerCharKey).length < 4) return false;
-  const conviction = Math.abs(S.align||0);
-  const doubt = clamp((85 - conviction)/85, 0, 1); // trajectoire floue = tensions internes
-  const p = 0.012 + doubt*0.05;
-  return Math.random() < p;
+  return true;
 }
+/* La faction eclate en deux : le camp qui perd bascule immediatement de l'autre cote et fonde une
+   faction dissidente au nom presque identique. */
+function civilWarSplinterName(base, fr){ return (fr ? 'NOUVEAUX ' : 'NEW ') + base; }
+function applyCivilWarSplit(playerWon){
+  const split = S.civilWarSplit;
+  if(!split || split.done || !S.team) return '';
+  split.done = true;
+  const fr = S.lang==='fr';
+  const baseSide = S.team.side, tier = S.team.tier;
+  const fac = facAt(baseSide, tier);
+  if(!fac) return '';
+  const oppSide = baseSide==='villain' ? 'hero' : 'villain';
+  const losers = playerWon
+    ? (split.foes||[]).concat(split.foeKey?[split.foeKey]:[])
+    : (split.allies||[]).slice();
+  const uniq = Array.from(new Set(losers.filter(k=>k && CHARACTERS[k])));
+  if(!uniq.length) return '';
+  const leaveNames = uniq.map(k=>canonName(k));
+  const baseName = fr?fac.fr:fac.en;
+  fac.members = fac.members.filter(n=> leaveNames.indexOf(n) < 0);
+  const splinter = {
+    id: fac.id+'_split', icon: fac.icon,
+    fr: civilWarSplinterName(fac.fr, true), en: civilWarSplinterName(fac.en, false),
+    leader: playerWon ? leaveNames[leaveNames.length-1] : canonName(S.playerCharKey),
+    members: leaveNames.slice(), side: oppSide, tier: tier, splinter: true,
+  };
+  const splinterName = fr?splinter.fr:splinter.en;
+  const names = uniq.map(k=>fr?CHARACTERS[k].fr:CHARACTERS[k].en).join(', ');
+  if(playerWon){
+    // Les vaincus quittent ton camp : ils deviennent tes adversaires sous un nouveau pavillon.
+    uniq.forEach(k=>{ CHARACTERS[k].align = oppSide; });
+    S.enemySplinterFac = splinter;
+    const label = fr ? `${baseName} eclate : ${names} basculent et fondent ${splinterName}.`
+                     : `${baseName} splits: ${names} defect and found ${splinterName}.`;
+    S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: oppSide==='villain' });
+    return `<br><br><b style="color:var(--red);">${fr?'FRACTURE DEFINITIVE':'PERMANENT SPLIT'}</b><br>${label}`;
+  }
+  // Tu es du cote vaincu : ton camp entier bascule et fonde la faction dissidente.
+  if(splinter.members.indexOf(canonName(S.playerCharKey)) < 0) splinter.members.push(canonName(S.playerCharKey));
+  uniq.forEach(k=>{ CHARACTERS[k].align = oppSide; });
+  const oldZone = zoneOf(S.align);
+  S.align = oppSide==='hero' ? 70 : -70;
+  S.turningPoints.push({ year:S.currentYear, from:oldZone, to:oppSide });
+  S.lastZone = oppSide;
+  S.splinterFac = splinter;
+  S.team = { side: oppSide, tier: tier };
+  if(typeof syncMenteesToSide === 'function') syncMenteesToSide();
+  const label = fr ? `Battu(e) par ton propre camp, tu quittes ${baseName} avec ${names} et fondes ${splinterName}.`
+                   : `Beaten by your own side, you leave ${baseName} with ${names} and found ${splinterName}.`;
+  S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: oppSide==='villain' });
+  return `<br><br><b style="color:var(--red);">${fr?'FRACTURE DEFINITIVE':'PERMANENT SPLIT'}</b><br>${label}`;
+}
+
 function startCivilWar(){
   const fr = S.lang==='fr';
   const mates = myFactionMemberKeys().filter(k=>k!==S.playerCharKey);
@@ -9096,7 +9175,7 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
       ? `Tu sors vainqueur face a ${foeName}${clean?' sans une egratignure':''}. Tes appuis, ta lecture du combat et ta frappe progressent.<br><br><b style="color:var(--green);">Elan de victoire : +${f.momentum}</b><br>Degats +${f.momentum*8}% et +${f.momentum*6} PV pour les prochains affrontements.<br>Courage +2, Popularite +${clean?3:1}.`
       : `You beat ${foeName}${clean?' without a scratch':''}. Footwork, reads and striking power all improve.<br><br><b style="color:var(--green);">Win momentum: +${f.momentum}</b><br>+${f.momentum*8}% damage and +${f.momentum*6} HP in upcoming fights.<br>Courage +2, Popularity +${clean?3:1}.`;
     S.currentYearEntries.push({ tag:(S.lang==='fr'?`Victoire contre ${foeName}`:`Victory over ${foeName}`), location:null, type:'combat', outcome:'win' });
-    showBattleAftermath(`<div class="ru-title" style="color:var(--green);font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, col, cb);
+    showBattleAftermath(`<div class="ru-title" style="color:var(--green);font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}${applyCivilWarSplit(true)}</p>`, col, cb);
     return;
   }
   f.streak = 0;
@@ -9117,7 +9196,7 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
     ? `${foeName} t'a mis au tapis. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Ton elan retombe a zero. Degats -${sev*10}% et -${sev*8} PV sur les ${battles} prochain(s) combat(s).<br>Courage -${2+sev*2}, Popularite -${1+sev}${sev>=2?(S.lang==='fr'?', Intelligence +1 (tu apprends de la douleur)':', Intelligence +1 (pain teaches)'):''}.`
     : `${foeName} put you down. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Momentum wiped. -${sev*10}% damage and -${sev*8} HP for your next ${battles} fight(s).<br>Courage -${2+sev*2}, Popularity -${1+sev}${sev>=2?', Intelligence +1':''}.`;
   S.currentYearEntries.push({ tag:(S.lang==='fr'?`Defaite contre ${foeName} - ${label}`:`Defeat vs ${foeName} - ${label}`), location:null, type:'combat', outcome:'lose' });
-  showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, 'var(--red)', cb);
+  showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}${applyCivilWarSplit(false)}</p>`, 'var(--red)', cb);
 }
 /* ---------- Escouades visuelles : des allies (et des adversaires) au coude a coude ---------- */
 /* Taille d'equipe plafonnee par l'ampleur du combat (scope) : 1=quartier (solo), 2=ville, 3=pays,
@@ -9151,7 +9230,10 @@ function buildBattleSquads(foeKey, mission){
   if(mission && mission.civilWar){
     const mates = shuffle(myFactionMemberKeys().filter(k=>k!==S.playerCharKey && k!==foeKey));
     const half = Math.floor(mates.length/2);
-    return { allies: mates.slice(0, half), foes: mates.slice(half, half*2) };
+    const squads = { allies: mates.slice(0, half), foes: mates.slice(half, half*2) };
+    /* On memorise la composition exacte : le camp vaincu basculera de l'autre cote apres le combat. */
+    S.civilWarSplit = { allies: squads.allies.slice(), foes: squads.foes.slice(), foeKey: foeKey, done:false };
+    return squads;
   }
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
