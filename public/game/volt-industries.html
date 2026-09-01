@@ -8062,7 +8062,6 @@ function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, ent
 function nextMission(){
   S.firstMissionStarted = true;
   /* Nouveau coup appris alors que tous les emplacements sont pris : le joueur choisit lequel il oublie. */
-  if(moveOverflow()){ S.pendingForgetReturn = 'mission'; S.screen = 'forgetMove'; render(); return; }
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
   const mentorSteps = Math.min(2, alignedMentees().length);
@@ -9891,6 +9890,7 @@ function startBattle(mission, done){
   const rubberBand = 1 + clamp((ps-fs)/140, 0, 0.45);
   const foeDmgMult = (1 + Math.max(0, form.streak)*0.03 + (Math.random()*0.18 - 0.05)) * rubberBand;
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
+  rollBattleLoadout(); // tirage au sort des 4 coups pour ce combat
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
