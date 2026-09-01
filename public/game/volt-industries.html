@@ -9554,7 +9554,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastMoveFr:null, playerActs:0 };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -9649,11 +9649,13 @@ function startBattle(mission, done){
     if(st.auto && !st.busy) maybeAutoPlay();
   };
   function autoChooseMoveIdx(){
+    const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr);
     const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < 0.35;
-    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal); if(healIdx>=0) return healIdx; }
-    let best = 0, bestScore = -1;
-    myMoves.forEach((m,i)=>{ if(m.heal) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
-    return best;
+    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal && avail(m)); if(healIdx>=0) return healIdx; }
+    let best = -1, bestScore = -1;
+    myMoves.forEach((m,i)=>{ if(m.heal || !avail(m)) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
+    if(best<0) best = myMoves.findIndex(avail);
+    return best<0 ? 0 : best;
   }
   function maybeAutoPlay(){
     if(S.careerAuto && !st.auto){
@@ -9824,7 +9826,7 @@ function startBattle(mission, done){
       const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
-      const isLocked = st.lastPlayerMoveIdx === i;
+      const isLocked = !!st.lastMoveFr && st.lastMoveFr === m.fr;
       const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
       return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
@@ -9851,9 +9853,15 @@ function startBattle(mission, done){
        qui disparait completement une fois utilise plutot que de rester affiche grise. */
     const special = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
     if(special && !st.specialUsed){
-      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+      /* Le coup signature demande de la charge : il reste affiche mais grise et inutilisable
+         jusqu'a ce que le joueur ait joue assez d'actions dans le combat. */
+      const need = SPECIAL_CHARGE, have = Math.min(need, st.playerActs||0);
+      const ready = have >= need;
+      const sub = ready ? (S.lang==='fr'?special.descFr:special.descEn)
+        : (S.lang==='fr'?`Charge ${have}/${need} - encore ${need-have} action(s) avant de pouvoir l'utiliser`:`Charge ${have}/${need} - ${need-have} more action(s) before it can be used`);
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" ${ready?'':'disabled'} style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);${ready?'':'opacity:.4;'}">
         <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
-        <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
+        <span>${sub}</span></button>`;
     }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
@@ -9864,7 +9872,8 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(700));
     };
     const spBtn = movesEl.querySelector('#btlSpecial'); if(spBtn) spBtn.onclick = ()=>{
-      if(st.busy) return;
+      if(st.busy || st.specialUsed) return;
+      if((st.playerActs||0) < SPECIAL_CHARGE) return;
       if(special.type==='RALLY'){
         /* Ralliement : on choisit qui on appelle, on ne pioche plus au hasard. En priorite les
            membres de ta propre faction si tu en as une ; si tu n'en as pas, uniquement des
@@ -9958,6 +9967,7 @@ function startBattle(mission, done){
     meSpotFrame.innerHTML = targetFoe.img ? `<img src="${targetFoe.img}" alt="${myName}">` : `<span class="cp-glyph">${myName.charAt(0).toUpperCase()}</span>`;
     const meNameEl = ov.querySelector('.btl-fighter.me .btl-name'); if(meNameEl) meNameEl.textContent = myName + ' (' + targetFoe.name + ')';
     myMoves = (targetFoe.key ? foeMovesFor(targetFoe.key) : foeMoves).slice();
+    st.lastMoveFr = null;
     setLog(S.lang==='fr'?`${myName} se change en ${targetFoe.name} - meme visage, memes coups.`:`${myName} shifts into ${targetFoe.name} - same face, same moves.`);
     renderMoves();
     setTimeout(()=>{ runTurn(); }, wait(1000));
@@ -10158,9 +10168,12 @@ function startBattle(mission, done){
   }
   function playerTurn(i){
     if(st.busy) return;
-    if(i === st.lastPlayerMoveIdx) return; // verrou d'un tour : impossible d'enchainer le meme coup
+    const mv = myMoves[i]; if(!mv) return;
+    /* Verrou d'un tour : impossible d'enchainer exactement le meme coup. On identifie le coup par
+       son nom et non par son index, car la liste peut changer en cours de combat. */
+    if(st.lastMoveFr && st.lastMoveFr === mv.fr) return;
     st.busy = true; setMovesEnabled(false);
-    st.lastPlayerMoveIdx = i;
+    st.lastMoveFr = mv.fr; st.playerActs = (st.playerActs||0) + 1;
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
