@@ -9376,6 +9376,13 @@ function buildBattleSquads(foeKey, mission){
     S.civilWarSplit = { allies: squads.allies.slice(), foes: squads.foes.slice(), foeKey: foeKey, done:false };
     return squads;
   }
+  /* REVANCHE : on rejoue exactement les deux moities de la Civil War, cinq ans plus tard. */
+  if(mission && mission.civilWarRematch && S.civilWarRematch){
+    const r = S.civilWarRematch;
+    const alive = k=>k && CHARACTERS[k] && k!==S.playerCharKey && k!==foeKey;
+    return { allies: r.allies.filter(alive), foes: r.foes.filter(alive) };
+  }
+
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
