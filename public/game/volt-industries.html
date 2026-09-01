@@ -62,9 +62,6 @@
   .palsel .swatch:hover{ transform:scale(1.15); }
   .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
   @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
-  .hud-drag{ touch-action:none; cursor:grab; }
-  .hud-drag.hud-dragging{ cursor:grabbing; opacity:.92; }
-  .hud-drag::after{ }
   .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
@@ -99,7 +96,7 @@
     box-shadow: 0 30px 70px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04); animation: rise .5s ease; }
   @keyframes rise{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
   h1{ font-size: clamp(26px, 4.5vw, 42px); letter-spacing:-1px; margin:0 0 8px; color:var(--ink);}
-  h2{ font-size:21px; line-height:1.3; margin:0 0 8px; letter-spacing:0; color:var(--ink); overflow-wrap:anywhere;}
+  h2{ font-size:21px; margin:0 0 4px; letter-spacing:-0.4px; color:var(--ink);}
   h3{ font-size:15.5px; margin:22px 0 6px; color:var(--ink); text-transform:uppercase; letter-spacing:1px;}
   .eyebrow{ text-transform:uppercase; font-size:11px; letter-spacing:3.5px; font-weight:800; color:var(--accent); margin-bottom:10px; display:block; text-shadow:0 0 12px var(--accent-soft); }
   p.lead{ color:var(--dim); font-size:15.5px; line-height:1.65; max-width:680px; }
@@ -155,7 +152,6 @@
   .choice.jv-reco{ border-color:var(--jvc, var(--accent)); box-shadow:0 0 24px -14px var(--jvc, var(--accent)); }
   .choice.jv-reco::after{ content:attr(data-reco); display:inline-block; margin-left:8px; font-size:9.5px; letter-spacing:1.6px;
     font-weight:900; color:var(--jvc, var(--accent)); vertical-align:middle; }
-  #choices{ display:flow-root; clear:both; }
   .log-entry{ border-left:3px solid var(--accent); padding:10px 16px; margin-bottom:10px; background:rgba(255,255,255,.02); border-radius:0 10px 10px 0; font-size:14px; color:#c3cee2;}
   .log-entry.villain{ border-left-color:var(--red); }
   .relwrap{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:14px;}
@@ -425,11 +421,7 @@
     .conv-line{ font-size:14.5px; min-height:0; margin-bottom:4px; }
     .conv-charname{ font-size:12px; margin-bottom:8px; }
     .conv-stage .conv-portrait .cp-glyph{ font-size:64px; }
-    .main-col > .card h2{ font-size:19px; line-height:1.42; margin:8px 0 14px; min-height:max-content; position:relative; z-index:1; }
-    .mission-year,.mission-tag,.mission-loc{ line-height:1.45; overflow-wrap:anywhere; }
-    #choices{ padding-top:1px; position:relative; z-index:2; }
-    .choice{ min-height:0; height:auto; padding:13px 15px; font-size:14px; line-height:1.5; margin-top:10px; white-space:normal; overflow-wrap:anywhere; word-break:normal; }
-    .choice.jv-reco::after{ display:block; width:max-content; max-width:100%; margin:7px 0 0; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
+    .choice{ padding:13px 15px; font-size:14px; margin-top:10px; }
     .choice:hover{ transform:none; }
   }
 
@@ -613,9 +605,6 @@
   .btl-overlay{ position:fixed; inset:0; z-index:320; display:flex; flex-direction:column; justify-content:flex-start; overflow-y:auto; padding-top:4vh;
     padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px)); -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
     background:#04070d; background-image:radial-gradient(ellipse at 50% 25%, rgba(18,24,40,.97), #04070d 78%); animation: cineIn .3s ease; }
-  /* Les enfants directs ne doivent JAMAIS se compresser : sinon le contenu est ecrase
-     a la hauteur de l'ecran et les dernieres attaques restent inaccessibles (plus de scroll). */
-  .btl-overlay > *{ flex-shrink:0; }
   @media (max-width:560px){
     .btl-overlay{ padding-top:2vh; padding-bottom:calc(200px + env(safe-area-inset-bottom, 0px)); }
   }
@@ -789,11 +778,6 @@
   }
   @keyframes ambientPulse{ 0%,100%{ opacity:.55;} 50%{ opacity:1;} }
   .btl-meta{ display:flex; flex-direction:column; gap:5px; }
-.arch-badge{ display:inline-block; vertical-align:middle; object-fit:contain; flex:0 0 auto;
-    filter: drop-shadow(0 2px 5px rgba(0,0,0,.6)) drop-shadow(0 0 6px rgba(0,229,255,.28)); }
-  .char-tile-photo .arch-badge{ position:absolute; right:5px; bottom:5px; z-index:4; }
-  .cdp-photo .arch-badge{ position:absolute; right:8px; bottom:8px; z-index:4; }
-  .pname{ display:flex; align-items:center; gap:8px; }
   .btl-name{ font-size:12px; font-weight:900; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 12px currentColor; }
   .btl-hpbar{ height:11px; border-radius:8px; background:rgba(255,255,255,.09); border:1px solid var(--line); overflow:hidden; }
   .btl-hpfill{ height:100%; width:100%; border-radius:8px; transition:width .45s ease, background .45s ease; }
@@ -864,7 +848,6 @@
     .btl-move{ padding:8px 9px; }
     .btl-move b{ font-size:11.5px; }
     .btl-move span{ display:none; }
-    .btl-move span.btl-move-badge{ display:inline-block; font-size:8px; padding:1px 5px; margin-bottom:4px; }
   }
   /* --- Escouades de combat (visages allies / adverses) --- */
   .btl-squad{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; margin-top:2px; }
@@ -1094,8 +1077,6 @@
     .pod-name{ font-size:11px; } .pod-sub{ font-size:8px; }
   }
   .pod-player{ margin:0 auto; max-width:300px; }
-  @keyframes podSideSwap{ 0%{ filter:brightness(1.9) saturate(1.5); } 40%{ filter:brightness(1.25) saturate(1.2); } 100%{ filter:none; } }
-  .pod-player.pod-sideswap .pod-scene{ animation:podSideSwap 1.1s ease-out 1; }
   .pod-player .pod-scene{ width:100%; height:auto; aspect-ratio:800/1120; overflow:visible; }
   .pod-player .pod-bg{ background-size:contain; }
   .pod-player .pod-fig{ width:52%; height:66%; bottom:18%; }
@@ -1686,20 +1667,6 @@ const CHAR_ARCHETYPE = {
   wolverine:{fr:'Mutant', en:'Mutant'},
   yelena:{fr:'Espionne', en:'Spy'},
 };
-const ARCH_ICON = {
-  'Guerrier':'/game/arch/guerrier.png', 'Tech':'/game/arch/tech.png', 'Mutant':'/game/arch/mutant.png',
-  'Cosmique':'/game/arch/cosmique.png', 'Mystique':'/game/arch/mystique.png', 'Genie':'/game/arch/genie.png',
-  'Divin':'/game/arch/divin.png', 'Colosse':'/game/arch/colosse.png', 'Psychique':'/game/arch/psychique.png',
-  'Arachnide':'/game/arch/arachnide.png', 'Espionne':'/game/arch/espionne.png',
-};
-function archOf(charKey){ return CHAR_ARCHETYPE[charKey] || null; }
-function archBadge(charKey, size){
-  const a = archOf(charKey); if(!a) return '';
-  const src = ARCH_ICON[a.fr]; if(!src) return '';
-  const px = size || 26;
-  const label = (S && S.lang==='fr') ? a.fr : a.en;
-  return `<img class="arch-badge" src="${src}" alt="${label}" title="${label}" loading="lazy" style="width:${px}px;height:${px}px;">`;
-}
 function specimenLabel(charKey, align, fr){
   const arch = CHAR_ARCHETYPE[charKey];
   const label = arch ? (fr?arch.fr:arch.en) : (fr?'Specimen':'Specimen');
@@ -1808,9 +1775,9 @@ const PORTRAITS = Object.keys(CHAR_IMG).map(k=>({ key:k, url:CHAR_IMG[k], charKe
 /* ============================ FACTIONS (equipes reelles, jamais neutres) ============================
    Une faction = une equipe / organisation avec un camp obligatoire (hero ou villain).
    On ne peut integrer une faction qu'a partir de la 4e etoile : les index 1-3 sont donc vides. */
-const FACTION_MIN_STARS = 2;
+const FACTION_MIN_STARS = 4;
 const FACTIONS = {
-  hero: [ null, null,
+  hero: [ null,
     { id:'thunderbolts', fr:'THUNDERBOLTS', en:'THUNDERBOLTS', icon:'void', leader:'Bucky', leader2:'Yelena',
       members:['Sentry','U.S. Agent','Ghost','Red Guardian','Bucky','Yelena'] },
     { id:'f4', fr:'FANTASTIC FOUR', en:'FANTASTIC FOUR', icon:'rings', leader:'Mister Fantastic',
@@ -1819,7 +1786,7 @@ const FACTIONS = {
       members:['Wolverine','Storm','Jean Grey','Cyclops','Professor X'] },
     { id:'guardians', fr:'GUARDIANS OF THE GALAXY', en:'GUARDIANS OF THE GALAXY', icon:'galaxy', leader:'Star-Lord',
       members:['Star-Lord','Rocket','Groot','Gamora','Nebula','Telios','Drax','Mantis'] },
-    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe', leader:'Captain America',
+    { id:'avengers', fr:'AVENGERS', en:'AVENGERS', icon:'globe', leader:'Iron Man',
       members:['Spider-Man','Iron Man','Captain America','Thor','Hulk','Black Widow','Black Panther','Scarlet Witch','Vision','Ant-Man','Doctor Strange','Falcon','Hawkeye'] },
   ],
   villain: [ null, null,
@@ -1871,7 +1838,7 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
    (combats, conversations, missions), sans que ce soit jamais exclusif : d'autres
    factions du meme camp (hero ou villain) restent presentes en renfort/second plan. */
 /* Resolution robuste d'une faction : il n'existe que 8 factions (4 hero + 4 villain), indexees
-   par palier 2..6. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
+   par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
    de renvoyer un bandeau vide sans nom ni logo. */
 function facAt(side, tier){
   const arr = FACTIONS[side]; if(!arr) return null;
@@ -1887,7 +1854,7 @@ function myFactionMemberKeys(){
   if(!fac) return [];
   return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
 }
-/* Le leader (heros) / maître (villains) de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
+/* Le chef de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
 function myFactionLeaderKey(){
   if(!S.team) return null;
   const fac = facAt(S.team.side, S.team.tier);
@@ -2146,18 +2113,6 @@ function factionEmblemSVG(side, tier, size){
 
 }
 function factionName(side, tier){ const fac = facAt(side, tier); if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
-function factionLeaderLabel(side, fr, lower=false){
-  const isVillain = side==='villain';
-  const lab = fr ? (isVillain ? (lower?'maître':'MAÎTRE') : (lower?'leader':'LEADER'))
-                 : (isVillain ? (lower?'master':'MASTER') : (lower?'leader':'LEADER'));
-  return lab;
-}
-function factionLeaderName(side, tier){ const fac = facAt(side, tier); if(!fac || !fac.leader) return ''; return fac.leader; }
-function factionLeaderHTML(side, tier){
-  const fac = facAt(side, tier); if(!fac || !fac.leader) return '';
-  const fr = S.lang==='fr'; const lab = factionLeaderLabel(side, fr, true);
-  return `<div style="font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--dim); margin-top:6px;">${lab} : <span style="color:${charColor(side)};">${fac.leader}</span></div>`;
-}
 
 const MISSIONS = [
   { id:'sauvetage', type:'rescue', danger:1, scope:2, tagFr:'Catastrophe', tagEn:'Disaster',
@@ -3918,6 +3873,19 @@ function computePowerLevel(){
   const growth = clamp(Math.floor(S.totalMissionsDone/8) * (winRate-0.3)*1.5, -10, 30);
   return clamp(charBase*0.75 + statBonus*0.6 + growth*0.9 + agingDelta(), 1, 100);
 }
+/* Developpement de carriere, INDEPENDANT de la puissance propre du personnage : sert a faire
+   progresser un personnage de son point de depart (LowEnd) vers son plafond (Prime) au fil d'une
+   carriere, sans etre fausse par le fait qu'un personnage deja tres fort (comme Galactus) ait
+   naturellement un computePowerLevel() eleve des le premier jour. Uniquement l'evolution VECUE
+   cette carriere : stats, missions accomplies, palmares, age. */
+function careerDevFactor(){
+  const statBonus = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/9);
+  const totalFights = (S.combat.won||0) + (S.combat.lost||0);
+  const winRate = totalFights>0 ? (S.combat.won||0)/totalFights : 0.5;
+  const growth = clamp(Math.floor(S.totalMissionsDone/8) * (winRate-0.3)*1.5, -10, 30);
+  const raw = statBonus + growth + agingDelta();
+  return clamp(raw/55, 0, 1);
+}
 /* ---------- Vieillissement : certains gagnent en puissance avec l'age, d'autres declinent ---------- */
 function currentAge(){ return (S.startAge||24) + Math.max(0,(S.currentYear||1)-1); }
 /* ---------- Condition physique (PV) : on demarre au minimum, on monte lentement ----------
@@ -3969,85 +3937,155 @@ function agingLabel(){
   return (fr?`Age ${currentAge()} - ${name} (${sign} puissance)`:`Age ${currentAge()} - ${name} (${sign} power)`);
 }
 /* ---------- Hierarchie de puissance : tous les heros/villains ne se valent pas (echelle 1-10) ---------- */
-const CHAR_TIER = {
-  /* Puissance exacte sur 100, fournie par l'utilisateur. Une variance de +/-10 s'applique
-     ensuite par carriere (voir charPower ci-dessous) : les valeurs ci-dessous sont la base fixe. */
-  boomnpc:100,
-  malachar:99,
-  jeangrey:99,
-  sepulcre:98,
-  nyx:97,
-  vipera:96,
-  solen:96,
-  vaelor:95,
-  ferrum:94,
-  mandate:94,
-  gorr:93,
-  apocalypse:92,
-  magneto:91,
-  obsidian:90,
-  capmarvel:90,
-  profx:89,
-  lorelei:88,
-  aurelia:88,
-  nihil:87,
-  storm:86,
-  invisiblewoman:85,
-  humantorch:84,
-  volt:84,
-  mrfantastic:83,
-  electro:81,
-  siddartha:80,
-  theg:79,
-  kidspider:79,
-  antman:78,
-  thething:77,
-  fuchsia:73,
-  ebonymaw:72,
-  sable:71,
-  gamora:70,
-  groot:69,
-  cyclops:68,
-  nebula:66,
-  mysterio:65,
-  docock:64,
-  corvus:63,
-  proxima:62,
-  cull:61,
-  pyro:60,
-  mystique:59,
-  aegis:58,
-  starlord:53,
-  marsh:53,
-  daredevil:46,
-  rocket:45,
-  kaerus:54,
-  deadpool:74,
-  /* 11 nouveaux venus (ajoutes via Lovable) */
+const CHAR_NORMAL = {
+  sepulcre:96,
+  silversurfer:90,
+  malachar:89,
+  sentry:86,
+  ferrum:86,
+  vaelor:86,
+  apocalypse:86,
+  capmarvel:86,
+  jeangrey:85,
+  nyx:85,
+  boomnpc:85,
+  aurelia:84,
+  solen:83,
+  magneto:83,
+  gorr:82,
   telios:82,
-  wolverine:76,
-  venom:80,
-  drax:67,
-  falcon:50,
-  hawkeye:43,
-  wasp:57,
-  yelena:52,
-  mantis:52,
-  sylvie:75,
-  bucky:55,
-  /* 11 nouveaux venus (Thunderbolts, mystiques et cosmiques) */
-  sentry:96,
-  silversurfer:93,
-  emmafrost:78,
-  clea:75,
-  america:85,
-  wong:82,
-  shuri:62,
+  siddartha:80,
+  profx:79,
+  obsidian:79,
+  nihil:79,
+  lorelei:79,
+  theg:79,
+  mandate:78,
+  invisiblewoman:78,
+  storm:77,
+  volt:76,
+  clea:76,
+  vipera:75,
+  thething:73,
+  emmafrost:72,
+  humantorch:70,
+  america:69,
+  mrfantastic:69,
+  cyclops:68,
+  ebonymaw:68,
+  sylvie:67,
+  cull:67,
+  venom:66,
+  wolverine:65,
+  wong:65,
+  kidspider:64,
+  groot:64,
+  sable:63,
+  gamora:63,
+  proxima:63,
+  corvus:63,
+  electro:61,
   shangchi:60,
-  usagent:50,
-  redguardian:45,
-  ghost:65,
-
+  drax:60,
+  aegis:59,
+  starlord:57,
+  shuri:57,
+  docock:57,
+  antman:56,
+  nebula:56,
+  deadpool:55,
+  mantis:55,
+  wasp:54,
+  usagent:53,
+  fuchsia:52,
+  rocket:52,
+  bucky:52,
+  ghost:52,
+  mystique:52,
+  pyro:51,
+  hawkeye:50,
+  mysterio:49,
+  marsh:49,
+  falcon:49,
+  yelena:48,
+  daredevil:47,
+  kaerus:45,
+  redguardian:43,
+};
+const CHAR_PRIME = {
+  sepulcre:100,
+  silversurfer:96,
+  malachar:100,
+  sentry:98,
+  ferrum:97,
+  vaelor:96,
+  apocalypse:95,
+  capmarvel:95,
+  jeangrey:99,
+  nyx:98,
+  boomnpc:100,
+  aurelia:93,
+  solen:95,
+  magneto:94,
+  gorr:94,
+  telios:93,
+  siddartha:92,
+  profx:92,
+  obsidian:90,
+  nihil:90,
+  lorelei:89,
+  theg:97,
+  mandate:92,
+  invisiblewoman:89,
+  storm:91,
+  volt:90,
+  clea:88,
+  vipera:91,
+  thething:85,
+  emmafrost:86,
+  humantorch:83,
+  america:84,
+  mrfantastic:83,
+  cyclops:88,
+  ebonymaw:78,
+  sylvie:82,
+  cull:74,
+  venom:86,
+  wolverine:85,
+  wong:77,
+  kidspider:86,
+  groot:79,
+  sable:83,
+  gamora:81,
+  proxima:73,
+  corvus:72,
+  electro:77,
+  shangchi:79,
+  drax:77,
+  aegis:83,
+  starlord:77,
+  shuri:75,
+  docock:68,
+  antman:81,
+  nebula:77,
+  deadpool:78,
+  mantis:75,
+  wasp:67,
+  usagent:61,
+  fuchsia:73,
+  rocket:67,
+  bucky:66,
+  ghost:66,
+  mystique:64,
+  pyro:64,
+  hawkeye:63,
+  mysterio:66,
+  marsh:71,
+  falcon:61,
+  yelena:58,
+  daredevil:69,
+  kaerus:71,
+  redguardian:52,
 };
 /* Puissance sur 100, avec une marge de +/-10 qui varie d'une carriere a l'autre (les personnages
    ne sont jamais figes : Iron Man peut etre un peu plus fort ou plus faible selon la partie). */
@@ -4056,12 +4094,40 @@ function charPowerVariance(key){
   if(S.powerVariance[key]===undefined) S.powerVariance[key] = Math.round((Math.random()*2-1)*10);
   return S.powerVariance[key];
 }
+/* Le plafond "Prime" n'est jamais garanti pile poil : un leger flou (+/-4) fait qu'on ne sait
+   jamais vraiment, meme pour Galactus, s'il finira exactement a son maximum theorique ou juste
+   en-dessous - tire une fois par carriere. */
+function primeJitter(key){
+  if(!S.primeJitter) S.primeJitter = {};
+  if(S.primeJitter[key]===undefined) S.primeJitter[key] = Math.round((Math.random()*2-1)*4);
+  return S.primeJitter[key];
+}
+/* Coup d'eclat : dans de tres rares cas (3% par carriere), n'importe quel personnage - meme le
+   plus modeste - peut connaitre une carriere hors norme qui le fait largement depasser son propre
+   plafond habituel. Tire une seule fois, au tout debut de la carriere, jamais recalcule ensuite. */
+function powerBreakthrough(key){
+  if(!S.powerBreakthrough) S.powerBreakthrough = {};
+  if(S.powerBreakthrough[key]===undefined){
+    S.powerBreakthrough[key] = Math.random() < 0.03 ? Math.round(75 + Math.random()*25) : null;
+  }
+  return S.powerBreakthrough[key];
+}
 function charTier(key){
   if(!key) return 50;
-  if(CHAR_TIER[key]!==undefined) return clamp(CHAR_TIER[key] + charPowerVariance(key), 1, 100);
+  if(CHAR_NORMAL[key]!==undefined) return clamp(CHAR_NORMAL[key] + charPowerVariance(key), 1, 100);
   const c = CHARACTERS[key];
   if(!c) return 50;
   return clamp(40 + charPowerVariance(key), 1, 100); /* recrues et personnages jouables : encore en construction */
+}
+/* Plafond absolu, jamais atteint des le debut d'une carriere : c'est le vrai maximum qu'un
+   personnage peut esperer approcher en toute fin de parcours, pas son point de depart. Il ne
+   varie pas d'une carriere a l'autre (contrairement a charTier), c'est un vrai maximum fixe. */
+function charPrimeTier(key){
+  if(!key) return 60;
+  if(CHAR_PRIME[key]!==undefined) return CHAR_PRIME[key];
+  const c = CHARACTERS[key];
+  if(!c) return 60;
+  return 55; /* recrues et personnages jouables : encore en construction */
 }
 /* ---------- Niveau minimum d'apparition (echelle de rang 1-7, comme les combats) ---------- */
 const CHAR_UNLOCK_TIER = {
@@ -4380,114 +4446,78 @@ const AudioEngine = (function(){
   const FADE_MS = 900;
   const LOOP_VOL = 0.55, STING_VOL = 0.85;
 
-  /* Un seul lecteur musical physique. C'est volontaire : plusieurs elements Audio et leurs
-     callbacks de fondu pouvaient survivre a une transition, lancer une seconde piste deux
-     secondes plus tard, puis couper celle qui jouait. Les positions sont conservees par piste,
-     mais une seule source peut desormais produire du son a un instant donne. */
-  const player = new Audio();
-  player.preload = 'auto';
-  player.loop = true;
-  player.volume = 0;
-  const positions = {};
+  const deckA = new Audio(); const deckB = new Audio();
+  [deckA, deckB].forEach(d=>{ d.loop = true; d.volume = 0; d.preload = 'auto'; });
+  let activeDeck = deckA, idleDeck = deckB;
   let currentLoopKey = null; // 'welcome' | 'ambient' | 'combat' | null
   let pendingLoopKey = null; // la boucle a reprendre une fois le sting termine
-  let activeKey = null;      // cle reellement chargee dans le lecteur unique
-  let stingKey = null;
-  let transitionId = 0;
+  let stingAudio = null;
+  let stingStartedAt = 0;
   let muted = false;
   try{ muted = localStorage.getItem('volt_audio_muted') === '1'; }catch(e){}
   let unlocked = false; // les navigateurs bloquent la lecture avant un geste utilisateur
 
-  function fadeTo(targetVol, ms, id, onDone){
-    const startVol = player.volume, startTime = performance.now();
+  function fadeTo(audio, targetVol, ms, onDone){
+    const gen = (audio._fadeGen = (audio._fadeGen||0) + 1);
+    const startVol = audio.volume, startTime = performance.now();
     const effTarget = muted ? 0 : targetVol;
     function step(now){
-      if(id !== transitionId) return;
+      if(audio._fadeGen !== gen) return; // une autre transition a pris le relais
       const t = Math.min(1, (now-startTime)/ms);
-      player.volume = Math.max(0, Math.min(1, startVol + (effTarget-startVol)*t));
+      audio.volume = startVol + (effTarget-startVol)*t;
       if(t<1) requestAnimationFrame(step);
       else if(onDone) onDone();
     }
     requestAnimationFrame(step);
   }
 
-  function rememberPosition(){
-    if(activeKey && !stingKey && Number.isFinite(player.currentTime)) positions[activeKey] = player.currentTime;
-  }
-  function loadAndPlay(key, src, loop, targetVol, id){
-    if(id !== transitionId) return;
-    activeKey = key;
-    player.muted = muted;
-    player.pause();
-    player.loop = loop;
-    player.src = src;
-    player.load();
-    const begin = ()=>{
-      if(id !== transitionId || activeKey !== key) return;
-      player.removeEventListener('loadedmetadata', begin);
-      if(loop){
-        const saved = positions[key] || 0;
-        if(Number.isFinite(player.duration) && player.duration>0) player.currentTime = Math.min(saved, Math.max(0, player.duration-0.1));
-      }
-      player.volume = 0;
-      try{ const p = player.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
-      fadeTo(targetVol, key==='combat'?500:FADE_MS, id);
-    };
-    if(player.readyState >= 1) begin();
-    else player.addEventListener('loadedmetadata', begin, { once:true });
-  }
-
+  let lastCrossAt = 0;
   function crossTo(key){
-    if(!TRACKS[key]) return;
+    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
+    if(!unlocked || stingBlocking) { pendingLoopKey = key; currentLoopKey = key; return; }
+    if(currentLoopKey === key) return;
     currentLoopKey = key;
-    if(muted) return;
-    if(stingKey){ pendingLoopKey = key; return; }
-    if(!unlocked){ pendingLoopKey = key; return; }
-    if(activeKey === key){
-      if(player.paused){ try{ const p = player.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
-      const id = ++transitionId;
-      fadeTo(LOOP_VOL, 250, id);
-      return;
-    }
-    rememberPosition();
-    const id = ++transitionId;
-    const fadeMs = activeKey ? (key==='combat'?350:500) : 0;
-    const swap = ()=>loadAndPlay(key, TRACKS[key], true, LOOP_VOL, id);
-    if(fadeMs) fadeTo(0, fadeMs, id, swap); else swap();
+    lastCrossAt = Date.now();
+    const src = TRACKS[key];
+    if(!src) return;
+    const outgoing = activeDeck, incoming = idleDeck;
+    activeDeck = incoming; idleDeck = outgoing;
+    if(incoming.src !== location.origin + src && !incoming.src.endsWith(src)) incoming.src = src;
+    /* Le combat n'attaque pas au tout debut de la piste, mais 8 secondes dedans - avec un fondu
+       plus court et discret, plutot que le fondu standard des autres transitions. */
+    const startAt = key==='combat' ? 8 : 0;
+    const fadeMs = key==='combat' ? 500 : FADE_MS;
+    const setStart = ()=>{ try{ incoming.currentTime = startAt; }catch(e){} };
+    if(incoming.readyState >= 1) setStart();
+    else incoming.addEventListener('loadedmetadata', setStart, { once:true });
+    incoming.volume = 0;
+    try{ const p = incoming.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    fadeTo(incoming, LOOP_VOL, fadeMs);
+    fadeTo(outgoing, 0, fadeMs, ()=>{ outgoing.pause(); });
   }
 
   function playSting(key){
-    if(!unlocked || muted) return;
+    if(!unlocked) return;
     const src = STINGS[key]; if(!src) return;
     pendingLoopKey = currentLoopKey;
-    rememberPosition();
-    stingKey = key;
-    const id = ++transitionId;
-    const startSting = ()=>{
-      loadAndPlay('sting:'+key, src, false, STING_VOL, id);
-      player.onended = ()=>{
-        if(id !== transitionId) return;
-        player.onended = null;
-        stingKey = null;
-        activeKey = null;
-        const resume = pendingLoopKey || currentLoopKey;
-        pendingLoopKey = null;
-        if(resume) crossTo(resume);
-      };
+    fadeTo(activeDeck, 0, 500, ()=>{ activeDeck.pause(); });
+    fadeTo(idleDeck, 0, 500, ()=>{ idleDeck.pause(); });
+    if(stingAudio){ stingAudio.pause(); stingAudio.onended = null; }
+    stingAudio = new Audio(src);
+    stingStartedAt = Date.now();
+    stingAudio.loop = false; stingAudio.volume = muted ? 0 : STING_VOL;
+    try{ const p = stingAudio.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    stingAudio.onended = ()=>{
+      stingAudio = null;
+      if(pendingLoopKey){ currentLoopKey = null; crossTo(pendingLoopKey); pendingLoopKey = null; }
     };
-    fadeTo(0, 350, id, startSting);
   }
   /* A appeler quand l'ecran d'annonce (gemme/8eme etoile) se ferme, au cas ou le joueur
      l'aurait fermee avant la fin naturelle du sting - la musique de fond reprend alors direct. */
   function stopSting(){
-    if(!stingKey) return;
-    const resume = pendingLoopKey || currentLoopKey;
-    pendingLoopKey = null;
-    stingKey = null;
-    player.onended = null;
-    activeKey = null;
-    const id = ++transitionId;
-    fadeTo(0, 350, id, ()=>{ if(id===transitionId && resume) crossTo(resume); });
+    if(!stingAudio) return;
+    fadeTo(stingAudio, 0, 500, ()=>{ if(stingAudio){ stingAudio.pause(); stingAudio=null; } });
+    if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
 
   function start(){
@@ -4496,27 +4526,13 @@ const AudioEngine = (function(){
     if(pendingLoopKey){ const k = pendingLoopKey; pendingLoopKey = null; currentLoopKey = null; crossTo(k); }
   }
   function setMode(newMode){ crossTo(newMode); }
-  /* iOS/Safari ignore purement et simplement l'ecriture de .volume : baisser le volume a 0 ne
-     coupait donc rien sur telephone. On coupe donc reellement le lecteur (muted + pause). */
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
-    const id = ++transitionId;
-    player.muted = m;
-    if(m){
-      rememberPosition();
-      player.onended = null;
-      stingKey = null;
-      try{ player.pause(); }catch(e){}
-      try{ player.volume = 0; }catch(e){}
-      try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
-    } else {
-      const resume = currentLoopKey;
-      if(resume){ activeKey = null; currentLoopKey = null; crossTo(resume); }
-      else fadeTo(LOOP_VOL, 300, id);
-    }
+    const target = muted ? 0 : LOOP_VOL;
+    if(activeDeck.paused===false || activeDeck.volume>0) fadeTo(activeDeck, target, 300);
+    if(stingAudio) fadeTo(stingAudio, muted?0:STING_VOL, 300);
   }
-
   function isMuted(){ return muted; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
@@ -4536,18 +4552,29 @@ const AudioEngine = (function(){
     }catch(e){}
   }
 
-  /* Filet de securite sans changement de source : il ne peut donc jamais lancer une autre piste. */
+  /* Filet de securite : les navigateurs ralentissent ou suspendent les animations (dont nos
+     fondus) quand l'onglet passe en arriere-plan (changement d'onglet, verrouillage d'ecran...).
+     Un fondu interrompu en plein milieu peut rester bloque a mi-volume, voire a zero, pour de bon.
+     On verifie regulierement que l'etat reel correspond a ce qui est attendu, et on se corrige
+     tout seul si ce n'est pas le cas - plutot que de rester silencieux sans raison apparente. */
   function healthCheck(){
     if(muted || !unlocked || !currentLoopKey) return;
-    if(stingKey || activeKey !== currentLoopKey) return;
-    if(player.paused){ try{ const p = player.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
-    if(player.volume < 0.02){ const id = ++transitionId; fadeTo(LOOP_VOL, 400, id); }
+    if(Date.now() - lastCrossAt < FADE_MS + 600) return; // laisse un fondu normal se terminer tranquillement
+    const stingBlocking = stingAudio && !stingAudio.paused && !stingAudio.ended && (Date.now()-stingStartedAt) < 20000;
+    if(stingBlocking) return;
+    const shouldBePlaying = activeDeck.paused===false && activeDeck.volume>0.05;
+    const looksStuck = activeDeck.paused || activeDeck.volume < 0.02;
+    if(looksStuck && !shouldBePlaying){
+      const key = currentLoopKey; currentLoopKey = null;
+      activeDeck.pause(); idleDeck.pause();
+      activeDeck.volume = 0; idleDeck.volume = 0;
+      crossTo(key);
+    }
   }
   setInterval(healthCheck, 4000);
   if(typeof document!=='undefined'){
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) healthCheck(); });
   }
-
 
   return { start, setMode, playSting, stopSting, setMuted, isMuted, speak };
 })();
@@ -4556,69 +4583,12 @@ let _saveTimer = null;
    la carriere. Un verrou memorise a true rendait le bouton Simulation visuellement actif mais
    bloquait definitivement sa premiere etape apres certaines sauvegardes/reprises. */
 let _autoStepPending = false;
-/* ============================ HUD DEPLACABLE ============================
-   Le badge de rang, la console JARVIS/ULTRON et le bouton Simuler peuvent etre deplaces
-   librement pendant une partie ; la position est memorisee par element. */
-const HUD_POS_KEY = 'volt.hudPos.v1';
-function hudPosAll(){ try{ return JSON.parse(localStorage.getItem(HUD_POS_KEY)||'{}') || {}; }catch(e){ return {}; } }
-function hudPosSave(id, pos){ const all = hudPosAll(); all[id] = pos; try{ localStorage.setItem(HUD_POS_KEY, JSON.stringify(all)); }catch(e){} }
-function hudApplyPos(el, pos){
-  if(!el || !pos) return;
-  const r = el.getBoundingClientRect();
-  const maxX = Math.max(0, window.innerWidth - (r.width||80) - 4);
-  const maxY = Math.max(0, window.innerHeight - (r.height||40) - 4);
-  const x = Math.min(Math.max(0, pos.x), maxX), y = Math.min(Math.max(0, pos.y), maxY);
-  el.style.setProperty('left', x+'px', 'important');
-  el.style.setProperty('top', y+'px', 'important');
-  el.style.setProperty('right', 'auto', 'important');
-  el.style.setProperty('bottom', 'auto', 'important');
-  el.style.setProperty('transform', 'none', 'important');
-}
-function makeHudDraggable(el, id){
-  if(!el || el._hudDrag) return;
-  el._hudDrag = true;
-  el.classList.add('hud-drag');
-  const saved = hudPosAll()[id];
-  if(saved) requestAnimationFrame(()=>hudApplyPos(el, saved));
-  let sx=0, sy=0, ox=0, oy=0, moved=false, active=false;
-  el.addEventListener('pointerdown', (e)=>{
-    if(e.button!==undefined && e.button!==0) return;
-    const r = el.getBoundingClientRect();
-    sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top; moved=false; active=true;
-    el.setPointerCapture && el.setPointerCapture(e.pointerId);
-  });
-  el.addEventListener('pointermove', (e)=>{
-    if(!active) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    if(!moved && Math.abs(dx)+Math.abs(dy) < 6) return;
-    if(!moved){ moved=true; el.classList.add('hud-dragging'); }
-    e.preventDefault();
-    hudApplyPos(el, { x: ox+dx, y: oy+dy });
-  });
-  const end = (e)=>{
-    if(!active) return; active=false;
-    el.classList.remove('hud-dragging');
-    if(moved){
-      const r = el.getBoundingClientRect();
-      hudPosSave(id, { x:r.left, y:r.top });
-      const kill = (ev)=>{ ev.stopPropagation(); ev.preventDefault(); };
-      el.addEventListener('click', kill, { capture:true, once:true });
-      setTimeout(()=>el.removeEventListener('click', kill, true), 60);
-    }
-  };
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
-}
-window.addEventListener('resize', ()=>{
-  const all = hudPosAll();
-  ['rankBadgeFixed','careerAutoWidget','jarvis'].forEach(id=>{ const el=document.getElementById(id); if(el && all[id]) hudApplyPos(el, all[id]); });
-});
 /* ---------- Simulation de carriere : joue automatiquement les questions et les combats (x4), arretable a tout moment ---------- */
 function renderCareerAutoWidget(){
   let el = document.getElementById('careerAutoWidget');
   const eligible = shouldShowSidebar() && S.screen!=='end' && S.firstMissionStarted;
   if(!eligible){ if(el) el.remove(); return; }
-  if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); makeHudDraggable(el, 'careerAutoWidget'); }
+  if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); }
   el.className = 'career-auto-widget' + (S.careerAuto ? ' running' : '');
   const isFr = S.lang==='fr';
   el.innerHTML = S.careerAuto
@@ -4764,7 +4734,7 @@ async function clearGameState(){
 function renderRankBadge(){
   let el = document.getElementById('rankBadgeFixed');
   if(!shouldShowSidebar()){ if(el) el.remove(); return; }
-  if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); makeHudDraggable(el, 'rankBadgeFixed'); }
+  if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); }
   const zone = zoneOf(S.align);
   const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
   const stars = computeStars();
@@ -4795,7 +4765,6 @@ function renderRankBadge(){
   el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
     <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
   el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
-  refreshPlayerPodSide();
   if(stars > S.lastStars){ showRankUpToast(stars, zone); showScopeCinematic(stars); }
   S.lastStars = stars;
 }
@@ -5287,12 +5256,10 @@ function avatarBoxInner(){
 function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
   const fr = S.lang === 'fr';
-  /* La capsule du joueur en carriere suit TON camp actuel, pas l'alignement d'origine du personnage :
-     bleu si tu es heros, rouge si tu es villain, violet si tu es independant - et elle rebascule
-     autant de fois que tu changes de camp pendant la partie. */
-  const al = zoneOf(S.align);
+  const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
+  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
   const col = podAuraColor(al);
-  const hue = podAuraHue(al);
+  const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
   const sub = specimenLabel(S.playerCharKey, al, fr);
   const src = podFigSrc(S.portrait);
   return `<div class="pod pod-player" aria-hidden="true" style="--podc:${col}; --podhue:${hue};">
@@ -5306,7 +5273,7 @@ function playerPodPanel(){
     <div class="pod-glass"></div>
     <div class="pod-scan"></div>
     <div class="pod-base">
-      <div class="pod-name">${S.heroName || '???'} ${archBadge(S.playerCharKey, 22)}</div>
+      <div class="pod-name">${S.heroName || '???'}</div>
       <div class="pod-sub">${sub}</div>
       <div class="pod-gauges"><i></i><i></i><i></i><i></i></div>
     </div>
@@ -5334,16 +5301,15 @@ function statBar(label, val, color){ return `<div class="stat"><div class="slabe
 function screenCodex(){
   const d = document.createElement('div'); const fr = S.lang==='fr';
   const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
-  const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
+  const allKeys = Object.keys(CHARACTERS);
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
-  const allFactions = [['hero', FACTIONS.hero], ['villain', FACTIONS.villain]].flatMap(([side, arr])=>(arr||[]).filter(Boolean).map(f=>({...f, side})));
+  const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
   const repHtml = allFactions.map(f=>{
     const rep = factionRepOf(f.id);
     const pct = Math.round((rep+20)/40*100);
     const col = rep>0 ? '#7ef0c0' : (rep<0 ? '#ff5c6e' : 'var(--dim)');
-    const leaderLab = f.leader ? `<span style="font-size:9px; color:var(--dim); margin-left:6px;">${factionLeaderLabel(f.side, fr, true)} ${f.leader}</span>` : '';
     return `<div style="margin-bottom:8px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;"><span>${f.fr}${leaderLab}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
+      <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${f.fr}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
       <div class="barbg" style="height:5px;"><div class="barfill" style="width:${pct}%; background:${col};"></div></div>
     </div>`;
   }).join('');
@@ -5908,24 +5874,6 @@ function podCharacterPool(){
 function podAuraColor(align){
   return align === 'hero' ? '#3ba9ff' : align === 'villain' ? '#ff3b4e' : '#a855f7';
 }
-function podAuraHue(align){
-  return align === 'hero' ? '0deg' : align === 'villain' ? '140deg' : '60deg';
-}
-/* Mise a jour a chaud de la capsule du joueur : appelee a chaque rafraichissement du badge de rang,
-   donc a chaque fois que ton alignement bouge en cours de partie. */
-function refreshPlayerPodSide(){
-  const pod = document.querySelector('.pod-player'); if(!pod) return;
-  const al = zoneOf(S.align);
-  if(pod.dataset.side === al) return;
-  pod.dataset.side = al;
-  pod.style.setProperty('--podc', podAuraColor(al));
-  pod.style.setProperty('--podhue', podAuraHue(al));
-  const sub = pod.querySelector('.pod-sub');
-  if(sub) sub.textContent = specimenLabel(S.playerCharKey, al, S.lang==='fr');
-  pod.classList.remove('pod-sideswap');
-  void pod.offsetWidth;
-  pod.classList.add('pod-sideswap');
-}
 function incubatorPodHTML(){
   return `<div class="pod" aria-hidden="true" style="--podc:#3ba9ff; --podhue:0deg;">
    <div class="pod-scene">
@@ -6016,7 +5964,7 @@ function mountIncubatorPod(root){
     setTimeout(()=>{
       if(!document.body.contains(pod)) { if(_podTimer){ clearInterval(_podTimer); _podTimer=null; } return; }
       pod.style.setProperty('--podc', col);
-          pod.style.setProperty('--podhue', podAuraHue(c.align));
+      pod.style.setProperty('--podhue', c.align === 'hero' ? '0deg' : c.align === 'villain' ? '140deg' : '60deg');
       fig.style.setProperty('--pod-scale','1');
       fig.style.setProperty('--pod-shift-x','0px');
       fig.style.setProperty('--pod-shift-y','0px');
@@ -6609,7 +6557,7 @@ function screenProfileChoice(){
     const nm = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.nameFr:p.nameEn);
     return `<div class="char-tile ${unlocked?'':'locked'}" data-pid="${p.id}" style="--pc-color:${col};" tabindex="0">
       <div class="char-tile-photo">${p.img?`<img src="${p.img}" alt="${nm}" loading="lazy">`:`<span class="char-tile-initial">${nm.charAt(0)}</span>`}
-        ${archBadge(p.charKey, 30)}${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
+        ${unlocked?'':`<div class="char-tile-lock">&#128274;</div>`}</div>
       <div class="char-tile-dot" style="background:${col};"></div>
       <div class="char-tile-name">${nm}</div>
       ${unlocked?'':`<div class="char-tile-cond">${tierConditionWithProgress(p.id)}</div>`}
@@ -6633,7 +6581,7 @@ function screenProfileChoice(){
     const moralCol = morality>=4 ? '#7ef0c0' : (morality<=-4 ? '#ff5c6e' : '#e8c96a');
     panelEl.classList.add('open');
     panelEl.style.setProperty('--pc-color', col);
-    panelEl.innerHTML = `<div class="cdp-photo">${p.img?`<img src="${p.img}" alt="${nm}">`:''}<span class="preset-badge">${badge}</span>${archBadge(p.charKey, 42)}</div>
+    panelEl.innerHTML = `<div class="cdp-photo">${p.img?`<img src="${p.img}" alt="${nm}">`:''}<span class="preset-badge">${badge}</span></div>
       <div class="cdp-body">
         <div class="pname">${nm}</div><div class="pdesc">${S.lang==='fr'?p.descFr:p.descEn}</div>
         ${statLine(p.stats||{})}
@@ -7204,6 +7152,12 @@ function buildCareerPlan(){
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
   S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
   S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
+  /* Bug corrige : la variance de puissance n'etait jamais reinitialisee, elle restait figee pour un
+     personnage donne d'une carriere a l'autre dans la meme session, malgre le commentaire qui disait
+     le contraire. Ces trois tirages recommencent maintenant vraiment a chaque nouvelle carriere. */
+  S.powerVariance = {};
+  S.primeJitter = {};
+  S.powerBreakthrough = {};
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
@@ -8521,8 +8475,6 @@ function impactFromEff(eff, alignDelta){
   return items;
 }
 const BASIC_MOVES = [{fr:'Frappe directe',en:'Direct hit',p:20,acc:.97},{fr:'Coup a tout casser',en:'All-out swing',p:36,acc:.65}];
-/* Nombre de tours joues avant qu'une attaque signature ne soit disponible - joueur ET PNJ. */
-const SPECIAL_CHARGE = 4;
 const CHAR_SPECIAL = {
   hawkeye:{type:'RALLY', nameFr:'Signal de detresse', nameEn:'Distress signal', descFr:'Une fleche-signal qui appelle du renfort sur le champ de bataille.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
   rocket:{type:'RALLY', nameFr:'Appel des Gardiens', nameEn:'Call the Guardians', descFr:'Il siffle fort - et l\'un des siens rapplique aussitot.', descEn:'A surge of power that boosts every strike for the rest of the fight.'},
@@ -9116,8 +9068,8 @@ function buildBattleSquads(foeKey, mission){
   const loreRest = attrOthers.filter(k=>loreMates.indexOf(k)<0);
   const attrOrLore = loreMates.length ? weightedFactionOrder(loreMates, loreRest, 0.7) : attrOthers;
   let allyPool = (facMates.length || attrMates.length || loreMates.length) ? weightedTripleOrder(facMates, attrMates, attrOrLore, 0.8, 0.6) : shuffle(sidePool);
-  /* Le leader / maître de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
-     avec lui a tes cotes. */
+  /* Le chef de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
+     a ses cotes qu'avec n'importe quel autre membre de l'equipe. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && allyPool.includes(leaderKey)) allyPool = [leaderKey].concat(allyPool.filter(k=>k!==leaderKey));
   /* Si tu as plusieurs recrues actives (2 maximum, puisqu'elles cessent de l'etre au bout de 5 ans) :
@@ -9484,7 +9436,21 @@ function startBattle(mission, done){
      meme facon pour tout le monde. La puissance propre du personnage (CHAR_TIER) est maintenant un
      vrai multiplicateur final : le plafond de Doom reste toujours nettement au-dessus de celui d'un
      personnage faible, quel que soit son niveau de competences accumulees. */
-  const charPowerScale = 0.45 + (charTier(S.playerCharKey)||50)/100 * 1.25;
+  /* Rapport de force en deux temps : "Normal" (la moyenne attendue sur une carriere) et "Prime"
+     (le vrai plafond, jamais atteint des le debut). Le point de depart est calcule pour que la
+     moyenne d'une carriere retombe bien sur "Normal", et la progression vers "Prime" suit le
+     developpement reel du personnage (age, stats, missions, victoires) - pas un chiffre fixe. */
+  const normalTier = charTier(S.playerCharKey)||50;
+  const primeTierBase = charPrimeTier(S.playerCharKey)||60;
+  const primeTier = clamp(primeTierBase + primeJitter(S.playerCharKey), 10, 100);
+  const lowEndTier = clamp(2*normalTier - primeTier, 10, 100);
+  const devFactor = careerDevFactor();
+  let effectiveTier = lowEndTier + (primeTier - lowEndTier) * devFactor;
+  /* Coup d'eclat : si tire pour cette carriere, il peut faire depasser meme le plafond habituel -
+     personne n'est jamais totalement plafonne pour de bon, meme les plus modestes. */
+  const breakthrough = powerBreakthrough(S.playerCharKey);
+  if(breakthrough!==null) effectiveTier = clamp(Math.max(effectiveTier, breakthrough*devFactor + lowEndTier*(1-devFactor)), 1, 100);
+  const charPowerScale = 0.45 + effectiveTier/100 * 1.25;
   /* Difficulte relevee : le joueur partait avec trop de PV et des degats trop superieurs a ceux
      de l'adversaire, d'ou des victoires quasi systematiques. Corrections :
      - PV joueur reduits (base 88 au lieu de 96, pente 0.55 au lieu de 0.7, momentum *3 au lieu de *4)
@@ -9545,7 +9511,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null, playerActs:0 };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastPlayerMoveIdx:null };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -9585,14 +9551,14 @@ function startBattle(mission, done){
     <div class="btl-spotlight">
       <div class="btl-fighter me">
         <div class="btl-frame" id="btlMeFrame" style="--cp-color:${myCol};">${avatarVisual()}</div>
-        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${archBadge(S.playerCharKey, 22)}${myName}</div>
+        <div class="btl-meta"><div class="btl-name" style="color:${myCol};">${myName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlMeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlMeNum"></div></div>
       </div>
       <div class="btl-vs" id="btlVS">VS</div>
       <div class="btl-fighter foe">
         <div class="btl-frame" id="btlFoeFrame" style="--cp-color:${foeCol};">${battleFrameInner(foe)}</div>
-        <div class="btl-meta"><div class="btl-name" id="btlFoeSpotName" style="color:${foeCol};">${archBadge(foeKey, 22)}${foeName}</div>
+        <div class="btl-meta"><div class="btl-name" id="btlFoeSpotName" style="color:${foeCol};">${foeName}</div>
           <div class="btl-hpbar"><div class="btl-hpfill" id="btlFoeHP" style="background:var(--green);"></div></div>
           <div class="btl-hpnum" id="btlFoeNum"></div></div>
       </div>
@@ -9640,15 +9606,11 @@ function startBattle(mission, done){
     if(st.auto && !st.busy) maybeAutoPlay();
   };
   function autoChooseMoveIdx(){
-    /* Le dernier coup joue est en recharge : le mode auto doit obligatoirement en choisir un autre. */
-    const locked = st.lastPlayerMoveIdx;
-    const ok = i => i>=0 && i!==locked;
     const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < 0.35;
-    if(lowSelf){ const healIdx = myMoves.findIndex((m,i)=>m.heal && ok(i)); if(ok(healIdx)) return healIdx; }
-    let best = -1, bestScore = -1;
-    myMoves.forEach((m,i)=>{ if(m.heal || !ok(i)) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
-    if(best<0) myMoves.forEach((m,i)=>{ if(!ok(i)) return; const score = (m.p||0)*(m.acc||1) + (m.heal||0); if(score>bestScore){ bestScore=score; best=i; } });
-    return best<0 ? 0 : best;
+    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal); if(healIdx>=0) return healIdx; }
+    let best = 0, bestScore = -1;
+    myMoves.forEach((m,i)=>{ if(m.heal) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
+    return best;
   }
   function maybeAutoPlay(){
     if(S.careerAuto && !st.auto){
@@ -9816,15 +9778,12 @@ function startBattle(mission, done){
       const sub = isDef ? (S.lang==='fr'?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
                          : (S.lang==='fr'?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
       const badge = m.shard ? (S.lang==='fr'?'ECLAT':'SHARD') : (isDef ? 'DEF' : (S.lang==='fr'?'ATQ':'ATK'));
-      /* Code couleur lisible meme sur mobile : vert = defense, rouge = attaque, couleur de la gemme = eclat. */
-      const col = m.shard ? (m.shardCol||'#c9a227') : (isDef ? '#4ee39a' : '#ff5a5a');
-      const badgeCol = col;
+      const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
       const isLocked = st.lastPlayerMoveIdx === i;
-      const style = ` style="border-color:${col}; background:${col}1f; box-shadow:0 0 14px -7px ${col};${isLocked?' opacity:.4;':''}"`;
-      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b style="color:${col};">${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
-
+      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -9846,26 +9805,12 @@ function startBattle(mission, done){
         <span>${S.lang==='fr'?'Le prochain coup adverse te vise a sa place':'The next enemy hit targets you instead of them'}</span></button>`;
     }
     /* Attaque signature : un coup unique par personnage, utilisable une seule fois par combat,
-       qui disparait completement une fois utilise plutot que de rester affiche grise.
-       Elle ne se debloque JAMAIS en debut de combat : il faut d'abord charger la jauge en jouant
-       SPECIAL_CHARGE tours, pour tous les personnages sans exception. */
+       qui disparait completement une fois utilise plutot que de rester affiche grise. */
     const special = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
     if(special && !st.specialUsed){
-      const acts = st.playerActs||0;
-      const ready = acts >= SPECIAL_CHARGE;
-      const pct = Math.round(Math.min(1, acts/SPECIAL_CHARGE)*100);
-      if(ready){
-        movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.16); box-shadow:0 0 16px -7px #9a6bff;">
-          <span class="btl-move-badge" style="color:#c3a6ff; border-color:#9a6bff;">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
-          <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
-          <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
-      } else {
-        movesEl.innerHTML += `<div class="btl-move transform" style="grid-column:1 / -1; border-color:rgba(154,107,255,.35); background:rgba(154,107,255,.06); opacity:.62; cursor:not-allowed; position:relative; overflow:hidden;">
-          <span class="btl-move-badge" style="color:#c3a6ff; border-color:rgba(154,107,255,.5);">${S.lang==='fr'?'SPECIAL':'SPECIAL'}</span>
-          <b style="color:#c3a6ff;">${S.lang==='fr'?special.nameFr:special.nameEn}</b>
-          <span>${S.lang==='fr'?`Charge ${acts}/${SPECIAL_CHARGE} - encore ${SPECIAL_CHARGE-acts} tour(s) de combat`:`Charge ${acts}/${SPECIAL_CHARGE} - ${SPECIAL_CHARGE-acts} more turn(s)`}</span>
-          <i style="position:absolute; left:0; bottom:0; height:3px; width:${pct}%; background:#9a6bff; box-shadow:0 0 8px #9a6bff;"></i></div>`;
-      }
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);">
+        <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
+        <span>${S.lang==='fr'?special.descFr:special.descEn}</span></button>`;
     }
     movesEl.querySelectorAll('.btl-move[data-i]').forEach(b=>{ b.onclick = ()=>playerTurn(parseInt(b.dataset.i,10)); });
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
@@ -9962,7 +9907,7 @@ function startBattle(mission, done){
   function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ b.disabled = !on; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
-    st.busy = true; setMovesEnabled(false); st.playerActs = (st.playerActs||0) + 1;
+    st.busy = true; setMovesEnabled(false);
     st.transformed = true;
     const targetFoe = foeRoster[st.targetIdx] || foeRoster[0];
     allyRoster[0].transformedImg = targetFoe.img || foe.img;
@@ -9976,7 +9921,7 @@ function startBattle(mission, done){
   }
   function vanishMove(){
     if(st.busy || st.vanishUsed) return;
-    st.busy = true; setMovesEnabled(false); st.playerActs = (st.playerActs||0) + 1;
+    st.busy = true; setMovesEnabled(false);
     st.vanishUsed = true; st.dodgeNext = true;
     const heal = Math.round(allyRoster[0].maxHp*0.08);
     allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + heal);
@@ -10047,95 +9992,18 @@ function startBattle(mission, done){
     if(playerDown()){ finish(false); return; }
     const actor = nextActor();
     if(!actor){ setTimeout(runTurn, wait(50)); return; }
-    /* Etourdissement : un combattant sonne (par un coup special adverse) passe son tour. */
-    if(actor.ref._stunTurns > 0){
-      actor.ref._stunTurns--;
-      st.busy = true; setMovesEnabled(false);
-      setLog(S.lang==='fr'?`${actor.ref.name} est sonne(e) et perd son tour.`:`${actor.ref.name} is stunned and loses a turn.`);
-      setTimeout(runTurn, wait(800));
-      return;
-    }
     if(actor.side==='ally' && actor.ref.isPlayer){
       st.lastPlayerTurnAt = Date.now();
-      st.busy = false; renderMoves(); setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+      st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
       maybeAutoPlay();
       return;
     }
     st.busy = true; setMovesEnabled(false);
     if(actor.side==='ally') doAllyAct(actor.idx); else doFoeAct(actor.idx);
   }
-  /* Coups speciaux des PNJ : alliés comme adversaires possedent leur attaque signature et peuvent
-     la declencher une seule fois par combat, exactement comme le joueur. Les adversaires deviennent
-     donc bien plus dangereux (degats lourds, etourdissement, drain, banissement, zone). */
-  function npcSpecialTry(side, idx){
-    const roster = side==='ally' ? allyRoster : foeRoster;
-    const actor = roster[idx];
-    if(!actor || actor.isPlayer || actor._specialUsed) return false;
-    const sp = actor.key ? CHAR_SPECIAL[actor.key] : null;
-    if(!sp) return false;
-    /* Jamais au debut du combat, et jamais systematique : certains combattants ne sortiront pas leur
-       coup signature du tout, et ceux qui le font attendent que l'affrontement soit engage. */
-    actor._acts = (actor._acts||0) + 1;
-    if(actor._acts <= SPECIAL_CHARGE) return false;
-    if(actor._specialWill === undefined) actor._specialWill = Math.random() < 0.65;
-    if(!actor._specialWill) return false;
-    const hurt = actor.hp/actor.maxHp < 0.55;
-    if(Math.random() > (hurt ? 0.3 : 0.12)) return false;
-    actor._specialUsed = true;
-    const label = S.lang==='fr'?sp.nameFr:sp.nameEn;
-    const tier = tierOfKey(actor.key);
-    const foes = side==='ally' ? foeRoster : allyRoster;
-    const alive = livingIdx(foes);
-    if(!alive.length) return false;
-    let tIdx;
-    if(side==='foe') tIdx = pickAllyTarget(idx);
-    else tIdx = (foes[idx] && !foes[idx].ko) ? idx : pick(alive);
-    const hit = (i,d)=>{ if(side==='ally') dealToFoe(i, d, '#9a6bff'); else dealToAlly(i, d, '#9a6bff'); };
-    const tName = foes[tIdx] ? foes[tIdx].name : '';
-    flashSpotlight(side, actor);
-    setTimeout(()=>{
-      const head = S.lang==='fr'?`${actor.name} declenche ${label}`:`${actor.name} unleashes ${label}`;
-      if(sp.type==='BANISH'){
-        setLog(head + (S.lang==='fr'?` : ${tName} est ecarte(e) du combat.`:`: ${tName} is taken out of the fight.`));
-        hit(tIdx, 999);
-      } else if(sp.type==='BIG_STRIKE'){
-        const d = Math.round(30 + tier*0.42);
-        setLog(head + (S.lang==='fr'?` sur ${tName} : ${d} degats.`:` on ${tName}: ${d} damage.`));
-        hit(tIdx, d);
-      } else if(sp.type==='STUN'){
-        const d = Math.round(20 + tier*0.3);
-        if(foes[tIdx]) foes[tIdx]._stunTurns = 1;
-        setLog(head + (S.lang==='fr'?` : ${tName} encaisse ${d} degats et perdra son prochain tour.`:`: ${tName} takes ${d} damage and loses their next turn.`));
-        hit(tIdx, d);
-      } else if(sp.type==='AOE'){
-        const d = Math.round(16 + tier*0.24);
-        setLog(head + (S.lang==='fr'?` : tout le camp d'en face encaisse ${d} degats.`:`: the whole opposing side takes ${d} damage.`));
-        alive.forEach(i=>hit(i, d));
-      } else if(sp.type==='DRAIN'){
-        const d = Math.round(22 + tier*0.3);
-        hit(tIdx, d);
-        actor.hp = Math.min(actor.maxHp, actor.hp + d);
-        refreshEntry(side, idx); if(side==='foe' || idx>0) floatDmg(frameOf(side, idx), -d, actor.col);
-        setLog(head + (S.lang==='fr'?` : ${d} degats absorbes sur ${tName}, et autant de PV recuperes.`:`: ${d} damage drained from ${tName}, and as much HP recovered.`));
-      } else if(sp.type==='FULL_HEAL'){
-        const before = actor.hp; actor.hp = actor.maxHp;
-        refreshEntry(side, idx); floatDmg(frameOf(side, idx), -(actor.hp-before), '#7ef0c0');
-        setLog(head + (S.lang==='fr'?` : ses blessures se referment entierement.`:`: their wounds close up entirely.`));
-      } else { // RALLY et autres : galvanisation, coup renforce immediat
-        const d = Math.round(24 + tier*0.34);
-        actor._rallied = true;
-        setLog(head + (S.lang==='fr'?` : galvanise(e), il/elle frappe ${tName} pour ${d} degats.`:`: galvanized, they hit ${tName} for ${d} damage.`));
-        hit(tIdx, d);
-      }
-      if(side==='foe') refreshSpotlight();
-      setTimeout(runTurn, wait(950));
-    }, wait(520));
-    return true;
-  }
   /* Un membre de ton escouade (autre que toi) frappe la cible actuellement engagee. */
   function doAllyAct(idx){
     const ally = allyRoster[idx];
-    if(npcSpecialTry('ally', idx)) return;
     if(isWizardKey(ally.key)){
       const wounded = allyRoster.filter(a=>!a.ko && a.hp/a.maxHp < 0.75);
       if(wounded.length && Math.random()<0.4){
@@ -10175,7 +10043,7 @@ function startBattle(mission, done){
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * (ally._rallied?1.25:1)));
+    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5)));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       dealToFoe(atkIdx, d, ally.col);
@@ -10222,7 +10090,6 @@ function startBattle(mission, done){
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
     const actor = foeRoster[idx];
-    if(npcSpecialTry('foe', idx)) return;
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
@@ -10236,7 +10103,7 @@ function startBattle(mission, done){
       return;
     }
     const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * (actor._rallied?1.25:1);
+    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
@@ -10251,7 +10118,6 @@ function startBattle(mission, done){
     if(i === st.lastPlayerMoveIdx) return; // verrou d'un tour : impossible d'enchainer le meme coup
     st.busy = true; setMovesEnabled(false);
     st.lastPlayerMoveIdx = i;
-    st.playerActs = (st.playerActs||0) + 1;
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
@@ -10663,7 +10529,6 @@ function screenInvite(){
     <div class="team-hero-banner" style="border-color:${charColor(S.inviteSide)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.inviteSide, tier, 84)}</div>
       <div class="tname" style="color:${charColor(S.inviteSide)}; text-shadow:0 0 20px ${charColor(S.inviteSide)};">${fname}</div>
-      ${factionLeaderHTML(S.inviteSide, tier)}
     </div>
     <div class="actions"><button class="btn ghost" id="decline">${t('decline')}</button><button class="btn cyan" id="accept">${t('accept')}</button></div>`;
   d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier };
@@ -11553,7 +11418,7 @@ function generateGroupConversation(){
   const sameOthers = same.filter(k=>sameFacMates.indexOf(k)<0);
   const sameOrdered = sameFacMates.length ? weightedFactionOrder(sameFacMates, sameOthers, 0.58) : shuffle(same.slice());
   let cast = sameOrdered.slice(0, count);
-  /* Le leader / maître de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
+  /* Le chef de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && cast.includes(leaderKey)) cast = [leaderKey].concat(cast.filter(k=>k!==leaderKey));
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
@@ -12126,7 +11991,7 @@ function renderConversationOverlay(){
     </div>
     <div class="conv-body">
       ${convCastHTML(conv, speakerKey)}
-      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}${archBadge(speakerKey, 24)}</div>
+      <div class="conv-charname"><span class="conv-dot" style="background:${col};"></span>${S.lang==='fr'?charObj.fr:charObj.en}</div>
       <div class="conv-line">${lines[S.convLineIndex]}</div>
       ${!isLast ? `<div class="actions"><button class="btn cyan" id="convNext">${t('convNext')} -></button></div>` : `<div id="convChoices">${conv.choices.map((c,i)=>`<button class="choice" data-idx="${i}" style="--cp-color:${choiceColorFor(c)};">${S.lang==='fr'?c.fr:c.en}</button>`).join('')}</div>`}
     </div>
@@ -12298,8 +12163,7 @@ function screenEnd(){
     })()}</p>
     ${(S.team && teamNameEnd) ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84) || factionEmblemSVG(S.team.side, 5, 84)}</div>
-      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div>
-      ${factionLeaderHTML(S.team.side, S.team.tier)}</div>` : ''}
+      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${eclatsDetail}
@@ -12604,7 +12468,6 @@ function jarvisHUD(){
       <div class="jv-body" id="jvBody"></div>
       <div class="jv-meta"><span id="jvTag">// uplink 99.7 fm</span><button class="jv-mute" id="jvMute"></button></div>`;
     document.body.appendChild(el);
-    makeHudDraggable(el, 'jarvis');
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
   }
   jvSkin(el);
