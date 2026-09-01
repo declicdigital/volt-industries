@@ -7400,6 +7400,41 @@ function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'her
 function playerIsIndependent(){ const c = S.playerCharKey && CHARACTERS[S.playerCharKey]; return !!c && c.align==='neutral'; }
 function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
 function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
+/* Recrues encore de TON cote : si tu changes de camp et qu'elles ne suivent pas, elles deviennent
+   des adversaires - plus d'entrainements, plus de suivi, plus de soutien en combat. */
+function alignedMentees(){
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : (zoneOf(S.align)==='hero' ? 'hero' : null);
+  return livingMentees().filter(m=>{
+    if(m.outcome==='hero' || m.outcome==='villain'){
+      if(mySide===null) return false; // joueur independant : une recrue engagee d'un cote ne te suit plus
+      return m.outcome===mySide;
+    }
+    return true; // recrue encore neutre : toujours sous ta tutelle
+  });
+}
+/* Appelee a chaque bascule de camp : certaines recrues te suivent, les autres passent en face. */
+function syncMenteesToSide(){
+  const zone = zoneOf(S.align);
+  const mySide = zone==='villain' ? 'villain' : (zone==='hero' ? 'hero' : null);
+  if(mySide===null) return;
+  (S.mentees||[]).forEach(m=>{
+    if(!m.charKey || m.outcome==='died') return;
+    if(m.outcome!=='hero' && m.outcome!=='villain') return;
+    if(m.outcome===mySide) return;
+    const c = CHARACTERS[m.charKey];
+    const name = c ? (S.lang==='fr'?c.fr:c.en) : m.name;
+    const follows = !m.graduated && Math.random() < 0.35;
+    if(follows){
+      m.outcome = mySide;
+      jarvisSay(`${name} choisit de te suivre dans ta bascule : ${mySide==='villain'?'elle passe du cote des villains avec toi':'elle rejoint le camp des heros avec toi'}.`,
+        `${name} chooses to follow your switch and joins your new side.`, S.lang==='fr'?'loyaute':'loyalty');
+    } else {
+      m.graduated = true;
+      jarvisSay(`${name} refuse ta nouvelle voie : ton ancienne recrue est desormais dans le camp adverse.`,
+        `${name} rejects your new path: your former recruit now stands on the opposing side.`, S.lang==='fr'?'rupture':'break');
+    }
+  });
+}
 function recruitCandidates(){
   const taken = menteeKeys();
   const side = recruitSideKey();
@@ -7421,19 +7456,19 @@ function shouldTriggerMentor(){
 }
 /* Entrainements et suivis : plusieurs etapes par recrue, tres regulierement. */
 function shouldTriggerRecruitArc(){
-  if(!livingMentees().length) return false;
+  if(!alignedMentees().length) return false;
   if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 1) return false;
   return Math.random() < 0.55;
 }
 /* ---------- Entrainement au combat avec tes recrues : un vrai duel (1 ou 2 contre toi), sans
    aucun risque de mort permanente, distinct des vraies missions et du systeme narratif ci-dessus. */
 function shouldTriggerTrainingSpar(){
-  if(!livingMentees().filter(m=>!m.graduated).length) return false;
+  if(!alignedMentees().filter(m=>!m.graduated).length) return false;
   if(S.lastTrainingSparYear!=null && (S.currentYear - S.lastTrainingSparYear) < 2) return false;
   return Math.random() < 0.30;
 }
 function startTrainingSpar(){
-  const cands = livingMentees().filter(m=>!m.graduated); if(!cands.length) return false;
+  const cands = alignedMentees().filter(m=>!m.graduated); if(!cands.length) return false;
   S.lastTrainingSparYear = S.currentYear;
   /* Un contre un dans la plupart des cas, parfois les deux recrues en meme temps si tu en as deux. */
   const two = cands.length>=2 && Math.random()<0.35;
@@ -7471,7 +7506,7 @@ function startMentorScene(){
   return true;
 }
 function startRecruitArc(){
-  const live = livingMentees(); if(!live.length) return false;
+  const live = alignedMentees(); if(!live.length) return false;
   const mentee = pick(live); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
   const usedIds = S.usedArcIds || (S.usedArcIds=[]);
   const beats = mentee.beats||1;
@@ -7797,6 +7832,7 @@ function screenDefection(){
     S.align = isHero ? 70 : -70;
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:S.defectionSide });
     S.lastZone = S.defectionSide;
+    syncMenteesToSide();
     S.team = { side:S.defectionSide, tier };
     const label = fr ? `Tu as rejoint ${fname} - et change de camp.` : `You joined ${fname} - and switched sides.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero });
@@ -7838,7 +7874,7 @@ function nextMission(){
   S.firstMissionStarted = true;
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
-  const mentorSteps = Math.min(2, livingMentees().length);
+  const mentorSteps = Math.min(2, alignedMentees().length);
   const missionsThisYear = S.missionsPlan[S.currentYear-1] + mentorSteps;
   if(S.currentMissionInYear >= missionsThisYear){
     pushYearHistoryIfDone();
@@ -9087,7 +9123,7 @@ function buildBattleSquads(foeKey, mission){
   /* Toutes tes recrues (actives ou diplomees) existent comme personnages a part entiere ; seules
      les actives beneficient de la priorite/progression speciale plus bas. */
   const allMenteeKeys = livingMentees().map(m=>m.charKey).filter(k=>k && k!==foeKey);
-  const activeMenteeKeys = livingMentees().filter(m=>!m.graduated).map(m=>m.charKey).filter(k=>k && k!==foeKey);
+  const activeMenteeKeys = alignedMentees().filter(m=>!m.graduated).map(m=>m.charKey).filter(k=>k && k!==foeKey);
   const keys = Array.from(new Set(canonKeys.concat(allMenteeKeys)));
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
@@ -10405,6 +10441,7 @@ function handleZoneCheckAndContinue(){
   const newZone = zoneOf(S.align);
   if(newZone !== oldZone){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    syncMenteesToSide();
     showSwitchAnnouncement(oldZone, newZone, ()=>{
       if(checkFactionExpulsion()){ nextMission(); return; }
       if(checkTeamInvite()){ render(); return; }
@@ -12097,6 +12134,7 @@ function applyConvChoice(conv, choice){
   }
   if(newZone !== oldZone){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    syncMenteesToSide();
     showSwitchAnnouncement(oldZone, newZone, finishConv);
     return;
   }
