@@ -7201,6 +7201,7 @@ function buildCareerPlan(){
   S.powerVariance = {};
   S.primeJitter = {};
   S.powerBreakthrough = {};
+  S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
