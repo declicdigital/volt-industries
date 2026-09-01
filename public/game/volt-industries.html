@@ -11553,7 +11553,7 @@ function generateGroupConversation(){
   const sameOthers = same.filter(k=>sameFacMates.indexOf(k)<0);
   const sameOrdered = sameFacMates.length ? weightedFactionOrder(sameFacMates, sameOthers, 0.58) : shuffle(same.slice());
   let cast = sameOrdered.slice(0, count);
-  /* Le chef de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
+  /* Le leader / maître de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && cast.includes(leaderKey)) cast = [leaderKey].concat(cast.filter(k=>k!==leaderKey));
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
