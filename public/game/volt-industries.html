@@ -3882,8 +3882,8 @@ function freshState(lang){
     usedChoicePhrases:{ bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }, usedTextIdx:{},
     portrait:null, playerCharKey:null,
     romance:null, romanceHistory:[], lastRomanceYear:null,
-    romanceFate: Math.random() < (0.30 + Math.random()*0.30),
-    romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
+    romanceFate: Math.random() < (0.62 + Math.random()*0.30),
+    romanceMax: 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0),
     lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
@@ -7231,7 +7231,7 @@ function buildCareerPlan(){
      Le taux lui-meme varie maintenant entre 30% et 60% de chances selon la carriere, au lieu d'un
      taux fixe a 30%. */
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
-  S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
+  S.romanceFate = Math.random() < (0.62 + Math.random()*0.30);
   S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
   /* Bug corrige : la variance de puissance n'etait jamais reinitialisee, elle restait figee pour un
      personnage donne d'une carriere a l'autre dans la meme session, malgre le commentaire qui disait
@@ -7241,7 +7241,7 @@ function buildCareerPlan(){
   S.powerBreakthrough = {};
   S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
-  S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
+  S.romanceMax = 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
      carriere ratait ce tirage, plus AUCUNE carriere de la session ne pouvait jamais debloquer Doom,
@@ -7916,16 +7916,19 @@ function checkTeamInvite(){
      afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
   if(tier < 2) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
-  if(tier <= S[key]) return false;
-  if(Math.abs(S.align) < 55) return false;
-  /* Pas de plafond total sur la carriere : une proposition peut revenir tous les 7 ans, point. */
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
-  if(S.currentYear - last < 7) return false;
+  /* Une proposition par palier d'etoile, mais si ta progression stagne longtemps une nouvelle
+     proposition peut quand meme revenir : sur une longue carriere on doit en voir 2 ou 3. */
+  if(tier <= S[key] && (S.currentYear - last) < 10) return false;
+  if(Math.abs(S.align) < 42) return false;
+  if(S.currentYear - last < 4) return false;
   const fights = S.combat.won + S.combat.lost;
   const winRate = fights ? S.combat.won/fights : 0.35;
-  let p = 0.06 + winRate*0.18 + (S.stats.popularity-58)/420 + (S.locations.length>=4 ? 0.04 : 0);
-  if(S.team) p -= 0.10;
-  if(Math.random() > clamp(p, 0.02, 0.26)) return false;
+  let p = 0.16 + winRate*0.28 + (S.stats.popularity-52)/320 + (S.locations.length>=4 ? 0.06 : 0);
+  if(S.team) p -= 0.07;
+  /* Filet de securite : plus le temps passe sans aucune proposition, plus elle devient probable. */
+  if(S.currentYear - last > 12) p += 0.18;
+  if(Math.random() > clamp(p, 0.06, 0.55)) return false;
   S[key] = tier; S.lastInviteYear = S.currentYear;
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
@@ -9863,7 +9866,16 @@ function startBattle(mission, done){
       speedBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.speed,10)===4));
     }
     if(!st.auto || st.busy) return;
-    setTimeout(()=>{ if((st.auto||S.careerAuto) && !st.busy) playerTurn(autoChooseMoveIdx()); }, wait(500));
+    setTimeout(()=>{
+      if(!(st.auto||S.careerAuto) || st.busy) return;
+      /* En mode auto, le coup signature est utilise comme le ferait un joueur : des qu'il est
+         charge, avec une part de hasard, et de preference quand la cible est encore debout.
+         Seul le type RALLY est evite (il ouvre un choix de renfort qui bloquerait l'automatisme). */
+      const sp = document.getElementById('btlSpecial');
+      const spDef = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
+      if(sp && !sp.disabled && !st.specialUsed && spDef && spDef.type!=='RALLY' && Math.random()<0.8){ sp.click(); return; }
+      playerTurn(autoChooseMoveIdx());
+    }, wait(500));
   }
 
   function refreshSpotlight(){
@@ -12106,9 +12118,9 @@ function maybeTriggerRomance(){
   const past = (S.romanceHistory||[]).length;
   if(past >= (S.romanceMax||1)) return false;
   // apres une rupture, il faut du temps avant de refaire sa vie ; la toute premiere peut demarrer tout de suite
-  const gap = past ? 3 : 0;
+  const gap = past ? 2 : 0;
   if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < gap) return false;
-  if(Math.random() > 0.65) return false;
+  if(Math.random() > 0.88) return false;
   const enemy = Math.random() < 0.20;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
