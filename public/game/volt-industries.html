@@ -5336,13 +5336,14 @@ function screenCodex(){
   const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
   const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
-  const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
+  const allFactions = [['hero', FACTIONS.hero], ['villain', FACTIONS.villain]].flatMap(([side, arr])=>(arr||[]).filter(Boolean).map(f=>({...f, side})));
   const repHtml = allFactions.map(f=>{
     const rep = factionRepOf(f.id);
     const pct = Math.round((rep+20)/40*100);
     const col = rep>0 ? '#7ef0c0' : (rep<0 ? '#ff5c6e' : 'var(--dim)');
+    const leaderLab = f.leader ? `<span style="font-size:9px; color:var(--dim); margin-left:6px;">${factionLeaderLabel(f.side, fr, true)} ${f.leader}</span>` : '';
     return `<div style="margin-bottom:8px;">
-      <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${f.fr}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;"><span>${f.fr}${leaderLab}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
       <div class="barbg" style="height:5px;"><div class="barfill" style="width:${pct}%; background:${col};"></div></div>
     </div>`;
   }).join('');
