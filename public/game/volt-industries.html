@@ -7740,6 +7740,44 @@ function grantEclatShard(shard){
     S.pendingVoidCompletion = true;
   }
 }
+/* CIVIL WAR : une seule fois par carriere au maximum, et seulement dans certaines carrieres.
+   Il faut une faction avec assez de combattants, et surtout une trajectoire ambigue (tes reponses
+   n'ont pas trace une ligne nette) : plus tu as doute dans tes choix, plus la fracture est probable. */
+function shouldTriggerCivilWar(){
+  if(S.civilWarDone) return false;
+  if(!S.team) return false;
+  if(S.currentYear < 6) return false;
+  if(myFactionMemberKeys().filter(k=>k!==S.playerCharKey).length < 4) return false;
+  const conviction = Math.abs(S.align||0);
+  const doubt = clamp((85 - conviction)/85, 0, 1); // trajectoire floue = tensions internes
+  const p = 0.012 + doubt*0.05;
+  return Math.random() < p;
+}
+function startCivilWar(){
+  const fr = S.lang==='fr';
+  const mates = myFactionMemberKeys().filter(k=>k!==S.playerCharKey);
+  const leader = myFactionLeaderKey();
+  const foeKey = (leader && mates.includes(leader) && Math.random()<0.6) ? leader : pick(mates);
+  const fac = facAt(S.team.side, S.team.tier);
+  const facName = fac ? (fr?fac.fr:fac.en) : (fr?'ton equipe':'your team');
+  const foeName = foeKey ? (fr?CHARACTERS[foeKey].fr:CHARACTERS[foeKey].en) : '';
+  const eventScope = capScope(computeStars());
+  const villainSide = zoneOf(S.align)==='villain';
+  const m = {
+    id:'civil_war', type:'combat', danger:3, scope:eventScope, civilWar:true, forceDuel:true, charKey:foeKey,
+    tagFr:'CIVIL WAR', tagEn:'CIVIL WAR',
+    fr:`${facName} se dechire de l'interieur. Une ligne est tracee au milieu de la salle : la moitie de l'equipe se range derriere toi, l'autre moitie derriere ${foeName}. Personne ne reculera.`,
+    en:`${facName} tears itself apart. A line is drawn across the room: half the team stands behind you, the other half behind ${foeName}. Nobody is backing down.`,
+    location: { name: randLocationName(eventScope), type:eventScope },
+    choices:[
+      { fr:"Assumer la fracture et mener ton camp jusqu'au bout.", en:"Own the split and lead your side all the way.", eff:{courage:6, popularity:2, align: villainSide?-5:5} },
+      { fr:"Chercher a limiter les degats tout en tenant ta position.", en:"Try to limit the damage while holding your position.", eff:{intelligence:6, popularity:3} },
+      { fr:"Frapper le premier pour briser l'autre moitie de l'equipe.", en:"Strike first to break the other half of the team.", eff:{courage:4, popularity:-2, align: villainSide?-8:-4} },
+    ]};
+  S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  S.civilWarDone = true;
+  return true;
+}
 function shouldTriggerGrandEvent(){
   if(S.currentYear < 3) return false;
   if(S.lastGrandEventYear!=null && (S.currentYear - S.lastGrandEventYear) < 3) return false;
