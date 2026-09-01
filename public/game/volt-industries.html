@@ -9539,18 +9539,20 @@ function startBattle(mission, done){
      - puissance adverse augmentee (base 48, pente 0.72, streak *3)
      - effet "a ton niveau" : plus tu es fort par rapport a l'adversaire, plus celui-ci tape fort
        (jusqu'a +45% de degats), pour eviter que les gros personnages ecrasent tout le monde. */
-  /* PV stables : la base ne depend plus du momentum ni des blessures (qui faisaient chuter les PV
-     de 30 points d'un combat a l'autre). Elle suit uniquement la progression de carriere et la
-     courbe d'age (prime a 35 ans), et ne peut bouger que de 2% maximum entre deux combats. */
-  const baseHP = Math.max(75, 88 + (ps-55)*0.48);
-  const rawMaxHP = Math.max(46, baseHP * charPowerScale * vitalityFactor());
-  if(typeof S.hpBaseline !== 'number' || !isFinite(S.hpBaseline) || S.hpBaseline <= 0){
-    S.hpBaseline = rawMaxHP;
-  } else {
-    const step = S.hpBaseline * 0.02; // evolution progressive, jamais brutale
-    S.hpBaseline = clamp(rawMaxHP, S.hpBaseline - step, S.hpBaseline + step);
-  }
-  const myMaxHP = Math.max(46, Math.round(S.hpBaseline));
+   /* PV stables : la base de reference suit la progression de carriere et la courbe d'age (prime a
+      35 ans) et ne peut bouger que de 2% entre deux combats. Le momentum et les blessures comptent
+      toujours, mais en modulation legere par-dessus cette base (au lieu des -30 PV d'un coup). */
+   const baseHP = Math.max(75, 88 + (ps-55)*0.48);
+   const rawMaxHP = Math.max(46, baseHP * charPowerScale * vitalityFactor());
+   if(typeof S.hpBaseline !== 'number' || !isFinite(S.hpBaseline) || S.hpBaseline <= 0){
+     S.hpBaseline = rawMaxHP;
+   } else {
+     const step = S.hpBaseline * 0.02; // evolution progressive, jamais brutale
+     S.hpBaseline = clamp(rawMaxHP, S.hpBaseline - step, S.hpBaseline + step);
+   }
+   // Forme du moment : +/-4% max de momentum, et jusqu'a -6% si blesse.
+   const formMod = clamp(form.momentum*0.012, -0.04, 0.04) - (inj ? Math.min(0.06, inj.sev*0.02) : 0);
+   const myMaxHP = Math.max(46, Math.round(S.hpBaseline * (1 + formMod)));
 
   const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.24, 0.22)) * (inj ? (1 - inj.sev*0.12) : 1);
   const foeTier = Math.round((fs-40)*2.1 + Math.max(0, form.streak)*4);
