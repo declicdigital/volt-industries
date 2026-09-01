@@ -7400,6 +7400,41 @@ function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'her
 function playerIsIndependent(){ const c = S.playerCharKey && CHARACTERS[S.playerCharKey]; return !!c && c.align==='neutral'; }
 function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
 function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
+/* Recrues encore de TON cote : si tu changes de camp et qu'elles ne suivent pas, elles deviennent
+   des adversaires - plus d'entrainements, plus de suivi, plus de soutien en combat. */
+function alignedMentees(){
+  const mySide = zoneOf(S.align)==='villain' ? 'villain' : (zoneOf(S.align)==='hero' ? 'hero' : null);
+  return livingMentees().filter(m=>{
+    if(m.outcome==='hero' || m.outcome==='villain'){
+      if(mySide===null) return false; // joueur independant : une recrue engagee d'un cote ne te suit plus
+      return m.outcome===mySide;
+    }
+    return true; // recrue encore neutre : toujours sous ta tutelle
+  });
+}
+/* Appelee a chaque bascule de camp : certaines recrues te suivent, les autres passent en face. */
+function syncMenteesToSide(){
+  const zone = zoneOf(S.align);
+  const mySide = zone==='villain' ? 'villain' : (zone==='hero' ? 'hero' : null);
+  if(mySide===null) return;
+  (S.mentees||[]).forEach(m=>{
+    if(!m.charKey || m.outcome==='died') return;
+    if(m.outcome!=='hero' && m.outcome!=='villain') return;
+    if(m.outcome===mySide) return;
+    const c = CHARACTERS[m.charKey];
+    const name = c ? (S.lang==='fr'?c.fr:c.en) : m.name;
+    const follows = !m.graduated && Math.random() < 0.35;
+    if(follows){
+      m.outcome = mySide;
+      jarvisSay(`${name} choisit de te suivre dans ta bascule : ${mySide==='villain'?'elle passe du cote des villains avec toi':'elle rejoint le camp des heros avec toi'}.`,
+        `${name} chooses to follow your switch and joins your new side.`, S.lang==='fr'?'loyaute':'loyalty');
+    } else {
+      m.graduated = true;
+      jarvisSay(`${name} refuse ta nouvelle voie : ton ancienne recrue est desormais dans le camp adverse.`,
+        `${name} rejects your new path: your former recruit now stands on the opposing side.`, S.lang==='fr'?'rupture':'break');
+    }
+  });
+}
 function recruitCandidates(){
   const taken = menteeKeys();
   const side = recruitSideKey();
