@@ -7232,6 +7232,10 @@ function buildCareerPlan(){
   S.rel = { volt:0, vaelor:0, marsh:0, nyx:0, malachar:0, mandate:0, lorelei:0, obsidian:0 };
   S.log = [];
   S.team = null; S.usedMentorIds = []; S.usedArcIds = []; S.invitedTierHero = 0; S.invitedTierVillain = 0;
+  /* Nouvelle carriere : on efface toute trace d'une Civil War precedente (factions et camps d'origine). */
+  restoreFactionBaseline();
+  S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
+  S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null;
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
