@@ -9816,6 +9816,8 @@ function startBattle(mission, done){
   }
   function allFoesDown(){ return foeRoster.every(f=>f.ko); }
   function playerDown(){ return allyRoster[0].hp<=0; }
+  /* Nombre d'actions du joueur necessaires avant de pouvoir declencher son coup signature. */
+  const SPECIAL_CHARGE = 4;
   function renderMoves(){
     movesEl.innerHTML = myMoves.map((m,i)=>{
       const label = S.lang==='fr'?m.fr:m.en;
@@ -9828,7 +9830,7 @@ function startBattle(mission, done){
          l'enchainer deux fois de suite. */
       const isLocked = !!st.lastMoveFr && st.lastMoveFr === m.fr;
       const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
-      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -9859,7 +9861,7 @@ function startBattle(mission, done){
       const ready = have >= need;
       const sub = ready ? (S.lang==='fr'?special.descFr:special.descEn)
         : (S.lang==='fr'?`Charge ${have}/${need} - encore ${need-have} action(s) avant de pouvoir l'utiliser`:`Charge ${have}/${need} - ${need-have} more action(s) before it can be used`);
-      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" ${ready?'':'disabled'} style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);${ready?'':'opacity:.4;'}">
+      movesEl.innerHTML += `<button class="btl-move transform" id="btlSpecial" ${ready?'':'disabled data-lock="1"'} style="grid-column:1 / -1; border-color:#9a6bff; background:rgba(154,107,255,.08);${ready?'':'opacity:.4;'}">
         <b>${S.lang==='fr'?special.nameFr:special.nameEn}</b>
         <span>${sub}</span></button>`;
     }
@@ -9867,7 +9869,7 @@ function startBattle(mission, done){
     const tBtn = movesEl.querySelector('#btlTransform'); if(tBtn) tBtn.onclick = transformIntoFoe;
     const vBtn = movesEl.querySelector('#btlVanish'); if(vBtn) vBtn.onclick = vanishMove;
     const pBtn = movesEl.querySelector('#btlProtect'); if(pBtn) pBtn.onclick = ()=>{
-      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.protectIdx = protectIdx;
+      if(st.busy) return; st.busy = true; setMovesEnabled(false); st.playerActs = (st.playerActs||0) + 1; st.protectIdx = protectIdx;
       setLog(S.lang==='fr'?`Tu te places devant ${allyRoster[protectIdx].name}, pret(e) a encaisser.`:`You step in front of ${allyRoster[protectIdx].name}, ready to take the hit.`);
       setTimeout(runTurn, wait(700));
     };
@@ -9956,11 +9958,11 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
     };
   }
-  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ b.disabled = !on; }); }
+  function setMovesEnabled(on){ movesEl.querySelectorAll('button').forEach(b=>{ b.disabled = !on || b.dataset.lock==='1'; }); }
   function transformIntoFoe(){
     if(st.busy || st.transformed) return;
     st.busy = true; setMovesEnabled(false);
-    st.transformed = true;
+    st.transformed = true; st.playerActs = (st.playerActs||0) + 1;
     const targetFoe = foeRoster[st.targetIdx] || foeRoster[0];
     allyRoster[0].transformedImg = targetFoe.img || foe.img;
     renderRoster('ally');
@@ -9975,7 +9977,7 @@ function startBattle(mission, done){
   function vanishMove(){
     if(st.busy || st.vanishUsed) return;
     st.busy = true; setMovesEnabled(false);
-    st.vanishUsed = true; st.dodgeNext = true;
+    st.vanishUsed = true; st.dodgeNext = true; st.playerActs = (st.playerActs||0) + 1;
     const heal = Math.round(allyRoster[0].maxHp*0.08);
     allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + heal);
     floatDmg(frameOf('ally',0), -heal, myCol); refreshEntry('ally', 0);
@@ -10047,7 +10049,7 @@ function startBattle(mission, done){
     if(!actor){ setTimeout(runTurn, wait(50)); return; }
     if(actor.side==='ally' && actor.ref.isPlayer){
       st.lastPlayerTurnAt = Date.now();
-      st.busy = false; setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
+      st.busy = false; renderMoves(); setMovesEnabled(true); setLog(S.lang==='fr'?'A toi.':'Your turn.');
       maybeAutoPlay();
       return;
     }
