@@ -9398,7 +9398,6 @@ function buildBattleSquads(foeKey, mission){
   const foeFacs = factionsOfChar(foeKey);
   if(foeFacs.length){
     const fac = pick(foeFacs);
-    const facPool = (S.customFactions||[]).concat([]); // (les factions dissidentes sont deja couvertes par factionsOfChar)
     const facMembers = Object.keys(CHARACTERS).filter(k=>{
       const fs = factionsOfChar(k);
       return fs.some(f=>f.id===fac.id);
@@ -9406,7 +9405,6 @@ function buildBattleSquads(foeKey, mission){
     const foeMates = foePool.filter(k=>facMembers.includes(k));
     const foeRest = foePool.filter(k=>foeMates.indexOf(k)<0);
     if(foeMates.length) foePool = weightedFactionOrder(foeMates, foeRest, 0.85);
-    void facPool;
   } else {
     const indies = foePool.filter(k=>isIndependent(k));
     const others = foePool.filter(k=>indies.indexOf(k)<0);
