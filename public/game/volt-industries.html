@@ -4453,6 +4453,7 @@ document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') Au
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
+  syncLiveAligns();
   /* Filet de securite : quel que soit le chemin qui a mene ici (reprise de partie, retour du
      codex...), la musique d'ambiance est la bonne par defaut hors accueil et hors combat reel. */
   if(S.screen !== 'welcome' && !document.querySelector('.btl-overlay')) AudioEngine.setMode('ambient');
@@ -7438,7 +7439,7 @@ function pickMission(){
 function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
 /* Un joueur incarnant un independant (violet) peut recruter dans les deux bassins, mais sa recrue
    reste neutre elle aussi - elle ne devient jamais officiellement heros ou villain. */
-function playerIsIndependent(){ const c = S.playerCharKey && CHARACTERS[S.playerCharKey]; return !!c && c.align==='neutral'; }
+function playerIsIndependent(){ return !!S.playerCharKey && canonAlignOf(S.playerCharKey)==='neutral'; }
 function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
 function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
 /* Recrues encore de TON cote : si tu changes de camp et qu'elles ne suivent pas, elles deviennent
