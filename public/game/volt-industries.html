@@ -62,6 +62,8 @@
   .palsel .swatch:hover{ transform:scale(1.15); }
   .palsel .swatch.active{ border-color:#fff; box-shadow:0 0 0 2px var(--accent-soft), 0 0 10px var(--accent); transform:scale(1.12); }
   @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
+  .draggable-panel{ cursor:grab; touch-action:none; }
+  .draggable-panel.dragging{ cursor:grabbing; opacity:.92; box-shadow:0 18px 40px -12px rgba(0,0,0,.7) !important; z-index:900 !important; }
   .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
@@ -3919,7 +3921,7 @@ function agingProfile(){
   const key = S.playerCharKey || S.heroName || 'x';
   const tier = (typeof charTier==='function') ? 0 : 0;
   let h = 0; for(let i=0;i<key.length;i++) h = (h*31 + key.charCodeAt(i)) % 9973;
-  const t2 = (typeof CHAR_TIER!=='undefined' && S.playerCharKey && CHAR_TIER[S.playerCharKey]) ? CHAR_TIER[S.playerCharKey] : 5;
+  const t2 = (S.playerCharKey && CHAR_NORMAL[S.playerCharKey]) ? CHAR_NORMAL[S.playerCharKey] : 50;
   if(t2 >= 88) return 'late';
   const m = h % 3;
   return m===0 ? 'late' : (m===1 ? 'early' : 'stable');
@@ -4374,6 +4376,44 @@ function tryGrantEighthStar(){
 
 /* ============================ RENDER ============================ */
 const app = document.getElementById('app');
+/* Systeme de glisser-deposer generique pour les encarts flottants (console JARVIS, bouton
+   simulation, badge de rang) : la position choisie survit meme quand l'element est reconstruit
+   a chaque rendu, puisqu'elle est memorisee a part, pas sur le DOM lui-meme. */
+const _dragPositions = {};
+function makeDraggable(el, key){
+  if(!el) return;
+  el.classList.add('draggable-panel');
+  const pos = _dragPositions[key] || { x:0, y:0 };
+  el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+  if(el._dragBound) return;
+  el._dragBound = true;
+  let dragging = false, moved = false, startX=0, startY=0, origX=0, origY=0;
+  const isInteractive = (t)=> t.closest('button, a, input, .rival-badge-link');
+  function down(clientX, clientY, target){
+    if(isInteractive(target)) return;
+    dragging = true; moved = false; startX = clientX; startY = clientY;
+    const p = _dragPositions[key] || { x:0, y:0 };
+    origX = p.x; origY = p.y;
+    el.classList.add('dragging');
+  }
+  function move(clientX, clientY){
+    if(!dragging) return;
+    const dx = clientX-startX, dy = clientY-startY;
+    if(Math.abs(dx)>3 || Math.abs(dy)>3) moved = true;
+    _dragPositions[key] = { x: origX+dx, y: origY+dy };
+    el.style.transform = `translate(${origX+dx}px, ${origY+dy}px)`;
+  }
+  function up(){ dragging = false; el.classList.remove('dragging'); setTimeout(()=>{ moved = false; }, 0); }
+  el.addEventListener('mousedown', e=>{ down(e.clientX, e.clientY, e.target); });
+  document.addEventListener('mousemove', e=>{ if(dragging) move(e.clientX, e.clientY); });
+  document.addEventListener('mouseup', up);
+  el.addEventListener('touchstart', e=>{ const t=e.touches[0]; down(t.clientX, t.clientY, e.target); }, { passive:true });
+  document.addEventListener('touchmove', e=>{ if(dragging){ const t=e.touches[0]; move(t.clientX, t.clientY); } }, { passive:true });
+  document.addEventListener('touchend', up);
+  /* Empeche un simple clic (sur "Simuler", "Arreter"...) d'etre annule par le petit mouvement
+     de tolerance du glisser-deposer. */
+  el.addEventListener('click', e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); } }, true);
+}
 document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') AudioEngine.start(); }, { once:true });
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
@@ -4590,6 +4630,7 @@ function renderCareerAutoWidget(){
   if(!eligible){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'careerAutoWidget'; document.body.appendChild(el); }
   el.className = 'career-auto-widget' + (S.careerAuto ? ' running' : '');
+  makeDraggable(el, 'careerAutoWidget');
   const isFr = S.lang==='fr';
   el.innerHTML = S.careerAuto
     ? `<span class="caw-dot"></span><span class="caw-label">${isFr?'SIMULATION':'SIMULATION'}</span><button class="caw-btn" id="cawStop">${isFr?'ARRETER':'STOP'}</button>`
@@ -4735,6 +4776,7 @@ function renderRankBadge(){
   let el = document.getElementById('rankBadgeFixed');
   if(!shouldShowSidebar()){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id='rankBadgeFixed'; el.className='rank-badge'; document.body.appendChild(el); }
+  makeDraggable(el, 'rankBadge');
   const zone = zoneOf(S.align);
   const label = zone==='hero'?t('rankHero'):(zone==='villain'?t('rankVillain'):t('rankNeutral'));
   const stars = computeStars();
@@ -6058,6 +6100,7 @@ function screenWelcome(){
     </div>`;
     box.querySelector('#resumeCard').onclick = ()=>{ S = saved; render(); };
   });
+  makeDraggable(d.querySelector('.hud-console'), 'hudConsole');
   return d;
 }
 async function saveCareerToHistory(){
@@ -6373,15 +6416,15 @@ function markMet(keys){
 }
 function hasMetChar(key){ return (S.metCharacters||[]).includes(key); }
 const UNLOCK_TIERS = [
-  { ids:['hawkeye'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
-  { ids:['rocket'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
+  { ids:['hawkeye'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
+  { ids:['rocket'], condFr:'Terminer 2 carrieres au total', condEn:'Complete 2 careers total', check:(m)=>(m.careersCompleted||0)>=2 },
   { ids:['daredevil'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['yelena'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['marsh'], condFr:'Terminer 1 carriere au total', condEn:'Complete 1 career total', check:(m)=>(m.careersCompleted||0)>=1 },
   { ids:['falcon'], condFr:'Vivre une relation amoureuse', condEn:'Live through a romantic relationship', check:(m)=>!!m.everHadRomance },
   { ids:['mantis'], condFr:'Sauver 75 lieux', condEn:'Save 75 locations', check:(m)=>(m.totalCivilsSaved||0)>=75 },
   { ids:['starlord'], condFr:'Rejoindre une faction', condEn:'Join a faction', check:(m)=>!!m.everJoinedFaction },
-  { ids:['kaerus'], condFr:'Gagner 50 combats', condEn:'Win 50 fights', check:(m)=>(m.totalFightsWon||0)>=50 },
+  { ids:['kaerus'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['bucky'], condFr:'Terminer une carriere d\'au moins 15 ans', condEn:'Complete a career of at least 15 years', check:(m)=>(m.longestCareerYears||0)>=15 },
   { ids:['wasp'], condFr:'Obtenir 1 artefact', condEn:'Obtain 1 artifact', check:(m)=>(m.artifactsFoundEver||[]).length>=1 },
   { ids:['aegis'], condFr:'Former 10 recrues', condEn:'Train 10 recruits', check:(m)=>(m.totalMenteesTrained||0)>=10 },
@@ -6443,7 +6486,7 @@ const UNLOCK_TIERS = [
   { ids:['shuri'], condFr:'Jouer avec 10 personnages differents', condEn:'Play as 10 different characters', check:(m)=>(m.charactersPlayed||[]).length>=10 },
   { ids:['shangchi'], condFr:'Cumuler 25 etoiles au total', condEn:'Accumulate 25 stars total', check:(m)=>(m.totalStarsEarned||0)>=25 },
   { ids:['usagent'], condFr:'Cumuler 50 annees vecues au total', condEn:'Live 50 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=50 },
-  { ids:['redguardian'], condFr:'Jouer avec 5 personnages differents', condEn:'Play as 5 different characters', check:(m)=>(m.charactersPlayed||[]).length>=5 },
+  { ids:['redguardian'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['ghost'], condFr:'Cumuler 30 etoiles au total', condEn:'Accumulate 30 stars total', check:(m)=>(m.totalStarsEarned||0)>=30 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
@@ -6544,7 +6587,7 @@ function screenProfileChoice(){
      panneau au-dessus, plutot que d'etre toujours visible sur chaque case.
      Tries par puissance (le plus faible en premier), pagines par pages de 4x3 pour que les
      portraits restent grands et lisibles au lieu d'etre minuscules dans une grille geante. */
-  const sortedPresets = SELECTABLE_PRESETS.slice().sort((a,b)=>(CHAR_TIER[a.charKey]||50)-(CHAR_TIER[b.charKey]||50));
+  const sortedPresets = SELECTABLE_PRESETS.slice().sort((a,b)=>(CHAR_NORMAL[a.charKey]||50)-(CHAR_NORMAL[b.charKey]||50));
   const PAGE_COLS = 4, PAGE_ROWS = 3, PAGE_SIZE = PAGE_COLS*PAGE_ROWS;
   const pageCount = Math.ceil(sortedPresets.length / PAGE_SIZE);
   if(!S.charGridPage) S.charGridPage = 0;
@@ -9132,7 +9175,7 @@ function menteeEffectiveTier(charKey){
 function tierOfKey(k){
   const mt = menteeEffectiveTier(k);
   if(mt!=null) return mt;
-  return (typeof CHAR_TIER!=='undefined' && CHAR_TIER[k]) ? CHAR_TIER[k] : 5;
+  return charTier(k);
 }
 /* Personnages a affinite mystique/magique : en escouade, ils peuvent soigner un allie blesse au lieu d'attaquer. */
 const WIZARD_KEYS = ['solen','nyx','siddartha','sepulcre','aurelia','kaerus','lorelei','vaelor'];
