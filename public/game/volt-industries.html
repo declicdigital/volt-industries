@@ -7273,7 +7273,7 @@ function buildCareerPlan(){
   /* Nouvelle carriere : on efface toute trace d'une Civil War precedente (factions et camps d'origine). */
   restoreFactionBaseline();
   S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
-  S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null;
+  S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null; S.civilWarRematch = null;
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -7833,6 +7833,7 @@ function applyCivilWarSplit(playerWon){
     // Les vaincus quittent ton camp : ils deviennent tes adversaires sous un nouveau pavillon.
     uniq.forEach(k=>{ CHARACTERS[k].align = oppSide; });
     S.enemySplinterFac = splinter;
+    planCivilWarRematch(split, true, uniq);
     const label = fr ? `${baseName} eclate : ${names} basculent et fondent ${splinterName}.`
                      : `${baseName} splits: ${names} defect and found ${splinterName}.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: oppSide==='villain' });
@@ -7848,11 +7849,57 @@ function applyCivilWarSplit(playerWon){
   S.splinterFac = splinter;
   S.team = { side: oppSide, tier: tier };
   if(typeof syncMenteesToSide === 'function') syncMenteesToSide();
+  planCivilWarRematch(split, false, uniq);
   const label = fr ? `Battu(e) par ton propre camp, tu quittes ${baseName} avec ${names} et fondes ${splinterName}.`
                    : `Beaten by your own side, you leave ${baseName} with ${names} and found ${splinterName}.`;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: oppSide==='villain' });
   return `<br><br><b style="color:var(--red);">${fr?'FRACTURE DEFINITIVE':'PERMANENT SPLIT'}</b><br>${label}`;
 }
+/* REVANCHE : cinq ans apres la fracture, les deux moities se retrouvent - a condition que tu sois
+   toujours dans la faction avec laquelle tu es sorti de la Civil War. */
+function planCivilWarRematch(split, playerWon, defectors){
+  const allies = (split.allies||[]).slice();
+  const foes = playerWon ? defectors.slice() : (split.foes||[]).concat(split.foeKey?[split.foeKey]:[]);
+  S.civilWarRematch = {
+    year: (S.currentYear||1) + 5,
+    foeKey: split.foeKey || (foes.length?foes[foes.length-1]:null),
+    allies, foes: Array.from(new Set(foes.filter(k=>k && CHARACTERS[k]))),
+    wonFirst: !!playerWon,
+    side: S.team ? S.team.side : null, tier: S.team ? S.team.tier : null,
+    done: false,
+  };
+}
+function shouldTriggerCivilWarRematch(){
+  const r = S.civilWarRematch;
+  if(!r || r.done) return false;
+  if(!S.team) return false; // faction quittee : la revanche n'a plus lieu
+  if(S.team.side !== r.side || Number(S.team.tier) !== Number(r.tier)) return false;
+  if((S.currentYear||1) < r.year) return false;
+  if(!r.foes.length) return false;
+  return true;
+}
+function startCivilWarRematch(){
+  const r = S.civilWarRematch; const fr = S.lang==='fr';
+  const foeKey = (r.foeKey && CHARACTERS[r.foeKey]) ? r.foeKey : r.foes[0];
+  const foeName = fr?CHARACTERS[foeKey].fr:CHARACTERS[foeKey].en;
+  const eventScope = capScope(computeStars());
+  const villainSide = zoneOf(S.align)==='villain';
+  const m = {
+    id:'civil_war_rematch', type:'combat', danger:3, scope:eventScope, civilWarRematch:true, forceDuel:true, charKey:foeKey,
+    tagFr:'CIVIL WAR - REVANCHE', tagEn:'CIVIL WAR - REMATCH',
+    fr:`Cinq ans apres la fracture, ${foeName} et son camp ressurgissent. ${r.wonFirst?'Ils veulent leur revanche.':'Cette fois, c\'est toi qui viens la chercher.'} Les deux moities se font face une derniere fois.`,
+    en:`Five years after the split, ${foeName} and his side resurface. ${r.wonFirst?'They want their rematch.':'This time you are the one coming for it.'} Both halves face off one last time.`,
+    location: { name: randLocationName(eventScope), type:eventScope },
+    choices:[
+      { fr:"Regler ca definitivement, quoi qu'il en coute.", en:"Settle it for good, whatever it costs.", eff:{courage:7, popularity:2, align: villainSide?-6:6} },
+      { fr:"Garder la tete froide et exploiter leurs failles.", en:"Stay cold and exploit their weaknesses.", eff:{intelligence:7, popularity:3} },
+      { fr:"Leur tendre un piege avant meme le premier echange.", en:"Trap them before the first exchange.", eff:{courage:4, popularity:-2, align: villainSide?-8:-4} },
+    ]};
+  S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  r.done = true;
+  return true;
+}
+
 
 function startCivilWar(){
   const fr = S.lang==='fr';
@@ -8028,6 +8075,7 @@ function nextMission(){
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
   if(!S.peacefulEra && shouldTriggerCivilWar() && startCivilWar()) return;
+  if(!S.peacefulEra && shouldTriggerCivilWarRematch() && startCivilWarRematch()) return;
   if(!S.peacefulEra && shouldTriggerGrandEvent() && startGrandEvent()) return;
   if(!S.peacefulEra && shouldTriggerEclatQuest() && startEclatQuest()) return;
   if(!S.peacefulEra && shouldTriggerEclatReclaim() && startEclatReclaimQuest()) return;
@@ -9331,6 +9379,13 @@ function buildBattleSquads(foeKey, mission){
     S.civilWarSplit = { allies: squads.allies.slice(), foes: squads.foes.slice(), foeKey: foeKey, done:false };
     return squads;
   }
+  /* REVANCHE : on rejoue exactement les deux moities de la Civil War, cinq ans plus tard. */
+  if(mission && mission.civilWarRematch && S.civilWarRematch){
+    const r = S.civilWarRematch;
+    const alive = k=>k && CHARACTERS[k] && k!==S.playerCharKey && k!==foeKey;
+    return { allies: r.allies.filter(alive), foes: r.foes.filter(alive) };
+  }
+
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
