@@ -8922,7 +8922,10 @@ function pickOpponentKey(){
   /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
      dresser face a toi si tu incarnes l'un des deux. */
   if(S.playerCharKey){
-    const canonRivals = loreRivalOf(S.playerCharKey).filter(k=>pool.includes(k));
+    /* Un personnage de ton propre camp ne se dresse contre toi que dans 10% des cas : les rivalites
+       canoniques du meme camp que toi sont donc filtrees par ce meme tirage. */
+    const canonRivals = loreRivalOf(S.playerCharKey).filter(k=>pool.includes(k))
+      .filter(k=>CHARACTERS[k].align!==mySide || Math.random()<0.10);
     if(canonRivals.length && Math.random() < 0.3) return pick(canonRivals);
   }
   /* Les independants (violet, ni heros ni villain) peuvent se dresser contre toi a tout moment,
