@@ -9146,6 +9146,13 @@ function buildBattleSquads(foeKey, mission){
   if(mission && mission.isTraining && mission.trainingFoes && mission.trainingFoes.length){
     return { allies:[], foes: mission.trainingFoes.slice(1) };
   }
+  /* CIVIL WAR : tous les combattants de ta faction sont sur le terrain, coupes en deux moities de
+     taille strictement egale (toi inclus d'un cote, l'adversaire principal de l'autre). */
+  if(mission && mission.civilWar){
+    const mates = shuffle(myFactionMemberKeys().filter(k=>k!==S.playerCharKey && k!==foeKey));
+    const half = Math.floor(mates.length/2);
+    return { allies: mates.slice(0, half), foes: mates.slice(half, half*2) };
+  }
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
