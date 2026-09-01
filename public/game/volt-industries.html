@@ -7832,6 +7832,7 @@ function screenDefection(){
     S.align = isHero ? 70 : -70;
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:S.defectionSide });
     S.lastZone = S.defectionSide;
+    syncMenteesToSide();
     S.team = { side:S.defectionSide, tier };
     const label = fr ? `Tu as rejoint ${fname} - et change de camp.` : `You joined ${fname} - and switched sides.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero });
