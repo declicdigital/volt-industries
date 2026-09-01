@@ -9924,19 +9924,21 @@ function startBattle(mission, done){
       if(st.busy || st.specialUsed) return;
       if((st.playerActs||0) < SPECIAL_CHARGE) return;
       if(special.type==='RALLY'){
-        /* Ralliement : on choisit qui on appelle, on ne pioche plus au hasard. En priorite les
-           membres de ta propre faction si tu en as une ; si tu n'en as pas, uniquement des
-           personnages independants (jamais n'importe qui du meme camp). */
-        const alreadyIn = new Set(allyRoster.map(e=>e.key).filter(Boolean));
+        /* Ralliement : 4 personnages de ta faction sont proposes au hasard. Si tous les membres de
+           ta faction sont deja sur le terrain (ou si tu n'as pas de faction), on propose des
+           independants. Aucun personnage deja present dans le combat (allie OU adversaire) ne peut
+           etre propose. A son arrivee, le renfort te soigne. */
+        const inFight = new Set([...allyRoster, ...foeRoster].map(e=>e.key).filter(Boolean));
+        const shuffle = (arr)=>{ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+        const keyOfName = (nm)=>Object.keys(CHARACTERS).find(k=>CHARACTERS[k].fr===nm || CHARACTERS[k].en===nm);
+        const usable = (k)=>k && k!==S.playerCharKey && !inFight.has(k) && !DISABLED_CHARS.has(k) && CHARACTERS[k];
         let candidateKeys = [];
         if(S.team && S.team.side && S.team.tier){
           const faction = (FACTIONS[S.team.side]||[])[S.team.tier];
-          if(faction){
-            candidateKeys = faction.members.map(nm=>Object.keys(CHARACTERS).find(k=>CHARACTERS[k].fr===nm || CHARACTERS[k].en===nm))
-              .filter(k=>k && k!==S.playerCharKey && !alreadyIn.has(k));
-          }
-        } else {
-          candidateKeys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align==='neutral' && k!==S.playerCharKey && !alreadyIn.has(k) && !DISABLED_CHARS.has(k));
+          if(faction) candidateKeys = shuffle(faction.members.map(keyOfName).filter(usable));
+        }
+        if(!candidateKeys.length){
+          candidateKeys = shuffle(Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align==='neutral' && usable(k)));
         }
         if(!candidateKeys.length){
           st.busy = true; setMovesEnabled(false); st.specialUsed = true;
@@ -9956,7 +9958,16 @@ function startBattle(mission, done){
           allyRoster.push(newAlly);
           turnOrder.push({ side:'ally', idx:allyRoster.length-1, ref:newAlly });
           renderRoster('ally');
-          setLog(S.lang==='fr'?`${newAlly.name} rejoint le combat a tes cotes. Superiorite numerique !`:`${newAlly.name} joins the fight at your side. Numerical superiority!`);
+          // Le renfort te stabilise en arrivant : soin proportionnel a sa puissance.
+          const me = allyRoster[0];
+          const healAmt = Math.max(8, Math.round(me.maxHp * (0.14 + tier*0.0016)));
+          const before = me.hp;
+          me.hp = Math.min(me.maxHp, me.hp + healAmt);
+          const gained = Math.round(me.hp - before);
+          if(gained > 0){ floatDmg(meSpotFrame, gained, '#7ef0c0', true); refreshEntry('ally', 0); refreshSpotlight(); }
+          setLog(S.lang==='fr'
+            ? `${newAlly.name} rejoint le combat a tes cotes et te remet d'aplomb${gained>0?` (+${gained} PV)`:''}. Superiorite numerique !`
+            : `${newAlly.name} joins the fight at your side and patches you up${gained>0?` (+${gained} HP)`:''}. Numerical superiority!`);
           renderMoves();
           setTimeout(runTurn, wait(900));
         });
