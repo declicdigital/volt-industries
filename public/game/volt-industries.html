@@ -1858,6 +1858,7 @@ function restoreFactionBaseline(){
   });
   Object.keys(ALIGN_BASELINE).forEach(k=>{ if(CHARACTERS[k]) CHARACTERS[k].align = ALIGN_BASELINE[k]; });
 }
+snapshotFactionBaseline();
 function facAt(side, tier){
   /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
   if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
