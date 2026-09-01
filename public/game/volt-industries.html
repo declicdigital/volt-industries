@@ -10662,6 +10662,7 @@ function screenInvite(){
     <div class="team-hero-banner" style="border-color:${charColor(S.inviteSide)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.inviteSide, tier, 84)}</div>
       <div class="tname" style="color:${charColor(S.inviteSide)}; text-shadow:0 0 20px ${charColor(S.inviteSide)};">${fname}</div>
+      ${factionLeaderHTML(S.inviteSide, tier)}
     </div>
     <div class="actions"><button class="btn ghost" id="decline">${t('decline')}</button><button class="btn cyan" id="accept">${t('accept')}</button></div>`;
   d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier };
