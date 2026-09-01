@@ -7921,6 +7921,7 @@ function nextMission(){
   }
   S.currentMissionInYear += 1; S.totalMissionsDone += 1;
   if(shouldTriggerTraining()){ S.trainingOffer = skillCandidates(); S.screen='training'; render(); return; }
+  if(!S.peacefulEra && shouldTriggerCivilWar() && startCivilWar()) return;
   if(!S.peacefulEra && shouldTriggerGrandEvent() && startGrandEvent()) return;
   if(!S.peacefulEra && shouldTriggerEclatQuest() && startEclatQuest()) return;
   if(!S.peacefulEra && shouldTriggerEclatReclaim() && startEclatReclaimQuest()) return;
