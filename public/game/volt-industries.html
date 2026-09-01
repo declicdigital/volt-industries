@@ -9024,14 +9024,43 @@ function playerMoves(){
   const kept = (arr)=>arr.filter(m=>!forgotten.includes(m.fr));
   const priorityAtk = kept([].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool));
   const priorityDef = kept([].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool));
+  S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
+  /* Tirage au sort du combat en cours : les 4 coups ont ete piochés aleatoirement par
+     rollBattleLoadout() - on se contente de les resoudre ici. */
+  if(S.battleLoadout && S.battleLoadout.length){
+    const all = priorityAtk.concat(priorityDef);
+    const sel = S.battleLoadout.map(n=>all.find(m=>m.fr===n)).filter(Boolean);
+    if(sel.length) return sel;
+  }
   const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
   const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
   const atkOut = []; priorityAtk.forEach(m=>{ if(atkOut.length < (maxTotal-defOut.length) && !atkOut.some(x=>x.fr===m.fr) && !defOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
   while(atkOut.length + defOut.length < maxTotal) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
-  S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
   return atkOut.concat(defOut);
 }
+/* Avant chaque combat, les 4 coups sont tires au sort dans l'arsenal du personnage : soit
+   3 attaques + 1 defense, soit 2 attaques + 2 defenses (les mystiques gardent 2 defenses).
+   Le joueur ne choisit plus sa composition, elle change d'un combat a l'autre. */
+function rollBattleLoadout(){
+  S.battleLoadout = null;
+  playerMoves(); // remplit S._moveCandidates avec l'arsenal complet
+  const c = S._moveCandidates; if(!c) return;
+  const uniqBy = (arr)=>{ const seen=new Set(); return arr.filter(m=>{ if(!m||seen.has(m.fr)) return false; seen.add(m.fr); return true; }); };
+  const atks = shuffle(uniqBy(c.atk.slice()));
+  const defs = shuffle(uniqBy(c.def.slice()));
+  const isMystic = S.path === 'mystique';
+  let defCount = isMystic ? 2 : (Math.random()<0.5 ? 1 : 2);
+  defCount = Math.max(1, Math.min(defCount, defs.length || 1));
+  const out = [];
+  atks.slice(0, 4 - defCount).forEach(m=>out.push(m));
+  defs.slice(0, defCount).forEach(m=>out.push(m));
+  // arsenal trop court : on complete avec ce qui reste, sans doublon
+  const rest = atks.concat(defs).filter(m=>!out.some(x=>x.fr===m.fr));
+  while(out.length < 4 && rest.length) out.push(rest.shift());
+  if(out.length) S.battleLoadout = out.map(m=>m.fr);
+}
+
 /* Trop de coups appris pour le nombre d'emplacements disponibles : le joueur doit choisir
    lui-meme lequel il oublie, au lieu de le voir disparaitre silencieusement. */
 function moveOverflow(){
