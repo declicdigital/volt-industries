@@ -1887,7 +1887,7 @@ function myFactionMemberKeys(){
   if(!fac) return [];
   return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
 }
-/* Le chef de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
+/* Le leader (heros) / maître (villains) de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
 function myFactionLeaderKey(){
   if(!S.team) return null;
   const fac = facAt(S.team.side, S.team.tier);
