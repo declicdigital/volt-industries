@@ -1887,7 +1887,7 @@ function myFactionMemberKeys(){
   if(!fac) return [];
   return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
 }
-/* Le chef de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
+/* Le leader (heros) / maître (villains) de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
 function myFactionLeaderKey(){
   if(!S.team) return null;
   const fac = facAt(S.team.side, S.team.tier);
@@ -2146,6 +2146,18 @@ function factionEmblemSVG(side, tier, size){
 
 }
 function factionName(side, tier){ const fac = facAt(side, tier); if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
+function factionLeaderLabel(side, fr, lower=false){
+  const isVillain = side==='villain';
+  const lab = fr ? (isVillain ? (lower?'maître':'MAÎTRE') : (lower?'leader':'LEADER'))
+                 : (isVillain ? (lower?'master':'MASTER') : (lower?'leader':'LEADER'));
+  return lab;
+}
+function factionLeaderName(side, tier){ const fac = facAt(side, tier); if(!fac || !fac.leader) return ''; return fac.leader; }
+function factionLeaderHTML(side, tier){
+  const fac = facAt(side, tier); if(!fac || !fac.leader) return '';
+  const fr = S.lang==='fr'; const lab = factionLeaderLabel(side, fr, true);
+  return `<div style="font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--dim); margin-top:6px;">${lab} : <span style="color:${charColor(side)};">${fac.leader}</span></div>`;
+}
 
 const MISSIONS = [
   { id:'sauvetage', type:'rescue', danger:1, scope:2, tagFr:'Catastrophe', tagEn:'Disaster',
@@ -5324,13 +5336,14 @@ function screenCodex(){
   const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
   const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
-  const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
+  const allFactions = [['hero', FACTIONS.hero], ['villain', FACTIONS.villain]].flatMap(([side, arr])=>(arr||[]).filter(Boolean).map(f=>({...f, side})));
   const repHtml = allFactions.map(f=>{
     const rep = factionRepOf(f.id);
     const pct = Math.round((rep+20)/40*100);
     const col = rep>0 ? '#7ef0c0' : (rep<0 ? '#ff5c6e' : 'var(--dim)');
+    const leaderLab = f.leader ? `<span style="font-size:9px; color:var(--dim); margin-left:6px;">${factionLeaderLabel(f.side, fr, true)} ${f.leader}</span>` : '';
     return `<div style="margin-bottom:8px;">
-      <div style="display:flex; justify-content:space-between; font-size:11px;"><span>${f.fr}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;"><span>${f.fr}${leaderLab}</span><span style="color:${col}; font-weight:800;">${rep>0?'+':''}${rep}</span></div>
       <div class="barbg" style="height:5px;"><div class="barfill" style="width:${pct}%; background:${col};"></div></div>
     </div>`;
   }).join('');
@@ -9103,8 +9116,8 @@ function buildBattleSquads(foeKey, mission){
   const loreRest = attrOthers.filter(k=>loreMates.indexOf(k)<0);
   const attrOrLore = loreMates.length ? weightedFactionOrder(loreMates, loreRest, 0.7) : attrOthers;
   let allyPool = (facMates.length || attrMates.length || loreMates.length) ? weightedTripleOrder(facMates, attrMates, attrOrLore, 0.8, 0.6) : shuffle(sidePool);
-  /* Le chef de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
-     a ses cotes qu'avec n'importe quel autre membre de l'equipe. */
+  /* Le leader / maître de ta faction passe en tete des compagnons disponibles : tu te bats plus souvent
+     avec lui a tes cotes. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && allyPool.includes(leaderKey)) allyPool = [leaderKey].concat(allyPool.filter(k=>k!==leaderKey));
   /* Si tu as plusieurs recrues actives (2 maximum, puisqu'elles cessent de l'etre au bout de 5 ans) :
@@ -10650,6 +10663,7 @@ function screenInvite(){
     <div class="team-hero-banner" style="border-color:${charColor(S.inviteSide)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.inviteSide, tier, 84)}</div>
       <div class="tname" style="color:${charColor(S.inviteSide)}; text-shadow:0 0 20px ${charColor(S.inviteSide)};">${fname}</div>
+      ${factionLeaderHTML(S.inviteSide, tier)}
     </div>
     <div class="actions"><button class="btn ghost" id="decline">${t('decline')}</button><button class="btn cyan" id="accept">${t('accept')}</button></div>`;
   d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier };
@@ -11539,7 +11553,7 @@ function generateGroupConversation(){
   const sameOthers = same.filter(k=>sameFacMates.indexOf(k)<0);
   const sameOrdered = sameFacMates.length ? weightedFactionOrder(sameFacMates, sameOthers, 0.58) : shuffle(same.slice());
   let cast = sameOrdered.slice(0, count);
-  /* Le chef de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
+  /* Le leader / maître de ta faction prend le devant de la scene plus souvent : c'est lui qui lance le sujet. */
   const leaderKey = myFactionLeaderKey();
   if(leaderKey && cast.includes(leaderKey)) cast = [leaderKey].concat(cast.filter(k=>k!==leaderKey));
   if(other.length && Math.random() < 0.35){ cast = cast.slice(0, Math.max(2, count-1)).concat(shuffle(other.slice()).slice(0,1)); }
@@ -12284,7 +12298,8 @@ function screenEnd(){
     })()}</p>
     ${(S.team && teamNameEnd) ? `<div class="team-hero-banner" style="border-color:${charColor(S.team.side)};">
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84) || factionEmblemSVG(S.team.side, 5, 84)}</div>
-      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
+      <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div>
+      ${factionLeaderHTML(S.team.side, S.team.tier)}</div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${eclatsDetail}
