@@ -9210,7 +9210,10 @@ function buildBattleSquads(foeKey, mission){
   if(mission && mission.civilWar){
     const mates = shuffle(myFactionMemberKeys().filter(k=>k!==S.playerCharKey && k!==foeKey));
     const half = Math.floor(mates.length/2);
-    return { allies: mates.slice(0, half), foes: mates.slice(half, half*2) };
+    const squads = { allies: mates.slice(0, half), foes: mates.slice(half, half*2) };
+    /* On memorise la composition exacte : le camp vaincu basculera de l'autre cote apres le combat. */
+    S.civilWarSplit = { allies: squads.allies.slice(), foes: squads.foes.slice(), foeKey: foeKey, done:false };
+    return squads;
   }
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
