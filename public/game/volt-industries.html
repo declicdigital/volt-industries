@@ -9391,6 +9391,25 @@ function buildBattleSquads(foeKey, mission){
   }
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
   let foePool = shuffle(keys.filter(k=> effectiveAlignOf(k)==='neutral' ? neutralSideThisFight[k]===oppSide : effectiveAlignOf(k)===oppSide));
+  /* En face, on affronte majoritairement une faction qui existe deja : l'escouade adverse est
+     composee en priorite des membres de la faction de l'adversaire principal (Avengers, Black Order,
+     Sinister Six...). Si l'adversaire principal est un independant, on lui associe plutot d'autres
+     independants (plusieurs solitaires reunis pour l'occasion). */
+  const foeFacs = factionsOfChar(foeKey);
+  if(foeFacs.length){
+    const fac = pick(foeFacs);
+    const facMembers = Object.keys(CHARACTERS).filter(k=>{
+      const fs = factionsOfChar(k);
+      return fs.some(f=>f.id===fac.id);
+    });
+    const foeMates = foePool.filter(k=>facMembers.includes(k));
+    const foeRest = foePool.filter(k=>foeMates.indexOf(k)<0);
+    if(foeMates.length) foePool = weightedFactionOrder(foeMates, foeRest, 0.85);
+  } else {
+    const indies = foePool.filter(k=>isIndependent(k));
+    const others = foePool.filter(k=>indies.indexOf(k)<0);
+    if(indies.length) foePool = weightedFactionOrder(indies, others, 0.75);
+  }
   /* Si l'adversaire principal a sa propre recrue cette decennie, elle a de bonnes chances d'etre a
      ses cotes - sans jamais depasser le plafond d'escouade lie au niveau. */
   const foeRecruit = npcRecruitFor(foeKey);
