@@ -1843,6 +1843,8 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
    par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
    de renvoyer un bandeau vide sans nom ni logo. */
 function facAt(side, tier){
+  /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
+  if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
   const arr = FACTIONS[side]; if(!arr) return null;
   let i = Number(tier); if(!isFinite(i)) return null;
   if(i > arr.length-1) i = arr.length-1;
