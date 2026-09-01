@@ -5334,7 +5334,9 @@ function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
   const fr = S.lang === 'fr';
   const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
-  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
+  /* Le camp affiche dans TON incubateur est celui de ta jauge actuelle, pas celui d'origine du
+     personnage : tu passes heros (bleu), villain (rouge) ou independant (violet) autant de fois que tu changes. */
+  const al = zoneOf(S.align||0);
   const col = podAuraColor(al);
   const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
   const sub = specimenLabel(S.playerCharKey, al, fr);
