@@ -1842,6 +1842,22 @@ function isIndependent(key){ return factionsOfChar(key).length===0; }
 /* Resolution robuste d'une faction : il n'existe que 8 factions (4 hero + 4 villain), indexees
    par palier 2..5. Au-dela (6,7,8 etoiles), on reste sur la faction la plus haute du camp au lieu
    de renvoyer un bandeau vide sans nom ni logo. */
+/* Etat d'origine des factions et des alignements : une Civil War les modifie definitivement pour la
+   carriere en cours, il faut donc pouvoir tout remettre a zero au demarrage d'une nouvelle carriere. */
+const FACTION_BASELINE = { hero:[], villain:[] };
+const ALIGN_BASELINE = {};
+function snapshotFactionBaseline(){
+  ['hero','villain'].forEach(side=>{
+    FACTION_BASELINE[side] = FACTIONS[side].map(f=> f ? f.members.slice() : null);
+  });
+  Object.keys(CHARACTERS).forEach(k=>{ ALIGN_BASELINE[k] = CHARACTERS[k].align; });
+}
+function restoreFactionBaseline(){
+  ['hero','villain'].forEach(side=>{
+    (FACTION_BASELINE[side]||[]).forEach((mem,i)=>{ if(mem && FACTIONS[side][i]) FACTIONS[side][i].members = mem.slice(); });
+  });
+  Object.keys(ALIGN_BASELINE).forEach(k=>{ if(CHARACTERS[k]) CHARACTERS[k].align = ALIGN_BASELINE[k]; });
+}
 function facAt(side, tier){
   /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
   if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
