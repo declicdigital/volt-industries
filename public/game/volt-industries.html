@@ -1859,6 +1859,22 @@ function restoreFactionBaseline(){
   Object.keys(ALIGN_BASELINE).forEach(k=>{ if(CHARACTERS[k]) CHARACTERS[k].align = ALIGN_BASELINE[k]; });
 }
 snapshotFactionBaseline();
+/* Camp d'origine (fige) : sert a la logique "ce personnage est-il un independant de naissance ?",
+   independamment des bascules de camp survenues pendant la carriere en cours. */
+function canonAlignOf(k){ return ALIGN_BASELINE[k] || (CHARACTERS[k] && CHARACTERS[k].align) || 'neutral'; }
+/* Camp reel a l'instant present : le joueur suit sa jauge, une recrue suit son basculement, un
+   dissident de Civil War suit sa nouvelle faction. CHARACTERS[k].align devient donc la verite
+   affichee partout (cadres, faisceaux, incubateur, escouades) et est remise a zero par carriere. */
+function syncLiveAligns(){
+  if(S.playerCharKey && CHARACTERS[S.playerCharKey]){
+    CHARACTERS[S.playerCharKey].align = zoneOf(S.align||0);
+  }
+  (S.mentees||[]).forEach(m=>{
+    if(m && m.charKey && CHARACTERS[m.charKey] && (m.outcome==='hero' || m.outcome==='villain')){
+      CHARACTERS[m.charKey].align = m.outcome;
+    }
+  });
+}
 function facAt(side, tier){
   /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
   if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
