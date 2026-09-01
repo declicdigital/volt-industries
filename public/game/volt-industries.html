@@ -7456,19 +7456,19 @@ function shouldTriggerMentor(){
 }
 /* Entrainements et suivis : plusieurs etapes par recrue, tres regulierement. */
 function shouldTriggerRecruitArc(){
-  if(!livingMentees().length) return false;
+  if(!alignedMentees().length) return false;
   if(S.lastArcYear!=null && (S.currentYear - S.lastArcYear) < 1) return false;
   return Math.random() < 0.55;
 }
 /* ---------- Entrainement au combat avec tes recrues : un vrai duel (1 ou 2 contre toi), sans
    aucun risque de mort permanente, distinct des vraies missions et du systeme narratif ci-dessus. */
 function shouldTriggerTrainingSpar(){
-  if(!livingMentees().filter(m=>!m.graduated).length) return false;
+  if(!alignedMentees().filter(m=>!m.graduated).length) return false;
   if(S.lastTrainingSparYear!=null && (S.currentYear - S.lastTrainingSparYear) < 2) return false;
   return Math.random() < 0.30;
 }
 function startTrainingSpar(){
-  const cands = livingMentees().filter(m=>!m.graduated); if(!cands.length) return false;
+  const cands = alignedMentees().filter(m=>!m.graduated); if(!cands.length) return false;
   S.lastTrainingSparYear = S.currentYear;
   /* Un contre un dans la plupart des cas, parfois les deux recrues en meme temps si tu en as deux. */
   const two = cands.length>=2 && Math.random()<0.35;
@@ -7506,7 +7506,7 @@ function startMentorScene(){
   return true;
 }
 function startRecruitArc(){
-  const live = livingMentees(); if(!live.length) return false;
+  const live = alignedMentees(); if(!live.length) return false;
   const mentee = pick(live); const c = CHARACTERS[mentee.charKey]; if(!c) return false;
   const usedIds = S.usedArcIds || (S.usedArcIds=[]);
   const beats = mentee.beats||1;
@@ -7873,7 +7873,7 @@ function nextMission(){
   S.firstMissionStarted = true;
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
-  const mentorSteps = Math.min(2, livingMentees().length);
+  const mentorSteps = Math.min(2, alignedMentees().length);
   const missionsThisYear = S.missionsPlan[S.currentYear-1] + mentorSteps;
   if(S.currentMissionInYear >= missionsThisYear){
     pushYearHistoryIfDone();
@@ -9122,7 +9122,7 @@ function buildBattleSquads(foeKey, mission){
   /* Toutes tes recrues (actives ou diplomees) existent comme personnages a part entiere ; seules
      les actives beneficient de la priorite/progression speciale plus bas. */
   const allMenteeKeys = livingMentees().map(m=>m.charKey).filter(k=>k && k!==foeKey);
-  const activeMenteeKeys = livingMentees().filter(m=>!m.graduated).map(m=>m.charKey).filter(k=>k && k!==foeKey);
+  const activeMenteeKeys = alignedMentees().filter(m=>!m.graduated).map(m=>m.charKey).filter(k=>k && k!==foeKey);
   const keys = Array.from(new Set(canonKeys.concat(allMenteeKeys)));
   const myZone = zoneOf(S.align);
   const mySide = myZone==='villain' ? 'villain' : 'hero';
@@ -10440,6 +10440,7 @@ function handleZoneCheckAndContinue(){
   const newZone = zoneOf(S.align);
   if(newZone !== oldZone){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    syncMenteesToSide();
     showSwitchAnnouncement(oldZone, newZone, ()=>{
       if(checkFactionExpulsion()){ nextMission(); return; }
       if(checkTeamInvite()){ render(); return; }
@@ -12132,6 +12133,7 @@ function applyConvChoice(conv, choice){
   }
   if(newZone !== oldZone){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:newZone }); S.lastZone = newZone;
+    syncMenteesToSide();
     showSwitchAnnouncement(oldZone, newZone, finishConv);
     return;
   }
