@@ -9176,7 +9176,7 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
     ? `${foeName} t'a mis au tapis. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Ton elan retombe a zero. Degats -${sev*10}% et -${sev*8} PV sur les ${battles} prochain(s) combat(s).<br>Courage -${2+sev*2}, Popularite -${1+sev}${sev>=2?(S.lang==='fr'?', Intelligence +1 (tu apprends de la douleur)':', Intelligence +1 (pain teaches)'):''}.`
     : `${foeName} put you down. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Momentum wiped. -${sev*10}% damage and -${sev*8} HP for your next ${battles} fight(s).<br>Courage -${2+sev*2}, Popularity -${1+sev}${sev>=2?', Intelligence +1':''}.`;
   S.currentYearEntries.push({ tag:(S.lang==='fr'?`Defaite contre ${foeName} - ${label}`:`Defeat vs ${foeName} - ${label}`), location:null, type:'combat', outcome:'lose' });
-  showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, 'var(--red)', cb);
+  showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}${applyCivilWarSplit(false)}</p>`, 'var(--red)', cb);
 }
 /* ---------- Escouades visuelles : des allies (et des adversaires) au coude a coude ---------- */
 /* Taille d'equipe plafonnee par l'ampleur du combat (scope) : 1=quartier (solo), 2=ville, 3=pays,
