@@ -9155,7 +9155,7 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
       ? `Tu sors vainqueur face a ${foeName}${clean?' sans une egratignure':''}. Tes appuis, ta lecture du combat et ta frappe progressent.<br><br><b style="color:var(--green);">Elan de victoire : +${f.momentum}</b><br>Degats +${f.momentum*8}% et +${f.momentum*6} PV pour les prochains affrontements.<br>Courage +2, Popularite +${clean?3:1}.`
       : `You beat ${foeName}${clean?' without a scratch':''}. Footwork, reads and striking power all improve.<br><br><b style="color:var(--green);">Win momentum: +${f.momentum}</b><br>+${f.momentum*8}% damage and +${f.momentum*6} HP in upcoming fights.<br>Courage +2, Popularity +${clean?3:1}.`;
     S.currentYearEntries.push({ tag:(S.lang==='fr'?`Victoire contre ${foeName}`:`Victory over ${foeName}`), location:null, type:'combat', outcome:'win' });
-    showBattleAftermath(`<div class="ru-title" style="color:var(--green);font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, col, cb);
+    showBattleAftermath(`<div class="ru-title" style="color:var(--green);font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}${applyCivilWarSplit(true)}</p>`, col, cb);
     return;
   }
   f.streak = 0;
