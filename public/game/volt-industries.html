@@ -3888,6 +3888,7 @@ function freshState(lang){
     startAge:24, extensions:0,
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
+    forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
     voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null,
   };
@@ -5208,7 +5209,7 @@ function screenContent(){
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
     codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies, rivalDossier:screenRivalDossier, rivalClimax:screenRivalClimax,
     careerDurationChoice:screenCareerDurationChoice,
-    pressEvent:screenPressEvent, investigation:screenInvestigation, investigationResult:screenInvestigationResult };
+    pressEvent:screenPressEvent, investigation:screenInvestigation, investigationResult:screenInvestigationResult, forgetMove:screenForgetMove };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -7231,6 +7232,7 @@ function buildCareerPlan(){
      Le taux lui-meme varie maintenant entre 30% et 60% de chances selon la carriere, au lieu d'un
      taux fixe a 30%. */
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
+  S.forgottenMoves = []; S.pendingForgetReturn = null;
   S.romanceFate = Math.random() < (0.62 + Math.random()*0.30);
   S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
   /* Bug corrige : la variance de puissance n'etait jamais reinitialisee, elle restait figee pour un
@@ -8012,6 +8014,8 @@ function checkFactionCreationOffer(){
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
   S.firstMissionStarted = true;
+  /* Nouveau coup appris alors que tous les emplacements sont pris : le joueur choisit lequel il oublie. */
+  if(moveOverflow()){ S.pendingForgetReturn = 'mission'; S.screen = 'forgetMove'; render(); return; }
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
   const mentorSteps = Math.min(2, alignedMentees().length);
@@ -8966,14 +8970,69 @@ function playerMoves(){
   const extraSlots = yearsIn>=14 ? 2 : yearsIn>=7 ? 1 : 0;
   const maxTotal = clamp(4 + extraSlots, 4, 6);
   const minDef = isMystic ? 2 : 1; // toujours au moins une defense disponible (deux pour les mystiques)
-  const priorityAtk = [].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool);
-  const priorityDef = [].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool);
+  /* Coups volontairement oublies par le joueur : au-dela de 6 coups, c'est lui qui choisit
+     lequel il abandonne (ecran 'forgetMove'), plus le jeu qui ecrase un coup au hasard. */
+  const forgotten = S.forgottenMoves || [];
+  const kept = (arr)=>arr.filter(m=>!forgotten.includes(m.fr));
+  const priorityAtk = kept([].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool));
+  const priorityDef = kept([].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool));
   const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
   const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
   const atkOut = []; priorityAtk.forEach(m=>{ if(atkOut.length < (maxTotal-defOut.length) && !atkOut.some(x=>x.fr===m.fr) && !defOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
   while(atkOut.length + defOut.length < maxTotal) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
+  S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
   return atkOut.concat(defOut);
+}
+/* Trop de coups appris pour le nombre d'emplacements disponibles : le joueur doit choisir
+   lui-meme lequel il oublie, au lieu de le voir disparaitre silencieusement. */
+function moveOverflow(){
+  playerMoves();
+  const c = S._moveCandidates; if(!c) return null;
+  const atk = c.atk.slice(), def = c.def.slice();
+  if(atk.length + def.length <= c.maxTotal) return null;
+  return { atk, def, maxTotal:c.maxTotal, minDef:c.minDef };
+}
+function screenForgetMove(){
+  const d = document.createElement('div');
+  const ov = moveOverflow();
+  const isFr = S.lang==='fr';
+  if(!ov){
+    S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+    setTimeout(render, 0);
+    return d;
+  }
+  const canDrop = (m)=>m.heal ? (ov.def.length > ov.minDef) : (ov.atk.length > 1);
+  const all = ov.atk.concat(ov.def);
+  d.innerHTML = `
+    <h2>${isFr?'Un coup de trop':'One move too many'}</h2>
+    <p class="mini">${isFr
+      ? `Tu maitrises ${all.length} coups pour seulement ${ov.maxTotal} emplacements. Choisis celui que tu abandonnes.`
+      : `You know ${all.length} moves for only ${ov.maxTotal} slots. Choose the one you give up.`}</p>
+    <div class="grid2" id="fgList" style="margin-top:12px;">
+      ${all.map((m,i)=>{
+        const isDef = !!m.heal;
+        const col = isDef ? 'var(--green)' : 'var(--red)';
+        const sub = isDef ? (isFr?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
+                          : (isFr?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
+        const lock = !canDrop(m);
+        return `<button class="choice" data-fr="${m.fr.replace(/"/g,'&quot;')}" ${lock?'disabled style="opacity:.4;"':''}>
+          <b style="color:${col};">${isFr?m.fr:m.en}</b><span class="mini">${sub}${lock?(isFr?' - indispensable':' - required'):''}</span></button>`;
+      }).join('')}
+    </div>`;
+  d.querySelectorAll('#fgList button[data-fr]').forEach(b=>{
+    b.onclick = ()=>{
+      S.forgottenMoves = S.forgottenMoves || [];
+      S.forgottenMoves.push(b.dataset.fr);
+      const label = isFr?`Tu abandonnes definitivement : ${b.dataset.fr}.`:`You give up for good: ${b.dataset.fr}.`;
+      showImpact([{ label:(isFr?'Coup oublie':'Move forgotten'), text:b.dataset.fr }], label);
+      if(moveOverflow()){ render(); return; }
+      S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+      if(S.screen==='mission' && !S.currentMission){ nextMission(); return; }
+      render();
+    };
+  });
+  return d;
 }
 /* Adversaire : 90% camp adverse, 10% querelle interne */
 function crossedMentees(){
