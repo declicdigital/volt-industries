@@ -1858,6 +1858,23 @@ function restoreFactionBaseline(){
   });
   Object.keys(ALIGN_BASELINE).forEach(k=>{ if(CHARACTERS[k]) CHARACTERS[k].align = ALIGN_BASELINE[k]; });
 }
+snapshotFactionBaseline();
+/* Camp d'origine (fige) : sert a la logique "ce personnage est-il un independant de naissance ?",
+   independamment des bascules de camp survenues pendant la carriere en cours. */
+function canonAlignOf(k){ return ALIGN_BASELINE[k] || (CHARACTERS[k] && CHARACTERS[k].align) || 'neutral'; }
+/* Camp reel a l'instant present : le joueur suit sa jauge, une recrue suit son basculement, un
+   dissident de Civil War suit sa nouvelle faction. CHARACTERS[k].align devient donc la verite
+   affichee partout (cadres, faisceaux, incubateur, escouades) et est remise a zero par carriere. */
+function syncLiveAligns(){
+  if(S.playerCharKey && CHARACTERS[S.playerCharKey]){
+    CHARACTERS[S.playerCharKey].align = zoneOf(S.align||0);
+  }
+  (S.mentees||[]).forEach(m=>{
+    if(m && m.charKey && CHARACTERS[m.charKey] && (m.outcome==='hero' || m.outcome==='villain')){
+      CHARACTERS[m.charKey].align = m.outcome;
+    }
+  });
+}
 function facAt(side, tier){
   /* Faction dissidente nee d'une Civil War : elle remplace la faction de base pour ce camp/palier. */
   if(S.splinterFac && side===S.splinterFac.side && Number(tier)===Number(S.splinterFac.tier)) return S.splinterFac;
@@ -3865,12 +3882,13 @@ function freshState(lang){
     usedChoicePhrases:{ bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }, usedTextIdx:{},
     portrait:null, playerCharKey:null,
     romance:null, romanceHistory:[], lastRomanceYear:null,
-    romanceFate: Math.random() < (0.30 + Math.random()*0.30),
-    romanceMax: 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0),
+    romanceFate: Math.random() < (0.62 + Math.random()*0.30),
+    romanceMax: 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0),
     lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
+    forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
     voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null,
   };
@@ -4436,6 +4454,7 @@ document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') Au
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
+  syncLiveAligns();
   /* Filet de securite : quel que soit le chemin qui a mene ici (reprise de partie, retour du
      codex...), la musique d'ambiance est la bonne par defaut hors accueil et hors combat reel. */
   if(S.screen !== 'welcome' && !document.querySelector('.btl-overlay')) AudioEngine.setMode('ambient');
@@ -5190,7 +5209,7 @@ function screenContent(){
     summary:screenSummary, mission:screenMission, mentor:screenMentor, yearbreak:screenYearBreak, invite:screenInvite, defection:screenDefection, factionCreate:screenFactionCreate, training:screenTraining, end:screenEnd,
     codex:screenCodex, duelSim:screenDuelSimulator, trophies:screenTrophies, rivalDossier:screenRivalDossier, rivalClimax:screenRivalClimax,
     careerDurationChoice:screenCareerDurationChoice,
-    pressEvent:screenPressEvent, investigation:screenInvestigation, investigationResult:screenInvestigationResult };
+    pressEvent:screenPressEvent, investigation:screenInvestigation, investigationResult:screenInvestigationResult, forgetMove:screenForgetMove };
   wrap.appendChild(map[S.screen]());
   return wrap;
 }
@@ -5317,7 +5336,9 @@ function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
   const fr = S.lang === 'fr';
   const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
-  const al = (ck && ck.align) || (S.align < -10 ? 'villain' : S.align > 10 ? 'hero' : 'neutral');
+  /* Le camp affiche dans TON incubateur est celui de ta jauge actuelle, pas celui d'origine du
+     personnage : tu passes heros (bleu), villain (rouge) ou independant (violet) autant de fois que tu changes. */
+  const al = zoneOf(S.align||0);
   const col = podAuraColor(al);
   const hue = al === 'hero' ? '0deg' : al === 'villain' ? '140deg' : '60deg';
   const sub = specimenLabel(S.playerCharKey, al, fr);
@@ -7211,7 +7232,8 @@ function buildCareerPlan(){
      Le taux lui-meme varie maintenant entre 30% et 60% de chances selon la carriere, au lieu d'un
      taux fixe a 30%. */
   S.romance = null; S.romanceHistory = []; S.lastRomanceYear = null;
-  S.romanceFate = Math.random() < (0.30 + Math.random()*0.30);
+  S.forgottenMoves = []; S.pendingForgetReturn = null;
+  S.romanceFate = Math.random() < (0.62 + Math.random()*0.30);
   S.charMoveSplit = null; // nouveau tirage 2+2 ou 3+1 a chaque carriere
   /* Bug corrige : la variance de puissance n'etait jamais reinitialisee, elle restait figee pour un
      personnage donne d'une carriere a l'autre dans la meme session, malgre le commentaire qui disait
@@ -7221,7 +7243,7 @@ function buildCareerPlan(){
   S.powerBreakthrough = {};
   S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
-  S.romanceMax = 1 + (Math.random()<0.45?1:0) + (Math.random()<0.18?1:0);
+  S.romanceMax = 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0);
   /* Bug critique, meme famille : l'eligibilite a la 8eme etoile (qui debloque Doctor Doom, le palier
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
      carriere ratait ce tirage, plus AUCUNE carriere de la session ne pouvait jamais debloquer Doom,
@@ -7419,7 +7441,7 @@ function pickMission(){
 function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'hero'; }
 /* Un joueur incarnant un independant (violet) peut recruter dans les deux bassins, mais sa recrue
    reste neutre elle aussi - elle ne devient jamais officiellement heros ou villain. */
-function playerIsIndependent(){ const c = S.playerCharKey && CHARACTERS[S.playerCharKey]; return !!c && c.align==='neutral'; }
+function playerIsIndependent(){ return !!S.playerCharKey && canonAlignOf(S.playerCharKey)==='neutral'; }
 function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
 function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
 /* Recrues encore de TON cote : si tu changes de camp et qu'elles ne suivent pas, elles deviennent
@@ -7896,16 +7918,19 @@ function checkTeamInvite(){
      afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
   if(tier < 2) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
-  if(tier <= S[key]) return false;
-  if(Math.abs(S.align) < 55) return false;
-  /* Pas de plafond total sur la carriere : une proposition peut revenir tous les 7 ans, point. */
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
-  if(S.currentYear - last < 7) return false;
+  /* Une proposition par palier d'etoile, mais si ta progression stagne longtemps une nouvelle
+     proposition peut quand meme revenir : sur une longue carriere on doit en voir 2 ou 3. */
+  if(tier <= S[key] && (S.currentYear - last) < 10) return false;
+  if(Math.abs(S.align) < 42) return false;
+  if(S.currentYear - last < 4) return false;
   const fights = S.combat.won + S.combat.lost;
   const winRate = fights ? S.combat.won/fights : 0.35;
-  let p = 0.06 + winRate*0.18 + (S.stats.popularity-58)/420 + (S.locations.length>=4 ? 0.04 : 0);
-  if(S.team) p -= 0.10;
-  if(Math.random() > clamp(p, 0.02, 0.26)) return false;
+  let p = 0.16 + winRate*0.28 + (S.stats.popularity-52)/320 + (S.locations.length>=4 ? 0.06 : 0);
+  if(S.team) p -= 0.07;
+  /* Filet de securite : plus le temps passe sans aucune proposition, plus elle devient probable. */
+  if(S.currentYear - last > 12) p += 0.18;
+  if(Math.random() > clamp(p, 0.06, 0.55)) return false;
   S[key] = tier; S.lastInviteYear = S.currentYear;
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
@@ -7989,6 +8014,8 @@ function checkFactionCreationOffer(){
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
   S.firstMissionStarted = true;
+  /* Nouveau coup appris alors que tous les emplacements sont pris : le joueur choisit lequel il oublie. */
+  if(moveOverflow()){ S.pendingForgetReturn = 'mission'; S.screen = 'forgetMove'; render(); return; }
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
   const mentorSteps = Math.min(2, alignedMentees().length);
@@ -8943,14 +8970,83 @@ function playerMoves(){
   const extraSlots = yearsIn>=14 ? 2 : yearsIn>=7 ? 1 : 0;
   const maxTotal = clamp(4 + extraSlots, 4, 6);
   const minDef = isMystic ? 2 : 1; // toujours au moins une defense disponible (deux pour les mystiques)
-  const priorityAtk = [].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool);
-  const priorityDef = [].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool);
+  /* Coups volontairement oublies par le joueur : au-dela de 6 coups, c'est lui qui choisit
+     lequel il abandonne (ecran 'forgetMove'), plus le jeu qui ecrase un coup au hasard. */
+  const forgotten = S.forgottenMoves || [];
+  const kept = (arr)=>arr.filter(m=>!forgotten.includes(m.fr));
+  const priorityAtk = kept([].concat(shardMoves.filter(m=>!m.heal), artifactMoves.filter(m=>!m.heal), skillMoves, baseAtkPool));
+  const priorityDef = kept([].concat(shardMoves.filter(m=>m.heal), artifactMoves.filter(m=>m.heal), baseDefPool));
   const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
   const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
   const atkOut = []; priorityAtk.forEach(m=>{ if(atkOut.length < (maxTotal-defOut.length) && !atkOut.some(x=>x.fr===m.fr) && !defOut.some(x=>x.fr===m.fr)) atkOut.push(m); });
   while(atkOut.length + defOut.length < maxTotal) atkOut.push(charPool ? charPool.atk[atkOut.length%charPool.atk.length] : BASIC_MOVES[atkOut.length%2]);
+  S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
   return atkOut.concat(defOut);
+}
+/* Trop de coups appris pour le nombre d'emplacements disponibles : le joueur doit choisir
+   lui-meme lequel il oublie, au lieu de le voir disparaitre silencieusement. */
+function moveOverflow(){
+  playerMoves();
+  const c = S._moveCandidates; if(!c) return null;
+  const atk = c.atk.slice(), def = c.def.slice();
+  if(atk.length + def.length <= c.maxTotal) return null;
+  return { atk, def, maxTotal:c.maxTotal, minDef:c.minDef };
+}
+function screenForgetMove(){
+  const d = document.createElement('div');
+  const ov = moveOverflow();
+  const isFr = S.lang==='fr';
+  if(!ov){
+    S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+    setTimeout(render, 0);
+    return d;
+  }
+  const canDrop = (m)=>m.heal ? (ov.def.length > ov.minDef) : (ov.atk.length > 1);
+  const all = ov.atk.concat(ov.def);
+  /* En simulation automatique, le jeu tranche a ta place : il abandonne le coup le plus faible. */
+  if(S.careerAuto){
+    const droppable = all.filter(canDrop);
+    if(droppable.length){
+      const worst = droppable.slice().sort((a,b)=>((a.p*a.acc)+(a.heal||0)) - ((b.p*b.acc)+(b.heal||0)))[0];
+      S.forgottenMoves = S.forgottenMoves || [];
+      S.forgottenMoves.push(worst.fr);
+      setTimeout(()=>{ if(moveOverflow()){ render(); return; }
+        S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+        if(S.screen==='mission' && !S.currentMission){ nextMission(); return; }
+        render(); }, 0);
+      return d;
+    }
+  }
+  d.innerHTML = `
+    <h2>${isFr?'Un coup de trop':'One move too many'}</h2>
+    <p class="mini">${isFr
+      ? `Tu maitrises ${all.length} coups pour seulement ${ov.maxTotal} emplacements. Choisis celui que tu abandonnes.`
+      : `You know ${all.length} moves for only ${ov.maxTotal} slots. Choose the one you give up.`}</p>
+    <div class="grid2" id="fgList" style="margin-top:12px;">
+      ${all.map((m,i)=>{
+        const isDef = !!m.heal;
+        const col = isDef ? 'var(--green)' : 'var(--red)';
+        const sub = isDef ? (isFr?`Soin ${m.heal} - Degats ${m.p}`:`Heal ${m.heal} - Dmg ${m.p}`)
+                          : (isFr?`Degats ${m.p} - Precision ${Math.round(m.acc*100)}%`:`Dmg ${m.p} - Acc ${Math.round(m.acc*100)}%`);
+        const lock = !canDrop(m);
+        return `<button class="choice" data-fr="${m.fr.replace(/"/g,'&quot;')}" ${lock?'disabled style="opacity:.4;"':''}>
+          <b style="color:${col};">${isFr?m.fr:m.en}</b><span class="mini">${sub}${lock?(isFr?' - indispensable':' - required'):''}</span></button>`;
+      }).join('')}
+    </div>`;
+  d.querySelectorAll('#fgList button[data-fr]').forEach(b=>{
+    b.onclick = ()=>{
+      S.forgottenMoves = S.forgottenMoves || [];
+      S.forgottenMoves.push(b.dataset.fr);
+      const label = isFr?`Tu abandonnes definitivement : ${b.dataset.fr}.`:`You give up for good: ${b.dataset.fr}.`;
+      showImpact([{ label:(isFr?'Coup oublie':'Move forgotten'), text:b.dataset.fr }], label);
+      if(moveOverflow()){ render(); return; }
+      S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+      if(S.screen==='mission' && !S.currentMission){ nextMission(); return; }
+      render();
+    };
+  });
+  return d;
 }
 /* Adversaire : 90% camp adverse, 10% querelle interne */
 function crossedMentees(){
@@ -9630,6 +9726,7 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
     </div>`;
   }
 function startBattle(mission, done){
+  syncLiveAligns(); /* les cadres et faisceaux du combat suivent le camp actuel de chacun */
   AudioEngine.setMode('combat');
   const foeKey = battleFoeKey(mission);
   applyCrossedMenteeBond(foeKey);
@@ -9843,7 +9940,16 @@ function startBattle(mission, done){
       speedBtns.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.speed,10)===4));
     }
     if(!st.auto || st.busy) return;
-    setTimeout(()=>{ if((st.auto||S.careerAuto) && !st.busy) playerTurn(autoChooseMoveIdx()); }, wait(500));
+    setTimeout(()=>{
+      if(!(st.auto||S.careerAuto) || st.busy) return;
+      /* En mode auto, le coup signature est utilise comme le ferait un joueur : des qu'il est
+         charge, avec une part de hasard, et de preference quand la cible est encore debout.
+         Seul le type RALLY est evite (il ouvre un choix de renfort qui bloquerait l'automatisme). */
+      const sp = document.getElementById('btlSpecial');
+      const spDef = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
+      if(sp && !sp.disabled && !st.specialUsed && spDef && spDef.type!=='RALLY' && Math.random()<0.8){ sp.click(); return; }
+      playerTurn(autoChooseMoveIdx());
+    }, wait(500));
   }
 
   function refreshSpotlight(){
@@ -12086,9 +12192,9 @@ function maybeTriggerRomance(){
   const past = (S.romanceHistory||[]).length;
   if(past >= (S.romanceMax||1)) return false;
   // apres une rupture, il faut du temps avant de refaire sa vie ; la toute premiere peut demarrer tout de suite
-  const gap = past ? 3 : 0;
+  const gap = past ? 2 : 0;
   if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < gap) return false;
-  if(Math.random() > 0.65) return false;
+  if(Math.random() > 0.88) return false;
   const enemy = Math.random() < 0.20;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
