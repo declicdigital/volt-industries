@@ -9004,6 +9004,20 @@ function screenForgetMove(){
   }
   const canDrop = (m)=>m.heal ? (ov.def.length > ov.minDef) : (ov.atk.length > 1);
   const all = ov.atk.concat(ov.def);
+  /* En simulation automatique, le jeu tranche a ta place : il abandonne le coup le plus faible. */
+  if(S.careerAuto){
+    const droppable = all.filter(canDrop);
+    if(droppable.length){
+      const worst = droppable.slice().sort((a,b)=>((a.p*a.acc)+(a.heal||0)) - ((b.p*b.acc)+(b.heal||0)))[0];
+      S.forgottenMoves = S.forgottenMoves || [];
+      S.forgottenMoves.push(worst.fr);
+      setTimeout(()=>{ if(moveOverflow()){ render(); return; }
+        S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
+        if(S.screen==='mission' && !S.currentMission){ nextMission(); return; }
+        render(); }, 0);
+      return d;
+    }
+  }
   d.innerHTML = `
     <h2>${isFr?'Un coup de trop':'One move too many'}</h2>
     <p class="mini">${isFr
