@@ -2146,6 +2146,18 @@ function factionEmblemSVG(side, tier, size){
 
 }
 function factionName(side, tier){ const fac = facAt(side, tier); if(!fac) return ''; return S.lang==='fr'?fac.fr:fac.en; }
+function factionLeaderLabel(side, fr, lower=false){
+  const isVillain = side==='villain';
+  const lab = fr ? (isVillain ? (lower?'maître':'MAÎTRE') : (lower?'leader':'LEADER'))
+                 : (isVillain ? (lower?'master':'MASTER') : (lower?'leader':'LEADER'));
+  return lab;
+}
+function factionLeaderName(side, tier){ const fac = facAt(side, tier); if(!fac || !fac.leader) return ''; return fac.leader; }
+function factionLeaderHTML(side, tier){
+  const fac = facAt(side, tier); if(!fac || !fac.leader) return '';
+  const fr = S.lang==='fr'; const lab = factionLeaderLabel(side, fr, true);
+  return `<div style="font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--dim); margin-top:6px;">${lab} : <span style="color:${charColor(side)};">${fac.leader}</span></div>`;
+}
 
 const MISSIONS = [
   { id:'sauvetage', type:'rescue', danger:1, scope:2, tagFr:'Catastrophe', tagEn:'Disaster',
