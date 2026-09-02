@@ -10523,12 +10523,12 @@ function startBattle(mission, done){
         setLog(S.lang==='fr'?`${tName} est ecarte du combat d'un seul coup.`:`${tName} is taken out of the fight in one stroke.`);
         dealToFoe(tIdx, 999, '#9a6bff');
       } else if(special.type==='BIG_STRIKE' || special.type==='STUN'){
-        const dmg = Math.round(38 + playerStrength()*0.35);
+        const dmg = Math.round((38 + playerStrength()*0.35) * strMult(S.playerCharKey));
         setLog(S.lang==='fr'?`Un coup dececisif s'abat sur ${tName}.`:`A decisive blow lands on ${tName}.`);
         dealToFoe(tIdx, dmg, '#9a6bff');
       } else if(special.type==='AOE'){
         setLog(S.lang==='fr'?`L'attaque frappe tous les adversaires a la fois.`:`The attack strikes every opponent at once.`);
-        const dmg = Math.round(22 + playerStrength()*0.22);
+        const dmg = Math.round((22 + playerStrength()*0.22) * strMult(S.playerCharKey));
         foeRoster.forEach((f,i)=>{ if(!f.ko) dealToFoe(i, dmg, '#9a6bff'); });
       } else if(special.type==='FULL_HEAL'){
         const before = allyRoster[0].hp;
@@ -10537,7 +10537,7 @@ function startBattle(mission, done){
         refreshEntry('ally', 0); refreshSpotlight();
         setLog(S.lang==='fr'?`Tes blessures se referment completement.`:`Your wounds close up completely.`);
       } else if(special.type==='DRAIN'){
-        const dmg = Math.round(28 + playerStrength()*0.28);
+        const dmg = Math.round((28 + playerStrength()*0.28) * strMult(S.playerCharKey));
         dealToFoe(tIdx, dmg, '#9a6bff');
         const before = allyRoster[0].hp;
         allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + dmg);
@@ -10691,7 +10691,7 @@ function startBattle(mission, done){
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5)));
+    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * strMult(ally.key)));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       dealToFoe(atkIdx, d, ally.col);
@@ -10757,7 +10757,7 @@ function startBattle(mission, done){
       return;
     }
     const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
+    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * strMult(actor.key);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
@@ -10783,7 +10783,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
+    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus * strMult(S.playerCharKey));
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     dealToFoe(targetIdx, d, myCol);
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
