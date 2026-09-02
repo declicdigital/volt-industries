@@ -6488,7 +6488,7 @@ const UNLOCK_TIERS = [
   { ids:['thething'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
   { ids:['antman'], condFr:'Gagner 400 combats', condEn:'Win 400 fights', check:(m)=>(m.totalFightsWon||0)>=400 },
   { ids:['kidspider'], condFr:'Obtenir la 3eme Gemme d\'Infinite', condEn:'Obtain the 3rd Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=3 },
-  { ids:['theg'], condFr:'Rejoindre les 8 factions du jeu', condEn:'Join all 8 factions in the game', check:(m)=>(m.distinctFactionsJoined||[]).length>=8 },
+  { ids:['theg'], condFr:'Rejoindre les 9 factions du jeu', condEn:'Join all 9 factions in the game', check:(m)=>(m.distinctFactionsJoined||[]).length>=9 },
   { ids:['siddartha'], condFr:'Gagner 75 duels dans le simulateur', condEn:'Win 75 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=75 },
   { ids:['venom'], condFr:'Terminer 25 carrieres au total', condEn:'Complete 25 careers total', check:(m)=>(m.careersCompleted||0)>=25 },
   { ids:['electro'], condFr:'Atteindre 6 etoiles dans une carriere', condEn:'Reach 6 stars in a career', check:(m)=>(m.bestStars||0)>=6 },
