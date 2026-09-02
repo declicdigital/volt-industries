@@ -1291,7 +1291,7 @@ const T = {
     yearsLabel:"Nombre d'annees", beginCareer:"Lancer la carriere", estTime:"Temps estime", estMission:"~20 s par mission (choix, combats, discussions)",
     summaryTitle:"Ton dossier VOLT INDUSTRIES", year:"Annee", mission:"Mission",
     alignHero:"Heros", alignVillain:"Villain", alignNeutral:"Equilibre",
-    courage:"Courage", intelligence:"Intelligence", popularity:"Popularite", power:"Puissance",
+    courage:"Courage", intelligence:"Perspicacite", popularity:"Popularite", power:"Puissance",
     endTitle:"Fin de carriere", restart:"Recommencer une nouvelle carriere",
     relations:"Relations", logTitle:"Journal de carriere", continueMission:"Mission suivante",
     inviteHeroTitle:"Invitation officielle", inviteHeroText:"Tes exploits n'ont pas echappe a une organisation etablie, qui souhaite t'accueillir formellement dans ses rangs.",
@@ -1342,7 +1342,7 @@ const T = {
     yearsLabel:"Number of years", beginCareer:"Start career", estTime:"Estimated time", estMission:"~20 s per mission (choices, battles, talks)",
     summaryTitle:"Your VOLT INDUSTRIES file", year:"Year", mission:"Mission",
     alignHero:"Hero", alignVillain:"Menace", alignNeutral:"Balance",
-    courage:"Courage", intelligence:"Intelligence", popularity:"Popularity", power:"Power",
+    courage:"Courage", intelligence:"Insight", popularity:"Popularity", power:"Power",
     endTitle:"Career over", restart:"Start a new career",
     relations:"Relations", logTitle:"Career log", continueMission:"Next mission",
     inviteHeroTitle:"Official invitation", inviteHeroText:"Your exploits have not gone unnoticed - an established organization wants to formally welcome you into its ranks.",
@@ -3318,7 +3318,7 @@ const PRESETS = [
     look:{ helmet:'none', cape:false, glasses:'none', gloves:'none', boots:'none', aura:'none', weapon:'none', suitColor:'#3a3f47', secondaryColor:'#c8763c', symbol:'' },
     align:25, stats:{courage:20, intelligence:4, popularity:10},
     perkFr:'Force brute et endurance sans fin : domine tous les combats directs.', perkEn:'Raw strength and endless stamina: dominates every direct fight.',
-    flawFr:'Intelligence faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low intelligence: easily manipulated, fails strategic missions.',
+    flawFr:'Perspicacite faible : se fait manipuler et rate les missions strategiques.', flawEn:'Low insight: easily manipulated, fails strategic missions.',
     descFr:'Ancien docker devenu montagne humaine.', descEn:'Former dockworker turned human mountain.' },
   { id:'marsh', charKey:'marsh', side:'hero', img:CHAR_IMG.char7, nameFr:'Black Widow', nameEn:'Black Widow', heroFr:'Black Widow', heroEn:'Black Widow', morphology:'elance', path:'physique', powers:['vitesse','sens_aiguises'],
     look:{ helmet:'none', cape:false, glasses:'hud', gloves:'standard', boots:'thruster', aura:'electric', weapon:'none', suitColor:'#123c78', secondaryColor:'#ffc63f', symbol:'MRD' },
@@ -6398,7 +6398,7 @@ const TROPHIES = [
   { id:'both_sides', fr:'Les deux visages', en:'Both faces', descFr:'Termine au moins une carriere en heros et une en villain.', descEn:'Finish at least one hero career and one villain career.', check:(m)=>(m.heroCareers||0)>=1 && (m.villainCareers||0)>=1 },
   { id:'loyal', fr:'Fidele a sa parole', en:'True to your word', descFr:'Termine 3 carrieres sans jamais changer de camp.', descEn:'Finish 3 careers without ever switching sides.', check:(m)=>(m.loyalCareers||0)>=3 },
   { id:'ten_betrayals', fr:'Girouette legendaire', en:'Legendary weathervane', descFr:'Change de camp 10 fois au total.', descEn:'Switch sides 10 times total.', check:(m)=>(m.totalBetrayals||0)>=10 },
-  { id:'brain_90', fr:'Cerveau surdimensionne', en:'Oversized brain', descFr:'Atteins 90 en intelligence.', descEn:'Reach 90 intelligence.', check:(m)=>(m.bestIntelligence||0)>=90 },
+  { id:'brain_90', fr:'Cerveau surdimensionne', en:'Oversized brain', descFr:'Atteins 90 en perspicacite.', descEn:'Reach 90 insight.', check:(m)=>(m.bestIntelligence||0)>=90 },
   { id:'courage_90', fr:'Coeur d\'acier', en:'Heart of steel', descFr:'Atteins 90 en courage.', descEn:'Reach 90 courage.', check:(m)=>(m.bestCourage||0)>=90 },
   { id:'fame_90', fr:'Star planetaire', en:'Planetary star', descFr:'Atteins 90 en popularite.', descEn:'Reach 90 popularity.', check:(m)=>(m.bestPopularity||0)>=90 },
   { id:'skills_five', fr:'Arsenal personnel', en:'Personal arsenal', descFr:'Apprends 5 capacites dans une seule carriere.', descEn:'Learn 5 abilities in a single career.', check:(m)=>(m.maxSkillsInCareer||0)>=5 },
@@ -8753,8 +8753,8 @@ function choiceColorFor(choice){
   return '#b98bff';             // tendance neutre : violet
 }
 function statLabel(k){
-  const fr = { courage:'Attaque', intelligence:'Intelligence', popularity:'Popularite', align:'Alignement' };
-  const en = { courage:'Attack', intelligence:'Intelligence', popularity:'Popularity', align:'Alignment' };
+  const fr = { courage:'Attaque', intelligence:'Perspicacite', popularity:'Popularite', align:'Alignement' };
+  const en = { courage:'Attack', intelligence:'Insight', popularity:'Popularity', align:'Alignment' };
   return (S.lang==='fr'?fr:en)[k] || k;
 }
 function showImpact(items, title){
@@ -9409,7 +9409,7 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb){
     ? ['Tu te reveilles aux urgences, perfusion au bras.','Extraction en civiere, bloc operatoire dans l\'heure.','On te recolle a l\'infirmerie de Volt Industries.','Reveil en unite de soins, scanner et cotes fissurees.'][Math.min(3,sev)]
     : ['You wake up in the ER, IV in your arm.','Stretchered out, surgery within the hour.','Patched up in the Volt Industries infirmary.','You come to in intensive care, cracked ribs.'][Math.min(3,sev)];
   const body = S.lang==='fr'
-    ? `${foeName} t'a mis au tapis. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Ton elan retombe a zero. Degats -${sev*10}% et -${sev*8} PV sur les ${battles} prochain(s) combat(s).<br>Courage -${2+sev*2}, Popularite -${1+sev}${sev>=2?(S.lang==='fr'?', Intelligence +1 (tu apprends de la douleur)':', Intelligence +1 (pain teaches)'):''}.`
+    ? `${foeName} t'a mis au tapis. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Ton elan retombe a zero. Degats -${sev*10}% et -${sev*8} PV sur les ${battles} prochain(s) combat(s).<br>Courage -${2+sev*2}, Popularite -${1+sev}${sev>=2?(S.lang==='fr'?', Perspicacite +1 (tu apprends de la douleur)':', Insight +1 (pain teaches)'):''}.`
     : `${foeName} put you down. ${ward}<br><br><b style="color:var(--red);">${label}</b><br>Momentum wiped. -${sev*10}% damage and -${sev*8} HP for your next ${battles} fight(s).<br>Courage -${2+sev*2}, Popularity -${1+sev}${sev>=2?', Intelligence +1':''}.`;
   S.currentYearEntries.push({ tag:(S.lang==='fr'?`Defaite contre ${foeName} - ${label}`:`Defeat vs ${foeName} - ${label}`), location:null, type:'combat', outcome:'lose' });
   showBattleAftermath(`<div class="ru-title" style="color:var(--red);font-size:12px;letter-spacing:2px;">${S.lang==='fr'?'DEFAITE - URGENCES':'DEFEAT - EMERGENCY ROOM'}</div><p style="margin-top:12px;line-height:1.6;">${body}${applyCivilWarSplit(false)}</p>`, 'var(--red)', cb);
@@ -10993,7 +10993,7 @@ const RECRUIT_REASON_LINES_EN = [
 function showArtifactFound(art, cb){
   const isFr = S.lang==='fr';
   const bonusTxt = Object.entries(art.bonus||{}).map(([k,v])=>{
-    const lab = {courage:isFr?'Courage':'Courage', intelligence:isFr?'Intelligence':'Intelligence', popularity:isFr?'Popularite':'Popularity'}[k]||k;
+    const lab = {courage:isFr?'Courage':'Courage', intelligence:isFr?'Perspicacite':'Insight', popularity:isFr?'Popularite':'Popularity'}[k]||k;
     return `${lab} +${v}`;
   }).join(' &middot; ');
   Object.entries(art.bonus||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
@@ -12874,7 +12874,22 @@ function screenEnd(){
   const fights = S.combat.won + S.combat.lost;
   const winPct = fights ? Math.round(cs.winRate*100) : 0;
   const statAvg = Math.round((S.stats.courage+S.stats.intelligence+S.stats.popularity)/3);
-  const bestStat = (function(){ const e = [['courage',S.stats.courage],['intelligence',S.stats.intelligence],['popularity',S.stats.popularity]].sort((a,b)=>b[1]-a[1])[0]; return t(e[0])+' '+e[1]; })();
+  /* Profil de puissance reel du personnage (Force/Vitesse/QI/Resistance sur 10), deja suivi tout
+     au long de la carriere et deja utilise en combat (ordre d'initiative, degats, PV, qualite des
+     decisions) - pas invente pour ce bilan, juste affiche ici. */
+  const gridForce = currentStrength(S.playerCharKey);
+  const gridVitesse = currentSpeed(S.playerCharKey);
+  const gridQI = currentIQ(S.playerCharKey);
+  const gridRes = currentRes(S.playerCharKey);
+  const allStatsHtml = `<div class="kpi-grid" style="margin-top:10px;">
+    <div class="kpi"><div class="kval">${S.stats.courage}</div><div class="klabel">${isFr?'Courage':'Courage'}</div></div>
+    <div class="kpi"><div class="kval">${S.stats.intelligence}</div><div class="klabel">${isFr?'Perspicacite':'Insight'}</div></div>
+    <div class="kpi"><div class="kval">${S.stats.popularity}</div><div class="klabel">${isFr?'Popularite':'Popularity'}</div></div></div>
+    <div class="kpi-grid" style="margin-top:8px;">
+    <div class="kpi"><div class="kval">${gridForce}/10</div><div class="klabel">${isFr?'Force':'Strength'}</div></div>
+    <div class="kpi"><div class="kval">${gridVitesse}/10</div><div class="klabel">${isFr?'Vitesse':'Speed'}</div></div>
+    <div class="kpi"><div class="kval">${gridQI}/10</div><div class="klabel">${isFr?'QI':'IQ'}</div></div>
+    <div class="kpi"><div class="kval">${gridRes}/10</div><div class="klabel">${isFr?'Resistance':'Resistance'}</div></div></div>`;
   const scoreBars = cs.parts.map(p=>{
     const neg = p.max===0;
     const pct = neg ? clamp(Math.abs(p.value)*8,0,100) : clamp(p.value/p.max*100,0,100);
@@ -12907,7 +12922,8 @@ function screenEnd(){
     <div class="kpi"><div class="kval">${Math.round(computePowerLevel())}</div><div class="klabel">${t('power')}</div></div>
     <div class="kpi"><div class="kval">${statAvg}</div><div class="klabel">${isFr?'Moyenne des stats':'Average stats'}</div></div>
     <div class="kpi"><div class="kval">${(S.romance?1:0) + S.romanceHistory.length}</div><div class="klabel">${isFr?"Histoires d'amour":'Romances'}</div></div></div>
-    <p class="lead" style="margin-top:8px;">${isFr?'Meilleure statistique':'Best stat'}: <b>${bestStat}</b>${S.romance && CHARACTERS[S.romance.charKey] ? ` - ${isFr?'lie(e) a':'bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b>` : ''}</p>`;
+    ${allStatsHtml}
+    ${S.romance && CHARACTERS[S.romance.charKey] ? `<p class="lead" style="margin-top:8px;">${isFr?'Lie(e) a':'Bonded with'} <b>${isFr?CHARACTERS[S.romance.charKey].fr:CHARACTERS[S.romance.charKey].en}</b></p>` : ''}`;
   const outcomeLabelFr = { hero:'devenu(e) heros', villain:'devenu(e) villain', died:'mort(e) au combat', neutral:'reste independant(e)' };
   const outcomeLabelEn = { hero:'became a hero', villain:'became a villain', died:'died in action', neutral:'stayed independent' };
   const menteeList = S.mentees.length ? `<p class="lead" style="margin-top:6px; font-size:12px; color:var(--dim);">${S.mentees.map(m=>{
