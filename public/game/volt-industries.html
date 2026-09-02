@@ -5382,7 +5382,8 @@ function statBar(label, val, color){ return `<div class="stat"><div class="slabe
 function screenCodex(){
   const d = document.createElement('div'); const fr = S.lang==='fr';
   const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
-  const allKeys = Object.keys(CHARACTERS);
+  /* Le codex ne recense que les personnages canon : les recrues sont exclues. */
+  const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
   const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
   const repHtml = allFactions.map(f=>{
@@ -5410,7 +5411,6 @@ function screenCodex(){
   });
   grid.innerHTML = sorted.map(k=>{
     const c = CHARACTERS[k]; const met = hasMetChar(k);
-    const isRecruit = recruits.has(k);
     const col = c.align==='neutral' ? '#b98bff' : (c.align==='villain' ? '#ff2d55' : '#00e5ff');
     if(!met){
       return `<div style="text-align:center;">
@@ -5422,7 +5422,6 @@ function screenCodex(){
     return `<div style="text-align:center;">
       <div style="width:100%; aspect-ratio:1; border-radius:12px; overflow:hidden; border:1.5px solid ${col}; position:relative;">
         ${c.img?`<img src="${c.img}" alt="${c.fr}" style="width:100%; height:100%; object-fit:cover; object-position:50% 12%;" onerror="this.style.display='none';">`:`<div style="width:100%;height:100%; display:flex; align-items:center; justify-content:center; font-weight:900; color:${col};">${c.fr.charAt(0)}</div>`}
-        ${isRecruit?`<span style="position:absolute; top:2px; right:2px; font-size:7px; font-weight:800; background:rgba(0,0,0,.6); color:#7ef0c0; padding:1px 3px; border-radius:4px;">${fr?'RECR.':'REC.'}</span>`:''}
       </div>
       <div style="font-size:9.5px; margin-top:4px; font-weight:700;">${fr?c.fr:c.en}</div>
       <div style="font-size:8.5px; color:${col};">${moralityLabel(moral)}</div>
