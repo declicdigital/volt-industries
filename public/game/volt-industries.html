@@ -11115,15 +11115,20 @@ function resolveOutcome(mission){
     }
     if(mission.eclatQuest){
       const shard = ECLATS.find(e=>e.id===mission.eclatQuest);
-      const guardianKey = mission.charKey || S.lastBattleFoeKey;
-      if(shard && win && Math.random() < 0.68){
+      /* Pas de detenteur invente : si la Gemme n'etait gardee par personne, elle le reste. */
+      const guardianKey = mission.charKey || null;
+      if(shard && win && Math.random() < (guardianKey ? 0.68 : 0.82)){
         grantEclatShard(shard);
       } else if(shard){
         S.eclatHolders = S.eclatHolders || {};
         if(guardianKey) S.eclatHolders[shard.id] = guardianKey;
-        const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'son gardien':'its guardian');
-        const msgFr = win ? `${shard.frName} t'echappe au dernier instant. ${guardName} le reprend et disparait avec.` : `${guardName} garde ${shard.frName} et te repousse. Il faudra revenir.`;
-        const msgEn = win ? `${shard.enName} slips away at the last moment. ${guardName} takes it back and vanishes with it.` : `${guardName} holds onto ${shard.enName} and drives you back. You'll need to return.`;
+        const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'le site':'the site');
+        const msgFr = guardianKey
+          ? (win ? `${shard.frName} t'echappe au dernier instant. ${guardName} le reprend et disparait avec.` : `${guardName} garde ${shard.frName} et te repousse. Il faudra revenir.`)
+          : (win ? `${shard.frName} s'enfonce dans une faille avant que tu puisses la saisir. Elle refera surface ailleurs.` : `Tu es repousse : ${shard.frName} reste enfouie sur place. Il faudra revenir.`);
+        const msgEn = guardianKey
+          ? (win ? `${shard.enName} slips away at the last moment. ${guardName} takes it back and vanishes with it.` : `${guardName} holds onto ${shard.enName} and drives you back. You'll need to return.`)
+          : (win ? `${shard.enName} sinks into a rift before you can grab it. It will resurface elsewhere.` : `You are driven back: ${shard.enName} stays buried on site. You'll need to return.`);
         jarvisSay(msgFr, msgEn, S.lang==='fr'?'occasion manquee':'missed chance');
       }
     } else if(mission.eclatReclaim){
