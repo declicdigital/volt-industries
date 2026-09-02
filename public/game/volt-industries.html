@@ -6230,6 +6230,8 @@ function applyPreset(p){
   const canonName = canonC ? (S.lang==='fr'?canonC.fr:canonC.en) : (S.lang==='fr'?p.heroFr:p.heroEn);
   S.heroName = canonName; S.civilName = canonName;
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
+  S.playerSpeedBase = speedOfKey(S.playerCharKey);
+  if(typeof S.speedMod !== "number") S.speedMod = 0;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
@@ -9626,12 +9628,42 @@ const CHAR_IQ_BY_NAME = {
   "Red Skull": 9,
   "Red Guardian": 5,
 };
+
+/* Vitesse de combat propre a chaque personnage (note sur 10). Elle determine l'ordre d'action
+   chaque tour : plus la note est elevee, plus le personnage agit tot. Cette note varie d'une partie
+   a l'autre (jet de des a chaque combat) et peut evoluer au fil de la carriere (choix, age, blessures). */
+const CHAR_SPEED_BY_NAME = {
+  "Galactus": 8, "Silver Surfer": 10, "Thanos": 7, "Sentry": 9, "Hulk": 6, "Thor": 9,
+  "Apocalypse": 6, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
+  "Hela": 7, "Doctor Strange": 6, "Magneto": 5, "Gorr": 7, "Telios": 9, "Siddharta": 6,
+  "Professor X": 3, "Ultron": 6, "Annihilus": 6, "Vision": 8, "The G": 7, "Kang": 6,
+  "Invisible Woman": 5, "Storm": 6, "Iron Man": 8, "Clea": 7, "Loki": 6, "The Thing": 4,
+  "Emma Frost": 4, "Human Torch": 8, "America Chavez": 7, "Mister Fantastic": 5, "Cyclops": 4,
+  "Ebony Maw": 4, "Sylvie": 6, "Cull Obsidian": 4, "Venom": 6, "Wolverine": 6, "Wong": 5,
+  "Spider-Man": 8, "Groot": 3, "Black Panther": 7, "Gamora": 6, "Proxima Midnight": 6,
+  "Corvus Glaive": 5, "Electro": 5, "Shang-Chi": 7, "Drax": 5, "Captain America": 7,
+  "Star-Lord": 6, "Shuri": 4, "Doctor Octopus": 4, "Ant-Man": 6, "Nebula": 6, "Deadpool": 6,
+  "Mantis": 4, "Wasp": 7, "U.S. Agent": 6, "Green Goblin": 6, "Rocket": 5, "Bucky": 6,
+  "Ghost": 6, "Mystique": 5, "Pyro": 4, "Hawkeye": 5, "Mysterio": 4, "Black Widow": 6,
+  "Falcon": 6, "Yelena": 6, "Daredevil": 6, "Red Skull": 4, "Red Guardian": 5
+};
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
   if(!c) return 5;
   const v = CHAR_IQ_BY_NAME[c.canon] ?? CHAR_IQ_BY_NAME[c.en] ?? CHAR_IQ_BY_NAME[c.fr];
   return typeof v === 'number' ? v : 5;
+}
+/* Vitesse d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
+function speedOfKey(k){
+  const c = k ? CHARACTERS[k] : null;
+  if(!c) return 5;
+  const v = CHAR_SPEED_BY_NAME[c.canon] ?? CHAR_SPEED_BY_NAME[c.en] ?? CHAR_SPEED_BY_NAME[c.fr];
+  return typeof v === 'number' ? v : 5;
+}
+/* Ajuste la vitesse du joueur au fil de la carriere (choix, evenements, age, blessures). */
+function adjustSpeed(delta){
+  S.speedMod = clamp((S.speedMod||0) + delta, -10, 10);
 }
 /* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9. */
 function iqSkill(k){ return clamp(0.22 + iqOfKey(k)*0.068, 0.2, 0.92); }
@@ -10011,8 +10043,13 @@ function startBattle(mission, done){
 
   /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
   function spdFor(entry){
-    if(entry.isPlayer) return 46 + Math.round(S.stats.courage*0.18) + Math.round(Math.random()*10);
-    return 26 + tierOfKey(entry.key)*0.4 + Math.round(Math.random()*12);
+    const jitter = Math.round(Math.random()*10 - 5) + (S.speedMod||0);
+    if(entry.isPlayer){
+      const base = S.playerSpeedBase || 5;
+      return Math.round(20 + base*5 + (S.stats.courage||50)*0.12 + jitter);
+    }
+    const base = speedOfKey(entry.key);
+    return Math.round(20 + base*5 + tierOfKey(entry.key)*0.25 + jitter);
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
