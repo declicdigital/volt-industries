@@ -6232,6 +6232,8 @@ function applyPreset(p){
   S.portrait = p.img || null; S.playerCharKey = p.charKey || null;
   S.playerSpeedBase = speedOfKey(S.playerCharKey);
   if(typeof S.speedMod !== "number") S.speedMod = 0;
+  S.playerIQBase = iqOfKey(S.playerCharKey);
+  if(typeof S.iqMod !== "number") S.iqMod = 0;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
@@ -9654,6 +9656,14 @@ function iqOfKey(k){
   const v = CHAR_IQ_BY_NAME[c.canon] ?? CHAR_IQ_BY_NAME[c.en] ?? CHAR_IQ_BY_NAME[c.fr];
   return typeof v === 'number' ? v : 5;
 }
+/* IQ courant d'un personnage : le joueur beneficie de sa base + son mod carriere ; les PNJs
+   restent sur la note du dictionnaire. */
+function currentIQ(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerIQBase === 'number'){
+    return clamp(S.playerIQBase + (S.iqMod||0), 1, 10);
+  }
+  return iqOfKey(k);
+}
 /* Vitesse d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function speedOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -9665,8 +9675,13 @@ function speedOfKey(k){
 function adjustSpeed(delta){
   S.speedMod = clamp((S.speedMod||0) + delta, -10, 10);
 }
-/* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9. */
-function iqSkill(k){ return clamp(0.22 + iqOfKey(k)*0.068, 0.2, 0.92); }
+/* Ajuste l'IQ du joueur au fil de la carriere (choix, evenements, age, blessures). */
+function adjustIQ(delta){
+  S.iqMod = clamp((S.iqMod||0) + delta, -5, 5);
+}
+/* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9.
+   Un petit jet de des est ajoute pour que l'IQ varie d'une action a l'autre et d'une partie a l'autre. */
+function iqSkill(k){ return clamp(0.22 + currentIQ(k)*0.068 + (Math.random()*0.08 - 0.04), 0.2, 0.92); }
 /* Personnages a affinite mystique/magique : en escouade, ils peuvent soigner un allie blesse au lieu d'attaquer. */
 const WIZARD_KEYS = ['solen','nyx','siddartha','sepulcre','aurelia','kaerus','lorelei','vaelor'];
 function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
