@@ -9088,13 +9088,22 @@ function screenForgetMove(){
   }
   const canDrop = (m)=>m.heal ? (ov.def.length > ov.minDef) : (ov.atk.length > 1);
   const all = ov.atk.concat(ov.def);
-  /* En simulation automatique, le jeu tranche a ta place : il abandonne le coup le plus faible. */
+  /* En simulation automatique, le jeu tranche a ta place. Les coups de gemmes/artefacts ne sont
+     plus sanctuarises : quand ils occupent la moitie ou plus des emplacements, c'est l'un d'eux
+     (le plus faible) qui est abandonne, au lieu de sacrifier systematiquement les autres coups. */
   if(S.careerAuto){
     const droppable = all.filter(canDrop);
     if(droppable.length){
-      const worst = droppable.slice().sort((a,b)=>((a.p*a.acc)+(a.heal||0)) - ((b.p*b.acc)+(b.heal||0)))[0];
+      const isRare = (m)=>!!(m.shard||m.artifact);
+      const score = (m)=>((m.p||0)*(m.acc||1))+(m.heal||0);
+      const rare = droppable.filter(isRare);
+      const common = droppable.filter(m=>!isRare(m));
+      const rareTotal = all.filter(isRare).length;
+      const pool = (rare.length && (rareTotal >= Math.ceil(ov.maxTotal/2) || !common.length)) ? rare : (common.length ? common : droppable);
+      const worst = pool.slice().sort((a,b)=>score(a)-score(b))[0];
       S.forgottenMoves = S.forgottenMoves || [];
       S.forgottenMoves.push(worst.fr);
+
       setTimeout(()=>{ if(moveOverflow()){ render(); return; }
         S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
         if(S.screen==='mission' && !S.currentMission){ nextMission(); return; }
