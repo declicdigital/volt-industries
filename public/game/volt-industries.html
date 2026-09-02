@@ -9543,6 +9543,32 @@ function tierOfKey(k){
   if(mt!=null) return mt;
   return charTier(k);
 }
+/* Intelligence de combat propre a chaque personnage (note sur 10). Elle pilote la qualite des
+   decisions en combat : choix du meilleur coup, ciblage du plus faible, usage des defenses et
+   du coup special. Un Drax (2) tape au hasard, un Doctor Doom (10) joue quasiment parfaitement. */
+const CHAR_IQ_BY_NAME = {
+  'Galactus':9,'Silver Surfer':8,'Thanos':10,'Sentry':5,'Hulk':4,'Thor':6,'Apocalypse':9,
+  'Captain Marvel':6,'Jean Grey':8,'Scarlet Witch':6,'Doctor Doom':10,'Hela':7,'Doctor Strange':10,
+  'Magneto':9,'Gorr':6,'Telios':8,'Siddharta':7,'Professor X':10,'Professeur X':10,'Ultron':9,
+  'Annihilus':6,'Vision':9,'The G':9,'Kang':10,'Invisible Woman':8,'La Femme Invisible':8,
+  'Storm':7,'Iron Man':10,'Clea':8,'Loki':9,'The Thing':5,'La Chose':5,'Emma Frost':9,
+  'Human Torch':5,'La Torche':5,'America Chavez':6,'Mister Fantastic':10,'Cyclops':8,'Cyclope':8,
+  'Ebony Maw':8,'Sylvie':7,'Cull Obsidian':3,'Venom':6,'Wolverine':6,'Wong':8,'Spider-Man':9,
+  'Groot':3,'Black Panther':9,'Gamora':7,'Proxima Midnight':5,'Corvus Glaive':5,'Electro':7,
+  'Shang-Chi':6,'Drax':2,'Captain America':8,'Star-Lord':5,'Shuri':10,'Doctor Octopus':9,
+  'Ant-Man':7,'Nebula':7,'Deadpool':6,'Mantis':4,'Wasp':8,'U.S. Agent':5,'Green Goblin':9,
+  'Rocket':8,'Bucky':6,'Ghost':7,'Mystique':8,'Pyro':5,'Hawkeye':7,'Mysterio':8,
+  'Black Widow':8,'Falcon':6,'Yelena':7,'Daredevil':7,'Red Skull':9,'Red Guardian':4
+};
+/* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
+function iqOfKey(k){
+  const c = k ? CHARACTERS[k] : null;
+  if(!c) return 5;
+  const v = CHAR_IQ_BY_NAME[c.canon] ?? CHAR_IQ_BY_NAME[c.en] ?? CHAR_IQ_BY_NAME[c.fr];
+  return typeof v === 'number' ? v : 5;
+}
+/* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9. */
+function iqSkill(k){ return clamp(0.22 + iqOfKey(k)*0.068, 0.2, 0.92); }
 /* Personnages a affinite mystique/magique : en escouade, ils peuvent soigner un allie blesse au lieu d'attaquer. */
 const WIZARD_KEYS = ['solen','nyx','siddartha','sepulcre','aurelia','kaerus','lorelei','vaelor'];
 function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
