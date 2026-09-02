@@ -9774,7 +9774,10 @@ function buildRosterExtras(keys, weakened){
     const tier = tierOfKey(k);
     let maxHp = Math.round(58 + tier*0.9);
     let hp = maxHp;
-    if(weakened) hp = Math.round(maxHp * (0.3 + Math.random()*0.35)); // deja au front, en difficulte
+    // "weakened" : combat de renfort. Les combattants deja engages sont entames, jamais a l'agonie.
+    if(weakened === 'ally') hp = Math.round(maxHp * (0.55 + Math.random()*0.25)); // 55-80%
+    else if(weakened === 'foe') hp = Math.round(maxHp * (0.7 + Math.random()*0.2)); // 70-90% : eux aussi ont encaisse
+    else if(weakened) hp = Math.round(maxHp * (0.55 + Math.random()*0.25));
     return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp, ko:false, dead:false };
   }).filter(Boolean);
 }
