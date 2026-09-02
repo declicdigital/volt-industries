@@ -10425,6 +10425,7 @@ function startBattle(mission, done){
     if(i===st.targetIdx){ hit(foeSpotFrame, true, d); floatDmg(foeSpotFrame, d, col, true); }
     if(e.hp<=0){ e.ko = true; refreshEntry('foe', i); pickNextTarget(); }
     refreshSpotlight();
+    return d;
   }
   /* Un adversaire inflige des degats a un allie (le joueur ou un membre de son escouade). */
   function dealToAlly(i, d, col){
@@ -10438,6 +10439,7 @@ function startBattle(mission, done){
       if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
     }
     refreshSpotlight();
+    return d;
   }
   function allFoesDown(){ return foeRoster.every(f=>f.ko); }
   function playerDown(){ return allyRoster[0].hp<=0; }
@@ -10739,8 +10741,8 @@ function startBattle(mission, done){
     const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * strMult(ally.key)));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
-      dealToFoe(atkIdx, d, ally.col);
-      setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + d + (S.lang==='fr'?' degats.':' damage.'));
+      const dApplied = dealToFoe(atkIdx, d, ally.col) ?? d;
+      setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + dApplied + (S.lang==='fr'?' degats.':' damage.'));
       setTimeout(runTurn, wait(850));
     }, wait(500));
   }
@@ -10805,10 +10807,10 @@ function startBattle(mission, done){
     const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * strMult(actor.key);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
-    dealToAlly(targetAllyIdx, d, actor.col);
+    const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
     const targetName = allyRoster[targetAllyIdx].name;
-    setLog((S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${d} degats.`:`${actor.name} uses ${label} on ${targetName}: ${d} damage.`)
+    setLog((S.lang==='fr'?`${actor.name} utilise ${label} sur ${targetName} : ${dApplied} degats.`:`${actor.name} uses ${label} on ${targetName}: ${dApplied} damage.`)
       + (m.heal ? (S.lang==='fr'?` Il recupere ${m.heal} PV.`:` He recovers ${m.heal} HP.`) : ''));
     setTimeout(runTurn, wait(950));
   }
@@ -10830,8 +10832,8 @@ function startBattle(mission, done){
     }
     const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus * strMult(S.playerCharKey));
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
-    dealToFoe(targetIdx, d, myCol);
-    setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
+    const dApplied = dealToFoe(targetIdx, d, myCol) ?? d;
+    setLog(S.lang==='fr'?`${label} touche ${targetName} : ${dApplied} degats.`:`${label} hits ${targetName}: ${dApplied} damage.`);
     setTimeout(runTurn, wait(950));
   }
   renderRoster('ally'); renderRoster('foe'); refreshSpotlight(); renderMoves(); setMovesEnabled(false);
