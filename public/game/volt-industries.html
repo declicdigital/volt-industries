@@ -7786,6 +7786,10 @@ function showEclatCinematic(shard, cb){
   const cfg = ECLAT_CINE_CONFIG[shard.id] || { icon:'&#9733;', bgClass:'' };
   const name = isFr ? shard.frName : shard.enName;
   const domain = isFr ? shard.domainFr : shard.domainEn;
+  const moveName = isFr ? shard.move.fr : shard.move.en;
+  const moveIsDef = !!shard.move.heal;
+  const moveDetailFr = moveIsDef ? `Soin ${shard.move.heal} - Degats ${shard.move.p}` : `Degats ${shard.move.p} - Precision ${Math.round(shard.move.acc*100)}%`;
+  const moveDetailEn = moveIsDef ? `Heal ${shard.move.heal} - Dmg ${shard.move.p}` : `Dmg ${shard.move.p} - Acc ${Math.round(shard.move.acc*100)}%`;
   const overlay = document.createElement('div');
   overlay.className = 'cine-overlay eighth-star eclat-cine ' + cfg.bgClass;
   overlay.style.setProperty('--eclat-col', shard.col);
@@ -7795,6 +7799,11 @@ function showEclatCinematic(shard, cb){
       <div class="cine-scope">${isFr?'PIERRE D\'INFINITE OBTENUE':'INFINITY STONE OBTAINED'}</div>
       <div class="cine-title">${name.toUpperCase()}</div>
       <p class="star8-sub">${isFr?`Domaine : ${domain}. Un nouveau pouvoir s'eveille en toi.`:`Domain: ${domain}. A new power awakens in you.`}</p>
+      <div style="margin-top:14px; padding:10px 16px; border:1.5px solid ${shard.col}; border-radius:12px; background:rgba(255,255,255,.03); display:inline-block;">
+        <div style="font-size:9px; letter-spacing:1px; color:${shard.col}; font-weight:900;">${isFr?(moveIsDef?'NOUVELLE DEFENSE':'NOUVELLE ATTAQUE'):(moveIsDef?'NEW DEFENSE':'NEW ATTACK')}</div>
+        <div style="font-size:15px; font-weight:900; color:#fff; margin-top:2px;">${moveName}</div>
+        <div style="font-size:11px; color:var(--dim); margin-top:2px;">${isFr?moveDetailFr:moveDetailEn}</div>
+      </div>
       <button class="btl-move" id="eclatCineContinue" style="min-width:160px; margin-top:14px; border-color:${shard.col};"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
     </div>`;
   document.body.appendChild(overlay);
@@ -9034,7 +9043,7 @@ function playerMoves(){
      plus rares et les plus puissants). */
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
-    return Object.assign({ shard:true, shardCol:s.col, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
+    return Object.assign({ shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
   const artifactMoves = (S.artifacts||[]).map(id=>{
     const a = ARTIFACTS.find(x=>x.id===id); if(!a) return null;
@@ -10517,8 +10526,11 @@ function startBattle(mission, done){
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
       const isLocked = !!st.lastMoveFr && st.lastMoveFr === m.fr;
-      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol};"` : (isLocked ? ` style="opacity:.4;"` : '');
-      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}><span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol}; position:relative;"` : (isLocked ? ` style="opacity:.4;"` : '');
+      /* La vraie icone de pierre (meme rendu SVG que partout ailleurs dans le jeu), pour reperer
+         immediatement qu'un coup vient d'une Gemme d'Infinite, pas juste une bordure coloree. */
+      const gemIcon = m.shard ? `<div style="position:absolute; top:4px; right:6px; width:22px; height:22px;">${gemSVG({col:m.shardCol, col2:m.shardCol2}, 22, {spin:false})}</div>` : '';
+      return `<button class="btl-move"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}>${gemIcon}<span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
