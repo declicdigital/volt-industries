@@ -7669,16 +7669,17 @@ function shouldTriggerEclatQuest(){
 const ECLAT_HOLDERS = { derive:'vipera', murmure:'lorelei', fracture:'boomnpc', fureur:'malachar', attente:'solen', vestige:'aurelia' };
 function startEclatQuest(){
   const owned = S.eclats||[];
-  const avail = ECLATS.filter(e=>!owned.includes(e.id) && ECLAT_HOLDERS[e.id]!==S.playerCharKey);
+  const holderOf = (id)=>((S.eclatHolders||{})[id] || ECLAT_HOLDERS[id]);
+  const avail = ECLATS.filter(e=>!owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
   const shard = pick(avail);
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
-  // Le detenteur est toujours le meme pour une Gemme donnee, sauf si elle a deja change de main (echec precedent).
-  const existingHolder = (S.eclatHolders||{})[shard.id];
-  const guardianKey = existingHolder && CHARACTERS[existingHolder] ? existingHolder : ECLAT_HOLDERS[shard.id];
+  // Gardien tire au sort en debut de carriere ; il change si la Gemme a deja change de main.
+  const guardianKey = holderOf(shard.id);
+
   const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'une presence hostile':'a hostile presence');
   const isAlly = guardianKey && CHARACTERS[guardianKey] && CHARACTERS[guardianKey].align!=='neutral' && CHARACTERS[guardianKey].align===mySide;
   const introFr = isAlly
