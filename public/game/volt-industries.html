@@ -8056,10 +8056,10 @@ function checkFactionCreationOffer(){
     .filter(k=>CHARACTERS[k].align===mySide && k!==S.playerCharKey)
     .filter(k=>(S.rel[k]||0) >= 8)
     .sort((a,b)=>(S.rel[b]||0)-(S.rel[a]||0));
-  if(candidates.length < 2) return false;
+  if(candidates.length < 5) return false;
   if(Math.random() > 0.22) return false; /* reste rare, comme les invitations de faction */
   S.factionCreationOffered = true;
-  /* La faction proposee reunit tous les allies avec qui tu as un lien assez fort, jusqu'a 7 au total :
+  /* La faction proposee reunit au moins 5 allies avec qui tu as un lien assez fort, jusqu'a 7 au total :
      plus tu as construit de relations solides, plus la faction que le jeu te propose peut etre grande. */
   S.factionFounders = candidates.slice(0, Math.min(7, candidates.length));
   S.factionFounderSide = mySide;
