@@ -10734,21 +10734,25 @@ function startBattle(mission, done){
       }, wait(500));
       return;
     }
-    /* Ciblage : 50% le gars juste en face de lui dans l'alignement, 50% un autre adversaire au
-       hasard - l'equipe ne focus plus systematiquement la meme cible. */
+    /* Ciblage commun aux deux camps : 50% la cible en face ; sinon une autre cible, choisie
+       intelligemment parmi les plus faibles selon le QI, ou au hasard si la decision est ratee. */
     const aliveFoes = livingIdx(foeRoster);
     if(!aliveFoes.length){ finish(true); return; }
-    let atkIdx;
-    if(Math.random()<0.5 && foeRoster[idx] && !foeRoster[idx].ko) atkIdx = idx;
-    else if(Math.random() < askill) atkIdx = aliveFoes.slice().sort((a,b)=>(foeRoster[a].hp/foeRoster[a].maxHp)-(foeRoster[b].hp/foeRoster[b].maxHp))[0];
-    else atkIdx = pick(aliveFoes);
+    const atkIdx = pickTeamTarget(foeRoster, idx, askill);
     flashSpotlight('ally', ally);
-    const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * strMult(ally.key)));
+    const m = foeAIMoveFor(ally.key, ally);
+    const label = S.lang==='fr'?m.fr:m.en;
+    if(Math.random() > m.acc){
+      setLog(S.lang==='fr'?`${ally.name} tente ${label}... et manque sa cible.`:`${ally.name} tries ${label}... and misses.`);
+      setTimeout(runTurn, wait(900));
+      return;
+    }
+    const d = dmgOf(m, combatAttackPower(ally.key), strMult(ally.key));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       const dApplied = dealToFoe(atkIdx, d, ally.col) ?? d;
-      setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + dApplied + (S.lang==='fr'?' degats.':' damage.'));
+      if(m.heal){ ally.hp = Math.min(ally.maxHp, ally.hp + m.heal); refreshEntry('ally', idx); }
+      setLog((S.lang==='fr'?`${ally.name} utilise ${label} sur ${tName}`:`${ally.name} uses ${label} on ${tName}`) + ' : ' + dApplied + (S.lang==='fr'?' degats.':' damage.') + (m.heal ? (S.lang==='fr'?` Recuperation : ${m.heal} PV.`:` Recovery: ${m.heal} HP.`) : ''));
       setTimeout(runTurn, wait(850));
     }, wait(500));
   }
@@ -10781,18 +10785,21 @@ function startBattle(mission, done){
     if(actor) actor._lastMoveFr = chosen.fr;
     return chosen;
   }
+  function pickTeamTarget(roster, facingIdx, skill){
+    const alive = livingIdx(roster);
+    if(!alive.length) return 0;
+    const facingAlive = facingIdx!=null && roster[facingIdx] && !roster[facingIdx].ko;
+    if(facingAlive && Math.random()<0.5) return facingIdx;
+    const alternatives = facingAlive && alive.length>1 ? alive.filter(i=>i!==facingIdx) : alive;
+    if(Math.random() < skill){
+      return alternatives.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp))[0];
+    }
+    return pick(alternatives);
+  }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
-    const aliveAll = livingIdx(allyRoster);
-    if(!aliveAll.length) return 0;
-    /* Ciblage symetrique : 50% l'allie juste en face de cet adversaire dans l'alignement,
-       50% une autre cible - mais un adversaire intelligent choisit alors le plus affaibli. */
-    if(forIdx!=null && Math.random()<0.5 && allyRoster[forIdx] && !allyRoster[forIdx].ko) return forIdx;
     const sk = iqSkill(foeRoster[forIdx] ? foeRoster[forIdx].key : null);
-    if(Math.random() < sk){
-      return aliveAll.slice().sort((a,b)=>(allyRoster[a].hp/allyRoster[a].maxHp)-(allyRoster[b].hp/allyRoster[b].maxHp))[0];
-    }
-    return pick(aliveAll);
+    return pickTeamTarget(allyRoster, forIdx, sk);
   }
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
@@ -10800,18 +10807,15 @@ function startBattle(mission, done){
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
-    /* Precision adverse legerement superieure a la valeur affichee : les adversaires ratent
-       moins souvent que le joueur (bonus +0.07, plafonne a 0.97). */
-    if(st.dodgeNext || Math.random() > Math.min(0.97, m.acc + 0.07)){
+    /* Meme precision de coup pour les deux camps, sans bonus adverse cache. */
+    if(st.dodgeNext || Math.random() > m.acc){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
       setTimeout(runTurn, wait(900));
       return;
     }
-    const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * strMult(actor.key);
-    const d = dmgOf(m, power, mult);
+    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key));
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
@@ -10836,7 +10840,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus * strMult(S.playerCharKey));
+    const d = dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * allyBonus * strMult(S.playerCharKey));
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     const dApplied = dealToFoe(targetIdx, d, myCol) ?? d;
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${dApplied} degats.`:`${label} hits ${targetName}: ${dApplied} damage.`);
