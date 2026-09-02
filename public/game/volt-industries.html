@@ -6234,6 +6234,8 @@ function applyPreset(p){
   if(typeof S.speedMod !== "number") S.speedMod = 0;
   S.playerIQBase = iqOfKey(S.playerCharKey);
   if(typeof S.iqMod !== "number") S.iqMod = 0;
+  S.playerStrBase = strengthOfKey(S.playerCharKey);
+  if(typeof S.strMod !== "number") S.strMod = 0;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
@@ -9649,6 +9651,46 @@ const CHAR_SPEED_BY_NAME = {
   "Ghost": 6, "Mystique": 5, "Pyro": 4, "Hawkeye": 5, "Mysterio": 4, "Black Widow": 6,
   "Falcon": 6, "Yelena": 6, "Daredevil": 6, "Red Skull": 4, "Red Guardian": 5
 };
+/* Force physique / de frappe propre a chaque personnage (note sur 10). Elle module les degats
+   infliges (environ -12% a +15% autour de la moyenne) : assez pour se sentir, pas assez pour
+   desequilibrer les combats. Comme l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
+const CHAR_STRENGTH_BY_NAME = {
+  "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Apocalypse": 9, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 4, "Doctor Doom": 8,
+  "Hela": 8, "Doctor Strange": 4, "Magneto": 4, "Gorr": 8, "Telios": 6, "Siddharta": 9,
+  "Professor X": 2, "Ultron": 7, "Annihilus": 8, "Vision": 8, "The G": 8, "Kang": 6,
+  "Invisible Woman": 5, "La Femme Invisible": 5, "Storm": 5, "Iron Man": 7, "Clea": 5, "Loki": 6,
+  "The Thing": 8, "La Chose": 8, "Emma Frost": 4, "Human Torch": 5, "La Torche": 5,
+  "America Chavez": 6, "Mister Fantastic": 5, "Cyclops": 4, "Cyclope": 4, "Ebony Maw": 3,
+  "Sylvie": 5, "Cull Obsidian": 8, "Venom": 8, "Wolverine": 6, "Wong": 4, "Spider-Man": 7,
+  "Groot": 8, "Black Panther": 6, "Gamora": 6, "Proxima Midnight": 6, "Corvus Glaive": 6,
+  "Electro": 4, "Shang-Chi": 6, "Drax": 9, "Captain America": 9, "Star-Lord": 5, "Shuri": 3,
+  "Doctor Octopus": 5, "Ant-Man": 6, "Nebula": 6, "Deadpool": 6, "Mantis": 3, "Wasp": 4,
+  "U.S. Agent": 7, "Green Goblin": 6, "Rocket": 4, "Bucky": 7, "Ghost": 4, "Mystique": 4,
+  "Pyro": 3, "Hawkeye": 3, "Mysterio": 3, "Black Widow": 4, "Falcon": 4, "Yelena": 4,
+  "Daredevil": 4, "Red Skull": 5, "Red Guardian": 7
+};
+/* Force d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
+function strengthOfKey(k){
+  const c = k ? CHARACTERS[k] : null;
+  if(!c) return 5;
+  const v = CHAR_STRENGTH_BY_NAME[c.canon] ?? CHAR_STRENGTH_BY_NAME[c.en] ?? CHAR_STRENGTH_BY_NAME[c.fr];
+  return typeof v === 'number' ? v : 5;
+}
+/* Force courante : le joueur beneficie de sa base + son mod carriere. */
+function currentStrength(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerStrBase === 'number'){
+    return clamp(S.playerStrBase + (S.strMod||0), 1, 10);
+  }
+  return strengthOfKey(k);
+}
+/* Ajuste la force du joueur au fil de la carriere (entrainements, blessures, age). */
+function adjustStrength(delta){
+  S.strMod = clamp((S.strMod||0) + delta, -3, 3);
+}
+/* Multiplicateur de degats issu de la force : note 3 -> 0.94, 5 -> 1.00, 10 -> 1.15.
+   Volontairement resserre pour ne pas casser l'equilibre des combats. */
+function strMult(k){ return clamp(0.85 + currentStrength(k)*0.03, 0.85, 1.15); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -10481,12 +10523,12 @@ function startBattle(mission, done){
         setLog(S.lang==='fr'?`${tName} est ecarte du combat d'un seul coup.`:`${tName} is taken out of the fight in one stroke.`);
         dealToFoe(tIdx, 999, '#9a6bff');
       } else if(special.type==='BIG_STRIKE' || special.type==='STUN'){
-        const dmg = Math.round(38 + playerStrength()*0.35);
+        const dmg = Math.round((38 + playerStrength()*0.35) * strMult(S.playerCharKey));
         setLog(S.lang==='fr'?`Un coup dececisif s'abat sur ${tName}.`:`A decisive blow lands on ${tName}.`);
         dealToFoe(tIdx, dmg, '#9a6bff');
       } else if(special.type==='AOE'){
         setLog(S.lang==='fr'?`L'attaque frappe tous les adversaires a la fois.`:`The attack strikes every opponent at once.`);
-        const dmg = Math.round(22 + playerStrength()*0.22);
+        const dmg = Math.round((22 + playerStrength()*0.22) * strMult(S.playerCharKey));
         foeRoster.forEach((f,i)=>{ if(!f.ko) dealToFoe(i, dmg, '#9a6bff'); });
       } else if(special.type==='FULL_HEAL'){
         const before = allyRoster[0].hp;
@@ -10495,7 +10537,7 @@ function startBattle(mission, done){
         refreshEntry('ally', 0); refreshSpotlight();
         setLog(S.lang==='fr'?`Tes blessures se referment completement.`:`Your wounds close up completely.`);
       } else if(special.type==='DRAIN'){
-        const dmg = Math.round(28 + playerStrength()*0.28);
+        const dmg = Math.round((28 + playerStrength()*0.28) * strMult(S.playerCharKey));
         dealToFoe(tIdx, dmg, '#9a6bff');
         const before = allyRoster[0].hp;
         allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + dmg);
@@ -10649,7 +10691,7 @@ function startBattle(mission, done){
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5)));
+    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * strMult(ally.key)));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       dealToFoe(atkIdx, d, ally.col);
@@ -10715,7 +10757,7 @@ function startBattle(mission, done){
       return;
     }
     const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand;
+    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * strMult(actor.key);
     const d = dmgOf(m, power, mult);
     const targetAllyIdx = pickAllyTarget(idx);
     dealToAlly(targetAllyIdx, d, actor.col);
@@ -10741,7 +10783,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus);
+    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus * strMult(S.playerCharKey));
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     dealToFoe(targetIdx, d, myCol);
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${d} degats.`:`${label} hits ${targetName}: ${d} damage.`);
