@@ -10054,8 +10054,15 @@ function startBattle(mission, done){
   };
   function autoChooseMoveIdx(){
     const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr);
-    const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < 0.35;
-    if(lowSelf){ const healIdx = myMoves.findIndex(m=>m.heal && avail(m)); if(healIdx>=0) return healIdx; }
+    /* Le mode auto joue au niveau d'intelligence de TON personnage : un cerveau optimise, un
+       brutal frappe plus souvent au hasard et se soigne trop tard. */
+    const sk = iqSkill(S.playerCharKey);
+    const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < (0.22 + sk*0.22);
+    if(lowSelf && Math.random() < sk*0.9){ const healIdx = myMoves.findIndex(m=>m.heal && avail(m)); if(healIdx>=0) return healIdx; }
+    if(Math.random() > sk){
+      const rnd = myMoves.map((m,i)=>({m,i})).filter(o=>avail(o.m));
+      if(rnd.length) return pick(rnd).i;
+    }
     let best = -1, bestScore = -1;
     myMoves.forEach((m,i)=>{ if(m.heal || !avail(m)) return; const score = m.p*m.acc; if(score>bestScore){ bestScore=score; best=i; } });
     if(best<0) best = myMoves.findIndex(avail);
@@ -10076,7 +10083,7 @@ function startBattle(mission, done){
          Seul le type RALLY est evite (il ouvre un choix de renfort qui bloquerait l'automatisme). */
       const sp = document.getElementById('btlSpecial');
       const spDef = S.playerCharKey ? CHAR_SPECIAL[S.playerCharKey] : null;
-      if(sp && !sp.disabled && !st.specialUsed && spDef && spDef.type!=='RALLY' && Math.random()<0.8){ sp.click(); return; }
+      if(sp && !sp.disabled && !st.specialUsed && spDef && spDef.type!=='RALLY' && Math.random() < iqSkill(S.playerCharKey)){ sp.click(); return; }
       playerTurn(autoChooseMoveIdx());
     }, wait(500));
   }
@@ -10483,9 +10490,10 @@ function startBattle(mission, done){
   /* Un membre de ton escouade (autre que toi) frappe la cible actuellement engagee. */
   function doAllyAct(idx){
     const ally = allyRoster[idx];
+    const askill = iqSkill(ally.key);
     if(isWizardKey(ally.key)){
       const wounded = allyRoster.filter(a=>!a.ko && a.hp/a.maxHp < 0.75);
-      if(wounded.length && Math.random()<0.4){
+      if(wounded.length && Math.random() < askill*0.6){
         const target = wounded.sort((a,b)=>(a.hp/a.maxHp)-(b.hp/b.maxHp))[0];
         const tIdx = allyRoster.indexOf(target);
         flashSpotlight('ally', ally);
@@ -10502,7 +10510,7 @@ function startBattle(mission, done){
       }
     }
     /* Defense : un allie blesse peut se mettre en retrait et se soigner au lieu de frapper. */
-    if(ally.hp/ally.maxHp < 0.45 && Math.random()<0.35){
+    if(ally.hp/ally.maxHp < (0.30 + askill*0.22) && Math.random() < askill*0.55){
       flashSpotlight('ally', ally);
       const shield = Math.max(6, Math.round(8 + tierOfKey(ally.key)*0.12));
       setTimeout(()=>{
@@ -10519,6 +10527,7 @@ function startBattle(mission, done){
     if(!aliveFoes.length){ finish(true); return; }
     let atkIdx;
     if(Math.random()<0.5 && foeRoster[idx] && !foeRoster[idx].ko) atkIdx = idx;
+    else if(Math.random() < askill) atkIdx = aliveFoes.slice().sort((a,b)=>(foeRoster[a].hp/foeRoster[a].maxHp)-(foeRoster[b].hp/foeRoster[b].maxHp))[0];
     else atkIdx = pick(aliveFoes);
     flashSpotlight('ally', ally);
     const tier = tierOfKey(ally.key);
@@ -10537,9 +10546,11 @@ function startBattle(mission, done){
     const fm = (actor && actor._lastMoveFr && fmFull.some(mm=>mm.fr!==actor._lastMoveFr))
       ? fmFull.filter(mm=>mm.fr!==actor._lastMoveFr) : fmFull;
     let chosen = null;
-    /* Defenses : un adversaire blesse peut privilegier son coup defensif/soin s'il en a un -
-       seuil mesure (40% PV, 45% de chance) pour ne pas devenir increvable. */
-    if(actor && actor.hp/actor.maxHp < 0.40 && Math.random()<0.45){
+    /* La qualite des decisions depend de l'intelligence de combat du personnage (note sur 10). */
+    const sk = iqSkill(fk);
+    /* Defenses : un adversaire blesse privilegie son coup defensif/soin - un personnage
+       intelligent le fait bien plus souvent (et plus tot) qu'un brutal. */
+    if(actor && actor.hp/actor.maxHp < (0.28 + sk*0.22) && Math.random() < sk*0.7){
       const defs = fm.filter(mm=>mm.heal);
       if(defs.length) chosen = pick(defs);
     }
@@ -10547,12 +10558,12 @@ function startBattle(mission, done){
       const lowFoe = allyRoster[0].hp/allyRoster[0].maxHp < 0.35;
       if(lowFoe){
         const best = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc))[0];
-        if(Math.random()<0.85) chosen = best;
+        if(Math.random() < 0.35 + sk*0.65) chosen = best; /* le finisseur : evident pour un cerveau, rate par un bourrin */
       }
     }
     if(!chosen){
       const weighted = fm.slice().sort((a,b)=>(b.p*b.acc)-(a.p*a.acc));
-      chosen = Math.random()<0.72 ? weighted[0] : pick(fm);
+      chosen = Math.random() < sk ? weighted[0] : pick(fm);
     }
     if(actor) actor._lastMoveFr = chosen.fr;
     return chosen;
@@ -10562,8 +10573,12 @@ function startBattle(mission, done){
     const aliveAll = livingIdx(allyRoster);
     if(!aliveAll.length) return 0;
     /* Ciblage symetrique : 50% l'allie juste en face de cet adversaire dans l'alignement,
-       50% un autre membre de l'escouade au hasard (toi inclus). */
+       50% une autre cible - mais un adversaire intelligent choisit alors le plus affaibli. */
     if(forIdx!=null && Math.random()<0.5 && allyRoster[forIdx] && !allyRoster[forIdx].ko) return forIdx;
+    const sk = iqSkill(foeRoster[forIdx] ? foeRoster[forIdx].key : null);
+    if(Math.random() < sk){
+      return aliveAll.slice().sort((a,b)=>(allyRoster[a].hp/allyRoster[a].maxHp)-(allyRoster[b].hp/allyRoster[b].maxHp))[0];
+    }
     return pick(aliveAll);
   }
   /* Un adversaire (principal ou renfort) agit a son tour. */
