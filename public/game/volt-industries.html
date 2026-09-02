@@ -3854,6 +3854,9 @@ const ORIGINAL_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+1
    leurs donnees (puissance, moralite, coups) prets, mais n'apparaissent nulle part dans le jeu
    tant que ce n'est pas retire d'ici. */
 const DISABLED_CHARS = new Set();
+/* Bassin des recrues generiques (non canon) : utilisees comme mentees potentielles, et desormais
+   aussi pour reperer un adversaire qui est lui-meme une recrue (pas un heros/villain nomme). */
+const RECRUIT_ONLY_KEYS = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img) && !DISABLED_CHARS.has(k));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
@@ -5381,9 +5384,8 @@ function statBar(label, val, color){ return `<div class="stat"><div class="slabe
 /* ============================ CODEX DES PERSONNAGES ============================ */
 function screenCodex(){
   const d = document.createElement('div'); const fr = S.lang==='fr';
-  const recruits = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
   /* Le codex ne recense que les personnages canon : les recrues sont exclues. */
-  const allKeys = Object.keys(CHARACTERS).filter(k=>!recruits.has(k));
+  const allKeys = Object.keys(CHARACTERS).filter(k=>!RECRUIT_ONLY_KEYS.has(k));
   const metCount = allKeys.filter(k=>hasMetChar(k)).length;
   const allFactions = [...FACTIONS.hero, ...FACTIONS.villain].filter(Boolean);
   const repHtml = allFactions.map(f=>{
@@ -10362,11 +10364,29 @@ function startBattle(mission, done){
       ? (entry.transformedImg ? `<img src="${entry.transformedImg}" alt="${entry.name}" onerror="this.outerHTML='${fallbackGlyph}';">` : avatarVisual())
       : (entry.img ? `<img src="${entry.img}" alt="${entry.name}" onerror="this.outerHTML='${fallbackGlyph}';">` : `<span class="cp-glyph">${(entry.name||'?').charAt(0).toUpperCase()}</span>`);
     const selectable = side==='foe' && !entry.ko;
-    const isMentee = side==='ally' && !entry.isPlayer && entry.key && menteeKeys().includes(entry.key);
+    /* Badge de recrue : quatre cas distincts.
+       - Ta recrue active, encore en formation avec toi (alliee).
+       - Recrue adverse : l'adversaire lui-meme est un personnage du bassin des recrues generiques,
+         pas l'un de tes propres eleves.
+       - Ancienne recrue : l'un de TES eleves a bascule vers le camp oppose.
+       - Recrue diplomee : l'un de TES eleves a termine sa formation. */
+    const menteeRecord = (!entry.isPlayer && entry.key) ? (S.mentees||[]).find(m=>m.charKey===entry.key) : null;
+    let menteeBadge = null;
+    if(side==='foe' && entry.key && RECRUIT_ONLY_KEYS.has(entry.key)){
+      menteeBadge = { label: S.lang==='fr'?'RECRUE ADVERSE':'OPPOSING RECRUIT', color:'#ff6b6b' };
+    } else if(menteeRecord){
+      if(side==='foe' && crossedMentees().includes(menteeRecord)){
+        menteeBadge = { label: S.lang==='fr'?'ANCIENNE RECRUE':'FORMER RECRUIT', color:'#e8c96a' };
+      } else if(menteeRecord.graduated){
+        menteeBadge = { label: S.lang==='fr'?'RECRUE DIPLOMEE':'GRADUATED RECRUIT', color:'#c084fc' };
+      } else if(side==='ally'){
+        menteeBadge = { label: S.lang==='fr'?'TA RECRUE':'YOUR RECRUIT', color:'#7ef0c0' };
+      }
+    }
     return `<div class="rcard${entry.ko?' ko':''}${side==='foe' && i===st.targetIdx && !entry.ko?' selected':''}${selectable?' pickable':''}" data-side="${side}" data-idx="${i}" style="--cp-color:${entry.col};">
       <div class="rcard-frame" id="rframe-${side}-${i}">${inner}</div>
       <div class="rcard-meta">
-        <div class="rcard-name">${entry.name}${isMentee?`<span style="display:inline-block; margin-left:5px; font-size:8px; font-weight:900; letter-spacing:.5px; color:#7ef0c0; border:1px solid #7ef0c0; border-radius:5px; padding:0 4px; vertical-align:middle;">${S.lang==='fr'?'TA RECRUE':'YOUR RECRUIT'}</span>`:''}</div>
+        <div class="rcard-name">${entry.name}${menteeBadge?`<span style="display:inline-block; margin-left:5px; font-size:8px; font-weight:900; letter-spacing:.5px; color:${menteeBadge.color}; border:1px solid ${menteeBadge.color}; border-radius:5px; padding:0 4px; vertical-align:middle;">${menteeBadge.label}</span>`:''}</div>
         <div class="rcard-hpbar"><div class="rcard-hpfill" id="rhp-${side}-${i}" style="width:${pct}%; background:${hpColor(pct)};"></div></div>
         <div class="rcard-hpnum" id="rhpnum-${side}-${i}">${Math.max(0,Math.round(entry.hp))}/${entry.maxHp}</div>
       </div>
