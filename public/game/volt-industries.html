@@ -5992,6 +5992,7 @@ const POD_FIT_TWEAKS = {
   pyro:{ y:-14 },                    /* Pyro */
   aurelia:{ scale:1.10 },            /* Hela */
   malachar:{ scale:1.14, y:-8 },     /* Thanos */
+  sentry:{ scale:1.26, y:-14 },      /* Sentry : silhouette lointaine sur son visuel, on l'agrandit */
 };
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
@@ -6017,7 +6018,7 @@ function fitPodFigure(img){
     const center=((minX+maxX)/2)/w;
     const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
     const tw = POD_FIT_TWEAKS[img.dataset.podKey || ''] || {};
-    const finalScale = Math.min(1.34, scale * (tw.scale || 1));
+    const finalScale = Math.min(tw.scale ? 1.55 : 1.34, scale * (tw.scale || 1));
     img.style.setProperty('--pod-scale',finalScale.toFixed(3));
     img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
     img.style.setProperty('--pod-shift-y',`${(tw.y||0)}px`);
