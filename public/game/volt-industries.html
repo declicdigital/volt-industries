@@ -7310,11 +7310,16 @@ function buildCareerPlan(){
   S.rivalSide = oppSide0; // camp effectif force pour cette carriere, independant de son alignement canonique
   S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
   S.artifacts = []; S.factionRep = S.factionRep || {};
-  /* Si tu incarnes un detenteur canonique d'une Gemme (Loki, Vision, Doctor Doom, Thanos, Doctor
-     Strange, Hela), tu pars deja avec la tienne - fidele au lore. */
+  /* Les 6 Gemmes sont entierement aleatoires : aucune n'est acquise d'office au demarrage, aucun
+     ordre predefini, et leurs gardiens sont retires au sort a chaque nouvelle carriere. */
   S.eclats = [];
-  const innateGem = Object.keys(ECLAT_HOLDERS).find(id=>ECLAT_HOLDERS[id]===S.playerCharKey);
-  if(innateGem) S.eclats.push(innateGem);
+  const gemGuards = shuffle(Object.values(ECLAT_HOLDERS).slice());
+  S.eclatHolders = {};
+  shuffle(ECLATS.map(e=>e.id)).forEach((gid,i)=>{
+    const g = gemGuards[i % gemGuards.length];
+    if(g && g!==S.playerCharKey) S.eclatHolders[gid] = g;
+  });
+
   if(!S.metCharacters) S.metCharacters = [];
   /* Nouvelle Partie+ : l'heritage d'une carriere remarquable precedente donne un petit coup de pouce
      au demarrage de celle-ci - consomme une seule fois. */
@@ -7664,16 +7669,17 @@ function shouldTriggerEclatQuest(){
 const ECLAT_HOLDERS = { derive:'vipera', murmure:'lorelei', fracture:'boomnpc', fureur:'malachar', attente:'solen', vestige:'aurelia' };
 function startEclatQuest(){
   const owned = S.eclats||[];
-  const avail = ECLATS.filter(e=>!owned.includes(e.id) && ECLAT_HOLDERS[e.id]!==S.playerCharKey);
+  const holderOf = (id)=>((S.eclatHolders||{})[id] || ECLAT_HOLDERS[id]);
+  const avail = ECLATS.filter(e=>!owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
   const shard = pick(avail);
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
-  // Le detenteur est toujours le meme pour une Gemme donnee, sauf si elle a deja change de main (echec precedent).
-  const existingHolder = (S.eclatHolders||{})[shard.id];
-  const guardianKey = existingHolder && CHARACTERS[existingHolder] ? existingHolder : ECLAT_HOLDERS[shard.id];
+  // Gardien tire au sort en debut de carriere ; il change si la Gemme a deja change de main.
+  const guardianKey = holderOf(shard.id);
+
   const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'une presence hostile':'a hostile presence');
   const isAlly = guardianKey && CHARACTERS[guardianKey] && CHARACTERS[guardianKey].align!=='neutral' && CHARACTERS[guardianKey].align===mySide;
   const introFr = isAlly
