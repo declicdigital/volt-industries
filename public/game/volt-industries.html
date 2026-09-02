@@ -7310,14 +7310,16 @@ function buildCareerPlan(){
   S.rivalSide = oppSide0; // camp effectif force pour cette carriere, independant de son alignement canonique
   S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
   S.artifacts = []; S.factionRep = S.factionRep || {};
-  /* Les 6 Gemmes sont entierement aleatoires : aucune n'est acquise d'office au demarrage, aucun
-     ordre predefini, et leurs gardiens sont retires au sort a chaque nouvelle carriere. */
+  /* Les 6 Gemmes sont entierement aleatoires : aucune n'est acquise d'office au demarrage. Seules
+     1 ou 2 Gemmes (max) sont detenues par un autre personnage ; les 4 autres se trouvent lors de
+     combats, missions ou quetes, sans detenteur nomme. */
   S.eclats = [];
-  const gemGuards = shuffle(Object.values(ECLAT_HOLDERS).slice());
+  const gemGuards = shuffle(Object.values(ECLAT_HOLDERS).slice()).filter(k=>k && k!==S.playerCharKey);
   S.eclatHolders = {};
-  shuffle(ECLATS.map(e=>e.id)).forEach((gid,i)=>{
-    const g = gemGuards[i % gemGuards.length];
-    if(g && g!==S.playerCharKey) S.eclatHolders[gid] = g;
+  const heldCount = Math.random() < 0.5 ? 1 : 2;
+  shuffle(ECLATS.map(e=>e.id)).slice(0, heldCount).forEach((gid,i)=>{
+    const g = gemGuards[i % Math.max(1,gemGuards.length)];
+    if(g) S.eclatHolders[gid] = g;
   });
 
   if(!S.metCharacters) S.metCharacters = [];
