@@ -7665,13 +7665,16 @@ function shouldTriggerEclatQuest(){
   if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 1) return false;
   return Math.random() < 0.05;
 }
-/* Detenteurs canoniques, fideles au lore Marvel : chaque Gemme a SA propre gardienne ou gardien fixe,
-   ce n'est jamais tire au hasard. Loki (Tesseract) et Docteur Strange (Oeil d'Agamotto) au coeur
-   des histoires de multivers. */
+/* Pool de gardiens possibles : une ou deux Gemmes seulement sont confiees a un personnage au debut
+   d'une carriere (tirage aleatoire). Les autres n'ont aucun detenteur nomme et se trouvent sur le
+   terrain, lors de combats, missions ou quetes. */
 const ECLAT_HOLDERS = { derive:'vipera', murmure:'lorelei', fracture:'boomnpc', fureur:'malachar', attente:'solen', vestige:'aurelia' };
+/* Lieux/quetes ou une Gemme sans detenteur peut refaire surface. */
+const ECLAT_SITES_FR = ["un temple enfoui sous les glaces","une epave orbitale a la derive","un site de fouilles interdit","un laboratoire abandonne","une faille dimensionnelle instable","un sanctuaire oublie"];
+const ECLAT_SITES_EN = ["a temple buried under the ice","a drifting orbital wreck","a forbidden excavation site","an abandoned laboratory","an unstable dimensional rift","a forgotten sanctuary"];
 function startEclatQuest(){
   const owned = S.eclats||[];
-  const holderOf = (id)=>((S.eclatHolders||{})[id] || ECLAT_HOLDERS[id]);
+  const holderOf = (id)=>((S.eclatHolders||{})[id] || null);
   const avail = ECLATS.filter(e=>!owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
   const shard = pick(avail);
@@ -7679,20 +7682,26 @@ function startEclatQuest(){
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
-  // Gardien tire au sort en debut de carriere ; il change si la Gemme a deja change de main.
+  // Detenteur seulement si cette Gemme a ete confiee a un personnage (1 ou 2 max par carriere).
   const guardianKey = holderOf(shard.id);
+  const siteIdx = Math.floor(Math.random()*ECLAT_SITES_FR.length);
 
-  const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'une presence hostile':'a hostile presence');
+  const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : '';
   const isAlly = guardianKey && CHARACTERS[guardianKey] && CHARACTERS[guardianKey].align!=='neutral' && CHARACTERS[guardianKey].align===mySide;
-  const introFr = isAlly
-    ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la detient - il faudra la meriter, pas la voler.`
-    : `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la garde farouchement.`;
-  const introEn = isAlly
-    ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
-    : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`;
+  const introFr = !guardianKey
+    ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. Personne ne la detient : elle dort dans ${ECLAT_SITES_FR[siteIdx]}, et tu n'es pas seul a la chercher.`
+    : (isAlly
+      ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la detient - il faudra la meriter, pas la voler.`
+      : `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la garde farouchement.`);
+  const introEn = !guardianKey
+    ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. Nobody holds it: it lies dormant in ${ECLAT_SITES_EN[siteIdx]}, and you are not the only one looking.`
+    : (isAlly
+      ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
+      : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
   const m = {
     id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey,
-    tagFr:'Quete d\'Infinite', tagEn:'Infinity Quest',
+    tagFr: guardianKey ? 'Quete d\'Infinite' : 'Site d\'Infinite',
+    tagEn: guardianKey ? 'Infinity Quest' : 'Infinity Site',
     fr:introFr, en:introEn,
     location:{ name: randLocationName(scope), type:scope },
     choices:[
