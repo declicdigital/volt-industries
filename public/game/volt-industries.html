@@ -9732,6 +9732,9 @@ function adjustStrength(delta){
 /* Multiplicateur de degats issu de la force : note 3 -> 0.94, 5 -> 1.00, 10 -> 1.15.
    Volontairement resserre pour ne pas casser l'equilibre des combats. */
 function strMult(k){ return clamp(0.85 + currentStrength(k)*0.03, 0.85, 1.15); }
+/* Bases communes aux deux camps : aucun bonus cache lie au statut joueur/adversaire. */
+function combatMaxHp(k){ return Math.round(62 + currentRes(k)*7); }
+function combatAttackPower(k){ return Math.round(55 + currentStrength(k)*3); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -9754,6 +9757,12 @@ function speedOfKey(k){
   const v = CHAR_SPEED_BY_NAME[c.canon] ?? CHAR_SPEED_BY_NAME[c.en] ?? CHAR_SPEED_BY_NAME[c.fr];
   return typeof v === 'number' ? v : 5;
 }
+function currentSpeed(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerSpeedBase === 'number'){
+    return clamp(S.playerSpeedBase + (S.speedMod||0), 1, 10);
+  }
+  return speedOfKey(k);
+}
 /* Ajuste la vitesse du joueur au fil de la carriere (choix, evenements, age, blessures). */
 function adjustSpeed(delta){
   S.speedMod = clamp((S.speedMod||0) + delta, -10, 10);
@@ -9771,8 +9780,7 @@ function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
 function buildRosterExtras(keys, weakened){
   return keys.map(k=>{
     const c = CHARACTERS[k]; if(!c) return null;
-    const tier = tierOfKey(k);
-    let maxHp = Math.round(58 + tier*0.9);
+    let maxHp = combatMaxHp(k);
     let hp = maxHp;
     // "weakened" : combat de renfort. Les combattants deja engages sont entames, jamais a l'agonie.
     if(weakened === 'ally') hp = Math.round(maxHp * (0.55 + Math.random()*0.25)); // 55-80%
@@ -10097,8 +10105,9 @@ function startBattle(mission, done){
    /* PV stables : la base de reference suit la progression de carriere et la courbe d'age (prime a
       35 ans) et ne peut bouger que de 2% entre deux combats. Le momentum et les blessures comptent
       toujours, mais en modulation legere par-dessus cette base (au lieu des -30 PV d'un coup). */
-   const baseHP = Math.max(75, 88 + (ps-55)*0.48);
-   const rawMaxHP = Math.max(46, baseHP * charPowerScale * vitalityFactor());
+   /* Les PV de depart viennent desormais de la resistance du personnage, comme pour chaque PNJ.
+      La forme de carriere reste une variation legere, jamais un second systeme de puissance. */
+   const rawMaxHP = combatMaxHp(S.playerCharKey);
    if(typeof S.hpBaseline !== 'number' || !isFinite(S.hpBaseline) || S.hpBaseline <= 0){
      S.hpBaseline = rawMaxHP;
    } else {
@@ -10109,11 +10118,9 @@ function startBattle(mission, done){
    const formMod = clamp(form.momentum*0.012, -0.04, 0.04) - (inj ? Math.min(0.06, inj.sev*0.02) : 0);
    const myMaxHP = Math.max(46, Math.round(S.hpBaseline * (1 + formMod)));
 
-  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.24, 0.22)) * (inj ? (1 - inj.sev*0.12) : 1);
-  const foeTier = Math.round((fs-40)*2.1 + Math.max(0, form.streak)*4);
-  const foePower = Math.round(48 + fs*0.72 + Math.max(0, form.streak)*3);
-  const rubberBand = 1 + clamp((ps-fs)/140, 0, 0.45);
-  const foeDmgMult = (1 + Math.max(0, form.streak)*0.03 + (Math.random()*0.18 - 0.05)) * rubberBand;
+  /* Momentum et blessure ne modulent legerement que le personnage joue. L'adversaire ne recoit
+     plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
+  const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   rollBattleLoadout(); // tirage au sort des 4 coups pour ce combat
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
@@ -10136,7 +10143,7 @@ function startBattle(mission, done){
       }
     }
   })();
-  const allyBonus = 1 + squads.allies.length * 0.03;
+  const allyBonus = 1;
   const isReinforcement = scope>=3 && squads.allies.length>0 && squads.foes.length>0 && Math.random()<0.10;
   const allyExtras = buildRosterExtras(squads.allies, isReinforcement ? 'ally' : false);
   const foeExtras = buildRosterExtras(squads.foes, isReinforcement ? 'foe' : false);
@@ -10144,17 +10151,14 @@ function startBattle(mission, done){
 
   /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
   function spdFor(entry){
-    const jitter = Math.round(Math.random()*10 - 5) + (S.speedMod||0);
-    if(entry.isPlayer){
-      const base = S.playerSpeedBase || 5;
-      return Math.round(20 + base*5 + (S.stats.courage||50)*0.12 + jitter);
-    }
-    const base = speedOfKey(entry.key);
-    return Math.round(20 + base*5 + tierOfKey(entry.key)*0.25 + jitter);
+    const jitter = Math.round(Math.random()*10 - 5);
+    const base = currentSpeed(entry.isPlayer ? S.playerCharKey : entry.key);
+    return Math.round(20 + base*5 + jitter);
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
+  const foeMaxHp = combatMaxHp(foeKey);
+  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
   const allyRoster = allyRosterRaw, foeRoster = foeRosterRaw;
@@ -10437,15 +10441,15 @@ function startBattle(mission, done){
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('ally', i), false, d); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
     if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
-    if(e.hp<=0 && !e.isPlayer){
+    if(e.hp<=0){
       e.ko = true; refreshEntry('ally', i);
-      if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
+      if(!e.isPlayer && scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
     }
     refreshSpotlight();
     return d;
   }
   function allFoesDown(){ return foeRoster.every(f=>f.ko); }
-  function playerDown(){ return allyRoster[0].hp<=0; }
+  function playerDown(){ return allyRoster.every(a=>a.ko || a.hp<=0); }
   /* Nombre d'actions du joueur necessaires avant de pouvoir declencher son coup signature. */
   const SPECIAL_CHARGE = 4;
   function renderMoves(){
@@ -10731,21 +10735,25 @@ function startBattle(mission, done){
       }, wait(500));
       return;
     }
-    /* Ciblage : 50% le gars juste en face de lui dans l'alignement, 50% un autre adversaire au
-       hasard - l'equipe ne focus plus systematiquement la meme cible. */
+    /* Ciblage commun aux deux camps, sans regle artificielle 50/50 : le QI decide si le
+       combattant identifie la cible la plus vulnerable ; sinon il choisit parmi les survivants. */
     const aliveFoes = livingIdx(foeRoster);
     if(!aliveFoes.length){ finish(true); return; }
-    let atkIdx;
-    if(Math.random()<0.5 && foeRoster[idx] && !foeRoster[idx].ko) atkIdx = idx;
-    else if(Math.random() < askill) atkIdx = aliveFoes.slice().sort((a,b)=>(foeRoster[a].hp/foeRoster[a].maxHp)-(foeRoster[b].hp/foeRoster[b].maxHp))[0];
-    else atkIdx = pick(aliveFoes);
+    const atkIdx = pickTeamTarget(foeRoster, idx, askill);
     flashSpotlight('ally', ally);
-    const tier = tierOfKey(ally.key);
-    const d = Math.max(3, Math.round((6 + tier*0.17) * (0.8 + Math.random()*0.5) * strMult(ally.key)));
+    const m = foeAIMoveFor(ally.key, ally);
+    const label = S.lang==='fr'?m.fr:m.en;
+    if(Math.random() > m.acc){
+      setLog(S.lang==='fr'?`${ally.name} tente ${label}... et manque sa cible.`:`${ally.name} tries ${label}... and misses.`);
+      setTimeout(runTurn, wait(900));
+      return;
+    }
+    const d = dmgOf(m, combatAttackPower(ally.key), strMult(ally.key));
     setTimeout(()=>{
       const tName = foeRoster[atkIdx] ? foeRoster[atkIdx].name : '';
       const dApplied = dealToFoe(atkIdx, d, ally.col) ?? d;
-      setLog((S.lang==='fr'?`${ally.name} enchaine sur ${tName}`:`${ally.name} follows up on ${tName}`) + ' : ' + dApplied + (S.lang==='fr'?' degats.':' damage.'));
+      if(m.heal){ ally.hp = Math.min(ally.maxHp, ally.hp + m.heal); refreshEntry('ally', idx); }
+      setLog((S.lang==='fr'?`${ally.name} utilise ${label} sur ${tName}`:`${ally.name} uses ${label} on ${tName}`) + ' : ' + dApplied + (S.lang==='fr'?' degats.':' damage.') + (m.heal ? (S.lang==='fr'?` Recuperation : ${m.heal} PV.`:` Recovery: ${m.heal} HP.`) : ''));
       setTimeout(runTurn, wait(850));
     }, wait(500));
   }
@@ -10778,18 +10786,18 @@ function startBattle(mission, done){
     if(actor) actor._lastMoveFr = chosen.fr;
     return chosen;
   }
+  function pickTeamTarget(roster, facingIdx, skill){
+    const alive = livingIdx(roster);
+    if(!alive.length) return 0;
+    if(Math.random() < skill){
+      return alive.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp))[0];
+    }
+    return pick(alive);
+  }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
-    const aliveAll = livingIdx(allyRoster);
-    if(!aliveAll.length) return 0;
-    /* Ciblage symetrique : 50% l'allie juste en face de cet adversaire dans l'alignement,
-       50% une autre cible - mais un adversaire intelligent choisit alors le plus affaibli. */
-    if(forIdx!=null && Math.random()<0.5 && allyRoster[forIdx] && !allyRoster[forIdx].ko) return forIdx;
     const sk = iqSkill(foeRoster[forIdx] ? foeRoster[forIdx].key : null);
-    if(Math.random() < sk){
-      return aliveAll.slice().sort((a,b)=>(allyRoster[a].hp/allyRoster[a].maxHp)-(allyRoster[b].hp/allyRoster[b].maxHp))[0];
-    }
-    return pick(aliveAll);
+    return pickTeamTarget(allyRoster, forIdx, sk);
   }
   /* Un adversaire (principal ou renfort) agit a son tour. */
   function doFoeAct(idx){
@@ -10797,18 +10805,15 @@ function startBattle(mission, done){
     if(idx!==st.targetIdx) flashSpotlight('foe', actor);
     const m = foeAIMoveFor(actor.key, actor);
     const label = S.lang==='fr'?m.fr:m.en;
-    /* Precision adverse legerement superieure a la valeur affichee : les adversaires ratent
-       moins souvent que le joueur (bonus +0.07, plafonne a 0.97). */
-    if(st.dodgeNext || Math.random() > Math.min(0.97, m.acc + 0.07)){
+    /* Meme precision de coup pour les deux camps, sans bonus adverse cache. */
+    if(st.dodgeNext || Math.random() > m.acc){
       const dodgeMsg = st.dodgeNext ? (S.lang==='fr'?`${actor.name} frappe dans le vide - ${myName} a disparu.`:`${actor.name} strikes at nothing - ${myName} has vanished.`) : (S.lang==='fr'?`${actor.name} tente ${label}... et te manque.`:`${actor.name} tries ${label}... and misses.`);
       st.dodgeNext = false;
       setLog(dodgeMsg);
       setTimeout(runTurn, wait(900));
       return;
     }
-    const power = idx===0 ? foePower : (48 + tierOfKey(actor.key)*0.8);
-    const mult = (idx===0 ? foeDmgMult : (0.95 + Math.random()*0.3) * rubberBand) * strMult(actor.key);
-    const d = dmgOf(m, power, mult);
+    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key));
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
@@ -10833,7 +10838,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, 44 + ps*0.6 + S.stats.courage*0.12, dmgMult * allyBonus * strMult(S.playerCharKey));
+    const d = dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * allyBonus * strMult(S.playerCharKey));
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     const dApplied = dealToFoe(targetIdx, d, myCol) ?? d;
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${dApplied} degats.`:`${label} hits ${targetName}: ${dApplied} damage.`);
