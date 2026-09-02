@@ -9651,6 +9651,46 @@ const CHAR_SPEED_BY_NAME = {
   "Ghost": 6, "Mystique": 5, "Pyro": 4, "Hawkeye": 5, "Mysterio": 4, "Black Widow": 6,
   "Falcon": 6, "Yelena": 6, "Daredevil": 6, "Red Skull": 4, "Red Guardian": 5
 };
+/* Force physique / de frappe propre a chaque personnage (note sur 10). Elle module les degats
+   infliges (environ -12% a +15% autour de la moyenne) : assez pour se sentir, pas assez pour
+   desequilibrer les combats. Comme l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
+const CHAR_STRENGTH_BY_NAME = {
+  "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Apocalypse": 9, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 4, "Doctor Doom": 8,
+  "Hela": 8, "Doctor Strange": 4, "Magneto": 4, "Gorr": 8, "Telios": 6, "Siddharta": 9,
+  "Professor X": 2, "Ultron": 7, "Annihilus": 8, "Vision": 8, "The G": 8, "Kang": 6,
+  "Invisible Woman": 5, "La Femme Invisible": 5, "Storm": 5, "Iron Man": 7, "Clea": 5, "Loki": 6,
+  "The Thing": 8, "La Chose": 8, "Emma Frost": 4, "Human Torch": 5, "La Torche": 5,
+  "America Chavez": 6, "Mister Fantastic": 5, "Cyclops": 4, "Cyclope": 4, "Ebony Maw": 3,
+  "Sylvie": 5, "Cull Obsidian": 8, "Venom": 8, "Wolverine": 6, "Wong": 4, "Spider-Man": 7,
+  "Groot": 8, "Black Panther": 6, "Gamora": 6, "Proxima Midnight": 6, "Corvus Glaive": 6,
+  "Electro": 4, "Shang-Chi": 6, "Drax": 9, "Captain America": 9, "Star-Lord": 5, "Shuri": 3,
+  "Doctor Octopus": 5, "Ant-Man": 6, "Nebula": 6, "Deadpool": 6, "Mantis": 3, "Wasp": 4,
+  "U.S. Agent": 7, "Green Goblin": 6, "Rocket": 4, "Bucky": 7, "Ghost": 4, "Mystique": 4,
+  "Pyro": 3, "Hawkeye": 3, "Mysterio": 3, "Black Widow": 4, "Falcon": 4, "Yelena": 4,
+  "Daredevil": 4, "Red Skull": 5, "Red Guardian": 7
+};
+/* Force d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
+function strengthOfKey(k){
+  const c = k ? CHARACTERS[k] : null;
+  if(!c) return 5;
+  const v = CHAR_STRENGTH_BY_NAME[c.canon] ?? CHAR_STRENGTH_BY_NAME[c.en] ?? CHAR_STRENGTH_BY_NAME[c.fr];
+  return typeof v === 'number' ? v : 5;
+}
+/* Force courante : le joueur beneficie de sa base + son mod carriere. */
+function currentStrength(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerStrBase === 'number'){
+    return clamp(S.playerStrBase + (S.strMod||0), 1, 10);
+  }
+  return strengthOfKey(k);
+}
+/* Ajuste la force du joueur au fil de la carriere (entrainements, blessures, age). */
+function adjustStrength(delta){
+  S.strMod = clamp((S.strMod||0) + delta, -3, 3);
+}
+/* Multiplicateur de degats issu de la force : note 3 -> 0.94, 5 -> 1.00, 10 -> 1.15.
+   Volontairement resserre pour ne pas casser l'equilibre des combats. */
+function strMult(k){ return clamp(0.85 + currentStrength(k)*0.03, 0.85, 1.15); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
