@@ -10848,7 +10848,7 @@ function startBattle(mission, done){
     if(allyExtras.length){
       const names = allyExtras.map(e=>e.name).join(', ');
       if(isReinforcement){
-        setLog(S.lang==='fr'?`${names} tiennent le front depuis un moment, en difficulte. Ils t'appellent en renfort.`:`${names} have been holding the line, struggling. They call you in as backup.`);
+        setLog(S.lang==='fr'?`${names} tiennent le front depuis un moment : les deux camps sont deja entames. Ils t'appellent en renfort.`:`${names} have been holding the line for a while: both sides are already worn down. They call you in as backup.`);
       } else {
         setLog(S.lang==='fr'?`${names} prennent position a tes cotes.`:`${names} take position at your side.`);
       }
