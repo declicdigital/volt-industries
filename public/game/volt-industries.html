@@ -6236,6 +6236,8 @@ function applyPreset(p){
   if(typeof S.iqMod !== "number") S.iqMod = 0;
   S.playerStrBase = strengthOfKey(S.playerCharKey);
   if(typeof S.strMod !== "number") S.strMod = 0;
+  S.playerResBase = resOfKey(S.playerCharKey);
+  if(typeof S.resMod !== "number") S.resMod = 0;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
@@ -9670,6 +9672,45 @@ const CHAR_STRENGTH_BY_NAME = {
   "Pyro": 3, "Hawkeye": 3, "Mysterio": 3, "Black Widow": 4, "Falcon": 4, "Yelena": 4,
   "Daredevil": 4, "Red Skull": 5, "Red Guardian": 7
 };
+/* Resistance de chaque personnage (note sur 10) : reduit les degats subis (environ +6% a -15%
+   autour de la moyenne). Volontairement resserre pour ne pas rendre les tanks invincibles.
+   Comme la force, l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
+const CHAR_RES_BY_NAME = {
+  "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Apocalypse": 9, "Captain Marvel": 8, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
+  "Hela": 9, "Doctor Strange": 5, "Magneto": 4, "Gorr": 7, "Telios": 7, "Siddharta": 8,
+  "Professor X": 3, "Ultron": 8, "Annihilus": 8, "Vision": 9, "The G": 8, "Kang": 6,
+  "Invisible Woman": 6, "La Femme Invisible": 6, "Storm": 5, "Iron Man": 8, "Clea": 5, "Loki": 5,
+  "The Thing": 9, "La Chose": 9, "Emma Frost": 6, "Human Torch": 5, "La Torche": 5,
+  "America Chavez": 6, "Mister Fantastic": 6, "Cyclops": 4, "Cyclope": 4, "Ebony Maw": 3,
+  "Sylvie": 5, "Cull Obsidian": 8, "Venom": 8, "Wolverine": 9, "Wong": 4, "Spider-Man": 6,
+  "Groot": 8, "Black Panther": 6, "Gamora": 6, "Proxima Midnight": 6, "Corvus Glaive": 6,
+  "Electro": 4, "Shang-Chi": 6, "Drax": 8, "Captain America": 7, "Star-Lord": 5, "Shuri": 3,
+  "Doctor Octopus": 5, "Ant-Man": 6, "Nebula": 7, "Deadpool": 10, "Mantis": 3, "Wasp": 5,
+  "U.S. Agent": 7, "Green Goblin": 6, "Rocket": 4, "Bucky": 6, "Ghost": 5, "Mystique": 4,
+  "Pyro": 3, "Hawkeye": 3, "Mysterio": 3, "Black Widow": 4, "Falcon": 4, "Yelena": 4,
+  "Daredevil": 4, "Red Skull": 5, "Red Guardian": 5
+};
+/* Resistance d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
+function resOfKey(k){
+  const c = k ? CHARACTERS[k] : null;
+  if(!c) return 5;
+  const v = CHAR_RES_BY_NAME[c.canon] ?? CHAR_RES_BY_NAME[c.en] ?? CHAR_RES_BY_NAME[c.fr];
+  return typeof v === 'number' ? v : 5;
+}
+/* Resistance courante : le joueur beneficie de sa base + son mod carriere. */
+function currentRes(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerResBase === 'number'){
+    return clamp(S.playerResBase + (S.resMod||0), 1, 10);
+  }
+  return resOfKey(k);
+}
+/* Ajuste la resistance du joueur au fil de la carriere (entrainements, blessures, age). */
+function adjustRes(delta){
+  S.resMod = clamp((S.resMod||0) + delta, -3, 3);
+}
+/* Multiplicateur de degats SUBIS : note 3 -> x1.06, 5 -> x1.00, 10 -> x0.85. */
+function resMult(k){ return clamp(1.15 - currentRes(k)*0.03, 0.85, 1.15); }
 /* Force d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function strengthOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -10376,6 +10417,9 @@ function startBattle(mission, done){
   /* Un allie inflige des degats a la cible actuellement selectionnee. */
   function dealToFoe(i, d, col){
     const e = foeRoster[i]; if(!e || e.ko) return;
+    /* La resistance de la cible absorbe une part des degats (les mises hors combat
+       scenaristiques a 999 degats ne sont pas concernees). */
+    if(d < 900) d = Math.max(1, Math.round(d * resMult(e.key)));
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('foe', i), false, d); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
     if(i===st.targetIdx){ hit(foeSpotFrame, true, d); floatDmg(foeSpotFrame, d, col, true); }
@@ -10385,6 +10429,7 @@ function startBattle(mission, done){
   /* Un adversaire inflige des degats a un allie (le joueur ou un membre de son escouade). */
   function dealToAlly(i, d, col){
     const e = allyRoster[i]; if(!e || e.ko) return;
+    if(d < 900) d = Math.max(1, Math.round(d * resMult(e.isPlayer ? S.playerCharKey : e.key)));
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('ally', i), false, d); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
     if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
