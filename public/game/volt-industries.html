@@ -10105,8 +10105,9 @@ function startBattle(mission, done){
    /* PV stables : la base de reference suit la progression de carriere et la courbe d'age (prime a
       35 ans) et ne peut bouger que de 2% entre deux combats. Le momentum et les blessures comptent
       toujours, mais en modulation legere par-dessus cette base (au lieu des -30 PV d'un coup). */
-   const baseHP = Math.max(75, 88 + (ps-55)*0.48);
-   const rawMaxHP = Math.max(46, baseHP * charPowerScale * vitalityFactor());
+   /* Les PV de depart viennent desormais de la resistance du personnage, comme pour chaque PNJ.
+      La forme de carriere reste une variation legere, jamais un second systeme de puissance. */
+   const rawMaxHP = combatMaxHp(S.playerCharKey);
    if(typeof S.hpBaseline !== 'number' || !isFinite(S.hpBaseline) || S.hpBaseline <= 0){
      S.hpBaseline = rawMaxHP;
    } else {
@@ -10734,8 +10735,8 @@ function startBattle(mission, done){
       }, wait(500));
       return;
     }
-    /* Ciblage commun aux deux camps : 50% la cible en face ; sinon une autre cible, choisie
-       intelligemment parmi les plus faibles selon le QI, ou au hasard si la decision est ratee. */
+    /* Ciblage commun aux deux camps, sans regle artificielle 50/50 : le QI decide si le
+       combattant identifie la cible la plus vulnerable ; sinon il choisit parmi les survivants. */
     const aliveFoes = livingIdx(foeRoster);
     if(!aliveFoes.length){ finish(true); return; }
     const atkIdx = pickTeamTarget(foeRoster, idx, askill);
@@ -10788,13 +10789,10 @@ function startBattle(mission, done){
   function pickTeamTarget(roster, facingIdx, skill){
     const alive = livingIdx(roster);
     if(!alive.length) return 0;
-    const facingAlive = facingIdx!=null && roster[facingIdx] && !roster[facingIdx].ko;
-    if(facingAlive && Math.random()<0.5) return facingIdx;
-    const alternatives = facingAlive && alive.length>1 ? alive.filter(i=>i!==facingIdx) : alive;
     if(Math.random() < skill){
-      return alternatives.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp))[0];
+      return alive.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp))[0];
     }
-    return pick(alternatives);
+    return pick(alive);
   }
   function pickAllyTarget(forIdx){
     if(st.protectIdx!=null){ st.protectIdx = null; return 0; }
