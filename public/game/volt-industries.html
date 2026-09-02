@@ -6234,6 +6234,8 @@ function applyPreset(p){
   if(typeof S.speedMod !== "number") S.speedMod = 0;
   S.playerIQBase = iqOfKey(S.playerCharKey);
   if(typeof S.iqMod !== "number") S.iqMod = 0;
+  S.playerStrBase = strengthOfKey(S.playerCharKey);
+  if(typeof S.strMod !== "number") S.strMod = 0;
   S.playerSex = p.sex || ((p.charKey && CHARACTERS[p.charKey] && CHARACTERS[p.charKey].sex) || 'm');
   S.presetId = p.id;
   const st = p.stats || {};
