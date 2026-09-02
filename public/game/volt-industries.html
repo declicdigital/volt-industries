@@ -9774,7 +9774,10 @@ function buildRosterExtras(keys, weakened){
     const tier = tierOfKey(k);
     let maxHp = Math.round(58 + tier*0.9);
     let hp = maxHp;
-    if(weakened) hp = Math.round(maxHp * (0.3 + Math.random()*0.35)); // deja au front, en difficulte
+    // "weakened" : combat de renfort. Les combattants deja engages sont entames, jamais a l'agonie.
+    if(weakened === 'ally') hp = Math.round(maxHp * (0.55 + Math.random()*0.25)); // 55-80%
+    else if(weakened === 'foe') hp = Math.round(maxHp * (0.7 + Math.random()*0.2)); // 70-90% : eux aussi ont encaisse
+    else if(weakened) hp = Math.round(maxHp * (0.55 + Math.random()*0.25));
     return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp, ko:false, dead:false };
   }).filter(Boolean);
 }
@@ -10134,9 +10137,9 @@ function startBattle(mission, done){
     }
   })();
   const allyBonus = 1 + squads.allies.length * 0.03;
-  const isReinforcement = scope>=3 && squads.allies.length>0 && Math.random()<0.16;
-  const allyExtras = buildRosterExtras(squads.allies, isReinforcement);
-  const foeExtras = buildRosterExtras(squads.foes, false);
+  const isReinforcement = scope>=3 && squads.allies.length>0 && squads.foes.length>0 && Math.random()<0.10;
+  const allyExtras = buildRosterExtras(squads.allies, isReinforcement ? 'ally' : false);
+  const foeExtras = buildRosterExtras(squads.foes, isReinforcement ? 'foe' : false);
   const fullSquadFight = allyExtras.length>0 || foeExtras.length>0;
 
   /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
@@ -10845,7 +10848,7 @@ function startBattle(mission, done){
     if(allyExtras.length){
       const names = allyExtras.map(e=>e.name).join(', ');
       if(isReinforcement){
-        setLog(S.lang==='fr'?`${names} tiennent le front depuis un moment, en difficulte. Ils t'appellent en renfort.`:`${names} have been holding the line, struggling. They call you in as backup.`);
+        setLog(S.lang==='fr'?`${names} tiennent le front depuis un moment : les deux camps sont deja entames. Ils t'appellent en renfort.`:`${names} have been holding the line for a while: both sides are already worn down. They call you in as backup.`);
       } else {
         setLog(S.lang==='fr'?`${names} prennent position a tes cotes.`:`${names} take position at your side.`);
       }
