@@ -9732,6 +9732,9 @@ function adjustStrength(delta){
 /* Multiplicateur de degats issu de la force : note 3 -> 0.94, 5 -> 1.00, 10 -> 1.15.
    Volontairement resserre pour ne pas casser l'equilibre des combats. */
 function strMult(k){ return clamp(0.85 + currentStrength(k)*0.03, 0.85, 1.15); }
+/* Bases communes aux deux camps : aucun bonus cache lie au statut joueur/adversaire. */
+function combatMaxHp(k){ return Math.round(62 + currentRes(k)*7); }
+function combatAttackPower(k){ return Math.round(55 + currentStrength(k)*3); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -9754,6 +9757,12 @@ function speedOfKey(k){
   const v = CHAR_SPEED_BY_NAME[c.canon] ?? CHAR_SPEED_BY_NAME[c.en] ?? CHAR_SPEED_BY_NAME[c.fr];
   return typeof v === 'number' ? v : 5;
 }
+function currentSpeed(k){
+  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerSpeedBase === 'number'){
+    return clamp(S.playerSpeedBase + (S.speedMod||0), 1, 10);
+  }
+  return speedOfKey(k);
+}
 /* Ajuste la vitesse du joueur au fil de la carriere (choix, evenements, age, blessures). */
 function adjustSpeed(delta){
   S.speedMod = clamp((S.speedMod||0) + delta, -10, 10);
@@ -9771,8 +9780,7 @@ function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
 function buildRosterExtras(keys, weakened){
   return keys.map(k=>{
     const c = CHARACTERS[k]; if(!c) return null;
-    const tier = tierOfKey(k);
-    let maxHp = Math.round(58 + tier*0.9);
+    let maxHp = combatMaxHp(k);
     let hp = maxHp;
     // "weakened" : combat de renfort. Les combattants deja engages sont entames, jamais a l'agonie.
     if(weakened === 'ally') hp = Math.round(maxHp * (0.55 + Math.random()*0.25)); // 55-80%
@@ -10109,11 +10117,9 @@ function startBattle(mission, done){
    const formMod = clamp(form.momentum*0.012, -0.04, 0.04) - (inj ? Math.min(0.06, inj.sev*0.02) : 0);
    const myMaxHP = Math.max(46, Math.round(S.hpBaseline * (1 + formMod)));
 
-  const dmgMult = (1 + form.momentum*0.05 + clamp((ps-fs)/120, -0.24, 0.22)) * (inj ? (1 - inj.sev*0.12) : 1);
-  const foeTier = Math.round((fs-40)*2.1 + Math.max(0, form.streak)*4);
-  const foePower = Math.round(48 + fs*0.72 + Math.max(0, form.streak)*3);
-  const rubberBand = 1 + clamp((ps-fs)/140, 0, 0.45);
-  const foeDmgMult = (1 + Math.max(0, form.streak)*0.03 + (Math.random()*0.18 - 0.05)) * rubberBand;
+  /* Momentum et blessure ne modulent legerement que le personnage joue. L'adversaire ne recoit
+     plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
+  const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
   rollBattleLoadout(); // tirage au sort des 4 coups pour ce combat
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
@@ -10136,7 +10142,7 @@ function startBattle(mission, done){
       }
     }
   })();
-  const allyBonus = 1 + squads.allies.length * 0.03;
+  const allyBonus = 1;
   const isReinforcement = scope>=3 && squads.allies.length>0 && squads.foes.length>0 && Math.random()<0.10;
   const allyExtras = buildRosterExtras(squads.allies, isReinforcement ? 'ally' : false);
   const foeExtras = buildRosterExtras(squads.foes, isReinforcement ? 'foe' : false);
@@ -10144,17 +10150,14 @@ function startBattle(mission, done){
 
   /* Roster unifie : chaque combattant, allie comme adversaire, a ses propres PV visibles et sa propre vitesse. */
   function spdFor(entry){
-    const jitter = Math.round(Math.random()*10 - 5) + (S.speedMod||0);
-    if(entry.isPlayer){
-      const base = S.playerSpeedBase || 5;
-      return Math.round(20 + base*5 + (S.stats.courage||50)*0.12 + jitter);
-    }
-    const base = speedOfKey(entry.key);
-    return Math.round(20 + base*5 + tierOfKey(entry.key)*0.25 + jitter);
+    const jitter = Math.round(Math.random()*10 - 5);
+    const base = currentSpeed(entry.isPlayer ? S.playerCharKey : entry.key);
+    return Math.round(20 + base*5 + jitter);
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:96+foeTier, maxHp:96+foeTier, ko:false, tier:foeTier }]
+  const foeMaxHp = combatMaxHp(foeKey);
+  const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
   const allyRoster = allyRosterRaw, foeRoster = foeRosterRaw;
@@ -10437,15 +10440,15 @@ function startBattle(mission, done){
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('ally', i), false, d); floatDmg(frameOf('ally', i), d, col); refreshEntry('ally', i);
     if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
-    if(e.hp<=0 && !e.isPlayer){
+    if(e.hp<=0){
       e.ko = true; refreshEntry('ally', i);
-      if(scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
+      if(!e.isPlayer && scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
     }
     refreshSpotlight();
     return d;
   }
   function allFoesDown(){ return foeRoster.every(f=>f.ko); }
-  function playerDown(){ return allyRoster[0].hp<=0; }
+  function playerDown(){ return allyRoster.every(a=>a.ko || a.hp<=0); }
   /* Nombre d'actions du joueur necessaires avant de pouvoir declencher son coup signature. */
   const SPECIAL_CHARGE = 4;
   function renderMoves(){
