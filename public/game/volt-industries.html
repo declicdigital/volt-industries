@@ -5982,7 +5982,7 @@ function podFigSrc(url){
   return _podSrcMap[url] || url;
 }
 const POD_FIT_TWEAKS = {
-  aegis:{ scale:1.10, y:-16 },       /* Captain America */
+  aegis:{ scale:1.18, y:-28 },       /* Captain America : plus gros et remonté */
   apocalypse:{ scale:1.10, y:-16 },  /* Apocalypse */
   vaelor:{ scale:1.10, y:-16 },      /* Thor */
   thething:{ scale:1.10, y:-16 },    /* The Thing */
@@ -5993,6 +5993,10 @@ const POD_FIT_TWEAKS = {
   aurelia:{ scale:1.10 },            /* Hela */
   malachar:{ scale:1.14, y:-8 },     /* Thanos */
   sentry:{ scale:1.26, y:-14 },      /* Sentry : silhouette lointaine sur son visuel, on l'agrandit */
+  ferrum:{ scale:1.30, y:-16 },      /* Hulk */
+  emmafrost:{ scale:1.22, y:-12 },   /* Emma Frost */
+  gamora:{ scale:1.22, y:-14 },      /* Gamora */
+  sepulcre:{ scale:1.28, y:-16 },    /* Galactus */
 };
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
