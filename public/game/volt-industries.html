@@ -6838,6 +6838,100 @@ async function ffDownscale(dataUrl, maxW, maxH, quality){
   });
 }
 
+/* ---------- Decoupe du portrait genere : PNG transparent, sans contour ----------
+   Le modele renvoie le personnage isole sur fond vert uni. On retire le fond par
+   propagation depuis les bords (fond vert OU fond uni quelconque), on nettoie la
+   frange verte, on recadre au sujet et on renvoie un PNG a canal alpha, comme les
+   autres personnages du jeu. */
+async function ffCutout(dataUrl, maxW, maxH){
+  return new Promise((res)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      try{
+        const r = Math.min((maxW||640)/img.width, (maxH||860)/img.height, 1);
+        const w = Math.max(1, Math.round(img.width*r)), h = Math.max(1, Math.round(img.height*r));
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx = c.getContext('2d', {willReadFrequently:true});
+        ctx.drawImage(img,0,0,w,h);
+        const id = ctx.getImageData(0,0,w,h), px = id.data;
+        const at = (x,y)=>((y*w+x)<<2);
+
+        /* couleur de fond de reference = mediane des 4 coins */
+        const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(([x,y])=>{ const i=at(x,y); return [px[i],px[i+1],px[i+2]]; });
+        const med = (k)=>{ const a=corners.map(c2=>c2[k]).sort((p,q)=>p-q); return (a[1]+a[2])/2; };
+        const bg = [med(0),med(1),med(2)];
+        const isGreenBg = bg[1] > 90 && bg[1] > bg[0]*1.25 && bg[1] > bg[2]*1.25;
+
+        const isBg = (i)=>{
+          const R=px[i], G=px[i+1], B=px[i+2];
+          if(isGreenBg && G > 70 && G > R*1.22 && G > B*1.22) return true;
+          const d = Math.abs(R-bg[0]) + Math.abs(G-bg[1]) + Math.abs(B-bg[2]);
+          return d < 96;
+        };
+
+        /* propagation depuis tous les pixels de bord */
+        const seen = new Uint8Array(w*h);
+        const stack = [];
+        for(let x=0;x<w;x++){ stack.push(x, (h-1)*w+x); }
+        for(let y=0;y<h;y++){ stack.push(y*w, y*w+w-1); }
+        while(stack.length){
+          const p = stack.pop();
+          if(seen[p]) continue;
+          const i = p<<2;
+          if(!isBg(i)) continue;
+          seen[p] = 1;
+          const x = p%w, y = (p-x)/w;
+          if(x>0) stack.push(p-1);
+          if(x<w-1) stack.push(p+1);
+          if(y>0) stack.push(p-w);
+          if(y<h-1) stack.push(p+w);
+        }
+        for(let p=0;p<w*h;p++){ if(seen[p]) px[(p<<2)+3] = 0; }
+
+        /* nettoyage : frange verte residuelle sur le contour du sujet */
+        for(let y=0;y<h;y++){ for(let x=0;x<w;x++){
+          const p=y*w+x, i=p<<2;
+          if(!px[i+3]) continue;
+          let edge=false;
+          for(let dy=-1;dy<=1&&!edge;dy++){ for(let dx=-1;dx<=1;dx++){
+            const nx=x+dx, ny=y+dy; if(nx<0||ny<0||nx>=w||ny>=h) continue;
+            if(seen[ny*w+nx]){ edge=true; break; }
+          }}
+          if(!edge) continue;
+          const R=px[i], G=px[i+1], B=px[i+2];
+          if(isGreenBg && G > R*1.06 && G > B*1.06){
+            const m = Math.round((R+B)/2);
+            px[i+1] = Math.min(G, m);
+            px[i+3] = Math.round(px[i+3]*0.6);
+          } else {
+            px[i+3] = Math.round(px[i+3]*0.85);
+          }
+        }}
+        ctx.putImageData(id,0,0);
+
+        /* recadrage serre sur le sujet (marge 2%) */
+        let minX=w, maxX=0, minY=h, maxY=0, found=false;
+        for(let y=0;y<h;y++){ for(let x=0;x<w;x++){
+          if(px[((y*w+x)<<2)+3] > 24){ found=true;
+            if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+        }}
+        if(!found || maxX-minX < w*0.15 || maxY-minY < h*0.15){ res(c.toDataURL('image/png')); return; }
+        const padX = Math.round(w*0.02), padY = Math.round(h*0.02);
+        minX=Math.max(0,minX-padX); maxX=Math.min(w-1,maxX+padX);
+        minY=Math.max(0,minY-padY); maxY=Math.min(h-1,maxY+padY);
+        const cw = maxX-minX+1, ch = maxY-minY+1;
+        const out = document.createElement('canvas'); out.width=cw; out.height=ch;
+        out.getContext('2d').drawImage(c, minX, minY, cw, ch, 0, 0, cw, ch);
+        res(out.toDataURL('image/png'));
+      }catch(e){ res(dataUrl); }
+    };
+    img.onerror = ()=>res(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+
+
 /* ---------- Generation IA (Lovable AI, cote serveur) ---------- */
 const FF_MAX_TRIES = 3;
 
