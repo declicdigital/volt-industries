@@ -7835,8 +7835,10 @@ function shouldTriggerEclatQuest(){
   /* Chaque Gemme deja en poche rend la suivante nettement plus difficile a trouver - sans ça,
      stocker 3, 4 gemmes ou plus dans une meme carriere devenait trop courant. */
   const owned = (S.eclats||[]).length;
-  const diminish = Math.pow(0.42, owned);
-  return Math.random() < 0.045*diminish;
+  /* Multiplicateurs par nombre de Gemmes deja possedees, calibres par simulation pour viser environ
+     28% de chance d'atteindre 3 gemmes, 10% pour 4, 6% pour 5 et 3% pour 6 sur une carriere de 50 ans. */
+  const GEM_TRIGGER_MULT = [1, 1.2, 0.24, 0.28, 0.6, 1.1];
+  return Math.random() < 0.07*GEM_TRIGGER_MULT[owned];
 }
 /* Pool de gardiens possibles : une ou deux Gemmes seulement sont confiees a un personnage au debut
    d'une carriere (tirage aleatoire). Les autres n'ont aucun detenteur nomme et se trouvent sur le
@@ -7849,7 +7851,7 @@ function startEclatQuest(){
   const owned = S.eclats||[];
   /* Chaque Gemme suivante demande davantage d'etoiles dans la carriere en cours : la 1ere des 4
      etoiles minimum, la 2eme des 5, la 3eme et la 4eme des 6, la 5eme et la 6eme des 7. */
-  const GEM_STAR_REQ = [4,5,6,6,7,7];
+  const GEM_STAR_REQ = [3,4,4,5,5,6];
   const nextGemRank = owned.length; // 0-indexe : 0 = ce sera la 1ere gemme, etc.
   const starsNow = computeStars();
   if(nextGemRank < GEM_STAR_REQ.length && starsNow < GEM_STAR_REQ[nextGemRank]) return false;
