@@ -7135,7 +7135,7 @@ function screenFaceForge(){
         if(isFinal) stage.classList.remove('loading'); else stage.classList.add('loading');
       });
       if(last){
-        const small = await ffDownscale(last, 720, 960, 0.88);
+        const small = await ffCutout(last, 640, 860);
         FF.results.push(small); FF.sel = FF.results.length - 1;
       }
     }catch(e){
