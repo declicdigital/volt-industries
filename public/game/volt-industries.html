@@ -6574,7 +6574,7 @@ const UNLOCK_TIERS = [
   { ids:['usagent'], condFr:'Cumuler 60 annees vecues au total', condEn:'Live 60 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=60 },
   { ids:['redguardian'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['ghost'], condFr:'Cumuler 40 etoiles au total', condEn:'Accumulate 40 stars total', check:(m)=>(m.totalStarsEarned||0)>=40 },
-  { ids:['surtur'], condFr:'Cumuler 55 etoiles au total', condEn:'Accumulate 55 stars total', check:(m)=>(m.totalStarsEarned||0)>=55 },
+  { ids:['surtur'], condFr:'Terminer une carriere de 50 ans', condEn:'Finish a 50-year career', check:(m)=>(m.longestCareerYears||0)>=50 },
   { ids:['ronan'], condFr:'Cumuler 45 etoiles au total', condEn:'Accumulate 45 stars total', check:(m)=>(m.totalStarsEarned||0)>=45 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
