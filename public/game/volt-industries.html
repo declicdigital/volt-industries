@@ -5380,7 +5380,7 @@ function playerPodPanel(){
    <div class="pod-scene">
     <div class="pod-bg"></div>
     <div class="pod-glow"></div>
-    <img class="pod-fig on" alt="" decoding="async" data-pod-key="${S.playerCharKey||''}" src="${src}" onload="try{this.dataset.podKey=this.getAttribute('data-pod-key')||'';fitPodFigure(this);}catch(e){}" />
+    <img class="pod-fig on" alt="" decoding="async" data-pod-key="${S.presetId==='custom' ? 'custom' : (S.playerCharKey||'')}" src="${src}" onload="try{this.dataset.podKey=this.getAttribute('data-pod-key')||'';fitPodFigure(this);}catch(e){}" />
     <div class="pod-tint"></div>
     <div class="pod-mist"></div>
     <div class="pod-smoke"><i></i><i></i><i></i></div>
