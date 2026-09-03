@@ -6807,8 +6807,9 @@ function ffPrompt(){
     ? 'a menacing ' + (FF.sex==='f' ? 'supervillainess' : 'supervillain') + ', intimidating and darkly charismatic'
     : 'a heroic ' + (FF.sex==='f' ? 'superheroine' : 'superhero') + ', confident and inspiring');
   return [
-    'Ultra photorealistic cinematic movie still, shot on 85mm lens, shallow depth of field, dramatic volumetric rim lighting, high dynamic range, film grain, 8k detail.',
-    'Full upper-body portrait (head to waist) of ' + side + ', ' + sx.p + ', standing in a dark futuristic laboratory hangar.',
+    'Ultra photorealistic cinematic movie still, shot on 85mm lens, dramatic volumetric rim lighting, high dynamic range, film grain, 8k detail.',
+    'Full upper-body portrait (head to waist) of ' + side + ', ' + sx.p + '.',
+    'IMPORTANT: the character is fully isolated (cut-out) on a perfectly flat uniform pure chroma green background (#00FF00). No environment, no scenery, no floor, no shadow cast on the background, no vignette, no gradient, no border, no frame. The green must be identical in every corner and must not appear on the costume.',
     'The character is ' + sx.pr + '; the body, build and costume fit must read clearly as ' + sx.pr + '.',
     (FF_MASK[FF.mask].hides
       ? 'The head is FULLY covered: no face, no hair and no skin are visible on the head. Keep the exact body type, build, height, skin tone and posture of the person in the reference photo, but the face must be completely hidden by the headgear.'
@@ -6819,6 +6820,7 @@ function ffPrompt(){
     FF_AURA[FF.aura].p + '.',
     'Real practical costume made of real materials, live-action blockbuster production design, no cartoon, no 3d render, no illustration, no anime, no video game look, no text, no logo, no watermark.'
   ].join(' ');
+
 }
 
 async function ffDownscale(dataUrl, maxW, maxH, quality){
