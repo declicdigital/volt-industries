@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
         content: "https://volt-industries.lovable.app/og-volt-industries.jpg",
       },
       { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "800" },
+      { property: "og:image:height", content: "675" },
       { property: "og:image:alt", content: "Volt Industries — Le choix de l'énergie" },
       { name: "twitter:card", content: "summary_large_image" },
       {
