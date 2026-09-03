@@ -8016,8 +8016,23 @@ function shouldTriggerCivilWar(){
   return true;
 }
 /* La faction eclate en deux : le camp qui perd bascule immediatement de l'autre cote et fonde une
-   faction dissidente au nom presque identique. */
-function civilWarSplinterName(base, fr){ return (fr ? 'NOUVEAUX ' : 'NEW ') + base; }
+   faction dissidente - avec un vrai nom dedie, pas un simple "NOUVEAUX X" generique. */
+const CIVIL_WAR_SPLINTER_NAMES = {
+  avengers:    { fr:'DARK AVENGERS', en:'DARK AVENGERS' },
+  f4:          { fr:'DREADFUL FOUR', en:'DREADFUL FOUR' },
+  thunderbolts:{ fr:'MASTERS OF EVIL', en:'MASTERS OF EVIL' },
+  xmen:        { fr:'WEAPON X', en:'WEAPON X' },
+  guardians:   { fr:'DESTROYERS OF THE GALAXY', en:'DESTROYERS OF THE GALAXY' },
+  sinister6:   { fr:'AMAZING SIX', en:'AMAZING SIX' },
+  brotherhood: { fr:'FREEDOM FORCE', en:'FREEDOM FORCE' },
+  cabal:       { fr:'ILLUMINATI', en:'ILLUMINATI' },
+  blackorder:  { fr:'HERALD ORDER', en:'HERALD ORDER' },
+};
+function civilWarSplinterName(base, fr, facId){
+  const dedicated = CIVIL_WAR_SPLINTER_NAMES[facId];
+  if(dedicated) return fr ? dedicated.fr : dedicated.en;
+  return (fr ? 'NOUVEAUX ' : 'NEW ') + base;
+}
 function applyCivilWarSplit(playerWon){
   const split = S.civilWarSplit;
   if(!split || split.done || !S.team) return '';
@@ -8037,7 +8052,7 @@ function applyCivilWarSplit(playerWon){
   fac.members = fac.members.filter(n=> leaveNames.indexOf(n) < 0);
   const splinter = {
     id: fac.id+'_split', icon: fac.icon,
-    fr: civilWarSplinterName(fac.fr, true), en: civilWarSplinterName(fac.en, false),
+    fr: civilWarSplinterName(fac.fr, true, fac.id), en: civilWarSplinterName(fac.en, false, fac.id),
     leader: playerWon ? leaveNames[leaveNames.length-1] : canonName(S.playerCharKey),
     members: leaveNames.slice(), side: oppSide, tier: tier, splinter: true,
   };
@@ -8175,9 +8190,10 @@ function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 10) return false;
   const tier = computeStars();
-  /* FACTIONS n'a des factions definies qu'a partir du palier 2 (Ville) : en dessous, l'invitation
-     afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
-  if(tier < 2) return false;
+  /* La faction doit reellement exister a ce palier pour ce camp - le seuil differe entre heros
+     (Thunderbolts existe des le palier 1) et vilains (rien avant le palier 2). Un seuil fixe a 2
+     bloquait a tort toute invitation aux Thunderbolts, quel que soit le nombre de parties jouees. */
+  if(!facAt(zone, tier)) return false;
   /* On ne propose jamais de rejoindre la faction dont tu fais deja partie - seulement une autre. */
   if(S.team && S.team.side===zone && S.team.tier===tier) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
@@ -8206,7 +8222,7 @@ function checkDefectionOffer(){
   if(zone==='neutral' || S.totalMissionsDone < 10) return false;
   const oppZone = zone==='hero' ? 'villain' : 'hero';
   const tier = computeStars();
-  if(tier < 2) return false;
+  if(!facAt(oppZone, tier)) return false;
   const key = oppZone==='hero' ? 'defectedTierHero' : 'defectedTierVillain';
   if(tier <= (S[key]||0)) return false;
   if(Math.abs(S.align) < 55) return false; // il faut etre clairement engage pour que le debauchage ait un sens
