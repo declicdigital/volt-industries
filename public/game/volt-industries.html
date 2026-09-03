@@ -9348,10 +9348,15 @@ function moveOverflow(){
   const inLoadout = (fr)=>S.battleLoadout.includes(fr);
   /* Seul un ARTEFACT tout juste trouve et absent du tirage actuel declenche ce choix - les Gemmes
      sont deja integrees automatiquement par syncBattleLoadout(), jamais soumises au choix. */
-  const newArtifact = allCandidates.find(m=>m.artifact && !inLoadout(m.fr));
-  if(!newArtifact) return null;
-  if(S.battleLoadout.length < c.maxTotal) return null; // encore de la place, pas besoin de choisir
-  const atk = c.atk.slice(), def = c.def.slice();
+  const newArtifacts = allCandidates.filter(m=>m.artifact && !inLoadout(m.fr));
+  if(!newArtifacts.length) return null;
+  const currentLoadoutMoves = S.battleLoadout.map(fr=>allCandidates.find(m=>m.fr===fr)).filter(Boolean);
+  if(currentLoadoutMoves.length < c.maxTotal) return null; // encore de la place, pas besoin de choisir
+  /* On ne propose que ce qui compte reellement : tes coups actuels + le(s) nouvel(aux) artefact(s) -
+     jamais tout le bassin de coups possibles que tu n'as meme pas encore. */
+  const combined = currentLoadoutMoves.concat(newArtifacts);
+  const atk = combined.filter(m=>!m.heal);
+  const def = combined.filter(m=>m.heal);
   return { atk, def, maxTotal:c.maxTotal, minDef:c.minDef };
 }
 function screenForgetMove(){
@@ -9383,7 +9388,11 @@ function screenForgetMove(){
       const worst = droppable.slice().sort((a,b)=>score(a)-score(b))[0];
       S.forgottenMoves = S.forgottenMoves || [];
       S.forgottenMoves.push(worst.fr);
-
+      /* Mettre a jour reellement le tirage : retirer le coup abandonne, integrer le nouvel
+         artefact qui a declenche ce choix - sinon l'artefact ne serait jamais vraiment acquis. */
+      S.battleLoadout = S.battleLoadout.filter(fr=>fr!==worst.fr);
+      const newArtifactNames = all.filter(m=>m.artifact && !S.battleLoadout.includes(m.fr)).map(m=>m.fr);
+      S.battleLoadout = S.battleLoadout.concat(newArtifactNames);
 
       setTimeout(()=>{ if(moveOverflow()){ render(); return; }
         S.screen = S.pendingForgetReturn || 'mission'; S.pendingForgetReturn = null;
@@ -9412,6 +9421,11 @@ function screenForgetMove(){
     b.onclick = ()=>{
       S.forgottenMoves = S.forgottenMoves || [];
       S.forgottenMoves.push(b.dataset.fr);
+      /* Mettre a jour reellement le tirage : retirer le coup abandonne, integrer le nouvel
+         artefact qui a declenche ce choix. */
+      S.battleLoadout = S.battleLoadout.filter(fr=>fr!==b.dataset.fr);
+      const newArtifactNames = all.filter(m=>m.artifact && !S.battleLoadout.includes(m.fr)).map(m=>m.fr);
+      S.battleLoadout = S.battleLoadout.concat(newArtifactNames);
       const label = isFr?`Tu abandonnes definitivement : ${b.dataset.fr}.`:`You give up for good: ${b.dataset.fr}.`;
       showImpact([{ label:(isFr?'Coup oublie':'Move forgotten'), text:b.dataset.fr }], label);
       if(moveOverflow()){ render(); return; }
