@@ -1805,9 +1805,9 @@ const FACTIONS = {
     { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet', leader:'Magneto',
       members:['Magneto','Mystique','Pyro'] },
     { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'coil', leader:'Doctor Doom',
-      members:['Doctor Doom','Red Skull','Loki','Corvus Glaive','Proxima Midnight','Green Goblin','Emma Frost','Ronan','Surtur'] },
+      members:['Doctor Doom','Red Skull','Loki','Corvus Glaive','Proxima Midnight','Green Goblin','Emma Frost'] },
     { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'void', leader:'Thanos',
-      members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian'] },
+      members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian','Ronan'] },
   ],
 };
 /* Independants : aucune faction principale au depart (ils peuvent en rejoindre une plus tard). */
@@ -9340,8 +9340,18 @@ function syncBattleLoadout(){
 function moveOverflow(){
   playerMoves();
   const c = S._moveCandidates; if(!c) return null;
+  /* Le tirage initial (aleatoire, sans choix du joueur) n'a pas encore eu lieu : rien a arbitrer,
+     ca se resout tout seul. Ce n'est qu'UNE FOIS le tirage etabli qu'un nouvel artefact peut
+     declencher un vrai choix - jamais au tout debut d'une carriere. */
+  if(!S.battleLoadout || !S.battleLoadout.length) return null;
+  const allCandidates = c.atk.concat(c.def);
+  const inLoadout = (fr)=>S.battleLoadout.includes(fr);
+  /* Seul un ARTEFACT tout juste trouve et absent du tirage actuel declenche ce choix - les Gemmes
+     sont deja integrees automatiquement par syncBattleLoadout(), jamais soumises au choix. */
+  const newArtifact = allCandidates.find(m=>m.artifact && !inLoadout(m.fr));
+  if(!newArtifact) return null;
+  if(S.battleLoadout.length < c.maxTotal) return null; // encore de la place, pas besoin de choisir
   const atk = c.atk.slice(), def = c.def.slice();
-  if(atk.length + def.length <= c.maxTotal) return null;
   return { atk, def, maxTotal:c.maxTotal, minDef:c.minDef };
 }
 function screenForgetMove(){
