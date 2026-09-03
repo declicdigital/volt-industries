@@ -1915,7 +1915,7 @@ function myAttributeMemberKeys(){
   const myAttrs = ATTRIBUTES.filter(a=>a.members.indexOf(myName)>=0);
   if(!myAttrs.length) return [];
   return Object.keys(CHARACTERS).filter(k=>{
-    if(k===S.playerCharKey) return false;
+    if(k===S.playerCharKey || isCharDead(k)) return false;
     const n = canonName(k);
     return myAttrs.some(a=>a.members.indexOf(n)>=0);
   });
@@ -4931,7 +4931,7 @@ const SWITCH_WELCOME_VILLAIN_EN = [
   "{n} hands you a weapon. \"Prove it. Prove you're one of us, now.\"",
 ];
 function pickReactorForZone(zone, excludeKey){
-  const keys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align===zone && k!==excludeKey && k!==S.playerCharKey);
+  const keys = Object.keys(CHARACTERS).filter(k=>CHARACTERS[k].align===zone && k!==excludeKey && k!==S.playerCharKey && !isCharDead(k));
   if(!keys.length) return null;
   const known = keys.filter(k=>Math.abs(S.rel[k]||0) >= 3);
   const leaders = keys.filter(k=>k==='volt'||k==='boomnpc'||k==='warlock'||k==='titanwolf');
@@ -8293,7 +8293,7 @@ function checkFactionCreationOffer(){
   if(zone==='neutral') return false;
   const mySide = zone==='hero' ? 'hero' : 'villain';
   const candidates = Object.keys(CHARACTERS)
-    .filter(k=>CHARACTERS[k].align===mySide && k!==S.playerCharKey)
+    .filter(k=>CHARACTERS[k].align===mySide && k!==S.playerCharKey && !isCharDead(k))
     .filter(k=>(S.rel[k]||0) >= 8)
     .sort((a,b)=>(S.rel[b]||0)-(S.rel[a]||0));
   if(candidates.length < 5) return false;
@@ -10983,7 +10983,7 @@ function startBattle(mission, done){
         const inFight = new Set([...allyRoster, ...foeRoster].map(e=>e.key).filter(Boolean));
         const shuffle = (arr)=>{ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
         const keyOfName = (nm)=>Object.keys(CHARACTERS).find(k=>CHARACTERS[k].fr===nm || CHARACTERS[k].en===nm);
-        const usable = (k)=>k && k!==S.playerCharKey && !inFight.has(k) && !DISABLED_CHARS.has(k) && CHARACTERS[k];
+        const usable = (k)=>k && k!==S.playerCharKey && !inFight.has(k) && !DISABLED_CHARS.has(k) && !isCharDead(k) && CHARACTERS[k];
         let candidateKeys = [];
         if(S.team && S.team.side && S.team.tier){
           const faction = (FACTIONS[S.team.side]||[])[S.team.tier];
@@ -12865,7 +12865,7 @@ function romanceCandidates(enemy){
   const past = (S.romanceHistory||[]).map(r=>r.charKey);
   return NPC_KEYS.filter(k=>{
     const c = CHARACTERS[k];
-    if(k===S.playerCharKey || past.includes(k)) return false;
+    if(k===S.playerCharKey || past.includes(k) || isCharDead(k)) return false;
     if(c.sex !== wanted) return false;
     const foe = c.align!=='neutral' && c.align!==mySide;
     return enemy ? foe : !foe;
