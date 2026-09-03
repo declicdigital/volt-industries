@@ -7256,6 +7256,7 @@ function buildCareerPlan(){
   S.powerVariance = {};
   S.primeJitter = {};
   S.powerBreakthrough = {};
+  S.npcStatVariance = {}; // Force/Vitesse/QI/Resistance des PNJ varient aussi d'une carriere a l'autre
   S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0);
@@ -9836,7 +9837,7 @@ function currentRes(k){
   if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerResBase === 'number'){
     return clamp(S.playerResBase + (S.resMod||0), 1, 10);
   }
-  return resOfKey(k);
+  return clamp(resOfKey(k) + npcStatVariance('res', k), 1, 10);
 }
 /* Ajuste la resistance du joueur au fil de la carriere (entrainements, blessures, age). */
 function adjustRes(delta){
@@ -9852,11 +9853,22 @@ function strengthOfKey(k){
   return typeof v === 'number' ? v : 5;
 }
 /* Force courante : le joueur beneficie de sa base + son mod carriere. */
+/* Variance par carriere pour les PNJ : sans ça, un meme personnage (Doom, Corvus...) serait
+   exactement identique dans chaque partie. Tiree une seule fois par personnage et par carriere,
+   puis memorisee - un peu plus fort ou plus faible selon les parties, jamais totalement fige. */
+function npcStatVariance(statKey, k){
+  if(!S.npcStatVariance) S.npcStatVariance = {};
+  const cacheKey = statKey+'_'+k;
+  if(S.npcStatVariance[cacheKey]===undefined){
+    S.npcStatVariance[cacheKey] = Math.round((Math.random()*2-1)*1.4); // +/- ~1.4 sur une echelle de 10
+  }
+  return S.npcStatVariance[cacheKey];
+}
 function currentStrength(k){
   if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerStrBase === 'number'){
     return clamp(S.playerStrBase + (S.strMod||0), 1, 10);
   }
-  return strengthOfKey(k);
+  return clamp(strengthOfKey(k) + npcStatVariance('str', k), 1, 10);
 }
 /* Ajuste la force du joueur au fil de la carriere (entrainements, blessures, age). */
 function adjustStrength(delta){
@@ -9866,7 +9878,40 @@ function adjustStrength(delta){
    Volontairement resserre pour ne pas casser l'equilibre des combats. */
 function strMult(k){ return clamp(0.85 + currentStrength(k)*0.03, 0.85, 1.15); }
 /* Bases communes aux deux camps : aucun bonus cache lie au statut joueur/adversaire. */
-function combatMaxHp(k){ return Math.round(62 + currentRes(k)*7); }
+/* Progression liee au temps qui passe dans l'univers du jeu : tout le monde en profite egalement,
+   pas seulement toi - sinon l'ecart avec les autres personnages ne fait que grandir sans fin. */
+function worldProgressMult(){
+  const yearsElapsed = S.currentYear||1;
+  return clamp(1 + (yearsElapsed/38)*1.0, 1, 2.15);
+}
+/* Les personnages les plus legendaires (Prime proche de 100 - Doom, Thanos, Galactus...) ont un
+   vrai plafond plus haut que les autres, meme parmi ceux au maximum de Resistance (10/10) : sinon
+   rien ne les distingue plus des autres personnages simplement tres résistants. */
+function primeEliteBonus(k){
+  const prime = (typeof CHAR_PRIME!=='undefined' && CHAR_PRIME[k]) ? CHAR_PRIME[k] : 60;
+  return 1 + Math.max(0, prime-85)/100; // jusqu'a +15% pour un Prime de 100
+}
+/* Combien de Gemmes d'Infinite un personnage donne detient actuellement - toi via tes propres
+   Gemmes, un PNJ via le systeme de detenteurs. Utilise pour le bonus de puissance ci-dessous,
+   applique de la meme facon a tout le monde, pas seulement au joueur. */
+function gemCountFor(k){
+  if(k && S.playerCharKey && k===S.playerCharKey) return (S.eclats||[]).length;
+  if(!k || !S.eclatHolders) return 0;
+  return Object.values(S.eclatHolders).filter(h=>h===k).length;
+}
+function combatMaxHp(k){
+  const gemCount = gemCountFor(k);
+  const base = (62 + currentRes(k)*7) * worldProgressMult() * primeEliteBonus(k);
+  const rawTotal = base * (1 + gemCount*0.12) + gemCount*15;
+  /* Plafond souple, pas un mur dur : au-dela d'un certain seuil, chaque point supplementaire
+     compte de moins en moins - mais ne s'arrete jamais completement. Sinon un personnage deja
+     tres fort n'a plus RIEN a gagner d'une 3eme, 4eme ou 5eme Gemme une fois le plafond touche. */
+  const ceiling = gemCount>=6 ? 550 : 420;
+  const softStart = ceiling * 0.8;
+  if(rawTotal <= softStart) return Math.round(rawTotal);
+  const excess = rawTotal - softStart;
+  return Math.round(softStart + excess*0.3);
+}
 function combatAttackPower(k){ return Math.round(55 + currentStrength(k)*3); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
@@ -9881,7 +9926,7 @@ function currentIQ(k){
   if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerIQBase === 'number'){
     return clamp(S.playerIQBase + (S.iqMod||0), 1, 10);
   }
-  return iqOfKey(k);
+  return clamp(iqOfKey(k) + npcStatVariance('iq', k), 1, 10);
 }
 /* Vitesse d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function speedOfKey(k){
@@ -9894,7 +9939,7 @@ function currentSpeed(k){
   if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerSpeedBase === 'number'){
     return clamp(S.playerSpeedBase + (S.speedMod||0), 1, 10);
   }
-  return speedOfKey(k);
+  return clamp(speedOfKey(k) + npcStatVariance('speed', k), 1, 10);
 }
 /* Ajuste la vitesse du joueur au fil de la carriere (choix, evenements, age, blessures). */
 function adjustSpeed(delta){
@@ -10229,15 +10274,11 @@ function startBattle(mission, done){
       toujours, mais en modulation legere par-dessus cette base (au lieu des -30 PV d'un coup). */
    /* Les PV de depart viennent desormais de la resistance du personnage, comme pour chaque PNJ.
       La forme de carriere reste une variation legere, jamais un second systeme de puissance. */
-   const gemCount = (S.eclats||[]).length;
-   /* Courbe de PV, enfin vraiment connectee a la progression de carriere : le multiplicateur monte
-      doucement au debut, mais peut aller jusqu'a x2 (voire plus, avec les gemmes) entre 30 et 40 ans
-      de carriere - un veteran au sommet ne doit plus ressembler a un debutant. */
-   const yearsElapsed = S.currentYear||1;
-   const primeMultBase = clamp(1 + (yearsElapsed/38)*1.0, 1, 2.15); // ~x2 vers 38 ans, plafonne ensuite
-   const gemPowerMult = 1 + gemCount*0.14; // chaque gemme ajoute 14% de puissance globale
-   const rawMaxHP = Math.round(combatMaxHp(S.playerCharKey) * primeMultBase * gemPowerMult) + gemCount*10;
-   S.hpBaseline = rawMaxHP; // suit directement la vraie progression, plus de lissage qui etouffait la croissance
+   const gemCount = gemCountFor(S.playerCharKey);
+   /* combatMaxHp() applique deja tout : progression dans le temps, bonus de Gemmes et plafond,
+      de la meme facon pour toi et pour n'importe quel PNJ qui en detiendrait. */
+   const gemPowerMult = 1 + gemCount*0.14; // reutilise plus bas pour le bonus de degats
+   S.hpBaseline = combatMaxHp(S.playerCharKey); // suit directement la vraie progression, plus de lissage qui etouffait la croissance
    // Forme du moment : +/-4% max de momentum, et jusqu'a -6% si blesse.
    const formMod = clamp(form.momentum*0.012, -0.04, 0.04) - (inj ? Math.min(0.06, inj.sev*0.02) : 0);
    const myMaxHP = Math.max(46, Math.round(S.hpBaseline * (1 + formMod)));
