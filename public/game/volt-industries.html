@@ -9342,21 +9342,22 @@ function pickOpponentKey(){
   /* Rivalites canoniques (Spider-Man/Green Goblin, Cap/Crane Rouge, etc.) : plus de chances de se
      dresser face a toi si tu incarnes l'un des deux. */
   if(S.playerCharKey){
-    /* Un personnage de ton propre camp ne se dresse contre toi que dans 10% des cas : les rivalites
-       canoniques du meme camp que toi sont donc filtrees par ce meme tirage. */
+    /* Les rivalites canoniques ne se dressent contre toi que si elles sont d'un autre camp - jamais
+       du tien, sauf en Guerre Civile qui suit sa propre logique dediee. */
     const canonRivals = loreRivalOf(S.playerCharKey).filter(k=>pool.includes(k))
-      .filter(k=>CHARACTERS[k].align!==mySide || Math.random()<0.10);
+      .filter(k=>CHARACTERS[k].align!==mySide);
     if(canonRivals.length && Math.random() < 0.3) return pick(canonRivals);
   }
   /* Les independants (violet, ni heros ni villain) peuvent se dresser contre toi a tout moment,
      quel que soit ton camp du moment. */
   const neutral = pool.filter(k=>CHARACTERS[k].align==='neutral');
   if(neutral.length && Math.random() < 0.14) return pick(neutral);
+  /* Un adversaire ne peut jamais etre du meme camp que toi, en dehors d'une Guerre Civile
+     (qui a son propre systeme de composition d'equipe entierement separe). */
   const cross = pool.filter(k=>CHARACTERS[k].align && CHARACTERS[k].align!=='neutral' && CHARACTERS[k].align!==mySide);
-  const same = pool.filter(k=>CHARACTERS[k].align===mySide);
-  if(Math.random() < 0.9){ if(cross.length) return pick(cross); }
-  if(same.length) return pick(same);
-  return cross.length ? pick(cross) : pick(pool.length?pool:otherCharKeys());
+  if(cross.length) return pick(cross);
+  if(neutral.length) return pick(neutral);
+  return pick(pool.length?pool:otherCharKeys());
 }
 function battleFoeKey(mission){
   if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey) return mission.charKey;
