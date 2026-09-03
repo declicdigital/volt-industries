@@ -1442,7 +1442,7 @@ const CHAR_POD_IMG = {
   char19:"/__l5e/assets-v1/797cfa9b-761b-472c-8e5f-f284bb92feeb/pod_char19.png",
   char20:"/__l5e/assets-v1/5197b1fb-03f7-42f8-a5a6-a49c9be4bdc2/pod_char20.png",
   char41:"/__l5e/assets-v1/ea45b6fe-f0ef-4287-a2eb-adfb94bcf28b/pod_char41.png",
-  char42:"/__l5e/assets-v1/f5ab4fc6-4491-4207-aafc-d1f48ff4f5a8/doom_v2.png",
+  char42:"/__l5e/assets-v1/020a51a9-3b75-4d17-a7f8-8e2a5ca1f5bc/pod_char42.png",
   char43:"/__l5e/assets-v1/a7d81d92-08a1-4ab1-9e9f-d2112a35231a/pod_char43.png",
   char44:"/__l5e/assets-v1/e324b342-ef43-4480-950c-3d0002baafa7/pod_char44.png",
   char45:"/__l5e/assets-v1/339cb260-7303-48ec-9dda-a5d278b565f0/pod_char45.png",
@@ -1473,7 +1473,7 @@ const CHAR_POD_IMG = {
   char70:"/__l5e/assets-v1/dd35f8b6-17a4-4353-8ca2-352c48645053/pod_char70.png",
   char71:"/__l5e/assets-v1/014b89e1-7341-4176-a2df-317cf629a33d/pod_char71.png",
   char72:"/__l5e/assets-v1/daf33cbf-98d6-4659-a43e-d5fbf5fbc3d8/pod_char72.png",
-  char73:"/__l5e/assets-v1/95d36f91-e5af-4e49-bf98-7be95493d09f/Wolverine-3.png",
+  char73:"/__l5e/assets-v1/957ef03f-cbcb-4a94-9f38-0af833e0bbc1/pod_char73.png",
   char74:"/__l5e/assets-v1/9aac78af-e271-4f16-ab3d-f2bde9fe8aef/pod_char74.png",
   char75:"/__l5e/assets-v1/02251251-d4d6-44dd-bc81-52429b6bade9/pod_char75.png",
   char76:"/__l5e/assets-v1/1b1061bf-add0-45c3-b2ac-86cd7e57c1c8/pod_char76.png",
@@ -1516,7 +1516,7 @@ const CHAR_IMG = {
   char18:"/__l5e/assets-v1/efe1b777-65f3-4dd3-84b8-89cedbc2034d/npc_anusilus.png",
   char19:"/__l5e/assets-v1/6e18c32b-868f-41fe-b80c-30f5daecd671/npc_bang.webp",
   char20:"/__l5e/assets-v1/60d0557f-fab4-4805-84da-b0dfd97df1c9/npc_fouvert.png",
-  char42:"/__l5e/assets-v1/f5ab4fc6-4491-4207-aafc-d1f48ff4f5a8/doom_v2.png",
+  char42:"/__l5e/assets-v1/f9902ee1-7d56-4e7f-ba73-6c50d4ea19cc/npc_doctorboom.png",
   char41:"/__l5e/assets-v1/2e37f364-3c1f-4714-9d9c-4056ea37290f/npc_kidspider.png",
   char43:"/__l5e/assets-v1/c0a12cab-ed87-453b-a3e5-387d97594a60/Cyclope.png",
   char44:"/__l5e/assets-v1/f746b1cb-710e-40ca-8dc0-325b0e8064aa/Daredevil.png",
@@ -5992,7 +5992,7 @@ const POD_FIT_TWEAKS = {
   vaelor:{ scale:1.10, y:-16 },      /* Thor */
   thething:{ scale:1.10, y:-16 },    /* The Thing */
   vipera:{ y:-14 },                  /* Loki */
-  venom:{ y:-26 },                   /* Venom : remonté */
+  venom:{ y:-14 },                   /* Venom */
   wolverine:{ y:-14 },               /* Wolverine */
   pyro:{ y:-14 },                    /* Pyro */
   aurelia:{ scale:1.10 },            /* Hela */
@@ -6000,14 +6000,8 @@ const POD_FIT_TWEAKS = {
   sentry:{ scale:1.26, y:-14 },      /* Sentry : silhouette lointaine sur son visuel, on l'agrandit */
   ferrum:{ scale:1.30, y:-16 },      /* Hulk */
   emmafrost:{ scale:1.22, y:-12 },   /* Emma Frost */
-  gamora:{ scale:1.22, y:-4 },       /* Gamora : légèrement plus basse */
-  america:{ y:-24 },                 /* America Chavez : remontée */
-  shuri:{ scale:1.24, y:-12 },       /* Shuri : plus grande */
-  redguardian:{ scale:1.24, y:-12 },  /* Red Guardian : plus grand */
+  gamora:{ scale:1.22, y:-14 },      /* Gamora */
   sepulcre:{ scale:1.28, y:-16 },    /* Galactus */
-  boomnpc:{ scale:1.42, y:-10 },     /* Doctor Doom : visuel plein pied, cadrage serré sans déborder */
-
-
 };
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
@@ -6033,7 +6027,7 @@ function fitPodFigure(img){
     const center=((minX+maxX)/2)/w;
     const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
     const tw = POD_FIT_TWEAKS[img.dataset.podKey || ''] || {};
-    const finalScale = Math.min(tw.max || (tw.scale ? 1.42 : 1.34), scale * (tw.scale || 1));
+    const finalScale = Math.min(tw.scale ? 1.55 : 1.34, scale * (tw.scale || 1));
     img.style.setProperty('--pod-scale',finalScale.toFixed(3));
     img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
     img.style.setProperty('--pod-shift-y',`${(tw.y||0)}px`);
@@ -9994,7 +9988,7 @@ function adjustIQ(delta){
 }
 /* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9.
    Un petit jet de des est ajoute pour que l'IQ varie d'une action a l'autre et d'une partie a l'autre. */
-function iqSkill(k){ return clamp(0.22 + currentIQ(k)*0.068 + (Math.random()*0.08 - 0.04), 0.2, 0.92); }
+function iqSkill(k){ return clamp(0.06 + currentIQ(k)*0.086 + (Math.random()*0.08 - 0.04), 0.06, 0.94); }
 /* Personnages a affinite mystique/magique : en escouade, ils peuvent soigner un allie blesse au lieu d'attaquer. */
 const WIZARD_KEYS = ['solen','nyx','siddartha','sepulcre','aurelia','kaerus','lorelei','vaelor'];
 function isWizardKey(k){ return WIZARD_KEYS.includes(k); }
@@ -10629,7 +10623,13 @@ function startBattle(mission, done){
   function livingIdx(roster){ const out=[]; roster.forEach((e,i)=>{ if(!e.ko) out.push(i); }); return out; }
   function pickNextTarget(){
     const alive = livingIdx(foeRoster);
-    if(!alive.includes(st.targetIdx)) st.targetIdx = alive.length ? alive[0] : -1;
+    if(!alive.includes(st.targetIdx)){
+      /* Meme logique que pour tes allies/adversaires : ton propre QI decide si tu reperes
+         instinctivement la cible la plus affaiblie, ou si tu changes de cible au hasard -
+         plus jamais systematiquement le premier de la liste, sans exception. */
+      const sk = iqSkill(S.playerCharKey);
+      st.targetIdx = alive.length ? pickTeamTarget(foeRoster, -1, sk) : -1;
+    }
   }
   function floatDmg(frame, val, col, big){
     if(!frame) return;
