@@ -5367,6 +5367,9 @@ function avatarBoxInner(){
 }
 function playerPodPanel(){
   if(!S.portrait) return `<div class="avatar-wrap">${avatarBoxInner()}</div>`;
+  /* Les anciens personnages pouvaient encore contenir le decor rectangulaire
+     renvoye par l'IA. Leur PNG est migre une fois, directement dans la partie. */
+  if(S.presetId==='custom') ffUpgradeSavedCutout();
   const fr = S.lang === 'fr';
   const ck = S.playerCharKey && CHARACTERS[S.playerCharKey] ? CHARACTERS[S.playerCharKey] : null;
   /* Le camp affiche dans TON incubateur est celui de ta jauge actuelle, pas celui d'origine du
@@ -6868,7 +6871,15 @@ async function ffCutout(dataUrl, maxW, maxH){
           const R=px[i], G=px[i+1], B=px[i+2];
           if(isGreenBg && G > 70 && G > R*1.22 && G > B*1.22) return true;
           const d = Math.abs(R-bg[0]) + Math.abs(G-bg[1]) + Math.abs(B-bg[2]);
-          return d < 96;
+          if(d < 118) return true;
+          /* Secours pour les anciens rendus : leur fond de studio bleu/noir
+             n'etait pas uni. On ne retire que ce fond froid lorsqu'il reste
+             connecte au bord ; les couleurs chaudes du costume sont conservees. */
+          const hi=Math.max(R,G,B), lo=Math.min(R,G,B);
+          const coldDark = hi < 132 && B >= R*.82 && G >= R*.62;
+          const coldMid = hi < 178 && B > R*1.18 && B > G*.92;
+          const nearNeutralDark = hi < 72 && hi-lo < 38;
+          return coldDark || coldMid || nearNeutralDark;
         };
 
         /* propagation depuis tous les pixels de bord */
@@ -6972,6 +6983,18 @@ const FF_STORE = 'vi_custom_char';
 function ffSaveCustom(cfg){ try{ localStorage.setItem(FF_STORE, JSON.stringify(cfg)); }catch(e){} }
 function ffLoadCustom(){ try{ const r = localStorage.getItem(FF_STORE); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function ffClearCustom(){ try{ localStorage.removeItem(FF_STORE); }catch(e){} }
+let _ffCutoutUpgradeBusy = false;
+async function ffUpgradeSavedCutout(){
+  if(_ffCutoutUpgradeBusy) return;
+  const cfg = ffLoadCustom();
+  if(!cfg || !cfg.img || cfg.cutoutVersion === 2) return;
+  _ffCutoutUpgradeBusy = true;
+  try{
+    const png = await ffCutout(cfg.img, 640, 860);
+    cfg.img = png; cfg.cutoutVersion = 2; ffSaveCustom(cfg);
+    if(S.presetId==='custom' && S.portrait !== png){ S.portrait = png; render(); }
+  }catch(e){} finally { _ffCutoutUpgradeBusy = false; }
+}
 function applyCustomCharacter(cfg){
   const a = FF_ARCH[cfg.arch] || FF_ARCH.armure;
   const fr = S.lang==='fr';
@@ -7148,7 +7171,7 @@ function screenFaceForge(){
   };
 
   useBtn.onclick = ()=>{
-    const cfg = { img: FF.results[FF.sel], side:FF.side, sex:FF.sex, arch:FF.arch, color:FF.color, cape:!!FF.cape, mask:FF.mask, aura:FF.aura, name:'' };
+    const cfg = { img: FF.results[FF.sel], cutoutVersion:2, side:FF.side, sex:FF.sex, arch:FF.arch, color:FF.color, cape:!!FF.cape, mask:FF.mask, aura:FF.aura, name:'' };
     ffSaveCustom(cfg);
     applyCustomCharacter(cfg);
     S.heroName = '';
