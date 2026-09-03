@@ -1897,7 +1897,7 @@ function myFactionMemberKeys(){
   if(!S.team) return [];
   const fac = facAt(S.team.side, S.team.tier);
   if(!fac) return [];
-  return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0);
+  return Object.keys(CHARACTERS).filter(k=> fac.members.indexOf(canonName(k))>=0 && !isCharDead(k));
 }
 /* Le chef de ta faction actuelle : priorite systematique en escouade et en conversation de groupe. */
 function myFactionLeaderKey(){
@@ -3909,7 +3909,7 @@ function freshState(lang){
     romanceMax: 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0),
     lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
-    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], cosmicWins:0, trueCosmicWins:0,
+    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], deadCharKeys:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
@@ -5353,7 +5353,21 @@ function avatarSVG(){
     <circle cx="${cx+cfg.shoulderW*0.72}" cy="${footY+10}" r="2.5" fill="${pathColor}" opacity="0.6"><animate attributeName="cy" values="${footY+10};${footY-14};${footY+10}" dur="3.6s" repeatCount="indefinite"/></circle>
   </svg>`;
 }
-function otherCharKeys(){ return NPC_KEYS.filter(k=>k!==S.playerCharKey); }
+/* Mort permanente : un personnage tombe au combat est definitivement retire de la carriere -
+   il ne peut plus jamais reapparaitre comme allie, adversaire, membre de faction ou interlocuteur. */
+function isCharDead(k){ return !!k && Array.isArray(S.deadCharKeys) && S.deadCharKeys.indexOf(k)>=0; }
+function markCharDead(k, name){
+  if(!k) return false;
+  S.deadCharKeys = S.deadCharKeys || [];
+  if(S.deadCharKeys.indexOf(k)>=0) return false; // deja mort : jamais deux fois
+  S.deadCharKeys.push(k);
+  S.deadAllies = S.deadAllies || [];
+  S.deadAllies.push({ key:k, name:name || (CHARACTERS[k] ? (S.lang==='fr'?CHARACTERS[k].fr:CHARACTERS[k].en) : k), year:S.currentYear });
+  if(S.rivalKey===k) S.rivalKey = null;
+  if(S.traitorKey===k) S.traitorKey = null;
+  return true;
+}
+function otherCharKeys(){ return NPC_KEYS.filter(k=>k!==S.playerCharKey && !isCharDead(k)); }
 function avatarVisual(){
   if(S.portrait){
     const fallback = avatarSVG();
@@ -7453,7 +7467,7 @@ function buildCareerPlan(){
   S.activeConversation = null; S.convLineIndex = 0; S.usedConvIds = []; S.lastConvYear = null; S.missionsSinceConv = 0; S.usedFrag = {};
   S.usedChoicePhrases = { bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }; S.usedTextIdx = {};
   S.lastStars = 1; S.scopeCineSeen = {};
-  S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
+  S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.deadCharKeys = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
   S.usedPivotalIds = []; S.usedBreakthroughIds = []; S.usedIntrigueIds = [];
   S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null; S.investigationResult = null;
   S.customFactions = []; S.factionFounders = null; S.factionFounderSide = null;
@@ -7627,7 +7641,7 @@ function recruitSideKey(){ return zoneOf(S.align)==='villain' ? 'villain' : 'her
    reste neutre elle aussi - elle ne devient jamais officiellement heros ou villain. */
 function playerIsIndependent(){ return !!S.playerCharKey && canonAlignOf(S.playerCharKey)==='neutral'; }
 function menteeKeys(){ return (S.mentees||[]).map(m=>m.charKey).filter(Boolean); }
-function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died'); }
+function livingMentees(){ return (S.mentees||[]).filter(m=>m.charKey && m.outcome!=='died' && !isCharDead(m.charKey)); }
 /* Recrues encore de TON cote : si tu changes de camp et qu'elles ne suivent pas, elles deviennent
    des adversaires - plus d'entrainements, plus de suivi, plus de soutien en combat. */
 function alignedMentees(){
@@ -9560,7 +9574,7 @@ function pickOpponentKey(){
   return pick(pool.length?pool:otherCharKeys());
 }
 function battleFoeKey(mission){
-  if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey) return mission.charKey;
+  if(mission.charKey && CHARACTERS[mission.charKey] && mission.charKey!==S.playerCharKey && !isCharDead(mission.charKey)) return mission.charKey;
   return pickOpponentKey();
 }
 function battleTargetForYears(years){
@@ -10891,7 +10905,7 @@ function startBattle(mission, done){
     if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
     if(e.hp<=0){
       e.ko = true; refreshEntry('ally', i);
-      if(!e.isPlayer && scope>=6 && Math.random()<0.15){ e.dead = true; S.deadAllies = S.deadAllies||[]; S.deadAllies.push({ key:e.key, name:e.name, year:S.currentYear }); }
+      if(!e.isPlayer && scope>=6 && !isCharDead(e.key) && Math.random()<0.15){ if(markCharDead(e.key, e.name)) e.dead = true; }
     }
     refreshSpotlight();
     return d;
@@ -13359,7 +13373,7 @@ function screenEnd(){
       return `${m.name}${cname?` (${cname})`:''} — ${outc}, ${isFr?'niveau':'level'} ${lvl}%`;
     }).join(' &middot; ')}</p>` : '';
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase; font-size:12px; color:var(--accent);">${isFr?'Tes recrues':'Your recruits'}</p><p class="lead" style="margin-top:4px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
-  const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
+  const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.filter((a,i,arr)=>arr.findIndex(b=>(b.key||b.name)===(a.key||a.name))===i).map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const eclatsOwned = S.eclats || [];
   const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Gemmes d\'Infinite obtenues':'Infinity Gems obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
   const locBreak = locArr.length ? `<p class="lead" style="margin-top:6px;">${[1,2,3,4,5,6,7].filter(lv=>tierCounts[lv]>0).map(lv=>`${tierCounts[lv]} ${scopeLabel(lv)}`).join(', ')}.</p>` : '';
