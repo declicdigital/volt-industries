@@ -1493,7 +1493,11 @@ const CHAR_POD_IMG = {
   char90:"/game/chars/char90.png",
   char91:"/game/chars/char91.png",
   char92:"/game/chars/char92.png",
-  char93:"/game/chars/char93.png"
+  char93:"/game/chars/char93.png",
+  char94:"/__l5e/assets-v1/1b7e2138-0730-470c-a436-f693c564a9b0/surtur.png",
+  char95:"/__l5e/assets-v1/7db895ba-98f7-44de-b938-77cfee41deed/ronan.png",
+  char94:"/__l5e/assets-v1/1b7e2138-0730-470c-a436-f693c564a9b0/surtur.png",
+  char95:"/__l5e/assets-v1/7db895ba-98f7-44de-b938-77cfee41deed/ronan.png"
 };
 const CHAR_IMG = {
   char1:"/__l5e/assets-v1/92f023c1-99a0-416c-8cad-1f2b589a327a/npc_ironboy.png",
@@ -1606,6 +1610,8 @@ const CHAR_ARCHETYPE = {
   usagent:{fr:'Guerrier', en:'Warrior'},
   redguardian:{fr:'Guerrier', en:'Warrior'},
   ghost:{fr:'Tech', en:'Tech'},
+  surtur:{fr:'Divin', en:'Divine'},
+  ronan:{fr:'Cosmique', en:'Cosmic'},
   aegis:{fr:'Guerrier', en:'Warrior'},
   antman:{fr:'Tech', en:'Tech'},
   apocalypse:{fr:'Mutant', en:'Mutant'},
@@ -1747,6 +1753,8 @@ const CHARACTERS = {
   usagent:{fr:"U.S. Agent",en:"U.S. Agent",canon:"U.S. Agent",align:'hero', sex:'m', img:CHAR_IMG.char91},
   redguardian:{fr:"Red Guardian",en:"Red Guardian",canon:"Red Guardian",align:'hero', sex:'m', img:CHAR_IMG.char92},
   ghost:{fr:"Ghost",en:"Ghost",canon:"Ghost",align:'hero', sex:'f', img:CHAR_IMG.char93},
+  surtur:{fr:"Surtur",en:"Surtur",canon:"Surtur",align:'villain', sex:'m', img:CHAR_IMG.char94},
+  ronan:{fr:"Ronan",en:"Ronan",canon:"Ronan",align:'villain', sex:'m', img:CHAR_IMG.char95},
 
   /* --- Recrues uniquement : jamais jouables, jamais adversaires/allies/conversation. Utilisees seulement par le mentorat. --- */
   nightlark:{fr:"Faucon Pourpre",en:"Purple Falcon",align:'hero', sex:'m', img:CHAR_IMG.char21},
@@ -1797,7 +1805,7 @@ const FACTIONS = {
     { id:'brotherhood', fr:'BROTHERHOOD OF MUTANTS', en:'BROTHERHOOD OF MUTANTS', icon:'comet', leader:'Magneto',
       members:['Magneto','Mystique','Pyro'] },
     { id:'cabal', fr:'THE CABAL', en:'THE CABAL', icon:'coil', leader:'Doctor Doom',
-      members:['Doctor Doom','Red Skull','Loki','Corvus Glaive','Proxima Midnight','Green Goblin','Emma Frost'] },
+      members:['Doctor Doom','Red Skull','Loki','Corvus Glaive','Proxima Midnight','Green Goblin','Emma Frost','Ronan','Surtur'] },
     { id:'blackorder', fr:'BLACK ORDER', en:'BLACK ORDER', icon:'void', leader:'Thanos',
       members:['Thanos','Ebony Maw','Corvus Glaive','Proxima Midnight','Cull Obsidian'] },
   ],
@@ -3841,11 +3849,23 @@ const PRESETS = [
     perkFr:'Phasage quantique : elle traverse la matiere et devient intouchable.', perkEn:'Quantum phasing: she walks through matter and becomes untouchable.',
     flawFr:'Instabilite moleculaire : chaque phasage abime un peu plus son corps.', flawEn:'Molecular instability: every phase damages her body a little more.',
     descFr:"Fantome quantique, autrefois arme, aujourd'hui alliee instable.", descEn:'A quantum ghost, once a weapon, now an unstable ally.' },
+  { id:'surtur', charKey:'surtur', side:'villain', img:CHAR_IMG.char94, nameFr:'Surtur', nameEn:'Surtur', heroFr:'Surtur', heroEn:'Surtur', morphology:'divin', path:'divin', powers:['elementaire','force'],
+    look:{ helmet:'full', cape:false, glasses:'none', gloves:'armored', boots:'armored', aura:'flame', weapon:'sword', suitColor:'#3a0d06', secondaryColor:'#ff6a15', symbol:'' },
+    align:-52, stats:{courage:26, intelligence:12, popularity:-16},
+    perkFr:'Geant de feu prophetise : sa lame incandescente fend les mondes.', perkEn:'Prophesied fire giant: his blazing blade splits worlds.',
+    flawFr:"Lent et prisonnier de sa prophetie : il n'esquive presque jamais.", flawEn:'Slow and bound to his prophecy: he almost never evades.',
+    descFr:'Le geant de feu ne pour consumer les royaumes.', descEn:'The fire giant born to consume the realms.' },
+  { id:'ronan', charKey:'ronan', side:'villain', img:CHAR_IMG.char95, nameFr:'Ronan', nameEn:'Ronan', heroFr:'Ronan', heroEn:'Ronan', morphology:'colosse', path:'physique', powers:['force','elementaire'],
+    look:{ helmet:'full', cape:true, glasses:'none', gloves:'armored', boots:'armored', aura:'dark', weapon:'hammer', suitColor:'#141a2c', secondaryColor:'#4b6bd8', symbol:'' },
+    align:-40, stats:{courage:22, intelligence:14, popularity:-10},
+    perkFr:'Marteau universel : chaque frappe est un jugement sans appel.', perkEn:'Universal hammer: each blow is a final judgment.',
+    flawFr:'Fanatique jusqu\'a l\'aveuglement : sa haine dicte ses erreurs.', flawEn:'Blind fanatic: his hatred dictates his mistakes.',
+    descFr:"L'Accusateur kree, juge implacable au nom de son peuple.", descEn:'The Kree Accuser, an implacable judge in his people\'s name.' },
 
 ];
 
 /* Personnages jouables : les 22 personnages canon (11 heros, 11 villains). Deblocage progressif, voir UNLOCK_TIERS. */
-const SELECTABLE_IDS = ['hawkeye','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','bucky','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','drax','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc','sentry','silversurfer','emmafrost','clea','america','wong','shuri','shangchi','usagent','redguardian','ghost'];
+const SELECTABLE_IDS = ['hawkeye','rocket','daredevil','yelena','marsh','falcon','mantis','starlord','kaerus','bucky','wasp','aegis','mystique','pyro','cull','proxima','corvus','docock','mysterio','nebula','drax','cyclops','groot','gamora','sable','ebonymaw','fuchsia','deadpool','sylvie','wolverine','thething','antman','kidspider','theg','siddartha','venom','electro','telios','mrfantastic','humantorch','volt','invisiblewoman','storm','nihil','aurelia','valkyr','profx','capmarvel','obsidian','magneto','apocalypse','gorr','ferrum','mandate','vaelor','solen','vipera','nyx','sepulcre','jeangrey','malachar','boomnpc','sentry','silversurfer','emmafrost','clea','america','wong','shuri','shangchi','usagent','redguardian','ghost','surtur','ronan'];
 const SELECTABLE_PRESETS = PRESETS.filter(p=>SELECTABLE_IDS.includes(p.id));
 /* Personnages principaux du jeu (conversations, combats, romances) : The G, Siddartha, Hulk, Thanos, etc. */
 const ROOKIE_IMGS = new Set(Array.from({length:20},(_,i)=>CHAR_IMG['char'+(i+21)]).filter(Boolean));
@@ -3983,6 +4003,8 @@ const CHAR_NORMAL = {
   silversurfer:90,
   malachar:89,
   sentry:86,
+  surtur:88,
+  ronan:74,
   ferrum:86,
   vaelor:86,
   apocalypse:86,
@@ -4058,6 +4080,8 @@ const CHAR_PRIME = {
   silversurfer:96,
   malachar:100,
   sentry:98,
+  surtur:97,
+  ronan:85,
   ferrum:97,
   vaelor:96,
   apocalypse:95,
@@ -4178,6 +4202,7 @@ const CHAR_UNLOCK_TIER = {
   nihil:4, aegis:4, volt:4,
   aurelia:5, sepulcre:5, nyx:5, theg:5, mandate:5, siddartha:5, solen:5, malachar:5, lorelei:5,
   /* Les deux plus puissants du jeu : on ne les rencontre qu'a partir du niveau 6, et jamais avant. */
+  surtur:5, ronan:4,
   vaelor:6, boomnpc:6
   /* Les 20 recrues (titanwolf, warlock, baronvex compris) n'ont volontairement aucun palier : une
      recrue que TU as formee doit toujours pouvoir apparaitre a tes cotes, quel que soit ton niveau. */
@@ -4206,6 +4231,8 @@ const CHAR_MORALITY = {
   theg:2, siddartha:-1, vipera:0, sepulcre:-1, boomnpc:-2,
   /* Nouveaux venus */
   cyclops:8,
+  surtur:-9,
+  ronan:-7,
   daredevil:7,
   deadpool:0,
   docock:-6,
@@ -4268,7 +4295,7 @@ const CHAR_HERO_PROXIMITY = {
   sepulcre:3, /* Galactus : force amorale plutot que haineuse */
   siddartha:2, obsidian:1, aurelia:2,
   kaerus:0,   /* Ideologue convaincu : quasiment irrecuperable */
-  nihil:0, malachar:0 /* Absolutistes : aucune proximite */
+  nihil:0, malachar:0, surtur:0, ronan:1 /* Absolutistes : aucune proximite */
 };
 function heroProximity(key){ return CHAR_HERO_PROXIMITY[key]!==undefined ? CHAR_HERO_PROXIMITY[key] : 3; }
 /* ---------- Coherence des combats : force reelle du personnage vs force de l'adversaire ---------- */
@@ -6001,7 +6028,9 @@ const POD_FIT_TWEAKS = {
   ferrum:{ scale:1.30, y:-16 },      /* Hulk */
   emmafrost:{ scale:1.22, y:-12 },   /* Emma Frost */
   gamora:{ scale:1.22, y:-14 },      /* Gamora */
-  sepulcre:{ scale:1.28, y:-16 },    /* Galactus */
+  sepulcre:{ scale:1.28, y:-16 },
+  surtur:{ scale:1.14, y:-10 },      /* Surtur */
+  ronan:{ scale:1.06, y:-8 },        /* Ronan */    /* Galactus */
 };
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
@@ -6545,6 +6574,8 @@ const UNLOCK_TIERS = [
   { ids:['usagent'], condFr:'Cumuler 60 annees vecues au total', condEn:'Live 60 years total across all careers', check:(m)=>(m.totalYearsLived||0)>=60 },
   { ids:['redguardian'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['ghost'], condFr:'Cumuler 40 etoiles au total', condEn:'Accumulate 40 stars total', check:(m)=>(m.totalStarsEarned||0)>=40 },
+  { ids:['surtur'], condFr:'Cumuler 55 etoiles au total', condEn:'Accumulate 55 stars total', check:(m)=>(m.totalStarsEarned||0)>=55 },
+  { ids:['ronan'], condFr:'Cumuler 45 etoiles au total', condEn:'Accumulate 45 stars total', check:(m)=>(m.totalStarsEarned||0)>=45 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
 function metaVal(k){ return Number(META[k]||0); }
@@ -8875,6 +8906,8 @@ const CHAR_SPECIAL = {
   jeangrey:{type:'AOE', nameFr:'Feu de Phenix', nameEn:'Phoenix fire', descFr:'Une flamme cosmique embrase tous les adversaires a la fois.', descEn:'Strikes every opponent on the field at once.'},
   malachar:{type:'BIG_STRIKE', nameFr:'Gantelet', nameEn:'The Gauntlet', descFr:'Un claquement de doigts, et l\'issue du combat bascule.', descEn:'A devastating, guaranteed hit on the current target.'},
   boomnpc:{type:'BIG_STRIKE', nameFr:'Chatiment du Latverien', nameEn:'Latverian punishment', descFr:'Toute la puissance de son armure et de sa magie concentree en un seul coup.', descEn:'A devastating, guaranteed hit on the current target.'},
+  surtur:{type:'BIG_STRIKE', nameFr:'Ragnarok', nameEn:'Ragnarok', descFr:'Il abat Twilight et embrase tout le champ de bataille.', descEn:'A devastating, guaranteed hit on the current target.'},
+  ronan:{type:'BIG_STRIKE', nameFr:'Jugement universel', nameEn:'Universal judgment', descFr:"Le marteau de l'Accusateur tombe sans appel.", descEn:'A devastating, guaranteed hit on the current target.'},
   sentry:{type:'BIG_STRIKE', nameFr:"Frappe d'un million de soleils", nameEn:'Million-sun strike', descFr:"Toute la puissance du Sentry lachee d'un seul coup.", descEn:'A devastating, guaranteed hit on the current target.'},
   silversurfer:{type:'AOE', nameFr:'Vague du pouvoir cosmique', nameEn:'Power cosmic wave', descFr:'Une onde stellaire qui balaie tout le champ de bataille.', descEn:'Strikes every opponent on the field at once.'},
   emmafrost:{type:'STUN', nameFr:'Prison mentale', nameEn:'Mental prison', descFr:"Elle verrouille l'esprit adverse dans un cauchemar de diamant.", descEn:'Locks the opponent in place, skipping their next turn.'},
@@ -8950,6 +8983,8 @@ const CHAR_MOVES = {
   mantis:{ atk:[{fr:'Toucher empathique',en:'Empathic touch',p:22,acc:1.0},{fr:'Sommeil force',en:'Forced sleep',p:24,acc:0.95},{fr:'Vague emotionnelle',en:'Emotional wave',p:21,acc:1.0}], def:[{fr:'Voile d\'empathie',en:'Veil of empathy',p:14,acc:1.0, heal:16},{fr:'Retrait empathique',en:'Empathic withdrawal',p:9,acc:1.0, heal:20},{fr:'Bouclier mental',en:'Mental shield',p:0,acc:1.0, heal:12}] },
   sylvie:{ atk:[{fr:'Poignard illusoire',en:'Illusory dagger',p:26,acc:0.92},{fr:'Double trompeur',en:'Deceptive double',p:24,acc:0.94},{fr:'Charme mental',en:'Mental charm',p:22,acc:0.97}], def:[{fr:'Voile de deguisement',en:'Disguise veil',p:15,acc:1.0, heal:16},{fr:'Fuite dans le temps',en:'Flight through time',p:10,acc:1.0, heal:20},{fr:'Voile protecteur',en:'Protective veil',p:0,acc:1.0, heal:13}] },
   bucky:{ atk:[{fr:'Bras cybernetique',en:'Cybernetic arm',p:28,acc:0.88},{fr:'Tir de precision militaire',en:'Military precision shot',p:25,acc:0.93},{fr:'Combo du Soldat de l\'Hiver',en:'Winter Soldier combo',p:27,acc:0.89}], def:[{fr:'Plaque blindee',en:'Armored plating',p:15,acc:1.0, heal:16},{fr:'Recuperation du supersoldat',en:'Supersoldier recovery',p:10,acc:1.0, heal:21},{fr:'Garde renforcee',en:'Reinforced guard',p:0,acc:1.0, heal:13}] },
+  surtur:{ atk:[{fr:'Lame Twilight',en:'Twilight blade',p:34,acc:0.82},{fr:'Souffle de braise',en:'Ember breath',p:30,acc:0.88},{fr:'Coup de corne',en:'Horn charge',p:27,acc:0.9}], def:[{fr:'Peau de magma',en:'Magma hide',p:16,acc:1, heal:19},{fr:'Mur de flammes',en:'Wall of flame',p:12,acc:1, heal:22},{fr:'Renaissance ardente',en:'Blazing rebirth',p:0,acc:1, heal:14}] },
+  ronan:{ atk:[{fr:'Marteau universel',en:'Universal hammer',p:31,acc:0.84},{fr:'Onde kree',en:'Kree shockwave',p:27,acc:0.9},{fr:'Verdict de l\'Accusateur',en:"Accuser's verdict",p:29,acc:0.86}], def:[{fr:'Garde d\'acier kree',en:'Kree steel guard',p:15,acc:1, heal:18},{fr:'Armure rituelle',en:'Ritual armor',p:11,acc:1, heal:21},{fr:'Repli tactique',en:'Tactical fallback',p:0,acc:1, heal:13}] },
   sentry:{ atk:[{fr:'Poing solaire',en:'Solar fist',p:34,acc:0.8},{fr:'Rafale de lumiere',en:'Light barrage',p:30,acc:0.86},{fr:'Vol supersonique offensif',en:'Supersonic dive',p:28,acc:0.9}], def:[{fr:'Aura du Sentry',en:'Sentry aura',p:16,acc:1, heal:20},{fr:'Invulnerabilite totale',en:'Total invulnerability',p:13,acc:1, heal:24},{fr:'Reprise du Vide',en:'Void recovery',p:0,acc:1, heal:15}] },
   silversurfer:{ atk:[{fr:'Rayon cosmique',en:'Cosmic ray',p:32,acc:0.83},{fr:'Charge de planche',en:'Board charge',p:28,acc:0.9},{fr:'Onde stellaire',en:'Stellar wave',p:30,acc:0.86}], def:[{fr:'Peau argentee',en:'Silver skin',p:15,acc:1, heal:19},{fr:"Absorption d'energie",en:'Energy absorption',p:11,acc:1, heal:23},{fr:'Derive cosmique',en:'Cosmic drift',p:0,acc:1, heal:14}] },
   emmafrost:{ atk:[{fr:'Lame psychique',en:'Psychic blade',p:28,acc:0.88},{fr:'Poing de diamant',en:'Diamond fist',p:27,acc:0.9},{fr:'Assaut mental',en:'Mental assault',p:31,acc:0.8}], def:[{fr:'Forme de diamant',en:'Diamond form',p:17,acc:1, heal:18},{fr:'Bouclier mental',en:'Mental shield',p:10,acc:1, heal:22},{fr:'Sang-froid glacial',en:'Ice-cold composure',p:0,acc:1, heal:13}] },
@@ -9025,6 +9060,8 @@ const FOE_MOVES = {
   mantis:[{fr:'Toucher empathique',en:'Empathic touch',p:22,acc:1},{fr:'Sommeil force',en:'Forced sleep',p:24,acc:.95},{fr:'Voile d\'empathie',en:'Veil of empathy',p:14,acc:1,heal:16},{fr:'Vague emotionnelle',en:'Emotional wave',p:21,acc:1},{fr:'Surcharge sensorielle',en:'Sensory overload',p:34,acc:.75},{fr:'Retrait empathique',en:'Empathic withdrawal',p:9,acc:1,heal:20}],
   sylvie:[{fr:'Poignard illusoire',en:'Illusory dagger',p:26,acc:.92},{fr:'Double trompeur',en:'Deceptive double',p:24,acc:.94},{fr:'Voile de deguisement',en:'Disguise veil',p:15,acc:1,heal:16},{fr:'Charme mental',en:'Mental charm',p:22,acc:.97},{fr:'Enchantement fatal',en:'Fatal enchantment',p:37,acc:.68},{fr:'Fuite dans le temps',en:'Flight through time',p:10,acc:1,heal:20}],
   bucky:[{fr:'Bras cybernetique',en:'Cybernetic arm',p:28,acc:.88},{fr:'Tir de precision militaire',en:'Military precision shot',p:25,acc:.93},{fr:'Plaque blindee',en:'Armored plating',p:15,acc:1,heal:16},{fr:'Combo du Soldat de l\'Hiver',en:'Winter Soldier combo',p:27,acc:.89},{fr:'Mode d\'assassinat',en:'Assassination mode',p:37,acc:.68},{fr:'Recuperation du supersoldat',en:'Supersoldier recovery',p:10,acc:1,heal:21}],
+  surtur:[{fr:'Lame Twilight',en:'Twilight blade',p:34,acc:.82},{fr:'Souffle de braise',en:'Ember breath',p:30,acc:.88},{fr:'Peau de magma',en:'Magma hide',p:16,acc:1,heal:19},{fr:'Coup de corne',en:'Horn charge',p:27,acc:.9},{fr:'Mur de flammes',en:'Wall of flame',p:12,acc:1,heal:22},{fr:'Renaissance ardente',en:'Blazing rebirth',p:0,acc:1,heal:14}],
+  ronan:[{fr:'Marteau universel',en:'Universal hammer',p:31,acc:.84},{fr:'Onde kree',en:'Kree shockwave',p:27,acc:.9},{fr:'Garde d\'acier kree',en:'Kree steel guard',p:15,acc:1,heal:18},{fr:"Verdict de l'Accusateur",en:"Accuser's verdict",p:29,acc:.86},{fr:'Armure rituelle',en:'Ritual armor',p:11,acc:1,heal:21},{fr:'Repli tactique',en:'Tactical fallback',p:0,acc:1,heal:13}],
   sentry:[{fr:'Poing solaire',en:'Solar fist',p:34,acc:0.8},{fr:'Rafale de lumiere',en:'Light barrage',p:30,acc:0.86},{fr:'Aura du Sentry',en:'Sentry aura',p:16,acc:1, heal:20},{fr:'Vol supersonique offensif',en:'Supersonic dive',p:28,acc:0.9},{fr:'Invulnerabilite totale',en:'Total invulnerability',p:13,acc:1, heal:24},{fr:'Reprise du Vide',en:'Void recovery',p:0,acc:1, heal:15}],
   silversurfer:[{fr:'Rayon cosmique',en:'Cosmic ray',p:32,acc:0.83},{fr:'Charge de planche',en:'Board charge',p:28,acc:0.9},{fr:'Peau argentee',en:'Silver skin',p:15,acc:1, heal:19},{fr:'Onde stellaire',en:'Stellar wave',p:30,acc:0.86},{fr:"Absorption d'energie",en:'Energy absorption',p:11,acc:1, heal:23},{fr:'Derive cosmique',en:'Cosmic drift',p:0,acc:1, heal:14}],
   emmafrost:[{fr:'Lame psychique',en:'Psychic blade',p:28,acc:0.88},{fr:'Poing de diamant',en:'Diamond fist',p:27,acc:0.9},{fr:'Forme de diamant',en:'Diamond form',p:17,acc:1, heal:18},{fr:'Assaut mental',en:'Mental assault',p:31,acc:0.8},{fr:'Bouclier mental',en:'Mental shield',p:10,acc:1, heal:22},{fr:'Sang-froid glacial',en:'Ice-cold composure',p:0,acc:1, heal:13}],
@@ -9737,6 +9774,7 @@ const CHAR_IQ_BY_NAME = {
   "Hulk": 5,
   "Thor": 7,
   "Apocalypse": 9,
+  "Surtur": 5, "Ronan": 7,
   "Captain Marvel": 7,
   "Jean Grey": 8,
   "Scarlet Witch": 7,
@@ -9815,6 +9853,7 @@ const CHAR_IQ_BY_NAME = {
    a l'autre (jet de des a chaque combat) et peut evoluer au fil de la carriere (choix, age, blessures). */
 const CHAR_SPEED_BY_NAME = {
   "Galactus": 8, "Silver Surfer": 10, "Thanos": 7, "Sentry": 9, "Hulk": 6, "Thor": 9,
+  "Surtur": 4, "Ronan": 6,
   "Apocalypse": 6, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
   "Hela": 7, "Doctor Strange": 6, "Magneto": 5, "Gorr": 7, "Telios": 9, "Siddharta": 6,
   "Professor X": 3, "Ultron": 6, "Annihilus": 6, "Vision": 8, "The G": 7, "Kang": 6,
@@ -9833,6 +9872,7 @@ const CHAR_SPEED_BY_NAME = {
    desequilibrer les combats. Comme l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
 const CHAR_STRENGTH_BY_NAME = {
   "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Surtur": 10, "Ronan": 8,
   "Apocalypse": 9, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 4, "Doctor Doom": 8,
   "Hela": 8, "Doctor Strange": 4, "Magneto": 4, "Gorr": 8, "Telios": 6, "Siddharta": 9,
   "Professor X": 2, "Ultron": 7, "Annihilus": 8, "Vision": 8, "The G": 8, "Kang": 6,
@@ -9852,6 +9892,7 @@ const CHAR_STRENGTH_BY_NAME = {
    Comme la force, l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
 const CHAR_RES_BY_NAME = {
   "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Surtur": 9, "Ronan": 8,
   "Apocalypse": 9, "Captain Marvel": 8, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
   "Hela": 9, "Doctor Strange": 5, "Magneto": 4, "Gorr": 7, "Telios": 7, "Siddharta": 8,
   "Professor X": 3, "Ultron": 8, "Annihilus": 8, "Vision": 9, "The G": 8, "Kang": 6,
