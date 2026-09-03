@@ -3924,7 +3924,7 @@ function freshState(lang){
     romanceMax: 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0),
     lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
-    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], deadCharKeys:[], cosmicWins:0, trueCosmicWins:0,
+    unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], deadFoes:[], deadCharKeys:[], cosmicWins:0, trueCosmicWins:0,
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
@@ -5371,13 +5371,14 @@ function avatarSVG(){
 /* Mort permanente : un personnage tombe au combat est definitivement retire de la carriere -
    il ne peut plus jamais reapparaitre comme allie, adversaire, membre de faction ou interlocuteur. */
 function isCharDead(k){ return !!k && Array.isArray(S.deadCharKeys) && S.deadCharKeys.indexOf(k)>=0; }
-function markCharDead(k, name){
+function markCharDead(k, name, side){
   if(!k) return false;
   S.deadCharKeys = S.deadCharKeys || [];
   if(S.deadCharKeys.indexOf(k)>=0) return false; // deja mort : jamais deux fois
   S.deadCharKeys.push(k);
-  S.deadAllies = S.deadAllies || [];
-  S.deadAllies.push({ key:k, name:name || (CHARACTERS[k] ? (S.lang==='fr'?CHARACTERS[k].fr:CHARACTERS[k].en) : k), year:S.currentYear });
+  const rec = { key:k, name:name || (CHARACTERS[k] ? (S.lang==='fr'?CHARACTERS[k].fr:CHARACTERS[k].en) : k), year:S.currentYear };
+  if(side==='foe'){ S.deadFoes = S.deadFoes || []; S.deadFoes.push(rec); }
+  else { S.deadAllies = S.deadAllies || []; S.deadAllies.push(rec); }
   if(S.rivalKey===k) S.rivalKey = null;
   if(S.traitorKey===k) S.traitorKey = null;
   return true;
@@ -7482,7 +7483,7 @@ function buildCareerPlan(){
   S.activeConversation = null; S.convLineIndex = 0; S.usedConvIds = []; S.lastConvYear = null; S.missionsSinceConv = 0; S.usedFrag = {};
   S.usedChoicePhrases = { bold:[], clever:[], selfish:[], ruthless:[], calculating:[], hesitation:[] }; S.usedTextIdx = {};
   S.lastStars = 1; S.scopeCineSeen = {};
-  S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.deadCharKeys = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
+  S.unlockedChars = {}; S.traitorKey = null; S.teamBetrayalUsed = false; S.deadAllies = []; S.deadFoes = []; S.deadCharKeys = []; S.cosmicWins = 0; S.trueCosmicWins = 0;
   S.usedPivotalIds = []; S.usedBreakthroughIds = []; S.usedIntrigueIds = [];
   S.usedPressIds = []; S.usedInvestigationIds = []; S.lastPressYear = null; S.lastInvestigationYear = null; S.currentInvestigation = null; S.investigationResult = null;
   S.customFactions = []; S.factionFounders = null; S.factionFounderSide = null;
@@ -10894,6 +10895,35 @@ function startBattle(mission, done){
     fl.classList.add('go');
     if(size==='small') fl.classList.add('small');
   }
+  /* Annonce speciale : un combattant vient de tomber definitivement. Plein ecran, portrait
+     desature, couleur de son camp, et une ligne de JARVIS pour marquer le coup. */
+  function announceDeath(e, side){
+    if(!e) return;
+    const col = side==='foe' ? 'var(--red)' : (e.col || 'var(--blue)');
+    const img = e.img || (e.key && CHAR_IMG[e.key]) || (e.key && CHARACTERS[e.key] && CHARACTERS[e.key].img) || '';
+    const tag = S.lang==='fr' ? 'TOMBE AU COMBAT' : 'KILLED IN ACTION';
+    const sub = side==='foe'
+      ? (S.lang==='fr' ? `Neutralise definitivement - Annee ${S.currentYear}. Il ne reviendra jamais.` : `Permanently down - Year ${S.currentYear}. They will never return.`)
+      : (S.lang==='fr' ? `Tombe a tes cotes - Annee ${S.currentYear}. Il ne se relevera pas.` : `Fell at your side - Year ${S.currentYear}. They won't get back up.`);
+    const el = document.createElement('div');
+    el.className = 'btl-death';
+    el.style.setProperty('--kiaCol', col);
+    el.innerHTML = `<div class="kia-inner">
+      ${img ? `<div class="kia-pic"><img src="${img}" alt=""></div>` : ''}
+      <div class="kia-txt">
+        <div class="kia-tag">${tag}</div>
+        <div class="kia-name" style="color:${col};">${e.name||''}</div>
+        <div class="kia-rule"></div>
+        <div class="kia-sub">${sub}</div>
+      </div></div>`;
+    (ov || document.body).appendChild(el);
+    flashBattleOverlay('big');
+    setTimeout(()=>el.remove(), wait(3100));
+    try{
+      if(side==='foe') jarvisSay(`${e.name} ne se releve pas. Signal vital perdu : retire definitivement du registre.`, `${e.name} is not getting up. Vitals lost: permanently removed from the registry.`, S.lang==='fr'?'perte confirmee':'loss confirmed');
+      else jarvisSay(`${e.name} est tombe. Je clos son dossier, monsieur.`, `${e.name} has fallen. I'm closing their file, sir.`, S.lang==='fr'?'perte confirmee':'loss confirmed');
+    }catch(err){}
+  }
   function dmgOf(move, atkPower, mult){
     const scale = 0.75 + atkPower/220;
     return Math.max(4, Math.round(move.p * scale * (0.85 + Math.random()*0.3) * 0.62 * (mult||1)));
@@ -10907,7 +10937,10 @@ function startBattle(mission, done){
     e.hp = Math.max(0, e.hp - d);
     hit(frameOf('foe', i), false, d); floatDmg(frameOf('foe', i), d, col); refreshEntry('foe', i);
     if(i===st.targetIdx){ hit(foeSpotFrame, true, d); floatDmg(foeSpotFrame, d, col, true); }
-    if(e.hp<=0){ e.ko = true; refreshEntry('foe', i); pickNextTarget(); }
+    if(e.hp<=0){
+      e.ko = true; refreshEntry('foe', i); pickNextTarget();
+      if(e.key && scope>=6 && !isCharDead(e.key) && Math.random()<0.15){ if(markCharDead(e.key, e.name, 'foe')){ e.dead = true; announceDeath(e, 'foe'); } }
+    }
     refreshSpotlight();
     return d;
   }
@@ -10920,7 +10953,7 @@ function startBattle(mission, done){
     if(i===0){ hit(meSpotFrame, true, d); floatDmg(meSpotFrame, d, col, true); }
     if(e.hp<=0){
       e.ko = true; refreshEntry('ally', i);
-      if(!e.isPlayer && scope>=6 && !isCharDead(e.key) && Math.random()<0.15){ if(markCharDead(e.key, e.name)) e.dead = true; }
+      if(!e.isPlayer && scope>=6 && !isCharDead(e.key) && Math.random()<0.15){ if(markCharDead(e.key, e.name)){ e.dead = true; announceDeath(e, 'ally'); } }
     }
     refreshSpotlight();
     return d;
@@ -13388,6 +13421,7 @@ function screenEnd(){
       return `${m.name}${cname?` (${cname})`:''} — ${outc}, ${isFr?'niveau':'level'} ${lvl}%`;
     }).join(' &middot; ')}</p>` : '';
   const menteeDetail = S.mentees.length ? `<p class="lead" style="margin-top:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase; font-size:12px; color:var(--accent);">${isFr?'Tes recrues':'Your recruits'}</p><p class="lead" style="margin-top:4px;">${menteeHero} ${t('menteeHero')}, ${menteeVillain} ${t('menteeVillain')}, ${menteeDied} ${t('menteeDied')}, ${menteeNeutral} ${t('menteeNeutral')}.</p>${menteeList}` : '';
+  const fallenFoes = S.deadFoes && S.deadFoes.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Adversaires tombes definitivement':'Enemies permanently fallen'}: ${S.deadFoes.filter((a,i,arr)=>arr.findIndex(b=>(b.key||b.name)===(a.key||a.name))===i).map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const fallenAllies = S.deadAllies && S.deadAllies.length ? `<p class="lead" style="margin-top:6px; color:var(--red);">${isFr?'Tombes au combat a ses cotes':'Fell in battle at their side'}: ${S.deadAllies.filter((a,i,arr)=>arr.findIndex(b=>(b.key||b.name)===(a.key||a.name))===i).map(a=>`${a.name} (${t('year')} ${a.year})`).join(', ')}.</p>` : '';
   const eclatsOwned = S.eclats || [];
   const eclatsDetail = eclatsOwned.length ? `<p class="lead" style="margin-top:6px;">${isFr?'Gemmes d\'Infinite obtenues':'Infinity Gems obtained'} (${eclatsOwned.length}/${ECLATS.length}) : ${eclatsOwned.map(id=>{ const s=ECLATS.find(e=>e.id===id); return s ? `<span style="color:${s.col};">${isFr?s.frName:s.enName}</span>` : id; }).join(', ')}.</p>` : '';
@@ -13413,7 +13447,7 @@ function screenEnd(){
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
-    ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${eclatsDetail}
+    ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${fallenFoes}${eclatsDetail}
     <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
     <h3>${t('turningPointsTitle')}</h3>${turningHtml}
 
