@@ -1495,8 +1495,6 @@ const CHAR_POD_IMG = {
   char92:"/game/chars/char92.png",
   char93:"/game/chars/char93.png",
   char94:"/__l5e/assets-v1/1b7e2138-0730-470c-a436-f693c564a9b0/surtur.png",
-  char95:"/__l5e/assets-v1/7db895ba-98f7-44de-b938-77cfee41deed/ronan.png",
-  char94:"/__l5e/assets-v1/1b7e2138-0730-470c-a436-f693c564a9b0/surtur.png",
   char95:"/__l5e/assets-v1/7db895ba-98f7-44de-b938-77cfee41deed/ronan.png"
 };
 const CHAR_IMG = {
@@ -5974,7 +5972,7 @@ function podCharacterPool(){
   Object.keys(CHAR_IMG).forEach(k=>{
     const m = /^char(\d+)$/.exec(k); if(!m) return;
     const n = +m[1];
-    if(n <= 20 || (n >= 41 && n <= 93)) allowedImgs.add(CHAR_IMG[k]);
+    if(n <= 20 || (n >= 41 && n <= 95)) allowedImgs.add(CHAR_IMG[k]);
   });
   return Object.keys(CHARACTERS).filter(k=>{
     const c = CHARACTERS[k];
@@ -6575,7 +6573,7 @@ const UNLOCK_TIERS = [
   { ids:['redguardian'], condFr:'Disponible des le debut', condEn:'Available from the start', check:(m)=>true },
   { ids:['ghost'], condFr:'Cumuler 40 etoiles au total', condEn:'Accumulate 40 stars total', check:(m)=>(m.totalStarsEarned||0)>=40 },
   { ids:['surtur'], condFr:'Terminer une carriere de 50 ans', condEn:'Finish a 50-year career', check:(m)=>(m.longestCareerYears||0)>=50 },
-  { ids:['ronan'], condFr:'Cumuler 45 etoiles au total', condEn:'Accumulate 45 stars total', check:(m)=>(m.totalStarsEarned||0)>=45 },
+  { ids:['ronan'], condFr:'Vaincre ton rival 10 fois', condEn:'Defeat your rival 10 times', check:(m)=>(m.totalRivalWins||0)>=10 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
 function metaVal(k){ return Number(META[k]||0); }
