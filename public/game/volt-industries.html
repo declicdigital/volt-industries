@@ -9119,7 +9119,7 @@ function rollBattleLoadout(){
   playerMoves(); // remplit S._moveCandidates avec l'arsenal complet
   const c = S._moveCandidates; if(!c) return;
   const uniqBy = (arr)=>{ const seen=new Set(); return arr.filter(m=>{ if(!m||seen.has(m.fr)) return false; seen.add(m.fr); return true; }); };
-  const isPriority = (m)=>!!(m.shard || m.artifact);
+  const isPriority = (m)=>!!m.shard; // seules les Gemmes sont inamovibles - jamais les artefacts
   const guaranteedAtk = uniqBy(c.atk.filter(isPriority));
   const guaranteedDef = uniqBy(c.def.filter(isPriority));
   const restAtk = shuffle(uniqBy(c.atk.filter(m=>!isPriority(m))));
@@ -9147,7 +9147,7 @@ function syncBattleLoadout(){
   playerMoves(); // rafraichit S._moveCandidates
   const c = S._moveCandidates; if(!c) return;
   if(!S.battleLoadout || !S.battleLoadout.length){ rollBattleLoadout(); return; }
-  const isPriority = (m)=>!!(m.shard || m.artifact);
+  const isPriority = (m)=>!!m.shard; // seules les Gemmes sont inamovibles - jamais les artefacts
   const allCandidates = c.atk.concat(c.def);
   const findMove = (fr)=>allCandidates.find(m=>m.fr===fr);
   let loadoutMoves = S.battleLoadout.map(findMove).filter(Boolean);
@@ -9188,7 +9188,7 @@ function screenForgetMove(){
   /* Les coups de Gemmes d'Infinite et d'artefacts sont intouchables : ils ne peuvent jamais etre
      abandonnes (5 gemmes = 5 emplacements occupes d'office). Seuls les coups de base et les skills
      appris peuvent etre oublies - sauf cas extreme ou il n'y a plus que des coups rares. */
-  const isRare = (m)=>!!(m.shard||m.artifact);
+  const isRare = (m)=>!!m.shard; // seules les Gemmes sont intouchables - un artefact peut etre abandonne
   const canDrop = (m)=>{
     if(isRare(m)) return false;
     return m.heal ? (ov.def.length > ov.minDef) : (ov.atk.length > 1);
@@ -9512,6 +9512,17 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb, playerWasKO){
    4=continent, 5=monde, 6=systeme, 7=cosmique. On peut toujours tomber en dessous du plafond. */
 /* Plafond d'escouade base sur le niveau (etoiles) du joueur, pas sur l'ampleur geographique de la mission :
    1 etoile = 2 combattants max au total, 2* = 3, 3* = 4, 4* = 5, 5* = 6, 6 et 7* = 7 max. */
+/* Infériorite numerique liee aux Gemmes : plus tu en as, moins ton equipe est nombreuse - un vrai
+   prix a payer pour la puissance qu'elles t'apportent. 2 gemmes = 1 allie de moins, 3 = 2 de moins,
+   4 et 5 = 3 de moins, 6 = 4 de moins. */
+function gemSquadPenalty(){
+  const n = gemCountFor(S.playerCharKey);
+  if(n>=6) return 4;
+  if(n>=4) return 3;
+  if(n>=3) return 2;
+  if(n>=2) return 1;
+  return 0;
+}
 function squadCapForStars(){ return clamp(computeStars()+1, 1, 7); }
 /* Les personnages que tu ne joues pas peuvent aussi avoir leur propre recrue : une par tranche de
    10 ans, attribuee de facon stable (mais pas systematique - tout le monde n'en a pas forcement une
@@ -9553,7 +9564,8 @@ function buildBattleSquads(foeKey, mission){
 
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
-  const maxExtra = cap - 1; // en plus de toi / du adversaire principal
+  const maxExtra = cap - 1; // en plus de toi / du adversaire principal (adversaires : jamais reduits par tes gemmes)
+  const maxExtraAlly = Math.max(0, cap - gemSquadPenalty() - 1); // ton equipe : reduite par tes gemmes
   /* L'alignement effectif d'un personnage : pour une recrue (active ou diplomee) qui a bascule de
      camp, c'est son nouveau camp (outcome) qui compte pour l'escouade/l'adversite, pas son camp
      d'origine fige dans CHARACTERS. */
@@ -9668,8 +9680,9 @@ function buildBattleSquads(foeKey, mission){
   } else {
     n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
   }
-  const allies = allyPoolForFight.slice(0, n);
-  const foes = foePool.slice(0, n);
+  const nAllies = Math.min(n, maxExtraAlly); // ton equipe : jamais plus que ce que tes gemmes autorisent
+  const allies = allyPoolForFight.slice(0, nAllies);
+  const foes = foePool.slice(0, n); // les adversaires ne sont jamais reduits par tes gemmes
   return { allies, foes };
 }
 /* Une recrue active grandit annee apres annee depuis son recrutement : faible au debut, elle plafonne
@@ -10519,10 +10532,14 @@ function startBattle(mission, done){
         menteeBadge = { label: S.lang==='fr'?'TA RECRUE':'YOUR RECRUIT', color:'#7ef0c0' };
       }
     }
+    /* Gemmes detenues par ce personnage (pas toi) : une petite icone par gemme, juste apres le nom -
+       pour reperer d'un coup d'oeil qu'il en a une (et donc qu'il est plus fort et l'utilise en combat). */
+    const heldGems = (!entry.isPlayer && entry.key) ? ECLATS.filter(e=>(S.eclatHolders||{})[e.id]===entry.key) : [];
+    const gemIconsHtml = heldGems.length ? heldGems.map(g=>`<span style="display:inline-block; width:13px; height:13px; margin-left:3px; vertical-align:middle;">${gemSVG(g, 13, {spin:false})}</span>`).join('') : '';
     return `<div class="rcard${entry.ko?' ko':''}${side==='foe' && i===st.targetIdx && !entry.ko?' selected':''}${selectable?' pickable':''}" data-side="${side}" data-idx="${i}" style="--cp-color:${entry.col};">
       <div class="rcard-frame" id="rframe-${side}-${i}">${inner}</div>
       <div class="rcard-meta">
-        <div class="rcard-name">${entry.name}${menteeBadge?`<span style="display:inline-block; margin-left:5px; font-size:8px; font-weight:900; letter-spacing:.5px; color:${menteeBadge.color}; border:1px solid ${menteeBadge.color}; border-radius:5px; padding:0 4px; vertical-align:middle;">${menteeBadge.label}</span>`:''}</div>
+        <div class="rcard-name">${entry.name}${gemIconsHtml}${menteeBadge?`<span style="display:inline-block; margin-left:5px; font-size:8px; font-weight:900; letter-spacing:.5px; color:${menteeBadge.color}; border:1px solid ${menteeBadge.color}; border-radius:5px; padding:0 4px; vertical-align:middle;">${menteeBadge.label}</span>`:''}</div>
         <div class="rcard-hpbar"><div class="rcard-hpfill" id="rhp-${side}-${i}" style="width:${pct}%; background:${hpColor(pct)};"></div></div>
         <div class="rcard-hpnum" id="rhpnum-${side}-${i}">${Math.max(0,Math.round(entry.hp))}/${entry.maxHp}</div>
       </div>
@@ -11410,6 +11427,14 @@ function applyChoice(choice){
   if(S.pendingEighthStarCinematic){
     S.pendingEighthStarCinematic = false;
     showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); });
+    return;
+  }
+  /* Un nouveau coup (artefact trouve, palier d'annees...) a fait deborder le total au-dela de 6 :
+     le joueur doit choisir lui-meme lequel il abandonne, jamais un coup de Gemme. */
+  if(moveOverflow()){
+    S.pendingForgetReturn = 'mission';
+    S.screen = 'forgetMove';
+    render();
     return;
   }
   handleZoneCheckAndContinue();
