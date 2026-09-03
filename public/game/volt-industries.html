@@ -4610,8 +4610,11 @@ const AudioEngine = (function(){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
     const target = muted ? 0 : LOOP_VOL;
+    /* Sur mobile (surtout iOS Safari), le volume ne peut pas toujours etre change par script -
+       seule la propriete .muted fonctionne de facon fiable partout. On applique les deux. */
+    deckA.muted = m; deckB.muted = m;
     if(activeDeck.paused===false || activeDeck.volume>0) fadeTo(activeDeck, target, 300);
-    if(stingAudio) fadeTo(stingAudio, muted?0:STING_VOL, 300);
+    if(stingAudio){ stingAudio.muted = m; fadeTo(stingAudio, muted?0:STING_VOL, 300); }
   }
   function isMuted(){ return muted; }
 
@@ -7677,7 +7680,11 @@ function gauntletHTML(size){
 function shouldTriggerEclatQuest(){
   if((S.eclats||[]).length >= ECLATS.length) return false;
   if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 1) return false;
-  return Math.random() < 0.05;
+  /* Chaque Gemme deja en poche rend la suivante nettement plus difficile a trouver - sans ça,
+     stocker 3, 4 gemmes ou plus dans une meme carriere devenait trop courant. */
+  const owned = (S.eclats||[]).length;
+  const diminish = Math.pow(0.42, owned);
+  return Math.random() < 0.045*diminish;
 }
 /* Pool de gardiens possibles : une ou deux Gemmes seulement sont confiees a un personnage au debut
    d'une carriere (tirage aleatoire). Les autres n'ont aucun detenteur nomme et se trouvent sur le
@@ -9039,6 +9046,9 @@ function foeMovesFor(key){
      dispose lui aussi de son coup - aussi puissant que le tien s'il en trouvait une. */
   if(key && S.eclatHolders){
     Object.keys(S.eclatHolders).forEach(gemId=>{
+      /* Garde-fou : si tu possedes deja cette gemme toi-meme, elle ne peut jamais appartenir a
+         quelqu'un d'autre en meme temps - meme si une entree perimee trainait encore. */
+      if((S.eclats||[]).includes(gemId)) return;
       if(S.eclatHolders[gemId]===key){
         const shard = ECLATS.find(e=>e.id===gemId);
         if(shard && !base.some(m=>m.fr===shard.move.fr)){
@@ -9512,17 +9522,6 @@ function applyBattleAftermath(win, foeName, hpLeftPct, cb, playerWasKO){
    4=continent, 5=monde, 6=systeme, 7=cosmique. On peut toujours tomber en dessous du plafond. */
 /* Plafond d'escouade base sur le niveau (etoiles) du joueur, pas sur l'ampleur geographique de la mission :
    1 etoile = 2 combattants max au total, 2* = 3, 3* = 4, 4* = 5, 5* = 6, 6 et 7* = 7 max. */
-/* Infériorite numerique liee aux Gemmes : plus tu en as, moins ton equipe est nombreuse - un vrai
-   prix a payer pour la puissance qu'elles t'apportent. 2 gemmes = 1 allie de moins, 3 = 2 de moins,
-   4 et 5 = 3 de moins, 6 = 4 de moins. */
-function gemSquadPenalty(){
-  const n = gemCountFor(S.playerCharKey);
-  if(n>=6) return 4;
-  if(n>=4) return 3;
-  if(n>=3) return 2;
-  if(n>=2) return 1;
-  return 0;
-}
 function squadCapForStars(){ return clamp(computeStars()+1, 1, 7); }
 /* Les personnages que tu ne joues pas peuvent aussi avoir leur propre recrue : une par tranche de
    10 ans, attribuee de facon stable (mais pas systematique - tout le monde n'en a pas forcement une
@@ -9564,8 +9563,7 @@ function buildBattleSquads(foeKey, mission){
 
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
-  const maxExtra = cap - 1; // en plus de toi / du adversaire principal (adversaires : jamais reduits par tes gemmes)
-  const maxExtraAlly = Math.max(0, cap - gemSquadPenalty() - 1); // ton equipe : reduite par tes gemmes
+  const maxExtra = cap - 1; // en plus de toi / du adversaire principal
   /* L'alignement effectif d'un personnage : pour une recrue (active ou diplomee) qui a bascule de
      camp, c'est son nouveau camp (outcome) qui compte pour l'escouade/l'adversite, pas son camp
      d'origine fige dans CHARACTERS. */
@@ -9680,10 +9678,36 @@ function buildBattleSquads(foeKey, mission){
   } else {
     n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
   }
-  const nAllies = Math.min(n, maxExtraAlly); // ton equipe : jamais plus que ce que tes gemmes autorisent
-  const allies = allyPoolForFight.slice(0, nAllies);
-  const foes = foePool.slice(0, n); // les adversaires ne sont jamais reduits par tes gemmes
+  const nAllies = Math.min(n, maxExtra); // taille naturelle, avant ajustement lie aux gemmes
+  const naturalAllies = allyPoolForFight.slice(0, nAllies);
+  const foes = foePool.slice(0, n); // les adversaires ne sont jamais reduits par l'ecart de gemmes
+  /* Inferiorite numerique liee aux Gemmes : ce qui compte, c'est l'ECART entre le total de gemmes
+     de TON equipe (toi + tes allies presents, n'importe lequel peut en detenir) et celui de l'equipe
+     adverse (l'adversaire principal + ses allies) - pas seulement ce que tu possedes toi-meme. */
+  const myTeamGemTotal = gemCountFor(S.playerCharKey) + naturalAllies.reduce((s,k)=>s+gemCountFor(k),0);
+  const enemyTeamGemTotal = gemCountFor(foeKey) + foes.reduce((s,k)=>s+gemCountFor(k),0);
+  const gemDiff = myTeamGemTotal - enemyTeamGemTotal;
+  const penalty = gemSquadPenaltyByDiff(gemDiff);
+  const allies = penalty>0 ? naturalAllies.slice(0, Math.max(0, naturalAllies.length - penalty)) : naturalAllies;
   return { allies, foes };
+}
+/* Penalite d'escouade liee a l'ecart de Gemmes entre les deux equipes (pas seulement les tiennes) :
+   1-2 de plus = 0 a -1 allie (plus souvent -1 a 2 d'ecart) ; 3-4 = -1 a -2 (plus souvent -2 a 4) ;
+   5-6 = -1 a -3 (plus souvent -3 a 6). Aucune penalite si l'ecart n'est pas en ta faveur. */
+function gemSquadPenaltyByDiff(diff){
+  if(diff<=0) return 0;
+  const roll = Math.random();
+  if(diff<=2){
+    const pHeavy = diff===2 ? 0.65 : 0.35;
+    return roll<pHeavy ? 1 : 0;
+  }
+  if(diff<=4){
+    const pHeavy = diff===4 ? 0.65 : 0.35;
+    return roll<pHeavy ? 2 : 1;
+  }
+  const pHeavy = diff===6 ? 0.55 : 0.30;
+  if(roll<pHeavy) return 3;
+  return roll<(pHeavy+0.35) ? 2 : 1;
 }
 /* Une recrue active grandit annee apres annee depuis son recrutement : faible au debut, elle plafonne
    avant les poids lourds du jeu (elle n'est jamais un heros/villain confirme tant qu'elle est recrue). */
@@ -10532,9 +10556,12 @@ function startBattle(mission, done){
         menteeBadge = { label: S.lang==='fr'?'TA RECRUE':'YOUR RECRUIT', color:'#7ef0c0' };
       }
     }
-    /* Gemmes detenues par ce personnage (pas toi) : une petite icone par gemme, juste apres le nom -
-       pour reperer d'un coup d'oeil qu'il en a une (et donc qu'il est plus fort et l'utilise en combat). */
-    const heldGems = (!entry.isPlayer && entry.key) ? ECLATS.filter(e=>(S.eclatHolders||{})[e.id]===entry.key) : [];
+    /* Gemmes detenues : une petite icone par gemme, juste apres le nom - pour toi comme pour n'importe
+       qui d'autre. Garde-fou : une gemme que tu possedes deja ne peut jamais apparaitre chez quelqu'un
+       d'autre en meme temps, meme si une entree perimee trainait encore quelque part. */
+    const heldGems = entry.isPlayer
+      ? ECLATS.filter(e=>(S.eclats||[]).includes(e.id))
+      : (entry.key ? ECLATS.filter(e=>!(S.eclats||[]).includes(e.id) && (S.eclatHolders||{})[e.id]===entry.key) : []);
     const gemIconsHtml = heldGems.length ? heldGems.map(g=>`<span style="display:inline-block; width:13px; height:13px; margin-left:3px; vertical-align:middle;">${gemSVG(g, 13, {spin:false})}</span>`).join('') : '';
     return `<div class="rcard${entry.ko?' ko':''}${side==='foe' && i===st.targetIdx && !entry.ko?' selected':''}${selectable?' pickable':''}" data-side="${side}" data-idx="${i}" style="--cp-color:${entry.col};">
       <div class="rcard-frame" id="rframe-${side}-${i}">${inner}</div>
