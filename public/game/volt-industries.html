@@ -6448,6 +6448,7 @@ function maybeFindArtifact(){
   if(!pool.length) return null;
   const art = pick(pool);
   S.artifacts = (S.artifacts||[]).concat([art.id]);
+  syncBattleLoadout();
   return art;
 }
 /* ============================ REPUTATION PAR FACTION ============================
@@ -7317,10 +7318,11 @@ function buildCareerPlan(){
   S.rivalAltercations = 0; S.lastRivalAltercYear = null; S.rivalBond = 0; S.pendingRivalClimax = false; S.rivalReconciled = false;
   S.artifacts = []; S.factionRep = S.factionRep || {};
   /* Les 6 Gemmes sont entierement aleatoires : aucune n'est acquise d'office au demarrage. Seules
-     1 ou 2 Gemmes (max) sont detenues par un autre personnage ; les 4 autres se trouvent lors de
-     combats, missions ou quetes, sans detenteur nomme. */
+     1 ou 2 Gemmes (max) sont detenues par un autre personnage - n'importe lequel du jeu, pas
+     forcement le detenteur canonique Marvel ; les 4 autres se trouvent lors de combats, missions
+     ou quetes, sans detenteur nomme. */
   S.eclats = [];
-  const gemGuards = shuffle(Object.values(ECLAT_HOLDERS).slice()).filter(k=>k && k!==S.playerCharKey);
+  const gemGuards = shuffle(otherCharKeys().slice());
   S.eclatHolders = {};
   const heldCount = Math.random() < 0.5 ? 1 : 2;
   shuffle(ECLATS.map(e=>e.id)).slice(0, heldCount).forEach((gid,i)=>{
@@ -7337,6 +7339,11 @@ function buildCareerPlan(){
     S.ngPlusApplied = Object.assign({}, META.ngPlusBonus);
     META.ngPlusBonus = null; saveMetaProgress();
   }
+  /* Tirage des coups : une seule fois en debut de carriere, pas a chaque combat. Ils restent
+     ensuite fixes pour toute la carriere, sauf gain d'une Gemme/artefact (ajout garanti, jamais
+     retire) ou nouveau palier d'annees (7/14 ans - emplacement supplementaire). */
+  S.battleLoadout = null;
+  rollBattleLoadout();
 }
 
 function findPowerById(id){
@@ -7613,17 +7620,17 @@ function startCrossedMenteeArc(){
 const GAUNTLET_IMG = "/__l5e/assets-v1/aca1a565-1f2d-41fb-913e-4b169b91fb6b/Design_sans_titre_1.png";
 const ECLATS = [
   { id:'derive', frName:"Pierre de l'Espace", enName:"Space Stone", domainFr:'Espace', domainEn:'Space', col:'#2f8bff', col2:'#9ed4ff',
-    move:{ fr:'Rupture spatiale', en:'Spatial rupture', p:46, acc:.74 } },
+    move:{ fr:'Rupture spatiale', en:'Spatial rupture', p:68, acc:.78 } },
   { id:'murmure', frName:"Pierre de l'Esprit", enName:"Mind Stone", domainFr:'Esprit', domainEn:'Mind', col:'#ffd21f', col2:'#fff3b0',
-    move:{ fr:'Cri silencieux', en:'Silent scream', p:44, acc:.78 } },
+    move:{ fr:'Cri silencieux', en:'Silent scream', p:65, acc:.82 } },
   { id:'fracture', frName:"Pierre de la Realite", enName:"Reality Stone", domainFr:'Realite', domainEn:'Reality', col:'#ff2233', col2:'#ff9aa2',
-    move:{ fr:'Faille reelle', en:'Real rift', p:48, acc:.7 } },
+    move:{ fr:'Faille reelle', en:'Real rift', p:72, acc:.75 } },
   { id:'fureur', frName:"Pierre du Pouvoir", enName:"Power Stone", domainFr:'Puissance', domainEn:'Power', col:'#a44bff', col2:'#dcb0ff',
-    move:{ fr:'Deferlante', en:'Onslaught', p:50, acc:.68 } },
+    move:{ fr:'Deferlante', en:'Onslaught', p:76, acc:.72 } },
   { id:'attente', frName:"Pierre du Temps", enName:"Time Stone", domainFr:'Temps', domainEn:'Time', col:'#2ee07a', col2:'#aaf7cd',
-    move:{ fr:'Boucle figee', en:'Frozen loop', p:20, acc:1, heal:24 } },
+    move:{ fr:'Boucle figee', en:'Frozen loop', p:26, acc:1, heal:42 } },
   { id:'vestige', frName:"Pierre de l'Ame", enName:"Soul Stone", domainFr:'Ame', domainEn:'Soul', col:'#ff8a1f', col2:'#ffd0a0',
-    move:{ fr:"Ecrin d'ames", en:'Soul casket', p:24, acc:.95, heal:18 } },
+    move:{ fr:"Ecrin d'ames", en:'Soul casket', p:30, acc:.95, heal:38 } },
 ];
 /* Rendu SVG d'une vraie pierre precieuse taillee : facettes, reflet, aureole. */
 function gemSVG(shard, size, opts){
@@ -7680,6 +7687,12 @@ const ECLAT_SITES_FR = ["un temple enfoui sous les glaces","une epave orbitale a
 const ECLAT_SITES_EN = ["a temple buried under the ice","a drifting orbital wreck","a forbidden excavation site","an abandoned laboratory","an unstable dimensional rift","a forgotten sanctuary"];
 function startEclatQuest(){
   const owned = S.eclats||[];
+  /* Chaque Gemme suivante demande davantage d'etoiles dans la carriere en cours : la 1ere des 4
+     etoiles minimum, la 2eme des 5, la 3eme et la 4eme des 6, la 5eme et la 6eme des 7. */
+  const GEM_STAR_REQ = [4,5,6,6,7,7];
+  const nextGemRank = owned.length; // 0-indexe : 0 = ce sera la 1ere gemme, etc.
+  const starsNow = computeStars();
+  if(nextGemRank < GEM_STAR_REQ.length && starsNow < GEM_STAR_REQ[nextGemRank]) return false;
   const holderOf = (id)=>((S.eclatHolders||{})[id] || null);
   const avail = ECLATS.filter(e=>!owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
@@ -7818,6 +7831,7 @@ function grantEclatShard(shard){
   S.eclats.push(shard.id);
   if(S.eclatHolders) delete S.eclatHolders[shard.id];
   S.pendingEclatCinematic = shard.id;
+  syncBattleLoadout();
   if(S.eclats.length >= ECLATS.length && !S.voidCompletionDone){
     S.voidCompletionDone = true;
     S.eighthStar = true;
@@ -8004,6 +8018,8 @@ function checkTeamInvite(){
   /* FACTIONS n'a des factions definies qu'a partir du palier 2 (Ville) : en dessous, l'invitation
      afficherait une carte vide sans nom ni emblème. On ne propose donc jamais d'invitation avant ca. */
   if(tier < 2) return false;
+  /* On ne propose jamais de rejoindre la faction dont tu fais deja partie - seulement une autre. */
+  if(S.team && S.team.side===zone && S.team.tier===tier) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
   /* Une proposition par palier d'etoile, mais si ta progression stagne longtemps une nouvelle
@@ -8101,6 +8117,7 @@ function checkFactionCreationOffer(){
 function pushYearHistoryIfDone(){ S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = []; }
 function nextMission(){
   S.firstMissionStarted = true;
+  syncBattleLoadout();
   /* Nouveau coup appris alors que tous les emplacements sont pris : le joueur choisit lequel il oublie. */
   if(S.pendingRivalClimax && S.rivalKey){ S.screen='rivalClimax'; render(); return; }
   /* Former une recrue ajoute une etape supplementaire dans l'annee. */
@@ -9014,11 +9031,22 @@ const FOE_MOVES = {
 
 };
 function foeMovesFor(key){
-  if(FOE_MOVES[key]) return FOE_MOVES[key];
-  const c = CHARACTERS[key];
-  return c && c.align==='villain'
+  const base = FOE_MOVES[key] ? FOE_MOVES[key].slice() : (CHARACTERS[key] && CHARACTERS[key].align==='villain'
     ? [{fr:'Assaut brutal',en:'Brutal assault',p:29,acc:.86},{fr:'Cri de haine',en:'Cry of hate',p:33,acc:.75},{fr:'Coup bas defensif',en:'Defensive cheap shot',p:14,acc:1,heal:14},{fr:'Reprise cruelle',en:'Cruel recovery',p:9,acc:1,heal:20}]
-    : [{fr:'Frappe loyale',en:'Loyal strike',p:27,acc:.9},{fr:'Combo precis',en:'Precise combo',p:24,acc:.96},{fr:'Garde serree',en:'Tight guard',p:14,acc:1,heal:15},{fr:'Second souffle',en:'Second wind',p:9,acc:1,heal:20}];
+    : [{fr:'Frappe loyale',en:'Loyal strike',p:27,acc:.9},{fr:'Combo precis',en:'Precise combo',p:24,acc:.96},{fr:'Garde serree',en:'Tight guard',p:14,acc:1,heal:15},{fr:'Second souffle',en:'Second wind',p:9,acc:1,heal:20}]);
+  /* Un adversaire ou allie qui detient encore une Gemme d'Infinite (pas encore obtenue par toi)
+     dispose lui aussi de son coup - aussi puissant que le tien s'il en trouvait une. */
+  if(key && S.eclatHolders){
+    Object.keys(S.eclatHolders).forEach(gemId=>{
+      if(S.eclatHolders[gemId]===key){
+        const shard = ECLATS.find(e=>e.id===gemId);
+        if(shard && !base.some(m=>m.fr===shard.move.fr)){
+          base.push(Object.assign({ shard:true, shardCol:shard.col, shardCol2:shard.col2 }, shard.move));
+        }
+      }
+    });
+  }
+  return base;
 }
 function playerMoves(){
   const charPool = S.playerCharKey ? CHAR_MOVES[S.playerCharKey] : null;
@@ -9110,6 +9138,32 @@ function rollBattleLoadout(){
   const rest = restAtk.concat(restDef).filter(m=>!out.some(x=>x.fr===m.fr));
   while(out.length < total && rest.length) out.push(rest.shift());
   if(out.length) S.battleLoadout = out.map(m=>m.fr);
+}
+/* Mise a jour douce du tirage deja fixe : garantit la presence de tout coup de Gemme/artefact
+   (sans jamais toucher au reste), et ajoute un coup de plus si un nouveau palier d'annees vient
+   de s'ouvrir - sans jamais reroll ce qui est deja en place. */
+function syncBattleLoadout(){
+  playerMoves(); // rafraichit S._moveCandidates
+  const c = S._moveCandidates; if(!c) return;
+  if(!S.battleLoadout || !S.battleLoadout.length){ rollBattleLoadout(); return; }
+  const isPriority = (m)=>!!(m.shard || m.artifact);
+  const allCandidates = c.atk.concat(c.def);
+  const findMove = (fr)=>allCandidates.find(m=>m.fr===fr);
+  let loadoutMoves = S.battleLoadout.map(findMove).filter(Boolean);
+  const missingPriority = allCandidates.filter(isPriority).filter(m=>!loadoutMoves.some(x=>x.fr===m.fr));
+  missingPriority.forEach(m=>{
+    loadoutMoves.push(m);
+    while(loadoutMoves.length > c.maxTotal){
+      const idx = loadoutMoves.findIndex(x=>!isPriority(x));
+      if(idx===-1) break;
+      loadoutMoves.splice(idx,1);
+    }
+  });
+  if(loadoutMoves.length < c.maxTotal){
+    const remaining = shuffle(allCandidates.filter(m=>!loadoutMoves.some(x=>x.fr===m.fr)));
+    while(loadoutMoves.length < c.maxTotal && remaining.length) loadoutMoves.push(remaining.shift());
+  }
+  S.battleLoadout = loadoutMoves.map(m=>m.fr);
 }
 
 /* Trop de coups appris pour le nombre d'emplacements disponibles : le joueur doit choisir
@@ -9396,8 +9450,25 @@ function showBattleAftermath(html, col, cb){
   ov.querySelector('#btlAfterOk').onclick = advance;
   if(S.careerAuto) setTimeout(advance, 300);
 }
-function applyBattleAftermath(win, foeName, hpLeftPct, cb){
+function applyBattleAftermath(win, foeName, hpLeftPct, cb, playerWasKO){
   const f = battleForm();
+  if(win && playerWasKO){
+    /* Tu es tombe pendant ce combat, meme si ton equipe a fini par l'emporter sans toi : ça ne
+       peut pas etre une victoire "propre" comme les autres - pas d'elan gagne, une vraie
+       recuperation, moins spectaculaire qu'une defaite complete mais bien reelle. */
+    f.streak = Math.max(0, f.streak);
+    f.momentum = 0;
+    f.injury = { sev:1, battlesLeft:1, label: S.lang==='fr'?'quelques jours de repos':'a few days of rest' };
+    S.stats.courage = clamp(S.stats.courage - 1, 0, 100);
+    const col = '#e8c96a';
+    const title = S.lang==='fr'?'VICTOIRE DE L\'EQUIPE - TOI, TU ES TOMBE':'TEAM VICTORY - YOU WENT DOWN';
+    const body = S.lang==='fr'
+      ? `Ton equipe a fini le travail sans toi : tu etais deja hors combat quand ${foeName} a plie. Une victoire pour le dossier, mais pas pour ton corps.<br><br><b style="color:${col};">Pas d'elan gagne cette fois.</b><br>Quelques jours de repos necessaires avant le prochain affrontement.<br>Courage -1.`
+      : `Your team finished the job without you: you were already down when ${foeName} fell. A win for the record, not for your body.<br><br><b style="color:${col};">No momentum gained this time.</b><br>A few days of rest needed before the next fight.<br>Courage -1.`;
+    S.currentYearEntries.push({ tag:(S.lang==='fr'?`Victoire (toi hors combat) contre ${foeName}`:`Victory (you were down) over ${foeName}`), location:null, type:'combat', outcome:'win' });
+    showBattleAftermath(`<div class="ru-title" style="color:${col};font-size:12px;letter-spacing:2px;">${title}</div><p style="margin-top:12px;line-height:1.6;">${body}</p>`, col, cb);
+    return;
+  }
   if(win){
     f.streak = Math.max(0, f.streak) + 1;
     f.momentum = Math.min(6, f.momentum + 1);
@@ -9538,6 +9609,11 @@ function buildBattleSquads(foeKey, mission){
     mine = Math.random() < 0.25 ? eligibleMentees.slice() : [pick(eligibleMentees)];
   }
   if(mine.length) allyPool = mine.concat(allyPool.filter(k=>!mine.includes(k)));
+  /* Le partenaire amoureux actuel est present dans 65% de tes combats a plusieurs : il se bat a
+     tes cotes comme n'importe quel autre allie proche, pas seulement dans les scenes dediees. */
+  if(S.romance && S.romance.charKey && S.romance.charKey!==foeKey && allyPool.includes(S.romance.charKey) && Math.random()<0.65){
+    allyPool = [S.romance.charKey].concat(allyPool.filter(k=>k!==S.romance.charKey));
+  }
   let foePool = shuffle(keys.filter(k=> effectiveAlignOf(k)==='neutral' ? neutralSideThisFight[k]===oppSide : effectiveAlignOf(k)===oppSide));
   /* En face, on affronte majoritairement une faction qui existe deja : l'escouade adverse est
      composee en priorite des membres de la faction de l'adversaire principal (Avengers, Black Order,
@@ -10140,17 +10216,6 @@ function startBattle(mission, done){
      (le vrai plafond, jamais atteint des le debut). Le point de depart est calcule pour que la
      moyenne d'une carriere retombe bien sur "Normal", et la progression vers "Prime" suit le
      developpement reel du personnage (age, stats, missions, victoires) - pas un chiffre fixe. */
-  const normalTier = charTier(S.playerCharKey)||50;
-  const primeTierBase = charPrimeTier(S.playerCharKey)||60;
-  const primeTier = clamp(primeTierBase + primeJitter(S.playerCharKey), 10, 100);
-  const lowEndTier = clamp(2*normalTier - primeTier, 10, 100);
-  const devFactor = careerDevFactor();
-  let effectiveTier = lowEndTier + (primeTier - lowEndTier) * devFactor;
-  /* Coup d'eclat : si tire pour cette carriere, il peut faire depasser meme le plafond habituel -
-     personne n'est jamais totalement plafonne pour de bon, meme les plus modestes. */
-  const breakthrough = powerBreakthrough(S.playerCharKey);
-  if(breakthrough!==null) effectiveTier = clamp(Math.max(effectiveTier, breakthrough*devFactor + lowEndTier*(1-devFactor)), 1, 100);
-  const charPowerScale = 0.45 + effectiveTier/100 * 1.25;
   /* Difficulte relevee : le joueur partait avec trop de PV et des degats trop superieurs a ceux
      de l'adversaire, d'ou des victoires quasi systematiques. Corrections :
      - PV joueur reduits (base 88 au lieu de 96, pente 0.55 au lieu de 0.7, momentum *3 au lieu de *4)
@@ -10164,13 +10229,15 @@ function startBattle(mission, done){
       toujours, mais en modulation legere par-dessus cette base (au lieu des -30 PV d'un coup). */
    /* Les PV de depart viennent desormais de la resistance du personnage, comme pour chaque PNJ.
       La forme de carriere reste une variation legere, jamais un second systeme de puissance. */
-   const rawMaxHP = combatMaxHp(S.playerCharKey);
-   if(typeof S.hpBaseline !== 'number' || !isFinite(S.hpBaseline) || S.hpBaseline <= 0){
-     S.hpBaseline = rawMaxHP;
-   } else {
-     const step = S.hpBaseline * 0.02; // evolution progressive, jamais brutale
-     S.hpBaseline = clamp(rawMaxHP, S.hpBaseline - step, S.hpBaseline + step);
-   }
+   const gemCount = (S.eclats||[]).length;
+   /* Courbe de PV, enfin vraiment connectee a la progression de carriere : le multiplicateur monte
+      doucement au debut, mais peut aller jusqu'a x2 (voire plus, avec les gemmes) entre 30 et 40 ans
+      de carriere - un veteran au sommet ne doit plus ressembler a un debutant. */
+   const yearsElapsed = S.currentYear||1;
+   const primeMultBase = clamp(1 + (yearsElapsed/38)*1.0, 1, 2.15); // ~x2 vers 38 ans, plafonne ensuite
+   const gemPowerMult = 1 + gemCount*0.14; // chaque gemme ajoute 14% de puissance globale
+   const rawMaxHP = Math.round(combatMaxHp(S.playerCharKey) * primeMultBase * gemPowerMult) + gemCount*10;
+   S.hpBaseline = rawMaxHP; // suit directement la vraie progression, plus de lissage qui etouffait la croissance
    // Forme du moment : +/-4% max de momentum, et jusqu'a -6% si blesse.
    const formMod = clamp(form.momentum*0.012, -0.04, 0.04) - (inj ? Math.min(0.06, inj.sev*0.02) : 0);
    const myMaxHP = Math.max(46, Math.round(S.hpBaseline * (1 + formMod)));
@@ -10179,7 +10246,6 @@ function startBattle(mission, done){
      plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
   const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  rollBattleLoadout(); // tirage au sort des 4 coups pour ce combat
   let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
@@ -10331,7 +10397,7 @@ function startBattle(mission, done){
        brutal frappe plus souvent au hasard et se soigne trop tard. */
     const sk = iqSkill(S.playerCharKey);
     const lowSelf = allyRoster[0].hp / allyRoster[0].maxHp < (0.22 + sk*0.22);
-    if(lowSelf && Math.random() < sk*0.9){ const healIdx = myMoves.findIndex(m=>m.heal && avail(m)); if(healIdx>=0) return healIdx; }
+    if(lowSelf && Math.random() < (0.35 + sk*0.55)){ const healIdx = myMoves.findIndex(m=>m.heal && avail(m)); if(healIdx>=0) return healIdx; }
     if(Math.random() > sk){
       const rnd = myMoves.map((m,i)=>({m,i})).filter(o=>avail(o.m));
       if(rnd.length) return pick(rnd).i;
@@ -10746,6 +10812,7 @@ function startBattle(mission, done){
     setLog((win ? (S.lang==='fr'?`${foeName} et son escouade sont hors de combat. Tu tiens le terrain.`:`${foeName} and their squad are down. You hold the field.`)
                : (S.lang==='fr'?`Tu es a terre. ${foeName} prend l'avantage.`:`You are down. ${foeName} takes the upper hand.`)) + extraLine);
     const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
+    const playerWasKO = win && (allyRoster[0].ko || allyRoster[0].hp<=0);
     let permaDeath = false;
     if(!win && scope>=6 && !(mission && mission.isTraining)){
       const deathChance = 0.06 + (scope-6)*0.04;
@@ -10760,7 +10827,7 @@ function startBattle(mission, done){
       ov.classList.add('btl-out');
       setTimeout(()=>{
         ov.remove();
-        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey, permaDeath); });
+        applyBattleAftermath(win, foeName, hpPct, ()=>{ renderRankBadge(); done(win, foeKey, permaDeath); }, playerWasKO);
       }, wait(450));
     }, wait(1500));
   }
@@ -10932,7 +10999,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * allyBonus * strMult(S.playerCharKey));
+    const d = dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * allyBonus * strMult(S.playerCharKey) * gemPowerMult);
     if(m.heal){ allyRoster[0].hp = Math.min(allyRoster[0].maxHp, allyRoster[0].hp + m.heal); refreshEntry('ally', 0); }
     const dApplied = dealToFoe(targetIdx, d, myCol) ?? d;
     setLog(S.lang==='fr'?`${label} touche ${targetName} : ${dApplied} degats.`:`${label} hits ${targetName}: ${dApplied} damage.`);
@@ -11185,8 +11252,22 @@ function resolveOutcome(mission){
         grantEclatShard(shard);
       } else if(shard){
         S.eclatHolders = S.eclatHolders || {};
-        if(guardianKey) S.eclatHolders[shard.id] = guardianKey;
+        /* Une chance modeste (10%) qu'un tiers, pas forcement le gardien d'origine, en profite pour
+           la reclamer a ta place - c'est ce qui permet, tres rarement sur l'ensemble d'une carriere,
+           qu'un autre personnage du jeu finisse par accumuler plusieurs Gemmes. */
+        let newHolder = guardianKey;
+        let claimedByOther = false;
+        if(Math.random() < 0.10){
+          const pool = otherCharKeys().filter(k=>k!==guardianKey);
+          if(pool.length){ newHolder = pick(pool); claimedByOther = true; }
+        }
+        if(newHolder) S.eclatHolders[shard.id] = newHolder;
         const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'le site':'the site');
+        const newHolderName = newHolder && CHARACTERS[newHolder] ? (S.lang==='fr'?CHARACTERS[newHolder].fr:CHARACTERS[newHolder].en) : '';
+        if(claimedByOther){
+          jarvisSay(S.lang==='fr'?`${newHolderName} s'empare de ${shard.frName} pendant que vous etes tous les deux occupes ailleurs.`:`${newHolderName} seizes ${shard.enName} while you're both busy elsewhere.`,
+                    S.lang==='fr'?`${newHolderName} s'empare de ${shard.frName} pendant que vous etes tous les deux occupes ailleurs.`:`${newHolderName} seizes ${shard.enName} while you're both busy elsewhere.`, S.lang==='fr'?'un troisieme larron':'a third party');
+        } else {
         const msgFr = guardianKey
           ? (win ? `${shard.frName} t'echappe au dernier instant. ${guardName} le reprend et disparait avec.` : `${guardName} garde ${shard.frName} et te repousse. Il faudra revenir.`)
           : (win ? `${shard.frName} s'enfonce dans une faille avant que tu puisses la saisir. Elle refera surface ailleurs.` : `Tu es repousse : ${shard.frName} reste enfouie sur place. Il faudra revenir.`);
@@ -11194,6 +11275,7 @@ function resolveOutcome(mission){
           ? (win ? `${shard.enName} slips away at the last moment. ${guardName} takes it back and vanishes with it.` : `${guardName} holds onto ${shard.enName} and drives you back. You'll need to return.`)
           : (win ? `${shard.enName} sinks into a rift before you can grab it. It will resurface elsewhere.` : `You are driven back: ${shard.enName} stays buried on site. You'll need to return.`);
         jarvisSay(msgFr, msgEn, S.lang==='fr'?'occasion manquee':'missed chance');
+        }
       }
     } else if(mission.eclatReclaim){
       const shard = ECLATS.find(e=>e.id===mission.eclatReclaim);
