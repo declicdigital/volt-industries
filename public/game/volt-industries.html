@@ -6179,7 +6179,7 @@ function screenWelcome(){
     </div>`;
     box.querySelector('#resumeCard').onclick = ()=>{ S = saved; render(); };
   });
-  makeDraggable(d.querySelector('.hud-console'), 'hudConsole');
+  /* console d'accueil : inamovible */
   return d;
 }
 async function saveCareerToHistory(){
@@ -13623,9 +13623,11 @@ function jarvisHUD(){
     document.body.appendChild(el);
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
   }
+  makeDraggable(el, 'jarvisPanel');
   jvSkin(el);
   jvSyncMute();
   return el;
+
 }
 function jvSyncMute(){
   const b = document.getElementById('jvMute'); if(!b) return;
