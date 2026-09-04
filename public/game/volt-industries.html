@@ -10109,7 +10109,7 @@ function resOfKey(k){
 }
 /* Resistance courante : le joueur beneficie de sa base + son mod carriere. */
 function currentRes(k){
-  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerResBase === 'number'){
+  if(k === S.playerCharKey && S.usingPreset && typeof S.playerResBase === 'number'){
     return clamp(S.playerResBase + (S.resMod||0), 1, 10);
   }
   return clamp(resOfKey(k) + npcStatVariance('res', k), 1, 10);
@@ -10140,7 +10140,7 @@ function npcStatVariance(statKey, k){
   return S.npcStatVariance[cacheKey];
 }
 function currentStrength(k){
-  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerStrBase === 'number'){
+  if(k === S.playerCharKey && S.usingPreset && typeof S.playerStrBase === 'number'){
     return clamp(S.playerStrBase + (S.strMod||0), 1, 10);
   }
   return clamp(strengthOfKey(k) + npcStatVariance('str', k), 1, 10);
@@ -10170,7 +10170,7 @@ function primeEliteBonus(k){
    Gemmes, un PNJ via le systeme de detenteurs. Utilise pour le bonus de puissance ci-dessous,
    applique de la meme facon a tout le monde, pas seulement au joueur. */
 function gemCountFor(k){
-  if(k && S.playerCharKey && k===S.playerCharKey) return (S.eclats||[]).length;
+  if(k === S.playerCharKey && S.usingPreset) return (S.eclats||[]).length;
   if(!k || !S.eclatHolders) return 0;
   return Object.values(S.eclatHolders).filter(h=>h===k).length;
 }
@@ -10198,7 +10198,7 @@ function iqOfKey(k){
 /* IQ courant d'un personnage : le joueur beneficie de sa base + son mod carriere ; les PNJs
    restent sur la note du dictionnaire. */
 function currentIQ(k){
-  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerIQBase === 'number'){
+  if(k === S.playerCharKey && S.usingPreset && typeof S.playerIQBase === 'number'){
     return clamp(S.playerIQBase + (S.iqMod||0), 1, 10);
   }
   return clamp(iqOfKey(k) + npcStatVariance('iq', k), 1, 10);
@@ -10211,7 +10211,7 @@ function speedOfKey(k){
   return typeof v === 'number' ? v : 5;
 }
 function currentSpeed(k){
-  if(k && S.playerCharKey && k === S.playerCharKey && typeof S.playerSpeedBase === 'number'){
+  if(k === S.playerCharKey && S.usingPreset && typeof S.playerSpeedBase === 'number'){
     return clamp(S.playerSpeedBase + (S.speedMod||0), 1, 10);
   }
   return clamp(speedOfKey(k) + npcStatVariance('speed', k), 1, 10);
