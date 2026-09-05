@@ -8108,7 +8108,7 @@ function applyCivilWarSplit(playerWon){
   S.turningPoints.push({ year:S.currentYear, from:oldZone, to:oppSide });
   S.lastZone = oppSide;
   S.splinterFac = splinter;
-  S.team = { side: oppSide, tier: tier };
+  S.team = { side: oppSide, tier: tier, facId: (facAt(oppSide,tier)||{}).id };
   if(typeof syncMenteesToSide === 'function') syncMenteesToSide();
   planCivilWarRematch(split, false, uniq);
   const label = fr ? `Battu(e) par ton propre camp, tu quittes ${baseName} avec ${names} et fondes ${splinterName}.`
@@ -8226,8 +8226,11 @@ function checkTeamInvite(){
      (Thunderbolts existe des le palier 1) et vilains (rien avant le palier 2). Un seuil fixe a 2
      bloquait a tort toute invitation aux Thunderbolts, quel que soit le nombre de parties jouees. */
   if(!facAt(zone, tier)) return false;
-  /* On ne propose jamais de rejoindre la faction dont tu fais deja partie - seulement une autre. */
-  if(S.team && S.team.side===zone && S.team.tier===tier) return false;
+  /* On ne propose jamais de rejoindre la faction PRECISE dont tu fais deja partie - meme si ton
+     palier d'etoiles a change depuis que tu l'as rejointe. Mais une AUTRE faction du meme camp
+     reste tout a fait proposable - rejoindre une equipe n'empeche pas qu'une autre te debauche. */
+  const offeredFacId = (facAt(zone, tier)||{}).id;
+  if(S.team && S.team.side===zone && S.team.facId && offeredFacId===S.team.facId) return false;
   const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
   /* Une proposition par palier d'etoile, mais si ta progression stagne longtemps une nouvelle
@@ -8286,7 +8289,7 @@ function screenDefection(){
     S.turningPoints.push({ year:S.currentYear, from:oldZone, to:S.defectionSide });
     S.lastZone = S.defectionSide;
     syncMenteesToSide();
-    S.team = { side:S.defectionSide, tier };
+    S.team = { side:S.defectionSide, tier, facId: (facAt(S.defectionSide,tier)||{}).id };
     const label = fr ? `Tu as rejoint ${fname} - et change de camp.` : `You joined ${fname} - and switched sides.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero });
     nextMission();
@@ -11800,7 +11803,7 @@ function screenInvite(){
       <div class="tname" style="color:${charColor(S.inviteSide)}; text-shadow:0 0 20px ${charColor(S.inviteSide)};">${fname}</div>
     </div>
     <div class="actions"><button class="btn ghost" id="decline">${t('decline')}</button><button class="btn cyan" id="accept">${t('accept')}</button></div>`;
-  d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier };
+  d.querySelector('#accept').onclick=()=>{ S.team = { side:S.inviteSide, tier, facId: (facAt(S.inviteSide,tier)||{}).id };
     const label = S.lang==='fr' ? `Tu as rejoint ${fname}.` : `You joined ${fname}.`;
     S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain: !isHero }); nextMission(); };
   d.querySelector('#decline').onclick=()=>{ const label=t('declinedTeam'); S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:false }); nextMission(); };
