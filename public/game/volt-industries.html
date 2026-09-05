@@ -10119,7 +10119,7 @@ function currentRes(k){
 }
 /* Ajuste la resistance du joueur au fil de la carriere (entrainements, blessures, age). */
 function adjustRes(delta){
-  S.resMod = clamp((S.resMod||0) + delta, -3, 3);
+  S.resMod = clamp((S.resMod||0) + delta, -1, 1);
 }
 /* Multiplicateur de degats SUBIS : note 3 -> x1.06, 5 -> x1.00, 10 -> x0.85. */
 function resMult(k){ return clamp(1.15 - currentRes(k)*0.03, 0.85, 1.15); }
@@ -10150,7 +10150,7 @@ function currentStrength(k){
 }
 /* Ajuste la force du joueur au fil de la carriere (entrainements, blessures, age). */
 function adjustStrength(delta){
-  S.strMod = clamp((S.strMod||0) + delta, -3, 3);
+  S.strMod = clamp((S.strMod||0) + delta, -1, 1);
 }
 /* Multiplicateur de degats issu de la force : note 3 -> 0.94, 5 -> 1.00, 10 -> 1.15.
    Volontairement resserre pour ne pas casser l'equilibre des combats. */
@@ -10221,11 +10221,11 @@ function currentSpeed(k){
 }
 /* Ajuste la vitesse du joueur au fil de la carriere (choix, evenements, age, blessures). */
 function adjustSpeed(delta){
-  S.speedMod = clamp((S.speedMod||0) + delta, -10, 10);
+  S.speedMod = clamp((S.speedMod||0) + delta, -1, 1);
 }
 /* Ajuste l'IQ du joueur au fil de la carriere (choix, evenements, age, blessures). */
 function adjustIQ(delta){
-  S.iqMod = clamp((S.iqMod||0) + delta, -5, 5);
+  S.iqMod = clamp((S.iqMod||0) + delta, -1, 1);
 }
 /* Traduit l'IQ en probabilite de prendre la meilleure decision : 2 -> ~0.34, 5 -> ~0.55, 10 -> ~0.9.
    Un petit jet de des est ajoute pour que l'IQ varie d'une action a l'autre et d'une partie a l'autre. */
