@@ -5193,13 +5193,14 @@ function wordmarkLogoSVG(heightPx){
     <defs>
       <linearGradient id="${uid}s" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#ffffff"/>
-        <stop offset="38%" stop-color="#eef6ff"/>
-        <stop offset="62%" stop-color="#b9cadd"/>
-        <stop offset="100%" stop-color="#e8f2ff"/>
+        <stop offset="34%" stop-color="var(--accent, #00c2ff)" stop-opacity="0.55"/>
+        <stop offset="62%" stop-color="var(--accent, #00c2ff)"/>
+        <stop offset="100%" stop-color="var(--accent-dark, #0088cc)"/>
       </linearGradient>
       <filter id="${uid}f" x="-40%" y="-40%" width="180%" height="180%">
-        <feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#7fc8ff" flood-opacity="0.75"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="var(--accent, #7fc8ff)" flood-opacity="0.75"/>
       </filter>
+
     </defs>
     <g filter="url(#${uid}f)" fill="url(#${uid}s)">
       <polygon points="0,10 14,10 27,50 40,10 54,10 33,72 21,72"/>
