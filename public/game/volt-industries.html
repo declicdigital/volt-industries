@@ -10180,12 +10180,15 @@ function gemCountFor(k){
 function combatMaxHp(k){
   const gemCount = gemCountFor(k);
   const base = (62 + currentRes(k)*7) * worldProgressMult() * primeEliteBonus(k);
-  const rawTotal = base * (1 + gemCount*0.12) + gemCount*15;
+  /* Bonus purement proportionnel (pas de montant fixe ajoute) : l'ecart entre un personnage
+     modeste et un personnage au sommet de sa Prime reste globalement respecte meme une fois
+     gemme a fond, plutot que tout le monde qui converge vers le meme chiffre. */
+  const rawTotal = base * (1 + gemCount*0.15);
   /* Plafond souple, pas un mur dur : au-dela d'un certain seuil, chaque point supplementaire
      compte de moins en moins - mais ne s'arrete jamais completement. Sinon un personnage deja
      tres fort n'a plus RIEN a gagner d'une 3eme, 4eme ou 5eme Gemme une fois le plafond touche. */
-  const ceiling = gemCount>=6 ? 550 : 420;
-  const softStart = ceiling * 0.8;
+  const ceiling = gemCount>=6 ? 650 : 480;
+  const softStart = ceiling * 0.82;
   if(rawTotal <= softStart) return Math.round(rawTotal);
   const excess = rawTotal - softStart;
   return Math.round(softStart + excess*0.3);
