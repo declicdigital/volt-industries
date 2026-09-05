@@ -11312,7 +11312,13 @@ function startBattle(mission, done){
     const alive = livingIdx(roster);
     if(!alive.length) return 0;
     if(Math.random() < skill){
-      return alive.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp))[0];
+      /* Viser le PV% le plus bas - mais en cas d'egalite (typiquement au tout premier tour, ou
+         tout le monde est a 100%), on tranche au hasard, jamais systematiquement en faveur du
+         premier de la liste (qui se trouve etre presque toujours le joueur). */
+      const sorted = alive.slice().sort((a,b)=>(roster[a].hp/roster[a].maxHp)-(roster[b].hp/roster[b].maxHp));
+      const lowestPct = roster[sorted[0]].hp/roster[sorted[0]].maxHp;
+      const tied = sorted.filter(i=>Math.abs(roster[i].hp/roster[i].maxHp - lowestPct) < 0.001);
+      return pick(tied);
     }
     return pick(alive);
   }
