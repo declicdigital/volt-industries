@@ -8221,31 +8221,43 @@ function startGrandEvent(){
 function checkTeamInvite(){
   const zone = zoneOf(S.align);
   if(zone==='neutral' || S.totalMissionsDone < 10) return false;
-  const tier = computeStars();
+  const maxTier = computeStars();
   /* La faction doit reellement exister a ce palier pour ce camp - le seuil differe entre heros
-     (Thunderbolts existe des le palier 1) et vilains (rien avant le palier 2). Un seuil fixe a 2
-     bloquait a tort toute invitation aux Thunderbolts, quel que soit le nombre de parties jouees. */
-  if(!facAt(zone, tier)) return false;
+     (Thunderbolts existe des le palier 1) et vilains (rien avant le palier 2). */
+  if(!facAt(zone, 1) && !facAt(zone, 2)) return false;
+  /* Choisir un palier au hasard parmi TOUS ceux accessibles avec ton nombre d'etoiles actuel -
+     pas systematiquement le plus haut. Plus le palier est eleve, plus il est rare d'y etre
+     invite : les meilleures factions doivent rester difficiles a rejoindre, les plus modestes
+     restent accessibles meme longtemps apres les avoir depassees en etoiles. */
+  const eligibleTiers = [];
+  for(let t=1; t<=Math.min(maxTier,7); t++){ if(facAt(zone,t)) eligibleTiers.push(t); }
+  if(!eligibleTiers.length) return false;
+  const weights = eligibleTiers.map(t=>Math.max(1, 7-t)); // palier 1 = poids 6, palier 5+ = poids 1-2
+  const totalWeight = weights.reduce((a,b)=>a+b,0);
+  let roll = Math.random()*totalWeight, tier = eligibleTiers[0];
+  for(let i=0;i<eligibleTiers.length;i++){ roll -= weights[i]; if(roll<=0){ tier = eligibleTiers[i]; break; } }
   /* On ne propose jamais de rejoindre la faction PRECISE dont tu fais deja partie - meme si ton
      palier d'etoiles a change depuis que tu l'as rejointe. Mais une AUTRE faction du meme camp
      reste tout a fait proposable - rejoindre une equipe n'empeche pas qu'une autre te debauche. */
   const offeredFacId = (facAt(zone, tier)||{}).id;
   if(S.team && S.team.side===zone && S.team.facId && offeredFacId===S.team.facId) return false;
-  const key = zone==='hero' ? 'invitedTierHero' : 'invitedTierVillain';
+  /* Suivi par palier precis (pas un seul palier "maximum atteint") : chaque faction a son propre
+     cooldown, pour que la variete reste possible d'une invitation a l'autre. */
+  S.invitedTiersBySide = S.invitedTiersBySide || { hero:{}, villain:{} };
+  const tierBucket = S.invitedTiersBySide[zone];
   const last = (S.lastInviteYear===undefined || S.lastInviteYear===null) ? -99 : S.lastInviteYear;
-  /* Une proposition par palier d'etoile, mais si ta progression stagne longtemps une nouvelle
-     proposition peut quand meme revenir : sur une longue carriere on doit en voir 2 ou 3. */
-  if(tier <= S[key] && (S.currentYear - last) < 10) return false;
+  const lastThisTier = tierBucket[tier]===undefined ? -99 : tierBucket[tier];
+  if((S.currentYear - lastThisTier) < 10 && (S.currentYear - last) < 10) return false;
   if(Math.abs(S.align) < 42) return false;
   if(S.currentYear - last < 4) return false;
   const fights = S.combat.won + S.combat.lost;
   const winRate = fights ? S.combat.won/fights : 0.35;
-  let p = 0.16 + winRate*0.28 + (S.stats.popularity-52)/320 + (S.locations.length>=4 ? 0.06 : 0);
+  let p = 0.16 + winRate*0.28 + (S.stats.popularity-52)/320 + (S.locations.length>=4 ? 0.06 : 0) - (tier-1)*0.025;
   if(S.team) p -= 0.07;
   /* Filet de securite : plus le temps passe sans aucune proposition, plus elle devient probable. */
   if(S.currentYear - last > 12) p += 0.18;
   if(Math.random() > clamp(p, 0.06, 0.55)) return false;
-  S[key] = tier; S.lastInviteYear = S.currentYear;
+  tierBucket[tier] = S.currentYear; S.lastInviteYear = S.currentYear;
   S.pendingReturnScreen = S.screen; S.screen = 'invite'; S.inviteSide = zone; S.inviteTier = tier;
   return true;
 }
