@@ -498,6 +498,96 @@
   .history-del{ position:absolute; top:8px; right:10px; background:none; border:none; color:var(--dim); font-size:16px; cursor:pointer; line-height:1; }
   .history-del:hover{ color:var(--red); }
 
+  /* ---------- VORMIR : annonce speciale (Red Skull + Pierre de l'Ame) ---------- */
+  .vormir-cine{ background:#04030a; }
+  .vormir-cine .vm-bg{ position:absolute; inset:-3%; background-size:cover; background-position:center 45%;
+    animation: vmDrift 18s ease-in-out infinite alternate; filter:saturate(1.05) contrast(1.05); }
+  @keyframes vmDrift{ from{ transform:scale(1.04) translate3d(-1%,0,0); } to{ transform:scale(1.12) translate3d(1%,-1.5%,0); } }
+  .vormir-cine .vm-grade{ position:absolute; inset:0;
+    background:radial-gradient(ellipse 75% 60% at 50% 42%, rgba(255,120,40,.20), rgba(3,2,8,.90) 72%),
+               linear-gradient(180deg, rgba(3,2,8,.55), rgba(3,2,8,.15) 40%, rgba(3,2,8,.92)); }
+  .vormir-cine .vm-fog{ position:absolute; left:-20%; right:-20%; bottom:-10%; height:55%;
+    background:radial-gradient(ellipse at 50% 100%, rgba(220,200,190,.20), transparent 70%);
+    filter:blur(8px); animation: vmFog 14s ease-in-out infinite alternate; }
+  @keyframes vmFog{ from{ transform:translate3d(-4%,2%,0); opacity:.55; } to{ transform:translate3d(4%,-2%,0); opacity:.85; } }
+  .vormir-cine .vm-ember{ position:absolute; width:3px; height:3px; border-radius:50%;
+    background:#ffb14a; box-shadow:0 0 8px #ff8a1f, 0 0 18px rgba(255,110,30,.7); opacity:0;
+    animation: vmEmber linear infinite; }
+  @keyframes vmEmber{ 0%{ transform:translate3d(0,20px,0) scale(.6); opacity:0; }
+    12%{ opacity:1; } 100%{ transform:translate3d(var(--vx,18px),-72vh,0) scale(1.15); opacity:0; } }
+  .vormir-cine .vm-flash{ position:absolute; inset:0; background:rgba(255,190,120,.55); opacity:0; pointer-events:none;
+    animation: vmFlash 7s ease-in-out infinite; }
+  @keyframes vmFlash{ 0%,92%,100%{ opacity:0; } 94%{ opacity:.35; } 96%{ opacity:0; } 97%{ opacity:.18; } }
+  .vormir-cine .vm-wrap{ position:relative; z-index:3; display:flex; align-items:flex-end; justify-content:center;
+    gap:clamp(8px,3vw,42px); width:100%; max-width:1120px; padding:16px; }
+  .vormir-cine .vm-skull{ position:relative; flex:0 0 auto; width:clamp(150px,26vw,330px); align-self:flex-end;
+    animation: vmSkullIn .9s cubic-bezier(.2,.8,.3,1) both; }
+  .vormir-cine .vm-skull img{ width:100%; display:block; filter:drop-shadow(0 0 18px rgba(255,60,40,.65)) drop-shadow(0 0 60px rgba(255,40,20,.35)) contrast(1.05); }
+  .vormir-cine .vm-skull::after{ content:''; position:absolute; left:50%; bottom:-6%; transform:translateX(-50%);
+    width:120%; height:38%; border-radius:50%;
+    background:radial-gradient(ellipse at 50% 50%, rgba(255,50,30,.45), transparent 70%); filter:blur(10px); }
+  @keyframes vmSkullIn{ from{ opacity:0; transform:translate3d(-24px,14px,0) scale(.96); } to{ opacity:1; transform:none; } }
+  .vormir-cine .vm-panel{ flex:1 1 auto; min-width:0; max-width:560px; text-align:left;
+    background:linear-gradient(180deg, rgba(10,7,16,.86), rgba(6,4,12,.92));
+    border:1px solid rgba(255,140,70,.35); border-radius:16px; padding:clamp(14px,2.4vw,22px);
+    box-shadow:0 0 0 1px rgba(255,140,70,.10) inset, 0 24px 60px rgba(0,0,0,.6);
+    backdrop-filter:blur(6px); }
+  .vormir-cine .vm-scope{ font-size:11px; letter-spacing:.28em; font-weight:900; color:#ff8a1f;
+    text-shadow:0 0 14px rgba(255,120,30,.8); }
+  .vormir-cine .vm-title{ font-size:clamp(24px,5.4vw,44px); font-weight:900; letter-spacing:.06em; line-height:1.05;
+    margin-top:6px; color:#ffd7ac; text-shadow:0 0 26px rgba(255,140,50,.65), 0 0 70px rgba(255,80,20,.35); }
+  .vormir-cine .vm-who{ margin-top:10px; font-size:12px; font-weight:800; letter-spacing:.16em; color:#ff6a5a;
+    text-transform:uppercase; }
+  .vormir-cine .vm-line{ margin-top:8px; font-size:clamp(13px,2.1vw,16px); line-height:1.62; color:#f0e6e2;
+    animation: vmLineIn .5s ease both; }
+  .vormir-cine .vm-line b{ color:#ffcf9a; }
+  @keyframes vmLineIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  .vormir-cine .vm-actions{ margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+  .vormir-cine .vm-actions button{ background:linear-gradient(180deg,#ff8a2a,#c53a10); border:1px solid rgba(255,190,140,.55);
+    color:#1a0a04; font-weight:900; letter-spacing:.1em; padding:12px 18px; border-radius:11px; cursor:pointer;
+    box-shadow:0 0 26px rgba(255,110,30,.45); }
+  .vormir-cine .vm-actions button:hover{ filter:brightness(1.12); }
+  /* La Pierre de l'Ame : orbe scintillante */
+  .vormir-cine .vm-stone{ position:absolute; z-index:4; left:50%; top:clamp(52px,12vh,120px); transform:translateX(-50%);
+    width:clamp(74px,12vw,132px); height:clamp(74px,12vw,132px); animation: vmStoneFloat 5.5s ease-in-out infinite; }
+  @keyframes vmStoneFloat{ 0%,100%{ transform:translate(-50%,0); } 50%{ transform:translate(-50%,-12px); } }
+  .vormir-cine .vm-stone .core{ position:absolute; inset:16%; border-radius:50%;
+    background:radial-gradient(circle at 34% 28%, #fff6e2 0%, #ffcf7a 18%, #ff8a1f 48%, #c8290b 78%, #5d0d04 100%);
+    box-shadow:0 0 26px rgba(255,150,50,.95), 0 0 70px rgba(255,90,20,.7), 0 0 140px rgba(255,70,10,.45),
+               inset 0 0 22px rgba(255,240,200,.55);
+    animation: vmStonePulse 2.2s ease-in-out infinite; }
+  @keyframes vmStonePulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.28); } }
+  .vormir-cine .vm-stone .halo{ position:absolute; inset:-45%; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,140,50,.42), rgba(255,90,20,.14) 45%, transparent 70%);
+    animation: vmHalo 3.4s ease-in-out infinite; }
+  @keyframes vmHalo{ 0%,100%{ transform:scale(.92); opacity:.75; } 50%{ transform:scale(1.1); opacity:1; } }
+  .vormir-cine .vm-stone .rays{ position:absolute; inset:-70%;
+    background:conic-gradient(from 0deg, transparent 0 6%, rgba(255,190,120,.30) 8%, transparent 12% 30%,
+      rgba(255,170,90,.22) 32%, transparent 36% 58%, rgba(255,200,140,.28) 60%, transparent 64% 84%,
+      rgba(255,160,80,.20) 86%, transparent 90%);
+    mask:radial-gradient(circle, transparent 26%, #000 42%, transparent 76%);
+    -webkit-mask:radial-gradient(circle, transparent 26%, #000 42%, transparent 76%);
+    animation: vmSpin 16s linear infinite; }
+  @keyframes vmSpin{ to{ transform:rotate(360deg); } }
+  .vormir-cine .vm-stone .glint{ position:absolute; left:50%; top:50%; width:230%; height:2px; transform:translate(-50%,-50%);
+    background:linear-gradient(90deg, transparent, rgba(255,225,180,.85), transparent);
+    animation: vmGlint 3s ease-in-out infinite; }
+  .vormir-cine .vm-stone .glint.v{ transform:translate(-50%,-50%) rotate(90deg); animation-delay:.6s; }
+  @keyframes vmGlint{ 0%,100%{ opacity:.25; transform:translate(-50%,-50%) scaleX(.6); } 50%{ opacity:1; } }
+  .vormir-cine .vm-stone .glint.v{ animation-name: vmGlintV; }
+  @keyframes vmGlintV{ 0%,100%{ opacity:.2; transform:translate(-50%,-50%) rotate(90deg) scaleX(.6); }
+    50%{ opacity:.9; transform:translate(-50%,-50%) rotate(90deg) scaleX(1); } }
+  .vormir-cine .vm-stone .spark{ position:absolute; width:4px; height:4px; border-radius:50%; background:#fff2d8;
+    box-shadow:0 0 10px #ffb04a; animation: vmSpark 2.6s ease-in-out infinite; }
+  @keyframes vmSpark{ 0%,100%{ opacity:0; transform:scale(.4); } 45%{ opacity:1; transform:scale(1.25); } }
+  @media (max-width:640px){
+    .vormir-cine .vm-wrap{ flex-direction:column; align-items:center; gap:6px; padding:10px; }
+    .vormir-cine .vm-skull{ width:min(52vw,220px); }
+    .vormir-cine .vm-panel{ max-width:96vw; }
+    .vormir-cine .vm-stone{ top:6px; width:66px; height:66px; }
+  }
+
+
   .cine-overlay{ position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;
     animation: cineIn .25s ease; }
   .cine-overlay.cine-out{ animation: cineOut .5s ease forwards; }
@@ -8054,36 +8144,79 @@ function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
   if(S.vormirPlanned == null){
     S.vormirPlanned = Math.random() < 0.10; // 10% des parties seulement
-    S.vormirYear = 5 + Math.floor(Math.random()*12);
+    /* Jamais en debut de carriere : au minimum la 15e annee, souvent bien plus tard. */
+    S.vormirYear = 15 + Math.floor(Math.random()*16);
   }
   if(!S.vormirPlanned) return false;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
-  if(S.currentYear < (S.vormirYear||5)) return false;
+  if(S.currentYear < (S.vormirYear||15)) return false;
+  if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
   return true;
 }
 function showVormirAnnouncement(recruitName, cb){
-  /* Annonce speciale : elle arrete la simulation de carriere, le joueur doit reprendre la main. */
+  /* Annonce speciale : Red Skull, gardien de la Pierre, explique lui-meme le prix a payer.
+     Elle arrete la simulation de carriere, le joueur doit reprendre la main. */
   S.careerAuto = false;
   try{ renderCareerAutoWidget(); }catch(e){}
   const fr = S.lang==='fr';
+  const skullImg = (typeof CHAR_POD_IMG!=='undefined' && CHAR_POD_IMG.char13) || (CHAR_IMG && CHAR_IMG.char13) || '';
+  const beats = fr ? [
+    { who:'RED SKULL', txt:`Je t'attendais. Je n'ai plus de corps a moi, plus de camp, plus de guerre : seulement cette falaise, et le devoir de dire la verite a ceux qui montent. La Pierre de l'Ame est ici. Elle repose au fond de ce gouffre depuis avant ton monde.` },
+    { who:'RED SKULL', txt:`Mais la Pierre ne se prend pas. Elle se <b>paie</b>. Une ame pour une ame. Pas un ennemi, pas un inconnu : quelqu'un que tu as choisi, forme, protege. Tu es monte avec <b>${recruitName}</b>. Ce n'est pas un hasard.` },
+    { who:'RED SKULL', txt:`Alors la falaise vous a rendus identiques : meme souffle, meme force, exactement les memes coups. Aucun avantage, aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
+  ] : [
+    { who:'RED SKULL', txt:`I was waiting for you. I have no body of my own left, no side, no war: only this cliff, and the duty to tell the truth to those who climb. The Soul Stone is here. It has rested at the bottom of that chasm since before your world.` },
+    { who:'RED SKULL', txt:`But the Stone is not taken. It is <b>paid for</b>. A soul for a soul. Not an enemy, not a stranger: someone you chose, trained, protected. You climbed up with <b>${recruitName}</b>. That is no accident.` },
+    { who:'RED SKULL', txt:`So the cliff made you identical: same breath, same strength, exactly the same moves. No advantage, no excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
+  ];
+  const embers = Array.from({length:22}, ()=>{
+    const l = Math.random()*100, d = 6 + Math.random()*7, dl = -Math.random()*9,
+          vx = (Math.random()*90-45)+'px', sc = .6 + Math.random()*1.1;
+    return `<span class="vm-ember" style="left:${l}%; bottom:-4%; --vx:${vx};
+      animation-duration:${d.toFixed(1)}s; animation-delay:${dl.toFixed(1)}s; transform:scale(${sc.toFixed(2)});"></span>`;
+  }).join('');
+  const sparks = [[6,18],[88,26],[20,84],[76,80],[50,-6]].map((p,i)=>
+    `<span class="spark" style="left:${p[0]}%; top:${p[1]}%; animation-delay:${(i*.45).toFixed(2)}s;"></span>`).join('');
   const ov = document.createElement('div');
-  ov.className = 'cine-overlay epic pivotal vormir-cine';
-  ov.style.cssText = "background:#04030a url('stages/vormir.jpg') center 40%/cover no-repeat;";
-  ov.innerHTML = `<div class="cine-flash"></div>
-    <div style="position:absolute; inset:0; background:radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,110,60,.22), rgba(4,3,10,.86) 70%);"></div>
-    <div class="cine-content" style="position:relative; padding:18px; max-width:680px;">
-      <div class="cine-scope" style="color:#ff8a1f;">${fr?'TRANSMISSION PRIORITAIRE - VORMIR':'PRIORITY TRANSMISSION - VORMIR'}</div>
-      <div class="cine-title" style="color:#ffd0a0;">${fr?"LE SACRIFICE":"THE SACRIFICE"}</div>
-      <p class="lead" style="margin-top:14px; line-height:1.6;">${fr
-        ? `La Pierre de l'Ame n'est pas gardee : elle est <b>exigee</b>. Sur la falaise de Vormir, elle ne se donne qu'a celui qui reste debout. Tu es monte la-haut avec <b>${recruitName}</b>. Vous avez exactement la meme force, les memes coups, le meme souffle. Le vainqueur redescend avec la Pierre. L'autre ne redescend pas.`
-        : `The Soul Stone is not guarded: it is <b>demanded</b>. On the cliff of Vormir it only goes to whoever is left standing. You climbed up with <b>${recruitName}</b>. You have exactly the same strength, the same moves, the same breath. The winner walks down with the Stone. The other one does not walk down.`}</p>
-      <div class="actions" style="margin-top:18px;"><button id="vormirGo">${fr?'MONTER SUR LA FALAISE':'CLIMB THE CLIFF'}</button></div>
+  ov.className = 'cine-overlay epic vormir-cine';
+  ov.innerHTML = `
+    <div class="vm-bg" style="background-image:url('stages/vormir.jpg');"></div>
+    <div class="vm-grade"></div>
+    <div class="vm-fog"></div>
+    ${embers}
+    <div class="vm-flash"></div>
+    <div class="vm-stone" aria-hidden="true">
+      <span class="rays"></span><span class="halo"></span><span class="core"></span>
+      <span class="glint"></span><span class="glint v"></span>${sparks}
+    </div>
+    <div class="vm-wrap">
+      ${skullImg?`<div class="vm-skull"><img src="${skullImg}" alt="Red Skull"></div>`:''}
+      <div class="vm-panel">
+        <div class="vm-scope">${fr?'TRANSMISSION PRIORITAIRE - VORMIR':'PRIORITY TRANSMISSION - VORMIR'}</div>
+        <div class="vm-title">${fr?"LE SACRIFICE":"THE SACRIFICE"}</div>
+        <div class="vm-who" id="vmWho"></div>
+        <div class="vm-line" id="vmLine"></div>
+        <div class="vm-actions"><button id="vormirGo"></button></div>
+      </div>
     </div>`;
   document.body.appendChild(ov);
-  const go = ()=>{ ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420); };
-  ov.querySelector('#vormirGo').onclick = go;
+  const who = ov.querySelector('#vmWho'), line = ov.querySelector('#vmLine'), btn = ov.querySelector('#vormirGo');
+  let i = 0;
+  const paint = ()=>{
+    const b = beats[i];
+    who.textContent = b.who;
+    line.innerHTML = b.txt;
+    line.style.animation = 'none'; void line.offsetWidth; line.style.animation = '';
+    btn.textContent = (i < beats.length-1) ? (fr?'CONTINUER':'CONTINUE') : (fr?'MONTER SUR LA FALAISE':'CLIMB THE CLIFF');
+  };
+  paint();
+  btn.onclick = ()=>{
+    if(i < beats.length-1){ i++; paint(); return; }
+    ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420);
+  };
 }
+
 function startVormirSoul(){
   const fr = S.lang==='fr';
   const foeKey = pick(vormirRecruitKeys());
