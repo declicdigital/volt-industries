@@ -8135,19 +8135,31 @@ function grantEclatShard(shard){
   }
 }
 /* ---------- VORMIR : le sacrifice pour la Pierre de l'Ame ----------
-   Environ 1 carriere sur 10 seulement. Le joueur est convoque sur Vormir avec une de ses recrues :
-   duel a armes strictement egales (memes PV, memes coups), le vainqueur repart avec la Pierre de
-   l'Ame, le vaincu meurt definitivement. L'annonce coupe automatiquement la simulation. */
+   La probabilite de vivre le dilemme depend de la duree de carriere choisie :
+   20 ans ~ 10%, 50 ans ~ 30%, interpole lineairement entre ces points.
+   Le joueur est convoque sur Vormir avec une de ses recrues : duel a armes
+   strictement egales (memes PV, memes coups). Le vainqueur repart avec la
+   Pierre de l'Ame, le vaincu meurt definitivement. L'annonce coupe la simulation. */
 function vormirRecruitKeys(){
   return (S.mentees||[]).map(m=>m.charKey)
     .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
 }
+function computeVormirChance(years){
+  const y = Math.max(5, Math.min(70, years||20));
+  if(y < 15) return 0;
+  if(y < 20) return ((y - 15) / 5) * 0.10; // de 0% a 10% entre 15 et 20 ans
+  if(y <= 50) return 0.10 + ((y - 20) / 30) * 0.20; // de 10% a 30%
+  return 0.30; // plafond
+}
 function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
+  const careerYears = S.years || S.missionsPlan && S.missionsPlan.length || 20;
   if(S.vormirPlanned == null){
-    S.vormirPlanned = Math.random() < 0.10; // 10% des parties seulement
-    /* Jamais en debut de carriere : au minimum la 15e annee, souvent bien plus tard. */
-    S.vormirYear = 15 + Math.floor(Math.random()*16);
+    S.vormirPlanned = Math.random() < computeVormirChance(careerYears);
+    /* Jamais en debut de carriere : au minimum la 15e annee, mais toujours
+       a l'interieur de la duree totale choisie. */
+    const latest = Math.max(15, careerYears);
+    S.vormirYear = 15 + Math.floor(Math.random() * Math.max(1, latest - 14));
   }
   if(!S.vormirPlanned) return false;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
