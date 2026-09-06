@@ -7486,6 +7486,7 @@ function buildCareerPlan(){
   restoreFactionBaseline();
   S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
   S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null; S.civilWarRematch = null;
+  S.vormirDone = false; S.vormirPlanned = null; S.vormirYear = null;
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -8041,6 +8042,71 @@ function grantEclatShard(shard){
     S.pendingVoidCompletion = true;
   }
 }
+/* ---------- VORMIR : le sacrifice pour la Pierre de l'Ame ----------
+   Environ 1 carriere sur 10 seulement. Le joueur est convoque sur Vormir avec une de ses recrues :
+   duel a armes strictement egales (memes PV, memes coups), le vainqueur repart avec la Pierre de
+   l'Ame, le vaincu meurt definitivement. L'annonce coupe automatiquement la simulation. */
+function vormirRecruitKeys(){
+  return (S.mentees||[]).map(m=>m.charKey)
+    .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
+}
+function shouldTriggerVormirSoul(){
+  if(S.vormirDone) return false;
+  if(S.vormirPlanned == null){
+    S.vormirPlanned = Math.random() < 0.10; // 10% des parties seulement
+    S.vormirYear = 5 + Math.floor(Math.random()*12);
+  }
+  if(!S.vormirPlanned) return false;
+  if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
+  if(S.currentYear < (S.vormirYear||5)) return false;
+  if(!vormirRecruitKeys().length) return false;
+  return true;
+}
+function showVormirAnnouncement(recruitName, cb){
+  /* Annonce speciale : elle arrete la simulation de carriere, le joueur doit reprendre la main. */
+  S.careerAuto = false;
+  try{ renderCareerAutoWidget(); }catch(e){}
+  const fr = S.lang==='fr';
+  const ov = document.createElement('div');
+  ov.className = 'cine-overlay epic pivotal vormir-cine';
+  ov.style.cssText = "background:#04030a url('stages/vormir.jpg') center 40%/cover no-repeat;";
+  ov.innerHTML = `<div class="cine-flash"></div>
+    <div style="position:absolute; inset:0; background:radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,110,60,.22), rgba(4,3,10,.86) 70%);"></div>
+    <div class="cine-content" style="position:relative; padding:18px; max-width:680px;">
+      <div class="cine-scope" style="color:#ff8a1f;">${fr?'TRANSMISSION PRIORITAIRE - VORMIR':'PRIORITY TRANSMISSION - VORMIR'}</div>
+      <div class="cine-title" style="color:#ffd0a0;">${fr?"LE SACRIFICE":"THE SACRIFICE"}</div>
+      <p class="lead" style="margin-top:14px; line-height:1.6;">${fr
+        ? `La Pierre de l'Ame n'est pas gardee : elle est <b>exigee</b>. Sur la falaise de Vormir, elle ne se donne qu'a celui qui reste debout. Tu es monte la-haut avec <b>${recruitName}</b>. Vous avez exactement la meme force, les memes coups, le meme souffle. Le vainqueur redescend avec la Pierre. L'autre ne redescend pas.`
+        : `The Soul Stone is not guarded: it is <b>demanded</b>. On the cliff of Vormir it only goes to whoever is left standing. You climbed up with <b>${recruitName}</b>. You have exactly the same strength, the same moves, the same breath. The winner walks down with the Stone. The other one does not walk down.`}</p>
+      <div class="actions" style="margin-top:18px;"><button id="vormirGo">${fr?'MONTER SUR LA FALAISE':'CLIMB THE CLIFF'}</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const go = ()=>{ ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420); };
+  ov.querySelector('#vormirGo').onclick = go;
+}
+function startVormirSoul(){
+  const fr = S.lang==='fr';
+  const foeKey = pick(vormirRecruitKeys());
+  if(!foeKey) return false;
+  const foeName = fr?CHARACTERS[foeKey].fr:CHARACTERS[foeKey].en;
+  S.vormirDone = true;
+  const m = {
+    id:'vormir_soul', type:'combat', danger:3, scope:6, vormirSoul:true, forceDuel:true, charKey:foeKey,
+    tagFr:"VORMIR - PIERRE DE L'AME", tagEn:'VORMIR - SOUL STONE',
+    fr:`Vormir. Le vent porte des voix qui connaissent ton nom. ${foeName}, que tu as forme(e) toi-meme, se tient a l'autre bout de la falaise : la Pierre de l'Ame n'acceptera qu'un seul de vous deux, et l'autre restera ici pour toujours.`,
+    en:`Vormir. The wind carries voices that know your name. ${foeName}, whom you trained yourself, stands at the other end of the cliff: the Soul Stone will accept only one of you, and the other stays here forever.`,
+    location:{ name:'Vormir', type:6 },
+    choices:[
+      { fr:"Le regarder dans les yeux et frapper le premier.", en:"Look them in the eye and strike first.", eff:{courage:6, align:-4} },
+      { fr:"Chercher une faille dans ce que tu lui as appris.", en:"Look for a flaw in what you taught them.", eff:{intelligence:6} },
+      { fr:"Lui demander pardon avant de lever la main.", en:"Ask forgiveness before raising your hand.", eff:{courage:3, popularity:2, align:3} },
+    ]
+  };
+  showVormirAnnouncement(foeName, ()=>{
+    S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  });
+  return true;
+}
 /* CIVIL WAR : environ 3 carrieres sur 5 connaissent la fracture (tiree au sort une fois par carriere),
    au maximum une fois par carriere. Il faut une faction avec assez de combattants ; une trajectoire
    ambigue avance simplement l'annee de la rupture. */
@@ -8367,6 +8433,7 @@ function nextMission(){
   if(!S.peacefulEra && shouldTriggerCivilWar() && startCivilWar()) return;
   if(!S.peacefulEra && shouldTriggerCivilWarRematch() && startCivilWarRematch()) return;
   if(!S.peacefulEra && shouldTriggerGrandEvent() && startGrandEvent()) return;
+  if(!S.peacefulEra && shouldTriggerVormirSoul() && startVormirSoul()) return;
   if(!S.peacefulEra && shouldTriggerEclatQuest() && startEclatQuest()) return;
   if(!S.peacefulEra && shouldTriggerEclatReclaim() && startEclatReclaimQuest()) return;
   if(shouldTriggerCrossedMenteeArc() && startCrossedMenteeArc()){ S.lastCrossedArcYear = S.currentYear; return; }
@@ -9818,6 +9885,8 @@ function buildBattleSquads(foeKey, mission){
     return { allies: r.allies.filter(alive), foes: r.foes.filter(alive) };
   }
 
+  /* VORMIR : duel strictement seul a seul, aucune escouade des deux cotes. */
+  if(mission && mission.vormirSoul) return empty;
   const cap = squadCapForStars();
   if(cap <= 1) return empty; // combats de quartier : toujours 1 contre 1
   const maxExtra = cap - 1; // en plus de toi / du adversaire principal
@@ -10532,7 +10601,17 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
         `<div class="st-flash" style="animation-duration:15s; --st-flashc:radial-gradient(ellipse 60% 44% at 40% 40%, rgba(255,190,255,.45), transparent 62%);"></div>`,
       ]}),
   };
-  function battleStageHTML(scope){
+  function battleStageHTML(scope, mission){
+    /* VORMIR : decor dedie, plaine noire et eclipse rouge, aucun autre calque de ville/cosmos. */
+    if(mission && mission.vormirSoul){
+      return `<div class="btl-set btl-stage st-real stage-vormir" style="--st-base:#05040a; --st-linec:rgba(255,140,80,.22); --st-beamc:rgba(255,140,80,.18);">
+        <div class="st-photo" style="background-image:url('stages/vormir.jpg'); background-position:center 45%;"></div>
+        <div class="st-fog" style="color:rgba(255,150,90,.28);"><i></i><i></i><i></i></div>
+        <div class="st-l">${stMotes(14, 211, 'rgba(255,180,120,.85)')}</div>
+        <div class="st-grade"></div>
+        <div class="st-vig"></div>
+      </div>`;
+    }
     const lvl = Math.max(1, Math.min(7, scope|0 || 1));
     const th = STAGE_THEMES[lvl]();
     return `<div class="btl-set btl-stage st-real stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
@@ -10591,7 +10670,8 @@ function startBattle(mission, done){
      plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
   const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  let myMoves = playerMoves(); const foeMoves = foeMovesFor(foeKey);
+  const vormirMirror = !!(mission && mission.vormirSoul);
+  let myMoves = playerMoves(); const foeMoves = vormirMirror ? playerMoves().slice() : foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
   const squads = buildBattleSquads(foeKey, mission);
@@ -10625,7 +10705,7 @@ function startBattle(mission, done){
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  const foeMaxHp = combatMaxHp(foeKey);
+  const foeMaxHp = vormirMirror ? myMaxHP : combatMaxHp(foeKey);
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
@@ -10669,7 +10749,7 @@ function startBattle(mission, done){
   const ov = document.createElement('div');
   ov.className = 'btl-overlay has-stage intro' + (scope>=7 ? ' cosmic-battle' : (scope>=6 ? ' system-battle' : ''));
   ov.innerHTML = `
-    ${battleStageHTML(scope)}
+    ${battleStageHTML(scope, mission)}
     <div class="btl-epic-flash"></div>
     <div class="btl-spotlight">
       <div class="btl-fighter me">
@@ -11204,7 +11284,7 @@ function startBattle(mission, done){
     const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
     const playerWasKO = win && (allyRoster[0].ko || allyRoster[0].hp<=0);
     let permaDeath = false;
-    if(!win && scope>=6 && !(mission && mission.isTraining)){
+    if(!win && scope>=6 && !(mission && (mission.isTraining || mission.vormirSoul))){
       const deathChance = 0.06 + (scope-6)*0.04;
       if(Math.random() < deathChance){
         permaDeath = true;
@@ -11309,7 +11389,7 @@ function startBattle(mission, done){
     }, wait(500));
   }
   function foeAIMoveFor(fk, actor){
-    const fmFull = fk ? foeMovesFor(fk) : foeMoves;
+    const fmFull = (vormirMirror || !fk) ? foeMoves : foeMovesFor(fk);
     /* Verrou d'un tour : un adversaire ne peut jamais enchainer deux fois de suite le meme coup,
        attaque comme defense - il doit varier, exactement comme le joueur. */
     const fm = (actor && actor._lastMoveFr && fmFull.some(mm=>mm.fr!==actor._lastMoveFr))
@@ -11640,7 +11720,28 @@ function resolveOutcome(mission){
       S.stats.popularity = clamp(S.stats.popularity+6,0,100);
       jarvisSay(S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?'tournant historique':'historic turning point');
     }
-    if(mission.eclatQuest){
+    if(mission.vormirSoul){
+      /* VORMIR : il n'y a pas d'autre issue. Le vainqueur repart avec la Pierre de l'Ame, le vaincu
+         meurt definitivement - y compris le joueur. */
+      const rk = mission.charKey;
+      const rName = rk && CHARACTERS[rk] ? (S.lang==='fr'?CHARACTERS[rk].fr:CHARACTERS[rk].en) : (S.lang==='fr'?'ta recrue':'your recruit');
+      if(win){
+        const soul = ECLATS.find(e=>e.id==='vestige');
+        if(soul) grantEclatShard(soul);
+        if(rk){
+          markCharDead(rk, rName, 'ally');
+          const mt = (S.mentees||[]).find(x=>x.charKey===rk); if(mt) mt.outcome = 'died';
+        }
+        jarvisSay(S.lang==='fr'?`${rName} est reste(e) sur Vormir. La Pierre de l'Ame ne se donne jamais sans ce prix.`:`${rName} stayed on Vormir. The Soul Stone never comes without that price.`,
+                  S.lang==='fr'?`${rName} est reste(e) sur Vormir. La Pierre de l'Ame ne se donne jamais sans ce prix.`:`${rName} stayed on Vormir. The Soul Stone never comes without that price.`,
+                  S.lang==='fr'?'prix du sacrifice':'price of the sacrifice');
+      } else {
+        const causeFr = `tombe(e) sur la falaise de Vormir face a ${rName}, pour la Pierre de l'Ame`;
+        const causeEn = `fallen on the cliff of Vormir against ${rName}, for the Soul Stone`;
+        S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
+        if(rk){ S.eclatHolders = S.eclatHolders || {}; S.eclatHolders['vestige'] = rk; }
+      }
+    } else if(mission.eclatQuest){
       const shard = ECLATS.find(e=>e.id===mission.eclatQuest);
       /* Pas de detenteur invente : si la Gemme n'etait gardee par personne, elle le reste. */
       const guardianKey = mission.charKey || null;
@@ -11739,9 +11840,11 @@ function applyChoice(choice){
   showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
-  if(checkDeath(m)){
-    const causes = DEATH_CAUSES[S.lang]; const cause = causes[Math.floor(Math.random()*causes.length)];
-    S.dead = true; S.deathInfo = { year: S.currentYear, cause };
+  if(S.dead || checkDeath(m)){
+    if(!S.dead){
+      const causes = DEATH_CAUSES[S.lang]; const cause = causes[Math.floor(Math.random()*causes.length)];
+      S.dead = true; S.deathInfo = { year: S.currentYear, cause };
+    }
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
   }
