@@ -8144,36 +8144,79 @@ function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
   if(S.vormirPlanned == null){
     S.vormirPlanned = Math.random() < 0.10; // 10% des parties seulement
-    S.vormirYear = 5 + Math.floor(Math.random()*12);
+    /* Jamais en debut de carriere : au minimum la 15e annee, souvent bien plus tard. */
+    S.vormirYear = 15 + Math.floor(Math.random()*16);
   }
   if(!S.vormirPlanned) return false;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
-  if(S.currentYear < (S.vormirYear||5)) return false;
+  if(S.currentYear < (S.vormirYear||15)) return false;
+  if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
   return true;
 }
 function showVormirAnnouncement(recruitName, cb){
-  /* Annonce speciale : elle arrete la simulation de carriere, le joueur doit reprendre la main. */
+  /* Annonce speciale : Red Skull, gardien de la Pierre, explique lui-meme le prix a payer.
+     Elle arrete la simulation de carriere, le joueur doit reprendre la main. */
   S.careerAuto = false;
   try{ renderCareerAutoWidget(); }catch(e){}
   const fr = S.lang==='fr';
+  const skullImg = (typeof CHAR_POD_IMG!=='undefined' && CHAR_POD_IMG.char13) || (CHAR_IMG && CHAR_IMG.char13) || '';
+  const beats = fr ? [
+    { who:'RED SKULL', txt:`Je t'attendais. Je n'ai plus de corps a moi, plus de camp, plus de guerre : seulement cette falaise, et le devoir de dire la verite a ceux qui montent. La Pierre de l'Ame est ici. Elle repose au fond de ce gouffre depuis avant ton monde.` },
+    { who:'RED SKULL', txt:`Mais la Pierre ne se prend pas. Elle se <b>paie</b>. Une ame pour une ame. Pas un ennemi, pas un inconnu : quelqu'un que tu as choisi, forme, protege. Tu es monte avec <b>${recruitName}</b>. Ce n'est pas un hasard.` },
+    { who:'RED SKULL', txt:`Alors la falaise vous a rendus identiques : meme souffle, meme force, exactement les memes coups. Aucun avantage, aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
+  ] : [
+    { who:'RED SKULL', txt:`I was waiting for you. I have no body of my own left, no side, no war: only this cliff, and the duty to tell the truth to those who climb. The Soul Stone is here. It has rested at the bottom of that chasm since before your world.` },
+    { who:'RED SKULL', txt:`But the Stone is not taken. It is <b>paid for</b>. A soul for a soul. Not an enemy, not a stranger: someone you chose, trained, protected. You climbed up with <b>${recruitName}</b>. That is no accident.` },
+    { who:'RED SKULL', txt:`So the cliff made you identical: same breath, same strength, exactly the same moves. No advantage, no excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
+  ];
+  const embers = Array.from({length:22}, ()=>{
+    const l = Math.random()*100, d = 6 + Math.random()*7, dl = -Math.random()*9,
+          vx = (Math.random()*90-45)+'px', sc = .6 + Math.random()*1.1;
+    return `<span class="vm-ember" style="left:${l}%; bottom:-4%; --vx:${vx};
+      animation-duration:${d.toFixed(1)}s; animation-delay:${dl.toFixed(1)}s; transform:scale(${sc.toFixed(2)});"></span>`;
+  }).join('');
+  const sparks = [[6,18],[88,26],[20,84],[76,80],[50,-6]].map((p,i)=>
+    `<span class="spark" style="left:${p[0]}%; top:${p[1]}%; animation-delay:${(i*.45).toFixed(2)}s;"></span>`).join('');
   const ov = document.createElement('div');
-  ov.className = 'cine-overlay epic pivotal vormir-cine';
-  ov.style.cssText = "background:#04030a url('stages/vormir.jpg') center 40%/cover no-repeat;";
-  ov.innerHTML = `<div class="cine-flash"></div>
-    <div style="position:absolute; inset:0; background:radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,110,60,.22), rgba(4,3,10,.86) 70%);"></div>
-    <div class="cine-content" style="position:relative; padding:18px; max-width:680px;">
-      <div class="cine-scope" style="color:#ff8a1f;">${fr?'TRANSMISSION PRIORITAIRE - VORMIR':'PRIORITY TRANSMISSION - VORMIR'}</div>
-      <div class="cine-title" style="color:#ffd0a0;">${fr?"LE SACRIFICE":"THE SACRIFICE"}</div>
-      <p class="lead" style="margin-top:14px; line-height:1.6;">${fr
-        ? `La Pierre de l'Ame n'est pas gardee : elle est <b>exigee</b>. Sur la falaise de Vormir, elle ne se donne qu'a celui qui reste debout. Tu es monte la-haut avec <b>${recruitName}</b>. Vous avez exactement la meme force, les memes coups, le meme souffle. Le vainqueur redescend avec la Pierre. L'autre ne redescend pas.`
-        : `The Soul Stone is not guarded: it is <b>demanded</b>. On the cliff of Vormir it only goes to whoever is left standing. You climbed up with <b>${recruitName}</b>. You have exactly the same strength, the same moves, the same breath. The winner walks down with the Stone. The other one does not walk down.`}</p>
-      <div class="actions" style="margin-top:18px;"><button id="vormirGo">${fr?'MONTER SUR LA FALAISE':'CLIMB THE CLIFF'}</button></div>
+  ov.className = 'cine-overlay epic vormir-cine';
+  ov.innerHTML = `
+    <div class="vm-bg" style="background-image:url('stages/vormir.jpg');"></div>
+    <div class="vm-grade"></div>
+    <div class="vm-fog"></div>
+    ${embers}
+    <div class="vm-flash"></div>
+    <div class="vm-stone" aria-hidden="true">
+      <span class="rays"></span><span class="halo"></span><span class="core"></span>
+      <span class="glint"></span><span class="glint v"></span>${sparks}
+    </div>
+    <div class="vm-wrap">
+      ${skullImg?`<div class="vm-skull"><img src="${skullImg}" alt="Red Skull"></div>`:''}
+      <div class="vm-panel">
+        <div class="vm-scope">${fr?'TRANSMISSION PRIORITAIRE - VORMIR':'PRIORITY TRANSMISSION - VORMIR'}</div>
+        <div class="vm-title">${fr?"LE SACRIFICE":"THE SACRIFICE"}</div>
+        <div class="vm-who" id="vmWho"></div>
+        <div class="vm-line" id="vmLine"></div>
+        <div class="vm-actions"><button id="vormirGo"></button></div>
+      </div>
     </div>`;
   document.body.appendChild(ov);
-  const go = ()=>{ ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420); };
-  ov.querySelector('#vormirGo').onclick = go;
+  const who = ov.querySelector('#vmWho'), line = ov.querySelector('#vmLine'), btn = ov.querySelector('#vormirGo');
+  let i = 0;
+  const paint = ()=>{
+    const b = beats[i];
+    who.textContent = b.who;
+    line.innerHTML = b.txt;
+    line.style.animation = 'none'; void line.offsetWidth; line.style.animation = '';
+    btn.textContent = (i < beats.length-1) ? (fr?'CONTINUER':'CONTINUE') : (fr?'MONTER SUR LA FALAISE':'CLIMB THE CLIFF');
+  };
+  paint();
+  btn.onclick = ()=>{
+    if(i < beats.length-1){ i++; paint(); return; }
+    ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420);
+  };
 }
+
 function startVormirSoul(){
   const fr = S.lang==='fr';
   const foeKey = pick(vormirRecruitKeys());
