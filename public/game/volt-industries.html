@@ -11284,7 +11284,7 @@ function startBattle(mission, done){
     const hpPct = clamp(allyRoster[0].hp/allyRoster[0].maxHp*100, 0, 100);
     const playerWasKO = win && (allyRoster[0].ko || allyRoster[0].hp<=0);
     let permaDeath = false;
-    if(!win && scope>=6 && !(mission && mission.isTraining)){
+    if(!win && scope>=6 && !(mission && (mission.isTraining || mission.vormirSoul))){
       const deathChance = 0.06 + (scope-6)*0.04;
       if(Math.random() < deathChance){
         permaDeath = true;
