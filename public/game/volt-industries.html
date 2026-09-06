@@ -7613,7 +7613,8 @@ function buildCareerPlan(){
   const gemGuards = shuffle(otherCharKeys().slice());
   S.eclatHolders = {};
   const heldCount = Math.random() < 0.5 ? 1 : 2;
-  shuffle(ECLATS.map(e=>e.id)).slice(0, heldCount).forEach((gid,i)=>{
+  /* La Pierre de l'Ame ('vestige') est hors de ce tirage : elle ne s'obtient QUE sur Vormir. */
+  shuffle(ECLATS.map(e=>e.id).filter(id=>id!=='vestige')).slice(0, heldCount).forEach((gid,i)=>{
     const g = gemGuards[i % Math.max(1,gemGuards.length)];
     if(g) S.eclatHolders[gid] = g;
   });
@@ -7988,7 +7989,8 @@ function startEclatQuest(){
   const starsNow = computeStars();
   if(nextGemRank < GEM_STAR_REQ.length && starsNow < GEM_STAR_REQ[nextGemRank]) return false;
   const holderOf = (id)=>((S.eclatHolders||{})[id] || null);
-  const avail = ECLATS.filter(e=>!owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
+  /* La Pierre de l'Ame ne peut jamais tomber d'une quete ordinaire : Vormir est le seul chemin. */
+  const avail = ECLATS.filter(e=>e.id!=='vestige' && !owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
   const shard = pick(avail);
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
@@ -8036,7 +8038,7 @@ function shouldTriggerEclatReclaim(){
 }
 function startEclatReclaimQuest(){
   const holders = S.eclatHolders || {};
-  const ids = Object.keys(holders).filter(id=>CHARACTERS[holders[id]]);
+  const ids = Object.keys(holders).filter(id=>id!=='vestige' && CHARACTERS[holders[id]]);
   if(!ids.length) return false;
   const shardId = pick(ids);
   const shard = ECLATS.find(e=>e.id===shardId);
