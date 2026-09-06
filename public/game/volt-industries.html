@@ -11720,7 +11720,28 @@ function resolveOutcome(mission){
       S.stats.popularity = clamp(S.stats.popularity+6,0,100);
       jarvisSay(S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?"Cette crise restera dans les annales. Ton dossier vient de changer de dimension.":"This crisis will be remembered. Your file just changed dimension.", S.lang==='fr'?'tournant historique':'historic turning point');
     }
-    if(mission.eclatQuest){
+    if(mission.vormirSoul){
+      /* VORMIR : il n'y a pas d'autre issue. Le vainqueur repart avec la Pierre de l'Ame, le vaincu
+         meurt definitivement - y compris le joueur. */
+      const rk = mission.charKey;
+      const rName = rk && CHARACTERS[rk] ? (S.lang==='fr'?CHARACTERS[rk].fr:CHARACTERS[rk].en) : (S.lang==='fr'?'ta recrue':'your recruit');
+      if(win){
+        const soul = ECLATS.find(e=>e.id==='vestige');
+        if(soul) grantEclatShard(soul);
+        if(rk){
+          markCharDead(rk, rName, 'ally');
+          const mt = (S.mentees||[]).find(x=>x.charKey===rk); if(mt) mt.outcome = 'died';
+        }
+        jarvisSay(S.lang==='fr'?`${rName} est reste(e) sur Vormir. La Pierre de l'Ame ne se donne jamais sans ce prix.`:`${rName} stayed on Vormir. The Soul Stone never comes without that price.`,
+                  S.lang==='fr'?`${rName} est reste(e) sur Vormir. La Pierre de l'Ame ne se donne jamais sans ce prix.`:`${rName} stayed on Vormir. The Soul Stone never comes without that price.`,
+                  S.lang==='fr'?'prix du sacrifice':'price of the sacrifice');
+      } else {
+        const causeFr = `tombe(e) sur la falaise de Vormir face a ${rName}, pour la Pierre de l'Ame`;
+        const causeEn = `fallen on the cliff of Vormir against ${rName}, for the Soul Stone`;
+        S.dead = true; S.deathInfo = { year:S.currentYear, cause: S.lang==='fr'?causeFr:causeEn };
+        if(rk){ S.eclatHolders = S.eclatHolders || {}; S.eclatHolders['vestige'] = rk; }
+      }
+    } else if(mission.eclatQuest){
       const shard = ECLATS.find(e=>e.id===mission.eclatQuest);
       /* Pas de detenteur invente : si la Gemme n'etait gardee par personne, elle le reste. */
       const guardianKey = mission.charKey || null;
@@ -11819,9 +11840,11 @@ function applyChoice(choice){
   showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
-  if(checkDeath(m)){
-    const causes = DEATH_CAUSES[S.lang]; const cause = causes[Math.floor(Math.random()*causes.length)];
-    S.dead = true; S.deathInfo = { year: S.currentYear, cause };
+  if(S.dead || checkDeath(m)){
+    if(!S.dead){
+      const causes = DEATH_CAUSES[S.lang]; const cause = causes[Math.floor(Math.random()*causes.length)];
+      S.dead = true; S.deathInfo = { year: S.currentYear, cause };
+    }
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
   }
