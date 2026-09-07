@@ -8138,6 +8138,20 @@ const ECLAT_HOLDERS = { derive:'vipera', murmure:'lorelei', fracture:'boomnpc', 
 /* Lieux/quetes ou une Gemme sans detenteur peut refaire surface. */
 const ECLAT_SITES_FR = ["un temple enfoui sous les glaces","une epave orbitale a la derive","un site de fouilles interdit","un laboratoire abandonne","une faille dimensionnelle instable","un sanctuaire oublie"];
 const ECLAT_SITES_EN = ["a temple buried under the ice","a drifting orbital wreck","a forbidden excavation site","an abandoned laboratory","an unstable dimensional rift","a forgotten sanctuary"];
+/* Si une Gemme est detenue par quelqu'un, c'est TOUJOURS cette personne que l'on affronte pour
+   l'obtenir. Si ce detenteur meurt, la Gemme passe a un autre personnage vivant (jamais dans le
+   vide) - sauf la Pierre de l'Ame, exclusivement liee a Vormir. */
+function syncEclatHolders(){
+  const H = S.eclatHolders = S.eclatHolders || {};
+  Object.keys(H).forEach(id=>{
+    const k = H[id];
+    if(id==='vestige') return;
+    if(!k || !CHARACTERS[k] || isCharDead(k)){
+      const pool = otherCharKeys().filter(x=>x!==S.playerCharKey && !isCharDead(x));
+      if(pool.length) H[id] = pick(pool); else delete H[id];
+    }
+  });
+}
 function startEclatQuest(){
   const owned = S.eclats||[];
   /* Chaque Gemme suivante demande davantage d'etoiles dans la carriere en cours : la 1ere des 4
@@ -8146,6 +8160,7 @@ function startEclatQuest(){
   const nextGemRank = owned.length; // 0-indexe : 0 = ce sera la 1ere gemme, etc.
   const starsNow = computeStars();
   if(nextGemRank < GEM_STAR_REQ.length && starsNow < GEM_STAR_REQ[nextGemRank]) return false;
+  syncEclatHolders();
   const holderOf = (id)=>((S.eclatHolders||{})[id] || null);
   /* La Pierre de l'Ame ne peut jamais tomber d'une quete ordinaire : Vormir est le seul chemin. */
   const avail = ECLATS.filter(e=>e.id!=='vestige' && !owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
@@ -8187,7 +8202,7 @@ function startEclatQuest(){
       ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
       : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
   const m = {
-    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey,
+    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
     tagFr: guardianKey ? 'Quete d\'Infinite' : 'Site d\'Infinite',
     tagEn: guardianKey ? 'Infinity Quest' : 'Infinity Site',
     fr:introFr, en:introEn,
@@ -8446,8 +8461,9 @@ function shouldTriggerEclatReclaim(){
   return Math.random() < 0.06;
 }
 function startEclatReclaimQuest(){
+  syncEclatHolders();
   const holders = S.eclatHolders || {};
-  const ids = Object.keys(holders).filter(id=>id!=='vestige' && CHARACTERS[holders[id]]);
+  const ids = Object.keys(holders).filter(id=>id!=='vestige' && CHARACTERS[holders[id]] && !isCharDead(holders[id]));
   if(!ids.length) return false;
   const shardId = pick(ids);
   const shard = ECLATS.find(e=>e.id===shardId);
@@ -12346,7 +12362,8 @@ function resolveOutcome(mission){
            personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
            dans ce domaine retombe entierement a zero. */
         S.eclatHolders = S.eclatHolders || {};
-        const opponentClaims = guardianKey && Math.random() < 0.80;
+        /* Si l'adversaire la detenait deja, il la conserve forcement. */
+        const opponentClaims = guardianKey && (mission.eclatHadHolder || Math.random() < 0.80);
         if(opponentClaims){
           S.eclatHolders[shard.id] = guardianKey;
         } else {
