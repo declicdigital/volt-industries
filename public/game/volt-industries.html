@@ -4469,7 +4469,7 @@ function foeStrength(foeKey, mission){
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
   /* Gardiens de Gemme : nettement plus durs que n'importe quel adversaire de mission classique. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 22 : 0;
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 15 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
@@ -8397,7 +8397,7 @@ function stoneHeraldBeats(id, phase, heraldName, foeName, won){
   const lines = phase === 'intro' ? set.intro : set.out;
   return lines.map(txt=>({ who:heraldName, txt }));
 }
-function showStoneHerald(id, phase, foeName, cb){
+function showStoneHerald(id, phase, foeName, cb, won){
   const shard = ECLATS.find(e=>e.id===id);
   const cfg = STONE_HERALDS[id];
   if(!shard || !cfg){ cb(); return; }
@@ -8405,7 +8405,10 @@ function showStoneHerald(id, phase, foeName, cb){
   const hKey = stoneHeraldKey(id);
   const hChar = CHARACTERS[hKey];
   const heraldName = hChar ? (fr ? hChar.fr : hChar.en).toUpperCase() : '';
-  const beats = stoneHeraldBeats(id, phase, heraldName, foeName, phase !== 'intro');
+  /* La victoire n'est jamais supposee : hors de l'intro, si "won" n'est pas explicitement precise,
+     on considere que c'est un echec plutot que de risquer d'afficher a tort un texte de triomphe. */
+  const actuallyWon = phase==='intro' ? true : !!won;
+  const beats = stoneHeraldBeats(id, phase, heraldName, foeName, actuallyWon);
   if(!beats.length){ cb(); return; }
   try{ AudioEngine.playSting('gem'); }catch(e){}
   const img = heraldPortrait(hKey);
@@ -8420,7 +8423,7 @@ function showStoneHerald(id, phase, foeName, cb){
   const stoneName = fr ? shard.frName : shard.enName;
   const title = phase === 'intro'
     ? (fr ? "L'EPREUVE" : 'THE TRIAL')
-    : (fr ? 'LA PIERRE T\'ACCEPTE' : 'THE STONE ACCEPTS YOU');
+    : (actuallyWon ? (fr ? 'LA PIERRE T\'ACCEPTE' : 'THE STONE ACCEPTS YOU') : (fr ? 'LA PIERRE TE REJETTE' : 'THE STONE REJECTS YOU'));
   const place = fr ? cfg.placeFr : cfg.placeEn;
   const ov = document.createElement('div');
   ov.className = 'cine-overlay epic vormir-cine stone-cine';
@@ -11364,7 +11367,7 @@ function startBattle(mission, done){
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   /* Combat de Gemme : le gardien encaisse et frappe beaucoup plus fort. */
   const stoneFight = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
-  const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * (stoneFight ? 1.6 : 1));
+  const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * (stoneFight ? 1.4 : 1));
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
@@ -12109,7 +12112,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * (stoneFight ? 1.5 : 1));
+    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * (stoneFight ? 1.35 : 1));
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
@@ -12411,18 +12414,18 @@ function resolveOutcome(mission){
         if(STONE_HERALDS[shard.id]) S.pendingStoneHeraldFail = shard.id;
         /* Defaite : la plupart du temps (80%), l'adversaire precis que tu viens d'affronter
            devient le nouveau detenteur - il faudra le/la battre pour la recuperer. Sinon (20%),
-           personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
-           dans ce domaine retombe entierement a zero. */
+           personne ne la reclame. Dans TOUS les cas, echouer remet ta progression dans ce domaine
+           entierement a zero - pas de seconde chance a moitie prix. */
         S.eclatHolders = S.eclatHolders || {};
         /* Si l'adversaire la detenait deja, il la conserve forcement. */
         const opponentClaims = guardianKey && (mission.eclatHadHolder || Math.random() < 0.80);
         if(opponentClaims){
           S.eclatHolders[shard.id] = guardianKey;
-        } else {
-          if(S.eclatHolders[shard.id]) delete S.eclatHolders[shard.id];
-          const res = ensureEclatRes();
-          if(typeof res[shard.id]==='number') res[shard.id] = 0;
+        } else if(S.eclatHolders[shard.id]){
+          delete S.eclatHolders[shard.id];
         }
+        const res = ensureEclatRes();
+        if(typeof res[shard.id]==='number') res[shard.id] = 0;
         const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'ton adversaire':'your opponent');
         const msgFr = opponentClaims
           ? `${guardName} l'emporte et s'empare de ${shard.frName}. Il faudra le/la vaincre pour l'obtenir.`
@@ -12510,7 +12513,7 @@ function applyChoice(choice){
   if(S.pendingStoneHeraldFail){
     const failId = S.pendingStoneHeraldFail; S.pendingStoneHeraldFail = null;
     if(!S.pendingEclatCinematic){
-      showStoneHerald(failId, 'outro', null, ()=>{ handleZoneCheckAndContinue(); });
+      showStoneHerald(failId, 'outro', null, ()=>{ handleZoneCheckAndContinue(); }, false);
       return;
     }
   }
@@ -12524,7 +12527,7 @@ function applyChoice(choice){
         if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
         handleZoneCheckAndContinue();
       });
-      if(heraldId) showStoneHerald(heraldId, 'outro', null, runGem); else runGem();
+      if(heraldId) showStoneHerald(heraldId, 'outro', null, runGem, true); else runGem();
       return;
     }
   }
