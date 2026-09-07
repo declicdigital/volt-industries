@@ -7577,6 +7577,7 @@ function buildCareerPlan(){
   S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
   S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null; S.civilWarRematch = null;
   S.vormirDone = false; S.vormirPlanned = null; S.vormirYear = null; S.vormirRolledYear = null;
+  S.eclatRes = { derive:0, murmure:0, fracture:0, fureur:0, attente:0, vestige:0 };
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -11889,6 +11890,7 @@ function applyMentorChoice(choice, name){
   const label = (S.lang==='fr' ? choice.fr : choice.en) + (convertMsgFr ? ' ' + (S.lang==='fr'?convertMsgFr:convertMsgEn) : '');
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:finalRecruit });
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { recruit: finalRecruit==='hero'||finalRecruit==='villain', death: finalRecruit==='died' })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   if(convertMsgFr) jarvisSay(convertMsgFr, convertMsgEn, S.lang==='fr'?'tentative de conversion':'conversion attempt');
   handleZoneCheckAndContinue();
@@ -12049,6 +12051,7 @@ function applyChoice(choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { alignDelta, scope: m && m.scope })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
@@ -13630,6 +13633,7 @@ function applyConvChoice(conv, choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   if(eff.rom){ handleRomanceEffect(eff.rom, conv); }
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, {})); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   const oldZone = S.lastZone;
