@@ -8216,30 +8216,22 @@ function vormirRecruitKeys(){
   return (S.mentees||[]).map(m=>m.charKey)
     .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
 }
-function computeVormirChance(years){
-  const y = Math.max(5, Math.min(70, years||20));
-  if(y < 15) return 0;
-  if(y < 20) return ((y - 15) / 5) * 0.10; // de 0% a 10% entre 15 et 20 ans
-  if(y <= 50) return 0.10 + ((y - 20) / 30) * 0.20; // de 10% a 30%
-  return 0.30; // plafond
+/* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
+   resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
+   trahies. Une carriere longue laisse simplement plus d'occasions d'atteindre ce seuil. */
+function vormirSoulProgress(){
+  const res = ensureEclatRes();
+  const bond = (S.mentees||[]).length * 4 + Object.keys(S.rel||{}).reduce((a,k)=>a+Math.abs(S.rel[k]||0)*0.5, 0);
+  return (res.vestige||0) + bond;
 }
 function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
-  const careerYears = S.years || S.missionsPlan && S.missionsPlan.length || 20;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
   if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
-  /* Tirage annuel (comme pour les autres pierres) : la chance globale de la
-     carriere est repartie sur les annees eligibles (15 -> fin), donc rien n'est
-     fige au depart, mais le total reste ~10% a 20 ans et ~30% a 50 ans. */
-  const total = computeVormirChance(careerYears);
-  if(total <= 0) return false;
-  const eligible = Math.max(1, Math.max(15, careerYears) - 14);
-  const perYear = 1 - Math.pow(1 - total, 1 / eligible);
-  if(S.vormirRolledYear === S.currentYear) return false;
-  S.vormirRolledYear = S.currentYear;
-  return Math.random() < perYear;
+  return vormirSoulProgress() >= VESTIGE_RES_THRESHOLD;
 }
+
 
 function showVormirAnnouncement(recruitName, cb){
   /* Annonce speciale : Red Skull, gardien de la Pierre, explique lui-meme le prix a payer.
