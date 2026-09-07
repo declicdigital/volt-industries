@@ -8138,6 +8138,20 @@ const ECLAT_HOLDERS = { derive:'vipera', murmure:'lorelei', fracture:'boomnpc', 
 /* Lieux/quetes ou une Gemme sans detenteur peut refaire surface. */
 const ECLAT_SITES_FR = ["un temple enfoui sous les glaces","une epave orbitale a la derive","un site de fouilles interdit","un laboratoire abandonne","une faille dimensionnelle instable","un sanctuaire oublie"];
 const ECLAT_SITES_EN = ["a temple buried under the ice","a drifting orbital wreck","a forbidden excavation site","an abandoned laboratory","an unstable dimensional rift","a forgotten sanctuary"];
+/* Si une Gemme est detenue par quelqu'un, c'est TOUJOURS cette personne que l'on affronte pour
+   l'obtenir. Si ce detenteur meurt, la Gemme passe a un autre personnage vivant (jamais dans le
+   vide) - sauf la Pierre de l'Ame, exclusivement liee a Vormir. */
+function syncEclatHolders(){
+  const H = S.eclatHolders = S.eclatHolders || {};
+  Object.keys(H).forEach(id=>{
+    const k = H[id];
+    if(id==='vestige') return;
+    if(!k || !CHARACTERS[k] || isCharDead(k)){
+      const pool = otherCharKeys().filter(x=>x!==S.playerCharKey && !isCharDead(x));
+      if(pool.length) H[id] = pick(pool); else delete H[id];
+    }
+  });
+}
 function startEclatQuest(){
   const owned = S.eclats||[];
   /* Chaque Gemme suivante demande davantage d'etoiles dans la carriere en cours : la 1ere des 4
