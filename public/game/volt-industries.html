@@ -8056,7 +8056,15 @@ function startEclatQuest(){
   /* La Pierre de l'Ame ne peut jamais tomber d'une quete ordinaire : Vormir est le seul chemin. */
   const avail = ECLATS.filter(e=>e.id!=='vestige' && !owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
-  const shard = pick(avail);
+  /* La Gemme qui se manifeste est celle dont la resonance est la plus haute : c'est le fruit
+     direct des choix du joueur, pas un tirage. */
+  const res = ensureEclatRes();
+  const lead = avail.slice().sort((a,b)=>(res[b.id]||0)-(res[a.id]||0))[0];
+  const shard = lead || avail[0];
+  /* La quete consomme l'essentiel de la resonance accumulee : en cas d'echec, il faudra
+     de nouveau orienter ses choix vers ce domaine pour provoquer une seconde chance. */
+  res[shard.id] = Math.round((res[shard.id]||0) * 0.35);
+
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
