@@ -8146,6 +8146,7 @@ function startEclatQuest(){
   const nextGemRank = owned.length; // 0-indexe : 0 = ce sera la 1ere gemme, etc.
   const starsNow = computeStars();
   if(nextGemRank < GEM_STAR_REQ.length && starsNow < GEM_STAR_REQ[nextGemRank]) return false;
+  syncEclatHolders();
   const holderOf = (id)=>((S.eclatHolders||{})[id] || null);
   /* La Pierre de l'Ame ne peut jamais tomber d'une quete ordinaire : Vormir est le seul chemin. */
   const avail = ECLATS.filter(e=>e.id!=='vestige' && !owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
