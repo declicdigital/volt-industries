@@ -12362,7 +12362,8 @@ function resolveOutcome(mission){
            personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
            dans ce domaine retombe entierement a zero. */
         S.eclatHolders = S.eclatHolders || {};
-        const opponentClaims = guardianKey && Math.random() < 0.80;
+        /* Si l'adversaire la detenait deja, il la conserve forcement. */
+        const opponentClaims = guardianKey && (mission.eclatHadHolder || Math.random() < 0.80);
         if(opponentClaims){
           S.eclatHolders[shard.id] = guardianKey;
         } else {
