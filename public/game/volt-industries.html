@@ -8151,9 +8151,29 @@ const ECLAT_CINE_CONFIG = {
 /* Rangee persistante des eclats obtenus, affichee en haut a droite (dans le badge de rang) :
    un icone par eclat, cote a cote dans l'ordre d'obtention, jusqu'a 6. Un eclat perdu/vole
    disparait immediatement de cette rangee puisqu'elle se recalcule a chaque rendu depuis S.eclats. */
+/* Jauge de resonance : montre au joueur vers quelle Gemme ses choix le poussent actuellement. */
+function eclatResonanceHTML(){
+  if((S.eclats||[]).length >= ECLATS.length) return '';
+  const res = ensureEclatRes();
+  const lead = eclatResLeader(true);
+  if(!lead) return '';
+  const val = res[lead]||0;
+  if(val < 6) return '';
+  const shard = ECLATS.find(e=>e.id===lead);
+  if(!shard) return '';
+  const pctRaw = Math.min(100, Math.round(val / eclatResThreshold() * 100));
+  const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
+  const label = S.lang==='fr' ? 'Resonance' : 'Resonance';
+  return `<div class="eclat-res-row" title="${label} : ${domain}" style="display:flex; align-items:center; justify-content:flex-end; gap:5px; margin-top:5px;">
+    <span style="font-size:8px; letter-spacing:1px; font-weight:900; color:${shard.col};">${label.toUpperCase()} ${domain.toUpperCase()}</span>
+    <span style="width:52px; height:4px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; display:inline-block;">
+      <i style="display:block; height:100%; width:${pctRaw}%; background:${shard.col}; box-shadow:0 0 8px ${shard.col};"></i>
+    </span>
+  </div>`;
+}
 function eclatBadgeRowHTML(){
   const owned = S.eclats || [];
-  if(!owned.length) return '';
+  if(!owned.length) return eclatResonanceHTML();
   const chips = owned.map(id=>{
     const shard = ECLATS.find(e=>e.id===id);
     if(!shard) return '';
@@ -8161,7 +8181,7 @@ function eclatBadgeRowHTML(){
     return `<span class="gem-chip" title="${name}" style="--gc:${shard.col};">${gemSVG(shard, 20)}</span>`;
   }).join('');
   const full = owned.length >= ECLATS.length;
-  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>`;
+  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>${eclatResonanceHTML()}`;
 }
 function showEclatCinematic(shard, cb){
   AudioEngine.playSting('gem');
