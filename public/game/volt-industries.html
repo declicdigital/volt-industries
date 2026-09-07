@@ -4579,9 +4579,7 @@ function computeStars(){
    Plus de tirage aleatoire d'eligibilite, plus de seuil d'alignement, plus d'obtention automatique
    a 40 ans : ces anciennes conditions sont totalement retirees. */
 function eighthStarQualifies(){
-  if((S.eclats||[]).length >= ECLATS.length) return true;
-  if(computeStars() >= 7 && (S.currentYear||1) >= 50) return true;
-  return false;
+  return (S.eclats||[]).length >= ECLATS.length;
 }
 function tryGrantEighthStar(){
   if(S.eighthStar) return false;
@@ -7642,6 +7640,18 @@ function buildCareerPlan(){
   S.primeJitter = {};
   S.powerBreakthrough = {};
   S.npcStatVariance = {}; // Force/Vitesse/QI/Resistance des PNJ varient aussi d'une carriere a l'autre
+  /* Chaque carriere est plus ou moins orientee vers certains domaines : un multiplicateur tire au
+     hasard par domaine (entre 0.4x et 2x), different a chaque nouvelle partie. Une carriere peut
+     ainsi se retrouver clairement penchee vers la Realite et l'Esprit, quasi aveugle au Temps -
+     plutot que les 5 domaines qui avancent tous au meme rythme en parallele. */
+  S.gemAffinity = {};
+  ['fracture','murmure','derive','attente'].forEach(id=>{ S.gemAffinity[id] = 0.4 + Math.random()*1.6; });
+  /* Difficulte des seuils, totalement independante pour chaque domaine (y compris Pouvoir et Ame) -
+     pas un seul chiffre applique a tout : des milliers de combinaisons possibles, une carriere peut
+     avoir un seuil de Realite tres bas et un seuil de Temps tres haut, sans aucune correlation entre
+     les deux. */
+  S.gemThresholdMult = {};
+  ['fureur','fracture','murmure','derive','attente','vestige'].forEach(id=>{ S.gemThresholdMult[id] = 0.5 + Math.random()*1.3; });
   S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0);
@@ -8069,7 +8079,7 @@ function gauntletHTML(size){
    seul moyen d'obtenir une Gemme rapidement ; viser les 6 a la fois demande des styles de jeu
    contradictoires, ce qui reste rare sur une seule carriere. */
 const ECLAT_RES_IDS = ['derive','murmure','fracture','fureur','attente','vestige'];
-const GEM_THRESHOLDS = { fureur:25, fracture:30, murmure:24, derive:22, attente:26 }; // vestige : voir vormirSoulProgress
+const GEM_THRESHOLDS = { fureur:25, fracture:23, murmure:18, derive:16, attente:22 }; // vestige : voir vormirSoulProgress
 function ensureEclatRes(){
   if(!S.eclatRes || typeof S.eclatRes !== 'object'){
     S.eclatRes = {}; ECLAT_RES_IDS.forEach(id=>{ S.eclatRes[id] = 0; });
@@ -8083,7 +8093,7 @@ function gainEclatRes(id, amt){
   if((S.eclats||[]).includes(id)) return; // deja obtenue : plus rien a accumuler
   res[id] = Math.max(0, res[id] + amt);
 }
-function eclatResThreshold(id){ return GEM_THRESHOLDS[id] || 70; }
+function eclatResThreshold(id){ return Math.round((GEM_THRESHOLDS[id] || 70) * ((S.gemThresholdMult||{})[id]||1)); }
 /* Serie de victoires sans la moindre defaite - alimente le Pouvoir. Une seule perte remet le
    compteur a zero : il faut tenir la distance sans jamais flancher. Appele depuis la resolution
    de chaque combat. */
@@ -8097,10 +8107,11 @@ function feedPowerStreak(win){
    chaque increment vaut pour UN accomplissement reel, pas un score invisible. */
 function feedEclatResonance(eff, ctx){
   eff = eff || {}; ctx = ctx || {};
-  if(ctx.deceit) gainEclatRes('fracture', 1);
-  if(ctx.patient) gainEclatRes('attente', 1);
-  if(ctx.investigation && ctx.battleWin!==false) gainEclatRes('murmure', 1);
-  if((ctx.scope||1) >= 5) gainEclatRes('derive', 1);
+  const aff = S.gemAffinity || {};
+  if(ctx.deceit) gainEclatRes('fracture', 1 * (aff.fracture||1));
+  if(ctx.patient) gainEclatRes('attente', 1 * (aff.attente||1));
+  if(ctx.investigation && ctx.battleWin!==false) gainEclatRes('murmure', 1 * (aff.murmure||1));
+  if((ctx.scope||1) >= 5) gainEclatRes('derive', 1 * (aff.derive||1));
 }
 /* Detecte l'intention d'un choix depuis son libelle, pour nourrir le bon domaine. */
 function eclatCtxFromChoice(choice, extra){
@@ -8586,6 +8597,7 @@ function grantEclatShard(shard){
   if(S.eclats.length >= ECLATS.length && !S.voidCompletionDone){
     S.voidCompletionDone = true;
     S.eighthStar = true;
+    S.eighthStarByGemmes = true;
     S.pendingVoidCompletion = true;
   }
 }
@@ -8604,7 +8616,7 @@ function vormirRecruitKeys(){
 /* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
    resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
    trahies. Une carriere longue laisse simplement plus d'occasions d'atteindre ce seuil. */
-const VESTIGE_RES_THRESHOLD = 380; // seuil de liens requis pour etre convoque sur Vormir
+const VESTIGE_RES_THRESHOLD = 620; // seuil de liens requis pour etre convoque sur Vormir
 function vormirSoulProgress(){
   const mentBond = (S.mentees||[]).length * 5;
   const romBond = (S.romance && S.romance.charKey) ? 15 : 0;
@@ -8616,7 +8628,7 @@ function shouldTriggerVormirSoul(){
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
   if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
-  return vormirSoulProgress() >= VESTIGE_RES_THRESHOLD;
+  return vormirSoulProgress() >= VESTIGE_RES_THRESHOLD * ((S.gemThresholdMult||{}).vestige||1);
 }
 
 
@@ -9471,6 +9483,9 @@ function showVoidCompletionCinematic(cb){
   const sub = villain
     ? (isFr?"Les 6 Pierres d'Infinite sont serties dans ton Gantelet. Tout ce qui tenait encore debout s'effondre.":"All 6 Infinity Stones are set in your Gauntlet. Everything still standing collapses.")
     : (isFr?"Les 6 Pierres d'Infinite sont reunies dans le Gantelet. L'equilibre tient enfin, grace a toi.":"All 6 Infinity Stones are united in the Gauntlet. Balance finally holds, because of you.");
+  /* Moment charniere : la simulation automatique s'arrete net ici, un vrai choix s'impose - pas
+     de defilement automatique meme en mode auto, meme chose ne se decide pas toute seule. */
+  S.careerAuto = false;
   const overlay = document.createElement('div'); overlay.className = 'cine-overlay eighth-star void-complete ' + (villain?'void-villain':'void-hero');
   overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-rays"></div><div class="star8-burst"></div>${villain?'<div class="void-shatter"></div>':''}
     <div class="cine-content">
@@ -9479,18 +9494,21 @@ function showVoidCompletionCinematic(cb){
       <div class="cine-scope">${isFr?"LES 6 PIERRES D'INFINITE REUNIES":'ALL 6 INFINITY STONES UNITED'}</div>
       <div class="cine-title">${title}</div>
       <p class="star8-sub">${sub}</p>
+      <p class="star8-sub" style="margin-top:6px; opacity:.85;">${isFr?"Continuer ta carriere, ou t'arreter ici, au sommet ?":"Continue your career, or stop here, at the summit?"}</p>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px;">
         <button class="btl-move" id="voidDownload" style="min-width:220px; border-color:${villain?'#c04dff':'#ff5fa8'}; background:${villain?'rgba(192,77,255,.12)':'rgba(255,95,168,.12)'};"><b>${isFr?'TELECHARGER LA CARTE':'DOWNLOAD THE CARD'}</b></button>
-        <button class="btl-move" id="voidContinue" style="min-width:160px;"><b>${isFr?'VOIR LE BILAN FINAL':'SEE THE FINAL DEBRIEF'}</b></button>
+        <button class="btl-move" id="voidKeepGoing" style="min-width:190px; border-color:#2ee07a; background:rgba(46,224,122,.1);"><b>${isFr?'CONTINUER LA CARRIERE':'CONTINUE THE CAREER'}</b></button>
+        <button class="btl-move" id="voidContinue" style="min-width:190px;"><b>${isFr?'S\'ARRETER ICI, EN TRIOMPHE':'STOP HERE, TRIUMPHANT'}</b></button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
   document.body.classList.add('shake-cosmic');
   setTimeout(()=>{ document.body.classList.remove('shake-cosmic'); }, villain?3200:2200);
   overlay.querySelector('#voidDownload').onclick = downloadVoidCard;
-  const advanceV = ()=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
-  overlay.querySelector('#voidContinue').onclick = advanceV;
-  if(S.careerAuto) setTimeout(advanceV, 1400);
+  const closeOverlay = (after)=>{ overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); after(); }, 500); };
+  overlay.querySelector('#voidContinue').onclick = ()=>closeOverlay(cb);
+  overlay.querySelector('#voidKeepGoing').onclick = ()=>closeOverlay(()=>{ S.voidCareerContinues = true; handleZoneCheckAndContinue(); });
+  /* Plus d'avancee automatique en mode auto : ce choix demande une vraie decision du joueur. */
 }
 /* ================= COMBAT TACTIQUE (style Pokemon) ================= */
 const MOVES_BY_POWER = {
@@ -12445,9 +12463,8 @@ function resolveOutcome(mission){
     S.locations.push(Object.assign({}, mission.location, { kind }));
     if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1;
     if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1; }
-  if(!hadEighthBefore){
-    if(tryGrantEighthStar()){ S.pendingEighthStarCinematic = true; }
-  }
+  /* La 8eme etoile ne peut desormais venir que des 6 Gemmes reunies - deja entierement gere par
+     grantEclatShard() avec sa propre cinematique dediee au Gantelet. Rien d'autre a faire ici. */
   return { type, outcome };
 }
 function checkDeath(mission){
