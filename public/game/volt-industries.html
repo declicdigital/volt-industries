@@ -8066,7 +8066,7 @@ function gauntletHTML(size){
    seul moyen d'obtenir une Gemme rapidement ; viser les 6 a la fois demande des styles de jeu
    contradictoires, ce qui reste rare sur une seule carriere. */
 const ECLAT_RES_IDS = ['derive','murmure','fracture','fureur','attente','vestige'];
-const GEM_THRESHOLDS = { fureur:15, fracture:20, murmure:16, derive:14, attente:18 }; // vestige : voir vormirSoulProgress
+const GEM_THRESHOLDS = { fureur:25, fracture:30, murmure:24, derive:22, attente:26 }; // vestige : voir vormirSoulProgress
 function ensureEclatRes(){
   if(!S.eclatRes || typeof S.eclatRes !== 'object'){
     S.eclatRes = {}; ECLAT_RES_IDS.forEach(id=>{ S.eclatRes[id] = 0; });
@@ -8184,7 +8184,7 @@ function startEclatQuest(){
   let guardianKey = holderOf(shard.id);
   let hadNoGuardian = !guardianKey;
   if(!guardianKey){
-    const rivalPool = otherCharKeys().filter(k=>k!==S.playerCharKey);
+    const rivalPool = otherCharKeys().filter(k=>k!==S.playerCharKey && !RECRUIT_ONLY_KEYS.has(k));
     if(rivalPool.length) guardianKey = pick(rivalPool);
   }
   const siteIdx = Math.floor(Math.random()*ECLAT_SITES_FR.length);
@@ -8215,6 +8215,10 @@ function startEclatQuest(){
   };
   m.stoneHerald = shard.id;
   S.lastEclatYear = S.currentYear;
+  /* Comme pour Vormir : ce moment coupe toujours la simulation automatique, quelle que soit la
+     Pierre concernee - le joueur doit reprendre la main pour un moment aussi important. */
+  S.careerAuto = false;
+  try{ renderCareerAutoWidget(); }catch(e){}
   /* Annonce du heraut de la Pierre (comme Red Skull sur Vormir), puis le combat. */
   showStoneHerald(shard.id, 'intro', guardName, ()=>{
     S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
@@ -8594,7 +8598,7 @@ function vormirRecruitKeys(){
 /* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
    resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
    trahies. Une carriere longue laisse simplement plus d'occasions d'atteindre ce seuil. */
-const VESTIGE_RES_THRESHOLD = 95; // seuil de liens requis pour etre convoque sur Vormir
+const VESTIGE_RES_THRESHOLD = 380; // seuil de liens requis pour etre convoque sur Vormir
 function vormirSoulProgress(){
   const mentBond = (S.mentees||[]).length * 5;
   const romBond = (S.romance && S.romance.charKey) ? 15 : 0;
@@ -10597,6 +10601,19 @@ function buildBattleSquads(foeKey, mission){
   } else {
     n = clamp(Math.round(capForRoll*Math.pow(Math.random(),0.55)), 0, capForRoll);
   }
+  /* Plafond sur les personnages "recrue uniquement" : au maximum 2 dans ton equipe (la tienne ou
+     celle d'un collegue), au maximum 1 en face - au-dela, on les retire du bassin pour laisser la
+     place a de vrais personnages nommes plutot que de s'entasser entre recrues generiques. */
+  function capRecruits(pool, max){
+    let count = 0;
+    return pool.filter(k=>{
+      if(!RECRUIT_ONLY_KEYS.has(k)) return true;
+      count++;
+      return count <= max;
+    });
+  }
+  allyPoolForFight = capRecruits(allyPoolForFight, 2);
+  foePool = capRecruits(foePool, 1);
   const nAllies = Math.min(n, maxExtra); // taille naturelle, avant ajustement lie aux gemmes
   const naturalAllies = allyPoolForFight.slice(0, nAllies);
   const naturalFoes = foePool.slice(0, n); // taille naturelle, avant ajustement
