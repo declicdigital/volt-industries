@@ -6048,6 +6048,7 @@ function screenInvestigation(){
       const eff = win ? iv.successEff : iv.failEff;
       Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
       if(win){ META.totalInvestigationsSolved = (META.totalInvestigationsSolved||0) + 1; saveMetaProgress(); }
+      try{ feedEclatResonance(eff||{}, { investigation:true, patient:win }); }catch(e){}
       S.screen = 'investigationResult';
       S.investigationResult = {
         win,
@@ -7577,6 +7578,7 @@ function buildCareerPlan(){
   S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
   S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null; S.civilWarRematch = null;
   S.vormirDone = false; S.vormirPlanned = null; S.vormirYear = null; S.vormirRolledYear = null;
+  S.eclatRes = { derive:0, murmure:0, fracture:0, fureur:0, attente:0, vestige:0 };
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -7962,17 +7964,81 @@ function gauntletHTML(size){
     <div class="gauntlet-shine"></div>
   </div>`;
 }
+/* ============= RESONANCE D'INFINITE : les Gemmes se meritent par les choix =============
+   Plus de tirage au sort. Chaque decision du joueur (missions, conversations, formation de
+   recrues, combats) alimente la resonance d'un ou plusieurs domaines d'Infinite. Quand une
+   resonance atteint son seuil, la Gemme correspondante se manifeste : c'est le chemin du
+   joueur qui decide QUELLE Gemme vient, et QUAND. Se specialiser amene vite une Gemme ;
+   diversifier ses choix est le seul moyen d'esperer les reunir toutes. */
+const ECLAT_RES_IDS = ['derive','murmure','fracture','fureur','attente','vestige'];
+function ensureEclatRes(){
+  if(!S.eclatRes || typeof S.eclatRes !== 'object'){
+    S.eclatRes = {}; ECLAT_RES_IDS.forEach(id=>{ S.eclatRes[id] = 0; });
+  }
+  ECLAT_RES_IDS.forEach(id=>{ if(typeof S.eclatRes[id] !== 'number') S.eclatRes[id] = 0; });
+  return S.eclatRes;
+}
+function gainEclatRes(id, amt){
+  if(!amt || !ECLAT_RES_IDS.includes(id)) return;
+  const res = ensureEclatRes();
+  if((S.eclats||[]).includes(id)) return; // deja obtenue : plus rien a accumuler
+  res[id] = Math.max(0, res[id] + amt);
+}
+/* Seuil de la prochaine Gemme : chaque Gemme deja en poche rend la suivante plus exigeante. */
+function eclatResThreshold(){
+  const owned = (S.eclats||[]).filter(id=>id!=='vestige').length;
+  return 70 + owned * 32;
+}
+const VESTIGE_RES_THRESHOLD = 120; // resonance d'Ame requise pour etre convoque sur Vormir
+/* Traduit un choix (ses effets + son contexte) en resonance. Un choix courageux nourrit la
+   Puissance, un choix reflechi l'Esprit, un choix manipulateur la Realite, un choix cosmique
+   l'Espace, la patience/duree le Temps, et tout ce qui touche aux liens et aux sacrifices l'Ame. */
+function feedEclatResonance(eff, ctx){
+  eff = eff || {}; ctx = ctx || {};
+  const cou = Math.max(0, eff.courage||0);
+  const iq  = Math.max(0, eff.intelligence||0);
+  const pop = Math.max(0, eff.popularity||0);
+  const alignAbs = Math.abs(ctx.alignDelta!=null ? ctx.alignDelta : (eff.align||0));
+  const scope = ctx.scope || 1;
+  gainEclatRes('fureur', cou*0.75 + (ctx.battleWin?2.2:0) + alignAbs*0.12);
+  gainEclatRes('murmure', iq*0.75 + (ctx.investigation?1.6:0));
+  gainEclatRes('fracture', pop*0.6 + (ctx.deceit?2.4:0) + alignAbs*0.10);
+  gainEclatRes('derive', (scope>=3 ? 1.6 : 0) + (scope>=5 ? 1.8 : 0) + cou*0.16);
+  gainEclatRes('attente', iq*0.22 + (ctx.patient?2.2:0) + 0.5);
+  const bonds = (eff.rel ? Object.keys(eff.rel).length*1.2 : 0) + (eff.rom?3.2:0)
+    + (ctx.recruit?2.6:0) + (ctx.sacrifice?4:0) + (ctx.death?3.5:0);
+  gainEclatRes('vestige', bonds + alignAbs*0.16);
+}
+/* Detecte l'intention d'un choix depuis son libelle, pour nourrir les bons domaines. */
+function eclatCtxFromChoice(choice, extra){
+  const txt = ((choice&&choice.fr)||'') + ' ' + ((choice&&choice.en)||'');
+  const t = txt.toLowerCase();
+  const ctx = Object.assign({}, extra||{});
+  if(/negoc|corromp|piege|mentir|manipul|trahi|bluff|deceive|corrupt|trap|lie|betray/.test(t)) ctx.deceit = true;
+  if(/attendre|patien|observer|etudier|analyser|preparer|study|wait|observe|analyz|prepare/.test(t)) ctx.patient = true;
+  if(/sacrifi|proteger|sauver|epargner|jurer|promettre|sacrific|protect|save|spare|vow/.test(t)) ctx.sacrifice = true;
+  return ctx;
+}
+function eclatResLeader(excludeVestige){
+  const res = ensureEclatRes();
+  const owned = S.eclats || [];
+  let best = null;
+  ECLAT_RES_IDS.forEach(id=>{
+    if(owned.includes(id)) return;
+    if(excludeVestige && id==='vestige') return;
+    if(!best || res[id] > res[best]) best = id;
+  });
+  return best;
+}
 function shouldTriggerEclatQuest(){
   if((S.eclats||[]).length >= ECLATS.length) return false;
   if(S.lastEclatYear!=null && (S.currentYear - S.lastEclatYear) < 1) return false;
-  /* Chaque Gemme deja en poche rend la suivante nettement plus difficile a trouver - sans ça,
-     stocker 3, 4 gemmes ou plus dans une meme carriere devenait trop courant. */
-  const owned = (S.eclats||[]).length;
-  /* Multiplicateurs par nombre de Gemmes deja possedees, calibres par simulation pour viser environ
-     28% de chance d'atteindre 3 gemmes, 10% pour 4, 6% pour 5 et 3% pour 6 sur une carriere de 50 ans. */
-  const GEM_TRIGGER_MULT = [1, 1.2, 0.24, 0.28, 0.6, 1.1];
-  return Math.random() < 0.07*GEM_TRIGGER_MULT[owned];
+  const res = ensureEclatRes();
+  const lead = eclatResLeader(true); // la Pierre de l'Ame a son propre chemin (Vormir)
+  if(!lead) return false;
+  return res[lead] >= eclatResThreshold();
 }
+
 /* Pool de gardiens possibles : une ou deux Gemmes seulement sont confiees a un personnage au debut
    d'une carriere (tirage aleatoire). Les autres n'ont aucun detenteur nomme et se trouvent sur le
    terrain, lors de combats, missions ou quetes. */
@@ -7992,7 +8058,15 @@ function startEclatQuest(){
   /* La Pierre de l'Ame ne peut jamais tomber d'une quete ordinaire : Vormir est le seul chemin. */
   const avail = ECLATS.filter(e=>e.id!=='vestige' && !owned.includes(e.id) && holderOf(e.id)!==S.playerCharKey);
   if(!avail.length) return false;
-  const shard = pick(avail);
+  /* La Gemme qui se manifeste est celle dont la resonance est la plus haute : c'est le fruit
+     direct des choix du joueur, pas un tirage. */
+  const res = ensureEclatRes();
+  const lead = avail.slice().sort((a,b)=>(res[b.id]||0)-(res[a.id]||0))[0];
+  const shard = lead || avail[0];
+  /* La quete consomme l'essentiel de la resonance accumulee : en cas d'echec, il faudra
+     de nouveau orienter ses choix vers ce domaine pour provoquer une seconde chance. */
+  res[shard.id] = Math.round((res[shard.id]||0) * 0.35);
+
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
@@ -8077,9 +8151,29 @@ const ECLAT_CINE_CONFIG = {
 /* Rangee persistante des eclats obtenus, affichee en haut a droite (dans le badge de rang) :
    un icone par eclat, cote a cote dans l'ordre d'obtention, jusqu'a 6. Un eclat perdu/vole
    disparait immediatement de cette rangee puisqu'elle se recalcule a chaque rendu depuis S.eclats. */
+/* Jauge de resonance : montre au joueur vers quelle Gemme ses choix le poussent actuellement. */
+function eclatResonanceHTML(){
+  if((S.eclats||[]).length >= ECLATS.length) return '';
+  const res = ensureEclatRes();
+  const lead = eclatResLeader(true);
+  if(!lead) return '';
+  const val = res[lead]||0;
+  if(val < 6) return '';
+  const shard = ECLATS.find(e=>e.id===lead);
+  if(!shard) return '';
+  const pctRaw = Math.min(100, Math.round(val / eclatResThreshold() * 100));
+  const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
+  const label = S.lang==='fr' ? 'Resonance' : 'Resonance';
+  return `<div class="eclat-res-row" title="${label} : ${domain}" style="display:flex; align-items:center; justify-content:flex-end; gap:5px; margin-top:5px;">
+    <span style="font-size:8px; letter-spacing:1px; font-weight:900; color:${shard.col};">${label.toUpperCase()} ${domain.toUpperCase()}</span>
+    <span style="width:52px; height:4px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; display:inline-block;">
+      <i style="display:block; height:100%; width:${pctRaw}%; background:${shard.col}; box-shadow:0 0 8px ${shard.col};"></i>
+    </span>
+  </div>`;
+}
 function eclatBadgeRowHTML(){
   const owned = S.eclats || [];
-  if(!owned.length) return '';
+  if(!owned.length) return eclatResonanceHTML();
   const chips = owned.map(id=>{
     const shard = ECLATS.find(e=>e.id===id);
     if(!shard) return '';
@@ -8087,7 +8181,7 @@ function eclatBadgeRowHTML(){
     return `<span class="gem-chip" title="${name}" style="--gc:${shard.col};">${gemSVG(shard, 20)}</span>`;
   }).join('');
   const full = owned.length >= ECLATS.length;
-  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>`;
+  return `<div class="eclat-badge-row" style="display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:6px;">${chips}${full?`<img src="${GAUNTLET_IMG}" alt="" class="gem-gauntlet-mini">`:''}</div>${eclatResonanceHTML()}`;
 }
 function showEclatCinematic(shard, cb){
   AudioEngine.playSting('gem');
@@ -8144,30 +8238,22 @@ function vormirRecruitKeys(){
   return (S.mentees||[]).map(m=>m.charKey)
     .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
 }
-function computeVormirChance(years){
-  const y = Math.max(5, Math.min(70, years||20));
-  if(y < 15) return 0;
-  if(y < 20) return ((y - 15) / 5) * 0.10; // de 0% a 10% entre 15 et 20 ans
-  if(y <= 50) return 0.10 + ((y - 20) / 30) * 0.20; // de 10% a 30%
-  return 0.30; // plafond
+/* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
+   resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
+   trahies. Une carriere longue laisse simplement plus d'occasions d'atteindre ce seuil. */
+function vormirSoulProgress(){
+  const res = ensureEclatRes();
+  const bond = (S.mentees||[]).length * 4 + Object.keys(S.rel||{}).reduce((a,k)=>a+Math.abs(S.rel[k]||0)*0.5, 0);
+  return (res.vestige||0) + bond;
 }
 function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
-  const careerYears = S.years || S.missionsPlan && S.missionsPlan.length || 20;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
   if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
-  /* Tirage annuel (comme pour les autres pierres) : la chance globale de la
-     carriere est repartie sur les annees eligibles (15 -> fin), donc rien n'est
-     fige au depart, mais le total reste ~10% a 20 ans et ~30% a 50 ans. */
-  const total = computeVormirChance(careerYears);
-  if(total <= 0) return false;
-  const eligible = Math.max(1, Math.max(15, careerYears) - 14);
-  const perYear = 1 - Math.pow(1 - total, 1 / eligible);
-  if(S.vormirRolledYear === S.currentYear) return false;
-  S.vormirRolledYear = S.currentYear;
-  return Math.random() < perYear;
+  return vormirSoulProgress() >= VESTIGE_RES_THRESHOLD;
 }
+
 
 function showVormirAnnouncement(recruitName, cb){
   /* Annonce speciale : Red Skull, gardien de la Pierre, explique lui-meme le prix a payer.
@@ -11825,6 +11911,7 @@ function applyMentorChoice(choice, name){
   const label = (S.lang==='fr' ? choice.fr : choice.en) + (convertMsgFr ? ' ' + (S.lang==='fr'?convertMsgFr:convertMsgEn) : '');
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:finalRecruit });
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { recruit: finalRecruit==='hero'||finalRecruit==='villain', death: finalRecruit==='died' })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   if(convertMsgFr) jarvisSay(convertMsgFr, convertMsgEn, S.lang==='fr'?'tentative de conversion':'conversion attempt');
   handleZoneCheckAndContinue();
@@ -11855,7 +11942,7 @@ function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
   const hadEighthBefore = S.eighthStar;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; try{ if(win) feedEclatResonance({}, { battleWin:true, scope:mission.scope||1 }); }catch(e){} if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
     if(mission.grandEvent && win){
       // Un evenement historique remporte compte pour plusieurs victoires a la fois : un vrai tournant de carriere.
       const evScope = mission.scope||6;
@@ -11985,6 +12072,7 @@ function applyChoice(choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { alignDelta, scope: m && m.scope })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
@@ -13566,6 +13654,7 @@ function applyConvChoice(conv, choice){
   S.stats.popularity = clamp(S.stats.popularity + (eff.popularity||0), 0, 100);
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   if(eff.rom){ handleRomanceEffect(eff.rom, conv); }
+  try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, {})); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   const oldZone = S.lastZone;
