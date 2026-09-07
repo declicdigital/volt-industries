@@ -10291,6 +10291,9 @@ function battleTargetForYears(years){
 function shouldBattle(mission){
   if(!mission || mission.type!=='combat') return false;
   if(mission.forceDuel) return true; // un defi personnel direct doit toujours etre un vrai combat visible
+  /* Les epreuves des Pierres d'Infinite (quete, reprise, Vormir) sont TOUJOURS jouees en combat reel :
+     jamais resolues hors-ecran, jamais annulees par une blessure ou le quota de combats. */
+  if(mission.eclatQuest || mission.eclatReclaim || mission.vormirSoul) return true;
   if(mission.pivotal || mission.breakthrough || mission.intrigue) return false;
   const f = battleForm();
   if(injuryActive()) return false;
