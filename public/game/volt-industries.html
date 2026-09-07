@@ -8447,8 +8447,9 @@ function shouldTriggerEclatReclaim(){
   return Math.random() < 0.06;
 }
 function startEclatReclaimQuest(){
+  syncEclatHolders();
   const holders = S.eclatHolders || {};
-  const ids = Object.keys(holders).filter(id=>id!=='vestige' && CHARACTERS[holders[id]]);
+  const ids = Object.keys(holders).filter(id=>id!=='vestige' && CHARACTERS[holders[id]] && !isCharDead(holders[id]));
   if(!ids.length) return false;
   const shardId = pick(ids);
   const shard = ECLATS.find(e=>e.id===shardId);
