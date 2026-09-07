@@ -4469,7 +4469,7 @@ function foeStrength(foeKey, mission){
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
   /* Gardiens de Gemme : nettement plus durs que n'importe quel adversaire de mission classique. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 9 : 0;
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 22 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
@@ -11364,7 +11364,7 @@ function startBattle(mission, done){
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   /* Combat de Gemme : le gardien encaisse et frappe beaucoup plus fort. */
   const stoneFight = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
-  const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * (stoneFight ? 1.35 : 1));
+  const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * (stoneFight ? 1.6 : 1));
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
@@ -12109,7 +12109,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * (stoneFight ? 1.3 : 1));
+    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * (stoneFight ? 1.5 : 1));
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
