@@ -7576,7 +7576,7 @@ function buildCareerPlan(){
   restoreFactionBaseline();
   S.civilWarDone = false; S.civilWarPlanned = null; S.civilWarYear = null;
   S.civilWarSplit = null; S.splinterFac = null; S.enemySplinterFac = null; S.civilWarRematch = null;
-  S.vormirDone = false; S.vormirPlanned = null; S.vormirYear = null;
+  S.vormirDone = false; S.vormirPlanned = null; S.vormirYear = null; S.vormirRolledYear = null;
   S.combat = { won:0, lost:0 }; S.locations = []; S.mentorCount = 0;
   S.battleForm = { momentum:0, streak:0, injury:null };
   S.skills = []; S.lastTrainingYear = null; S.trainingOffer = null;
@@ -8154,20 +8154,21 @@ function computeVormirChance(years){
 function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
   const careerYears = S.years || S.missionsPlan && S.missionsPlan.length || 20;
-  if(S.vormirPlanned == null){
-    S.vormirPlanned = Math.random() < computeVormirChance(careerYears);
-    /* Jamais en debut de carriere : au minimum la 15e annee, mais toujours
-       a l'interieur de la duree totale choisie. */
-    const latest = Math.max(15, careerYears);
-    S.vormirYear = 15 + Math.floor(Math.random() * Math.max(1, latest - 14));
-  }
-  if(!S.vormirPlanned) return false;
   if((S.eclats||[]).includes('vestige')) return false; // deja en poche : plus rien a sacrifier
-  if(S.currentYear < (S.vormirYear||15)) return false;
   if(S.currentYear < 15) return false;
   if(!vormirRecruitKeys().length) return false;
-  return true;
+  /* Tirage annuel (comme pour les autres pierres) : la chance globale de la
+     carriere est repartie sur les annees eligibles (15 -> fin), donc rien n'est
+     fige au depart, mais le total reste ~10% a 20 ans et ~30% a 50 ans. */
+  const total = computeVormirChance(careerYears);
+  if(total <= 0) return false;
+  const eligible = Math.max(1, Math.max(15, careerYears) - 14);
+  const perYear = 1 - Math.pow(1 - total, 1 / eligible);
+  if(S.vormirRolledYear === S.currentYear) return false;
+  S.vormirRolledYear = S.currentYear;
+  return Math.random() < perYear;
 }
+
 function showVormirAnnouncement(recruitName, cb){
   /* Annonce speciale : Red Skull, gardien de la Pierre, explique lui-meme le prix a payer.
      Elle arrete la simulation de carriere, le joueur doit reprendre la main. */
