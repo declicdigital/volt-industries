@@ -4061,7 +4061,7 @@ function freshState(lang){
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
-    voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null,
+    voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null, pendingStoneHerald:null, pendingStoneHeraldFail:null, powerHeraldPick:null,
   };
 }
 let S = freshState('fr');
@@ -8211,13 +8211,12 @@ function startEclatQuest(){
    avant le combat, et revient consacrer (ou constater) le resultat apres. Meme mise en scene que
    Red Skull sur Vormir pour la Pierre de l'Ame. */
 const STONE_HERALDS = {
-  fracture: { key:'nyx', bg:'stones/../stages/stone_reality.jpg', placeFr:'MONT WUNDAGORE', placeEn:'MOUNT WUNDAGORE' },
+  fracture: { key:'nyx', bg:'stages/stone_reality.jpg', placeFr:'MONT WUNDAGORE', placeEn:'MOUNT WUNDAGORE' },
   fureur:   { key:'starlord', keyVillain:'ronan', bg:'stages/stone_power.jpg', placeFr:'MORAG', placeEn:'MORAG' },
   derive:   { key:'vipera', bg:'stages/stone_space.jpg', placeFr:"LA VOUTE D'ASGARD", placeEn:'THE ASGARDIAN VAULT' },
   attente:  { key:'solen', bg:'stages/stone_time.jpg', placeFr:'KAMAR-TAJ', placeEn:'KAMAR-TAJ' },
   murmure:  { key:'lorelei', bg:'stages/stone_mind.jpg', placeFr:'LE BERCEAU', placeEn:'THE CRADLE' },
 };
-STONE_HERALDS.fracture.bg = 'stages/stone_reality.jpg';
 function stoneHeraldBg(id){ const h = STONE_HERALDS[id]; return h ? h.bg : ''; }
 /* La Pierre du Pouvoir : Star-Lord si tu es HERO, Ronan si tu es VILLAIN, tirage 50/50 en INDEPENDANT. */
 function stoneHeraldKey(id){
@@ -11190,6 +11189,20 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
         <div class="st-vig"></div>
       </div>`;
     }
+    /* PIERRES D'INFINITE : chaque combat pour une Pierre a son propre decor et son ambiance. */
+    const stoneId = mission && (mission.eclatQuest || mission.eclatReclaim);
+    const stoneBg = stoneId ? stoneHeraldBg(stoneId) : '';
+    if(stoneBg){
+      const sh = ECLATS.find(e=>e.id===stoneId) || { col:'#ffffff' };
+      return `<div class="btl-set btl-stage st-real stage-stone" style="--st-base:#05040a; --st-linec:${sh.col}33; --st-beamc:${sh.col}22;">
+        <div class="st-photo" style="background-image:url('${stoneBg}'); background-position:center 50%;"></div>
+        <div class="st-fog" style="color:${sh.col}44;"><i></i><i></i><i></i></div>
+        <div class="st-l">${stMotes(18, 307, sh.col)}</div>
+        <div class="st-flash" style="animation-duration:13s; --st-flashc:radial-gradient(ellipse 60% 44% at 50% 42%, ${sh.col}55, transparent 64%);"></div>
+        <div class="st-grade"></div>
+        <div class="st-vig"></div>
+      </div>`;
+    }
     const lvl = Math.max(1, Math.min(7, scope|0 || 1));
     const th = STAGE_THEMES[lvl]();
     return `<div class="btl-set btl-stage st-real stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
@@ -12325,7 +12338,9 @@ function resolveOutcome(mission){
       const guardianKey = mission.charKey || null;
       if(shard && win){
         grantEclatShard(shard);
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHeraldFail = shard.id;
         /* Defaite : la plupart du temps (80%), l'adversaire precis que tu viens d'affronter
            devient le nouveau detenteur - il faudra le/la battre pour la recuperer. Sinon (20%),
            personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
@@ -12353,6 +12368,7 @@ function resolveOutcome(mission){
       const holderKey = mission.charKey;
       if(shard && win && Math.random() < 0.35){
         grantEclatShard(shard);
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
         const holderName = holderKey && CHARACTERS[holderKey] ? (S.lang==='fr'?CHARACTERS[holderKey].fr:CHARACTERS[holderKey].en) : '';
         jarvisSay(S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`,
@@ -12423,15 +12439,24 @@ function applyChoice(choice){
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
   }
+  if(S.pendingStoneHeraldFail){
+    const failId = S.pendingStoneHeraldFail; S.pendingStoneHeraldFail = null;
+    if(!S.pendingEclatCinematic){
+      showStoneHerald(failId, 'outro', null, ()=>{ handleZoneCheckAndContinue(); });
+      return;
+    }
+  }
   if(S.pendingEclatCinematic){
     const shardId = S.pendingEclatCinematic; S.pendingEclatCinematic = null;
     const shard = ECLATS.find(e=>e.id===shardId);
     if(shard){
-      showEclatCinematic(shard, ()=>{
+      const heraldId = S.pendingStoneHerald; S.pendingStoneHerald = null;
+      const runGem = ()=>showEclatCinematic(shard, ()=>{
         if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); }); return; }
         if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
         handleZoneCheckAndContinue();
       });
+      if(heraldId) showStoneHerald(heraldId, 'outro', null, runGem); else runGem();
       return;
     }
   }
