@@ -4058,7 +4058,7 @@ function freshState(lang){
     lastStars:1, savedToHistory:false, scopeCineSeen:{},
     startAge:24, extensions:0,
     unlockedChars:{}, traitorKey:null, teamBetrayalUsed:false, deadAllies:[], deadFoes:[], deadCharKeys:[], cosmicWins:0, trueCosmicWins:0,
-    eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
+    eighthStar:false, eighthStarByGemmes:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
     voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null, pendingStoneHerald:null, pendingStoneHeraldFail:null, powerHeraldPick:null,
@@ -4469,7 +4469,7 @@ function foeStrength(foeKey, mission){
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
   /* Gardiens de Gemme : nettement plus durs que n'importe quel adversaire de mission classique. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 14 : 0;
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 9 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
@@ -4587,6 +4587,7 @@ function tryGrantEighthStar(){
   if(S.eighthStar) return false;
   if(!eighthStarQualifies()) return false;
   S.eighthStar = true;
+  S.eighthStarByGemmes = (S.eclats||[]).length >= ECLATS.length;
   return true;
 }
 
@@ -7648,7 +7649,7 @@ function buildCareerPlan(){
      final du jeu) n'etait tiree qu'une fois par session, a 5% de chance. Si la toute premiere
      carriere ratait ce tirage, plus AUCUNE carriere de la session ne pouvait jamais debloquer Doom,
      peu importe la performance du joueur. */
-  S.eighthStar = false; S.eighthStarEligible = Math.random() < 0.05; S.pendingEighthStarCinematic = false;
+  S.eighthStar = false; S.eighthStarByGemmes = false; S.eighthStarEligible = Math.random() < 0.05; S.pendingEighthStarCinematic = false;
   /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, exactement 2 recrues
      par tranche de 10 ans de carriere pour le joueur (pas plus). */
   S.mentorEligible = Math.random() < 0.70;
