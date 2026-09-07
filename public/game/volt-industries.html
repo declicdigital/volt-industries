@@ -66,6 +66,11 @@
   .draggable-panel.dragging{ cursor:grabbing; opacity:.92; box-shadow:0 18px 40px -12px rgba(0,0,0,.7) !important; z-index:900 !important; }
   .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
+  .gem-progress-panel{ position:fixed; top:230px; right:16px; z-index:79; width:170px; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
+    border:1.5px solid var(--line); border-radius:14px; padding:9px 13px; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
+  @media (max-width:720px){
+    .gem-progress-panel{ top:auto; bottom:calc(90px + env(safe-area-inset-bottom)); right:12px; width:150px; }
+  }
   .career-auto-widget{ position:fixed; top:16px; left:16px; z-index:900; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:14px; padding:8px 10px; display:flex; align-items:center; gap:8px; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .career-auto-widget.running{ border-color:var(--gold); }
@@ -4601,6 +4606,7 @@ function render(){
   app.innerHTML = '';
   app.appendChild(topbar());
   renderRankBadge();
+  renderGemProgressPanel();
   if(shouldShowSidebar()){
     const shell = document.createElement('div'); shell.className='game-shell';
     const side = document.createElement('div'); side.className='side-avatar'; side.innerHTML = sideAvatarPanel();
@@ -4947,6 +4953,56 @@ async function clearGameState(){
   if(!window.storage) return;
   try{ await window.storage.delete('currentGame', false); }catch(e){ /* nothing to clear */ }
 }
+/* Panneau complet des 6 domaines d'Infinite : une barre par domaine, coloree, sans jamais dire
+   "Gemme" - juste le nom mysterieux du domaine. Deplacable comme les autres encarts, et reductible
+   d'un simple clic pour ne pas encombrer l'ecran si le joueur n'en a pas besoin. */
+function renderGemProgressPanel(){
+  let el = document.getElementById('gemProgressPanel');
+  const owned = S.eclats || [];
+  const showPanel = shouldShowSidebar() && owned.length < ECLATS.length && S.firstMissionStarted;
+  if(!showPanel){ if(el) el.remove(); return; }
+  if(!el){
+    el = document.createElement('div'); el.id='gemProgressPanel'; el.className='gem-progress-panel';
+    document.body.appendChild(el);
+  }
+  makeDraggable(el, 'gemProgressPanel');
+  const collapsed = !!S.gemPanelCollapsed;
+  const res = ensureEclatRes();
+  const rows = ECLAT_RES_IDS.filter(id=>id!=='vestige' && !owned.includes(id)).map(id=>{
+    const shard = ECLATS.find(e=>e.id===id);
+    const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
+    const val = res[id]||0;
+    const pct = Math.min(100, Math.round(val / eclatResThreshold(id) * 100));
+    return `<div style="margin-top:7px;">
+      <div style="display:flex; justify-content:space-between; font-size:8px; letter-spacing:.8px; font-weight:900; color:${shard.col};">
+        <span>${domain.toUpperCase()}</span><span style="color:var(--dim); font-weight:700;">${pct}%</span>
+      </div>
+      <div style="width:100%; height:5px; border-radius:99px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:3px;">
+        <i style="display:block; height:100%; width:${pct}%; background:${shard.col}; box-shadow:0 0 8px ${shard.col};"></i>
+      </div>
+    </div>`;
+  }).join('');
+  /* La Pierre de l'Ame suit son propre chemin (Vormir) - affichee separement, sans couleur de
+     "domaine" puisqu'elle ne se declenche pas de la meme facon. */
+  const vestigeShard = ECLATS.find(e=>e.id==='vestige');
+  const vestigeRow = (!owned.includes('vestige') && vestigeShard) ? (function(){
+    const val = vormirSoulProgress();
+    const pct = Math.min(100, Math.round(val / VESTIGE_RES_THRESHOLD * 100));
+    return `<div style="margin-top:7px;">
+      <div style="display:flex; justify-content:space-between; font-size:8px; letter-spacing:.8px; font-weight:900; color:${vestigeShard.col};">
+        <span>${(S.lang==='fr'?vestigeShard.domainFr:vestigeShard.domainEn).toUpperCase()}</span><span style="color:var(--dim); font-weight:700;">${pct}%</span>
+      </div>
+      <div style="width:100%; height:5px; border-radius:99px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:3px;">
+        <i style="display:block; height:100%; width:${pct}%; background:${vestigeShard.col}; box-shadow:0 0 8px ${vestigeShard.col};"></i>
+      </div>
+    </div>`;
+  })() : '';
+  el.innerHTML = `<div class="gpp-head" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+      <span style="font-size:9px; letter-spacing:1px; font-weight:900; color:var(--dim);">${S.lang==='fr'?'RESONANCES':'RESONANCES'}</span>
+      <span style="font-size:11px; color:var(--dim);">${collapsed?'&#9654;':'&#9660;'}</span>
+    </div>${collapsed?'':(rows+vestigeRow)}`;
+  el.querySelector('.gpp-head').onclick = ()=>{ S.gemPanelCollapsed = !collapsed; renderGemProgressPanel(); };
+}
 function renderRankBadge(){
   let el = document.getElementById('rankBadgeFixed');
   if(!shouldShowSidebar()){ if(el) el.remove(); return; }
@@ -5249,6 +5305,7 @@ function checkFactionExpulsion(){
   S.team = null;
   showExpelToast(facName);
   renderRankBadge();
+  renderGemProgressPanel();
   const sideEl = document.querySelector('.side-avatar'); if(sideEl) sideEl.innerHTML = sideAvatarPanel();
   return true;
 }
@@ -6048,7 +6105,7 @@ function screenInvestigation(){
       const eff = win ? iv.successEff : iv.failEff;
       Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
       if(win){ META.totalInvestigationsSolved = (META.totalInvestigationsSolved||0) + 1; saveMetaProgress(); }
-      try{ feedEclatResonance(eff||{}, { investigation:true, patient:win }); }catch(e){}
+      try{ feedEclatResonance(eff||{}, { investigation:true, patient:win, battleWin:win }); }catch(e){}
       S.screen = 'investigationResult';
       S.investigationResult = {
         win,
@@ -7964,13 +8021,14 @@ function gauntletHTML(size){
     <div class="gauntlet-shine"></div>
   </div>`;
 }
-/* ============= RESONANCE D'INFINITE : les Gemmes se meritent par les choix =============
-   Plus de tirage au sort. Chaque decision du joueur (missions, conversations, formation de
-   recrues, combats) alimente la resonance d'un ou plusieurs domaines d'Infinite. Quand une
-   resonance atteint son seuil, la Gemme correspondante se manifeste : c'est le chemin du
-   joueur qui decide QUELLE Gemme vient, et QUAND. Se specialiser amene vite une Gemme ;
-   diversifier ses choix est le seul moyen d'esperer les reunir toutes. */
+/* ============= LES GEMMES SE MERITENT PAR DE VRAIS ACCOMPLISSEMENTS =============
+   Plus de tirage au sort, plus de calcul abstrait invisible : chaque Gemme a un compteur reel et
+   entier, base sur un accomplissement concret et repere dans une seule direction (bagarreur pur,
+   manipulateur, enqueteur, aventurier cosmique, patient). Se specialiser dans UNE direction est le
+   seul moyen d'obtenir une Gemme rapidement ; viser les 6 a la fois demande des styles de jeu
+   contradictoires, ce qui reste rare sur une seule carriere. */
 const ECLAT_RES_IDS = ['derive','murmure','fracture','fureur','attente','vestige'];
+const GEM_THRESHOLDS = { fureur:15, fracture:20, murmure:16, derive:14, attente:18 }; // vestige : voir vormirSoulProgress
 function ensureEclatRes(){
   if(!S.eclatRes || typeof S.eclatRes !== 'object'){
     S.eclatRes = {}; ECLAT_RES_IDS.forEach(id=>{ S.eclatRes[id] = 0; });
@@ -7984,32 +8042,26 @@ function gainEclatRes(id, amt){
   if((S.eclats||[]).includes(id)) return; // deja obtenue : plus rien a accumuler
   res[id] = Math.max(0, res[id] + amt);
 }
-/* Seuil de la prochaine Gemme : chaque Gemme deja en poche rend la suivante plus exigeante. */
-function eclatResThreshold(){
-  const owned = (S.eclats||[]).filter(id=>id!=='vestige').length;
-  return 70 + owned * 32;
+function eclatResThreshold(id){ return GEM_THRESHOLDS[id] || 70; }
+/* Serie de victoires sans la moindre defaite - alimente le Pouvoir. Une seule perte remet le
+   compteur a zero : il faut tenir la distance sans jamais flancher. Appele depuis la resolution
+   de chaque combat. */
+function feedPowerStreak(win){
+  if((S.eclats||[]).includes('fureur')) return;
+  const res = ensureEclatRes();
+  if(win) res.fureur = (res.fureur||0) + 1;
+  else res.fureur = 0;
 }
-const VESTIGE_RES_THRESHOLD = 120; // resonance d'Ame requise pour etre convoque sur Vormir
-/* Traduit un choix (ses effets + son contexte) en resonance. Un choix courageux nourrit la
-   Puissance, un choix reflechi l'Esprit, un choix manipulateur la Realite, un choix cosmique
-   l'Espace, la patience/duree le Temps, et tout ce qui touche aux liens et aux sacrifices l'Ame. */
+/* Traduit un choix (son contexte detecte) en progres concret pour le domaine correspondant -
+   chaque increment vaut pour UN accomplissement reel, pas un score invisible. */
 function feedEclatResonance(eff, ctx){
   eff = eff || {}; ctx = ctx || {};
-  const cou = Math.max(0, eff.courage||0);
-  const iq  = Math.max(0, eff.intelligence||0);
-  const pop = Math.max(0, eff.popularity||0);
-  const alignAbs = Math.abs(ctx.alignDelta!=null ? ctx.alignDelta : (eff.align||0));
-  const scope = ctx.scope || 1;
-  gainEclatRes('fureur', cou*0.75 + (ctx.battleWin?2.2:0) + alignAbs*0.12);
-  gainEclatRes('murmure', iq*0.75 + (ctx.investigation?1.6:0));
-  gainEclatRes('fracture', pop*0.6 + (ctx.deceit?2.4:0) + alignAbs*0.10);
-  gainEclatRes('derive', (scope>=3 ? 1.6 : 0) + (scope>=5 ? 1.8 : 0) + cou*0.16);
-  gainEclatRes('attente', iq*0.22 + (ctx.patient?2.2:0) + 0.5);
-  const bonds = (eff.rel ? Object.keys(eff.rel).length*1.2 : 0) + (eff.rom?3.2:0)
-    + (ctx.recruit?2.6:0) + (ctx.sacrifice?4:0) + (ctx.death?3.5:0);
-  gainEclatRes('vestige', bonds + alignAbs*0.16);
+  if(ctx.deceit) gainEclatRes('fracture', 1);
+  if(ctx.patient) gainEclatRes('attente', 1);
+  if(ctx.investigation && ctx.battleWin!==false) gainEclatRes('murmure', 1);
+  if((ctx.scope||1) >= 5) gainEclatRes('derive', 1);
 }
-/* Detecte l'intention d'un choix depuis son libelle, pour nourrir les bons domaines. */
+/* Detecte l'intention d'un choix depuis son libelle, pour nourrir le bon domaine. */
 function eclatCtxFromChoice(choice, extra){
   const txt = ((choice&&choice.fr)||'') + ' ' + ((choice&&choice.en)||'');
   const t = txt.toLowerCase();
@@ -8022,11 +8074,13 @@ function eclatCtxFromChoice(choice, extra){
 function eclatResLeader(excludeVestige){
   const res = ensureEclatRes();
   const owned = S.eclats || [];
-  let best = null;
+  let best = null, bestRatio = 0;
   ECLAT_RES_IDS.forEach(id=>{
     if(owned.includes(id)) return;
     if(excludeVestige && id==='vestige') return;
-    if(!best || res[id] > res[best]) best = id;
+    if(id==='vestige') return; // suit son propre chemin (Vormir)
+    const ratio = (res[id]||0) / eclatResThreshold(id);
+    if(!best || ratio > bestRatio){ best = id; bestRatio = ratio; }
   });
   return best;
 }
@@ -8036,7 +8090,7 @@ function shouldTriggerEclatQuest(){
   const res = ensureEclatRes();
   const lead = eclatResLeader(true); // la Pierre de l'Ame a son propre chemin (Vormir)
   if(!lead) return false;
-  return res[lead] >= eclatResThreshold();
+  return res[lead] >= eclatResThreshold(lead);
 }
 
 /* Pool de gardiens possibles : une ou deux Gemmes seulement sont confiees a un personnage au debut
@@ -8071,19 +8125,26 @@ function startEclatQuest(){
   const scope = capScope(computeStars());
   const shardName = S.lang==='fr' ? shard.frName : shard.enName;
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
-  // Detenteur seulement si cette Gemme a ete confiee a un personnage (1 ou 2 max par carriere).
-  const guardianKey = holderOf(shard.id);
+  // Detenteur si cette Gemme a ete confiee a un personnage (1 ou 2 max par carriere) - sinon,
+  // n'importe qui d'autre peut etre sur sa piste en meme temps que toi : le combat reste toujours
+  // contre quelqu'un de precis, jamais contre le vide.
+  let guardianKey = holderOf(shard.id);
+  let hadNoGuardian = !guardianKey;
+  if(!guardianKey){
+    const rivalPool = otherCharKeys().filter(k=>k!==S.playerCharKey);
+    if(rivalPool.length) guardianKey = pick(rivalPool);
+  }
   const siteIdx = Math.floor(Math.random()*ECLAT_SITES_FR.length);
 
   const guardName = guardianKey ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : '';
   const isAlly = guardianKey && CHARACTERS[guardianKey] && CHARACTERS[guardianKey].align!=='neutral' && CHARACTERS[guardianKey].align===mySide;
-  const introFr = !guardianKey
-    ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. Personne ne la detient : elle dort dans ${ECLAT_SITES_FR[siteIdx]}, et tu n'es pas seul a la chercher.`
+  const introFr = hadNoGuardian
+    ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. Personne ne la detient encore : elle dort dans ${ECLAT_SITES_FR[siteIdx]}, mais ${guardName} est deja sur sa piste, lui/elle aussi.`
     : (isAlly
       ? `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la detient - il faudra la meriter, pas la voler.`
       : `Une resonance venue de l'Infini te mene vers ${shardName}, lie au domaine de ${domain.toLowerCase()}. ${guardName} la garde farouchement.`);
-  const introEn = !guardianKey
-    ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. Nobody holds it: it lies dormant in ${ECLAT_SITES_EN[siteIdx]}, and you are not the only one looking.`
+  const introEn = hadNoGuardian
+    ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. Nobody holds it yet: it lies dormant in ${ECLAT_SITES_EN[siteIdx]}, but ${guardName} is already on its trail too.`
     : (isAlly
       ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
       : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
@@ -8161,7 +8222,7 @@ function eclatResonanceHTML(){
   if(val < 6) return '';
   const shard = ECLATS.find(e=>e.id===lead);
   if(!shard) return '';
-  const pctRaw = Math.min(100, Math.round(val / eclatResThreshold() * 100));
+  const pctRaw = Math.min(100, Math.round(val / eclatResThreshold(lead) * 100));
   const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
   const label = S.lang==='fr' ? 'Resonance' : 'Resonance';
   return `<div class="eclat-res-row" title="${label} : ${domain}" style="display:flex; align-items:center; justify-content:flex-end; gap:5px; margin-top:5px;">
@@ -8235,16 +8296,20 @@ function grantEclatShard(shard){
    strictement egales (memes PV, memes coups). Le vainqueur repart avec la
    Pierre de l'Ame, le vaincu meurt definitivement. L'annonce coupe la simulation. */
 function vormirRecruitKeys(){
-  return (S.mentees||[]).map(m=>m.charKey)
+  const mentees = (S.mentees||[]).map(m=>m.charKey);
+  const loved = (S.romance && S.romance.charKey) ? [S.romance.charKey] : [];
+  return mentees.concat(loved)
     .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
 }
 /* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
    resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
    trahies. Une carriere longue laisse simplement plus d'occasions d'atteindre ce seuil. */
+const VESTIGE_RES_THRESHOLD = 95; // seuil de liens requis pour etre convoque sur Vormir
 function vormirSoulProgress(){
-  const res = ensureEclatRes();
-  const bond = (S.mentees||[]).length * 4 + Object.keys(S.rel||{}).reduce((a,k)=>a+Math.abs(S.rel[k]||0)*0.5, 0);
-  return (res.vestige||0) + bond;
+  const mentBond = (S.mentees||[]).length * 5;
+  const romBond = (S.romance && S.romance.charKey) ? 15 : 0;
+  const relBond = Object.keys(S.rel||{}).reduce((a,k)=>a+Math.abs(S.rel[k]||0), 0);
+  return mentBond + romBond + relBond;
 }
 function shouldTriggerVormirSoul(){
   if(S.vormirDone) return false;
@@ -10021,6 +10086,10 @@ function showBattleAftermath(html, col, cb){
 }
 function applyBattleAftermath(win, foeName, hpLeftPct, cb, playerWasKO){
   const f = battleForm();
+  /* Serie de victoires personnelles ininterrompue pour la Puissance : etre porte par l'equipe
+     alors que tu es tombe ne compte pas comme une victoire a toi, seule une vraie victoire
+     debout la nourrit - toute autre issue la remet a zero. */
+  try{ feedPowerStreak(!!(win && !playerWasKO)); }catch(e){ console.error('Gemme Pouvoir : echec', e); }
   if(win && playerWasKO){
     /* Tu es tombe pendant ce combat, meme si ton equipe a fini par l'emporter sans toi : ça ne
        peut pas etre une victoire "propre" comme les autres - pas d'elan gagne, une vraie
@@ -11978,36 +12047,31 @@ function resolveOutcome(mission){
       }
     } else if(mission.eclatQuest){
       const shard = ECLATS.find(e=>e.id===mission.eclatQuest);
-      /* Pas de detenteur invente : si la Gemme n'etait gardee par personne, elle le reste. */
       const guardianKey = mission.charKey || null;
-      if(shard && win && Math.random() < (guardianKey ? 0.68 : 0.82)){
+      if(shard && win){
         grantEclatShard(shard);
       } else if(shard){
+        /* Defaite : la plupart du temps (80%), l'adversaire precis que tu viens d'affronter
+           devient le nouveau detenteur - il faudra le/la battre pour la recuperer. Sinon (20%),
+           personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
+           dans ce domaine retombe entierement a zero. */
         S.eclatHolders = S.eclatHolders || {};
-        /* Une chance modeste (10%) qu'un tiers, pas forcement le gardien d'origine, en profite pour
-           la reclamer a ta place - c'est ce qui permet, tres rarement sur l'ensemble d'une carriere,
-           qu'un autre personnage du jeu finisse par accumuler plusieurs Gemmes. */
-        let newHolder = guardianKey;
-        let claimedByOther = false;
-        if(Math.random() < 0.10){
-          const pool = otherCharKeys().filter(k=>k!==guardianKey);
-          if(pool.length){ newHolder = pick(pool); claimedByOther = true; }
-        }
-        if(newHolder) S.eclatHolders[shard.id] = newHolder;
-        const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'le site':'the site');
-        const newHolderName = newHolder && CHARACTERS[newHolder] ? (S.lang==='fr'?CHARACTERS[newHolder].fr:CHARACTERS[newHolder].en) : '';
-        if(claimedByOther){
-          jarvisSay(S.lang==='fr'?`${newHolderName} s'empare de ${shard.frName} pendant que vous etes tous les deux occupes ailleurs.`:`${newHolderName} seizes ${shard.enName} while you're both busy elsewhere.`,
-                    S.lang==='fr'?`${newHolderName} s'empare de ${shard.frName} pendant que vous etes tous les deux occupes ailleurs.`:`${newHolderName} seizes ${shard.enName} while you're both busy elsewhere.`, S.lang==='fr'?'un troisieme larron':'a third party');
+        const opponentClaims = guardianKey && Math.random() < 0.80;
+        if(opponentClaims){
+          S.eclatHolders[shard.id] = guardianKey;
         } else {
-        const msgFr = guardianKey
-          ? (win ? `${shard.frName} t'echappe au dernier instant. ${guardName} le reprend et disparait avec.` : `${guardName} garde ${shard.frName} et te repousse. Il faudra revenir.`)
-          : (win ? `${shard.frName} s'enfonce dans une faille avant que tu puisses la saisir. Elle refera surface ailleurs.` : `Tu es repousse : ${shard.frName} reste enfouie sur place. Il faudra revenir.`);
-        const msgEn = guardianKey
-          ? (win ? `${shard.enName} slips away at the last moment. ${guardName} takes it back and vanishes with it.` : `${guardName} holds onto ${shard.enName} and drives you back. You'll need to return.`)
-          : (win ? `${shard.enName} sinks into a rift before you can grab it. It will resurface elsewhere.` : `You are driven back: ${shard.enName} stays buried on site. You'll need to return.`);
-        jarvisSay(msgFr, msgEn, S.lang==='fr'?'occasion manquee':'missed chance');
+          if(S.eclatHolders[shard.id]) delete S.eclatHolders[shard.id];
+          const res = ensureEclatRes();
+          if(typeof res[shard.id]==='number') res[shard.id] = 0;
         }
+        const guardName = guardianKey && CHARACTERS[guardianKey] ? (S.lang==='fr'?CHARACTERS[guardianKey].fr:CHARACTERS[guardianKey].en) : (S.lang==='fr'?'ton adversaire':'your opponent');
+        const msgFr = opponentClaims
+          ? `${guardName} l'emporte et s'empare de ${shard.frName}. Il faudra le/la vaincre pour l'obtenir.`
+          : `Tu es repousse : ${shard.frName} echappe a tout le monde pour l'instant. Tout est a refaire dans ce domaine.`;
+        const msgEn = opponentClaims
+          ? `${guardName} wins and seizes ${shard.enName}. You'll need to defeat them to get it.`
+          : `You are driven back: ${shard.enName} escapes everyone for now. You're starting from scratch in that domain.`;
+        jarvisSay(msgFr, msgEn, S.lang==='fr'?'occasion manquee':'missed chance');
       }
     } else if(mission.eclatReclaim){
       const shard = ECLATS.find(e=>e.id===mission.eclatReclaim);
@@ -13544,6 +13608,7 @@ function handleRomanceEffect(rom, conv){
     if(r.betrayed) S.stats.popularity = clamp(S.stats.popularity - 1, 0, 100);
   }
   renderRankBadge();
+  renderGemProgressPanel();
 }
 /* ---------- Conversation overlay ---------- */
 function maybeTriggerConversation(){
