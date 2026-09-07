@@ -592,6 +592,44 @@
     .vormir-cine .vm-stone{ top:6px; width:66px; height:66px; }
   }
 
+  /* ---------- HERAUTS DES PIERRES D'INFINITE : meme mise en scene que Vormir, teinte par pierre ----------
+     --sc = couleur de la pierre, --sc2 = eclat clair. Les regles ci-dessous ne font que reteinter
+     le decor Vormir pour chacune des 5 autres Pierres. */
+  .stone-cine .vm-grade{
+    background:radial-gradient(ellipse 75% 60% at 50% 42%, color-mix(in srgb, var(--sc) 24%, transparent), rgba(3,2,8,.90) 72%),
+               linear-gradient(180deg, rgba(3,2,8,.55), rgba(3,2,8,.12) 40%, rgba(3,2,8,.92)); }
+  .stone-cine .vm-ember{ background:var(--sc2);
+    box-shadow:0 0 8px var(--sc), 0 0 18px color-mix(in srgb, var(--sc) 70%, transparent); }
+  .stone-cine .vm-flash{ background:color-mix(in srgb, var(--sc2) 45%, transparent); }
+  .stone-cine .vm-fog{ background:radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--sc2) 22%, transparent), transparent 70%); }
+  .stone-cine .vm-skull img{ filter:drop-shadow(0 0 18px color-mix(in srgb, var(--sc) 65%, transparent)) drop-shadow(0 0 60px color-mix(in srgb, var(--sc) 35%, transparent)) contrast(1.04); }
+  .stone-cine .vm-skull::after{ background:radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--sc) 45%, transparent), transparent 70%); }
+  .stone-cine .vm-panel{ border-color:color-mix(in srgb, var(--sc) 40%, transparent);
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--sc) 12%, transparent) inset, 0 24px 60px rgba(0,0,0,.6); }
+  .stone-cine .vm-scope{ color:var(--sc); text-shadow:0 0 14px color-mix(in srgb, var(--sc) 80%, transparent); }
+  .stone-cine .vm-title{ color:var(--sc2);
+    text-shadow:0 0 26px color-mix(in srgb, var(--sc) 65%, transparent), 0 0 70px color-mix(in srgb, var(--sc) 35%, transparent); }
+  .stone-cine .vm-who{ color:var(--sc); }
+  .stone-cine .vm-line b{ color:var(--sc2); }
+  .stone-cine .vm-actions button{ background:linear-gradient(180deg, var(--sc2), var(--sc));
+    border-color:color-mix(in srgb, var(--sc2) 60%, transparent); color:#0a0710;
+    box-shadow:0 0 26px color-mix(in srgb, var(--sc) 45%, transparent); }
+  .stone-cine .vm-stone .core{
+    background:radial-gradient(circle at 34% 28%, #ffffff 0%, var(--sc2) 20%, var(--sc) 52%, color-mix(in srgb, var(--sc) 55%, #100418) 80%, #08040c 100%);
+    box-shadow:0 0 26px color-mix(in srgb, var(--sc) 90%, transparent), 0 0 70px color-mix(in srgb, var(--sc) 60%, transparent),
+               0 0 140px color-mix(in srgb, var(--sc) 40%, transparent), inset 0 0 22px rgba(255,255,255,.45); }
+  .stone-cine .vm-stone .halo{ background:radial-gradient(circle, color-mix(in srgb, var(--sc) 42%, transparent), color-mix(in srgb, var(--sc) 14%, transparent) 45%, transparent 70%); }
+  .stone-cine .vm-stone .rays{ background:conic-gradient(from 0deg, transparent 0 6%, color-mix(in srgb, var(--sc2) 30%, transparent) 8%, transparent 12% 30%,
+      color-mix(in srgb, var(--sc) 24%, transparent) 32%, transparent 36% 58%, color-mix(in srgb, var(--sc2) 28%, transparent) 60%, transparent 64% 84%,
+      color-mix(in srgb, var(--sc) 20%, transparent) 86%, transparent 90%); }
+  .stone-cine .vm-stone .glint{ background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--sc2) 85%, transparent), transparent); }
+  .stone-cine .vm-stone .spark{ background:#fff; box-shadow:0 0 10px var(--sc2); }
+  @media (max-width:640px){
+    .stone-cine .vm-skull{ width:min(52vw,220px); }
+  }
+
+
+
 
   .cine-overlay{ position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;
     animation: cineIn .25s ease; }
@@ -4023,7 +4061,7 @@ function freshState(lang){
     eighthStar:false, eighthStarEligible:(Math.random()<0.05), pendingEighthStarCinematic:false, retirementOffered:false, retiredTriumphant:false, peacefulEra:false,
     forgottenMoves:[], pendingForgetReturn:null,
     careerAuto:false, eclats:[], lastEclatYear:null, eclatHolders:{}, lastEclatReclaimYear:null, lastBattleFoeKey:null,
-    voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null,
+    voidCompletionDone:false, pendingVoidCompletion:false, pendingEclatCinematic:null, pendingStoneHerald:null, pendingStoneHeraldFail:null, powerHeraldPick:null,
   };
 }
 let S = freshState('fr');
@@ -8160,10 +8198,246 @@ function startEclatQuest(){
       { fr:"Tenter de le negocier ou de le corrompre.", en:"Try to negotiate or corrupt it.", eff:{intelligence:2, courage:2, align: mySide==='villain'?-6:1} },
     ]
   };
-  S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  m.stoneHerald = shard.id;
   S.lastEclatYear = S.currentYear;
+  /* Annonce du heraut de la Pierre (comme Red Skull sur Vormir), puis le combat. */
+  showStoneHerald(shard.id, 'intro', guardName, ()=>{
+    S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  });
   return true;
 }
+/* ============= HERAUTS DES PIERRES D'INFINITE =============
+   Chaque Pierre a son gardien-annonciateur, son decor et ses repliques : il annonce l'epreuve
+   avant le combat, et revient consacrer (ou constater) le resultat apres. Meme mise en scene que
+   Red Skull sur Vormir pour la Pierre de l'Ame. */
+const STONE_HERALDS = {
+  fracture: { key:'nyx', bg:'stages/stone_reality.jpg', placeFr:'MONT WUNDAGORE', placeEn:'MOUNT WUNDAGORE' },
+  fureur:   { key:'starlord', keyVillain:'ronan', bg:'stages/stone_power.jpg', placeFr:'MORAG', placeEn:'MORAG' },
+  derive:   { key:'vipera', bg:'stages/stone_space.jpg', placeFr:"LA VOUTE D'ASGARD", placeEn:'THE ASGARDIAN VAULT' },
+  attente:  { key:'solen', bg:'stages/stone_time.jpg', placeFr:'KAMAR-TAJ', placeEn:'KAMAR-TAJ' },
+  murmure:  { key:'lorelei', bg:'stages/stone_mind.jpg', placeFr:'LE BERCEAU', placeEn:'THE CRADLE' },
+};
+function stoneHeraldBg(id){ const h = STONE_HERALDS[id]; return h ? h.bg : ''; }
+/* La Pierre du Pouvoir : Star-Lord si tu es HERO, Ronan si tu es VILLAIN, tirage 50/50 en INDEPENDANT. */
+function stoneHeraldKey(id){
+  const h = STONE_HERALDS[id]; if(!h) return null;
+  if(!h.keyVillain) return h.key;
+  const z = zoneOf(S.align);
+  if(z === 'villain') return h.keyVillain;
+  if(z === 'hero') return h.key;
+  S.powerHeraldPick = S.powerHeraldPick || (Math.random() < 0.5 ? h.key : h.keyVillain);
+  return S.powerHeraldPick;
+}
+function heraldPortrait(charKey){
+  const c = CHARACTERS[charKey]; if(!c) return '';
+  const base = c.img || '';
+  try{ for(const k in CHAR_IMG){ if(CHAR_IMG[k] === base && CHAR_POD_IMG[k]) return CHAR_POD_IMG[k]; } }catch(e){}
+  return base;
+}
+/* Repliques de chaque heraut : 3 temps avant le combat, 2 apres. */
+function stoneHeraldBeats(id, phase, heraldName, foeName, won){
+  const fr = S.lang === 'fr';
+  const foe = foeName || (fr ? 'ton adversaire' : 'your opponent');
+  const T = {
+    fracture: {
+      intro: fr ? [
+        `La montagne se souvient de tout. Chaque version de toi qui est montee ici est repartie differente, ou n'est pas repartie.`,
+        `La <b>Pierre de la Realite</b> ne cree rien : elle prend ce que tu crois vrai et le retourne contre toi. ${foe} est deja la, et croit autre chose que toi.`,
+        `Un seul recit tiendra debout apres ce combat. Fais en sorte que ce soit le tien.`,
+      ] : [
+        `The mountain remembers everything. Every version of you that climbed here left different, or never left.`,
+        `The <b>Reality Stone</b> creates nothing: it takes what you believe and turns it against you. ${foe} is already here, believing something else.`,
+        `Only one story will still stand after this fight. Make sure it is yours.`,
+      ],
+      out: won ? (fr ? [
+        `Tu as tenu. La realite a plie dans ton sens, et elle s'en souviendra.`,
+        `Porte-la avec prudence : ce que tu changeras desormais ne pourra plus etre defait.`,
+      ] : [
+        `Reality has chosen the shape you gave it. It will remember.`,
+        `Carry it carefully: what you change from now on cannot be undone.`,
+      ]) : (fr ? [
+        `La montagne a entendu un autre recit que le tien.`,
+        `Reviens quand tu sauras vraiment ce que tu veux rendre reel.`,
+      ] : [
+        `The mountain heard a story other than yours.`,
+        `Come back when you truly know what you want to make real.`,
+      ]),
+    },
+    fureur: {
+      intro: fr ? [
+        `Cette planete est un cimetiere, et l'<b>Orbe</b> en est la pierre tombale. Tout ce qui l'a touchee sans etre pret a fini en poussiere.`,
+        `La <b>Pierre du Pouvoir</b> ne juge pas ton camp. Elle mesure seulement ce que ton corps peut encaisser.`,
+        `${foe} est venu(e) pour la meme chose. L'un de vous deux ressortira d'ici en tenant l'Orbe.`,
+      ] : [
+        `This planet is a graveyard, and the <b>Orb</b> is its headstone. Everything that touched it unprepared became dust.`,
+        `The <b>Power Stone</b> does not judge your side. It only measures what your body can take.`,
+        `${foe} came for the same thing. One of you walks out of here holding the Orb.`,
+      ],
+      out: won ? (fr ? [
+        `Tu es encore debout. Tres peu peuvent en dire autant apres avoir touche cette chose.`,
+        `Maintenant elle bat en toi. Chaque coup que tu porteras sera plus lourd - et plus difficile a retenir.`,
+      ] : [
+        `You're still standing. Very few can say that after touching this thing.`,
+        `Now it beats inside you. Every blow you land will be heavier - and harder to hold back.`,
+      ]) : (fr ? [
+        `L'Orbe ne t'a pas juge digne aujourd'hui, et ton corps l'a senti.`,
+        `Reviens plus fort, ou ne reviens pas du tout.`,
+      ] : [
+        `The Orb did not find you worthy today, and your body felt it.`,
+        `Come back stronger, or don't come back at all.`,
+      ]),
+    },
+    derive: {
+      intro: fr ? [
+        `Bienvenue dans la voute. Tout ce que tu vois ici a ete vole a quelqu'un, moi compris.`,
+        `Le <b>Tesseract</b> ne se garde pas dans un coffre : il se garde par le nerf. Un pas de travers, et l'espace te recrache a l'autre bout de rien.`,
+        `${foe} veut le meme cube que toi. Charmant. Je regarde, et je prends le parti du survivant.`,
+      ] : [
+        `Welcome to the vault. Everything you see here was stolen from someone, myself included.`,
+        `The <b>Tesseract</b> isn't kept in a case: it's kept by nerve. One wrong step and space spits you out at the far end of nothing.`,
+        `${foe} wants the same cube you do. Charming. I'll watch, and side with whoever survives.`,
+      ],
+      out: won ? (fr ? [
+        `Impressionnant. Je m'attendais sincerement a te ramasser en morceaux.`,
+        `L'espace t'obeit maintenant. N'ouvre pas de porte que tu ne sauras pas refermer.`,
+      ] : [
+        `Impressive. I honestly expected to scrape you off the floor.`,
+        `Space answers to you now. Don't open a door you can't close.`,
+      ]) : (fr ? [
+        `Voila pourquoi je prefere regarder.`,
+        `Le cube reste ici. Il attend quelqu'un de plus rapide.`,
+      ] : [
+        `This is exactly why I prefer watching.`,
+        `The cube stays here. It's waiting for someone faster.`,
+      ]),
+    },
+    attente: {
+      intro: fr ? [
+        `J'ai regarde ce moment quatorze mille fois avant que tu ne franchisses la porte.`,
+        `L'<b>Oeil d'Agamotto</b> ne te donnera pas plus de temps : il te montrera exactement combien il t'en reste.`,
+        `Dans presque toutes les versions, ${foe} gagne ce combat. Presque. C'est la seule marge que je peux t'offrir.`,
+      ] : [
+        `I watched this moment fourteen thousand times before you walked through that door.`,
+        `The <b>Eye of Agamotto</b> won't give you more time: it will show you exactly how much you have left.`,
+        `In almost every version, ${foe} wins this fight. Almost. That is the only margin I can offer you.`,
+      ],
+      out: won ? (fr ? [
+        `Tu viens de realiser la seule issue que j'avais vue sur quatorze mille.`,
+        `Le temps t'appartient un peu. Ne t'en sers jamais pour te sauver toi d'abord.`,
+      ] : [
+        `You just walked the single outcome I saw out of fourteen thousand.`,
+        `Time is partly yours now. Never use it to save yourself first.`,
+      ]) : (fr ? [
+        `C'etait le futur le plus probable. Il n'est pas le seul.`,
+        `Repars. Ce couloir se rouvrira quand tu auras change ce que tu es.`,
+      ] : [
+        `That was the most likely future. It isn't the only one.`,
+        `Go. This corridor reopens when you have changed what you are.`,
+      ]),
+    },
+    murmure: {
+      intro: fr ? [
+        `Je suis ne de cette pierre. Je peux donc te dire precisement ce qu'elle fait a un esprit.`,
+        `La <b>Pierre de l'Esprit</b> lit avant de frapper. Elle saura ce que tu vas tenter avant toi.`,
+        `${foe} n'est pas ton vrai adversaire ici : c'est ce que la pierre va te murmurer pendant le combat.`,
+      ] : [
+        `I was born from this stone. So I can tell you precisely what it does to a mind.`,
+        `The <b>Mind Stone</b> reads before it strikes. It will know what you intend before you do.`,
+        `${foe} is not your real opponent here: what the stone whispers to you mid-fight is.`,
+      ],
+      out: won ? (fr ? [
+        `Tu as garde ton propre esprit jusqu'au bout. C'est rare, et c'est tout ce qui compte.`,
+        `Elle pensera avec toi desormais. Verifie toujours quelle voix decide.`,
+      ] : [
+        `You kept your own mind to the very end. That is rare, and it is all that matters.`,
+        `It will think alongside you now. Always check whose voice is deciding.`,
+      ]) : (fr ? [
+        `La pierre a trouve la faille avant toi.`,
+        `Ce n'est pas une defaite, c'est une information. Sers-t'en.`,
+      ] : [
+        `The stone found the flaw before you did.`,
+        `That isn't a defeat, it's information. Use it.`,
+      ]),
+    },
+  };
+  const set = T[id]; if(!set) return [];
+  const lines = phase === 'intro' ? set.intro : set.out;
+  return lines.map(txt=>({ who:heraldName, txt }));
+}
+function showStoneHerald(id, phase, foeName, cb){
+  const shard = ECLATS.find(e=>e.id===id);
+  const cfg = STONE_HERALDS[id];
+  if(!shard || !cfg){ cb(); return; }
+  const fr = S.lang === 'fr';
+  const hKey = stoneHeraldKey(id);
+  const hChar = CHARACTERS[hKey];
+  const heraldName = hChar ? (fr ? hChar.fr : hChar.en).toUpperCase() : '';
+  const beats = stoneHeraldBeats(id, phase, heraldName, foeName, phase !== 'intro');
+  if(!beats.length){ cb(); return; }
+  try{ AudioEngine.playSting('gem'); }catch(e){}
+  const img = heraldPortrait(hKey);
+  const embers = Array.from({length:20}, ()=>{
+    const l = Math.random()*100, d = 6 + Math.random()*7, dl = -Math.random()*9,
+          vx = (Math.random()*90-45)+'px', sc = .6 + Math.random()*1.1;
+    return `<span class="vm-ember" style="left:${l}%; bottom:-4%; --vx:${vx};
+      animation-duration:${d.toFixed(1)}s; animation-delay:${dl.toFixed(1)}s; transform:scale(${sc.toFixed(2)});"></span>`;
+  }).join('');
+  const sparks = [[6,18],[88,26],[20,84],[76,80],[50,-6]].map((p,i)=>
+    `<span class="spark" style="left:${p[0]}%; top:${p[1]}%; animation-delay:${(i*.45).toFixed(2)}s;"></span>`).join('');
+  const stoneName = fr ? shard.frName : shard.enName;
+  const title = phase === 'intro'
+    ? (fr ? "L'EPREUVE" : 'THE TRIAL')
+    : (fr ? 'LA PIERRE T\'ACCEPTE' : 'THE STONE ACCEPTS YOU');
+  const place = fr ? cfg.placeFr : cfg.placeEn;
+  const ov = document.createElement('div');
+  ov.className = 'cine-overlay epic vormir-cine stone-cine';
+  ov.style.setProperty('--sc', shard.col);
+  ov.style.setProperty('--sc2', shard.col2 || shard.col);
+  ov.innerHTML = `
+    <div class="vm-bg" style="background-image:url('${cfg.bg}');"></div>
+    <div class="vm-grade"></div>
+    <div class="vm-fog"></div>
+    ${embers}
+    <div class="vm-flash"></div>
+    <div class="vm-stone" aria-hidden="true">
+      <span class="rays"></span><span class="halo"></span><span class="core"></span>
+      <span class="glint"></span><span class="glint v"></span>${sparks}
+    </div>
+    <div class="vm-wrap">
+      ${img?`<div class="vm-skull"><img src="${img}" alt=""></div>`:''}
+      <div class="vm-panel">
+        <div class="vm-scope">${fr?'TRANSMISSION PRIORITAIRE':'PRIORITY TRANSMISSION'} - ${place}</div>
+        <div class="vm-title">${title}</div>
+        <div class="vm-who" id="shWho"></div>
+        <div class="vm-line" id="shLine"></div>
+        <div class="vm-actions"><button id="shGo"></button></div>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const who = ov.querySelector('#shWho'), line = ov.querySelector('#shLine'), btn = ov.querySelector('#shGo');
+  let i = 0, closed = false;
+  const lastLabel = phase === 'intro'
+    ? (fr ? `AFFRONTER POUR ${stoneName.toUpperCase()}` : `FIGHT FOR ${stoneName.toUpperCase()}`)
+    : (fr ? 'CONTINUER' : 'CONTINUE');
+  const paint = ()=>{
+    const b = beats[i];
+    who.textContent = b.who;
+    line.innerHTML = b.txt;
+    line.style.animation = 'none'; void line.offsetWidth; line.style.animation = '';
+    btn.textContent = (i < beats.length-1) ? (fr?'CONTINUER':'CONTINUE') : lastLabel;
+  };
+  const close = ()=>{
+    if(closed) return; closed = true;
+    try{ AudioEngine.stopSting(); }catch(e){}
+    ov.classList.add('cine-out'); setTimeout(()=>{ ov.remove(); cb(); }, 420);
+  };
+  const step = ()=>{ if(i < beats.length-1){ i++; paint(); if(S.careerAuto) setTimeout(step, 2600); return; } close(); };
+  paint();
+  btn.onclick = step;
+  /* En simulation automatique, la scene se joue seule sans bloquer la carriere. */
+  if(S.careerAuto) setTimeout(step, 2600);
+}
+
 /* ---------- Reprise d'un eclat detenu par un adversaire (vole, ou echec de garde precedent) ---------- */
 function shouldTriggerEclatReclaim(){
   const held = Object.keys(S.eclatHolders||{});
@@ -10915,6 +11189,20 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
         <div class="st-vig"></div>
       </div>`;
     }
+    /* PIERRES D'INFINITE : chaque combat pour une Pierre a son propre decor et son ambiance. */
+    const stoneId = mission && (mission.eclatQuest || mission.eclatReclaim);
+    const stoneBg = stoneId ? stoneHeraldBg(stoneId) : '';
+    if(stoneBg){
+      const sh = ECLATS.find(e=>e.id===stoneId) || { col:'#ffffff' };
+      return `<div class="btl-set btl-stage st-real stage-stone" style="--st-base:#05040a; --st-linec:${sh.col}33; --st-beamc:${sh.col}22;">
+        <div class="st-photo" style="background-image:url('${stoneBg}'); background-position:center 50%;"></div>
+        <div class="st-fog" style="color:${sh.col}44;"><i></i><i></i><i></i></div>
+        <div class="st-l">${stMotes(18, 307, sh.col)}</div>
+        <div class="st-flash" style="animation-duration:13s; --st-flashc:radial-gradient(ellipse 60% 44% at 50% 42%, ${sh.col}55, transparent 64%);"></div>
+        <div class="st-grade"></div>
+        <div class="st-vig"></div>
+      </div>`;
+    }
     const lvl = Math.max(1, Math.min(7, scope|0 || 1));
     const th = STAGE_THEMES[lvl]();
     return `<div class="btl-set btl-stage st-real stage-${lvl}" style="${th.vars.replace(/\s+/g,' ')}">
@@ -12050,7 +12338,9 @@ function resolveOutcome(mission){
       const guardianKey = mission.charKey || null;
       if(shard && win){
         grantEclatShard(shard);
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHeraldFail = shard.id;
         /* Defaite : la plupart du temps (80%), l'adversaire precis que tu viens d'affronter
            devient le nouveau detenteur - il faudra le/la battre pour la recuperer. Sinon (20%),
            personne ne la reclame, mais tu ne repars pas comme si de rien n'etait : ta progression
@@ -12078,6 +12368,7 @@ function resolveOutcome(mission){
       const holderKey = mission.charKey;
       if(shard && win && Math.random() < 0.35){
         grantEclatShard(shard);
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
         const holderName = holderKey && CHARACTERS[holderKey] ? (S.lang==='fr'?CHARACTERS[holderKey].fr:CHARACTERS[holderKey].en) : '';
         jarvisSay(S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`,
@@ -12148,15 +12439,24 @@ function applyChoice(choice){
     S.yearsHistory.push({ year: S.currentYear, entries: S.currentYearEntries.slice(), endAlign: S.align }); S.currentYearEntries = [];
     S.screen='end'; render(); return;
   }
+  if(S.pendingStoneHeraldFail){
+    const failId = S.pendingStoneHeraldFail; S.pendingStoneHeraldFail = null;
+    if(!S.pendingEclatCinematic){
+      showStoneHerald(failId, 'outro', null, ()=>{ handleZoneCheckAndContinue(); });
+      return;
+    }
+  }
   if(S.pendingEclatCinematic){
     const shardId = S.pendingEclatCinematic; S.pendingEclatCinematic = null;
     const shard = ECLATS.find(e=>e.id===shardId);
     if(shard){
-      showEclatCinematic(shard, ()=>{
+      const heraldId = S.pendingStoneHerald; S.pendingStoneHerald = null;
+      const runGem = ()=>showEclatCinematic(shard, ()=>{
         if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); }); return; }
         if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
         handleZoneCheckAndContinue();
       });
+      if(heraldId) showStoneHerald(heraldId, 'outro', null, runGem); else runGem();
       return;
     }
   }
