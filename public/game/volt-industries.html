@@ -6048,6 +6048,7 @@ function screenInvestigation(){
       const eff = win ? iv.successEff : iv.failEff;
       Object.entries(eff||{}).forEach(([k,v])=>{ S.stats[k] = (S.stats[k]||0) + v; });
       if(win){ META.totalInvestigationsSolved = (META.totalInvestigationsSolved||0) + 1; saveMetaProgress(); }
+      try{ feedEclatResonance(eff||{}, { investigation:true, patient:win }); }catch(e){}
       S.screen = 'investigationResult';
       S.investigationResult = {
         win,
@@ -11921,7 +11922,7 @@ function resolveOutcome(mission){
   const pl = computePowerLevel(); const type = mission.type || 'social'; let outcome = null;
   const scopePenalty = ((mission.scope||1)-1) * 0.06;
   const hadEighthBefore = S.eighthStar;
-  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
+  if(type==='combat'){ const winProb = clamp(0.42 + (S.stats.courage-50)/320 + pl/380 - scopePenalty, 0.08, 0.88); const win = (S.pendingBattleWin===true||S.pendingBattleWin===false) ? S.pendingBattleWin : (Math.random() < winProb); S.pendingBattleWin = null; if(win) S.combat.won++; else S.combat.lost++; outcome = win ? 'win' : 'lose'; try{ if(win) feedEclatResonance({}, { battleWin:true, scope:mission.scope||1 }); }catch(e){} if(win && (mission.scope||1)>=6) S.cosmicWins = (S.cosmicWins||0)+1; if(win && (mission.scope||1)>=7) S.trueCosmicWins = (S.trueCosmicWins||0)+1;
     if(mission.grandEvent && win){
       // Un evenement historique remporte compte pour plusieurs victoires a la fois : un vrai tournant de carriere.
       const evScope = mission.scope||6;
