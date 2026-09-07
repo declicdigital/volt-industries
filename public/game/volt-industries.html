@@ -8202,7 +8202,7 @@ function startEclatQuest(){
       ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
       : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
   const m = {
-    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey,
+    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
     tagFr: guardianKey ? 'Quete d\'Infinite' : 'Site d\'Infinite',
     tagEn: guardianKey ? 'Infinity Quest' : 'Infinity Site',
     fr:introFr, en:introEn,
