@@ -9449,36 +9449,8 @@ function downloadVoidCard(){
     }, 'image/png');
   });
 }
-function showEighthStarCinematic(cb){
-  AudioEngine.playSting('eighthStar');
-  const isFr = S.lang==='fr'; const zone = zoneOf(S.align);
-  const villain = zone==='villain';
-  const title = S.eighthStarByGemmes
-    ? (villain ? (isFr?'LE MULTIVERS EST TOMBE':'THE MULTIVERSE HAS FALLEN') : (isFr?'LE MULTIVERS EST SAUVE':'THE MULTIVERSE IS SAVED'))
-    : (isFr?'FIN DE CARRIERE LEGENDAIRE':'LEGENDARY CAREER FINALE');
-  const sub = S.eighthStarByGemmes
-    ? (villain ? (isFr?"Rien ne subsiste de ce qui s'opposait a toi.":"Nothing remains of what stood against you.") : (isFr?"Chaque monde respire encore grace a toi.":"Every world still breathes because of you."))
-    : (villain ? (isFr?"Tu as marque l'histoire par le chaos.":"You have carved history through chaos.") : (isFr?"Ton nom vivra aussi longtemps que les mondes que tu as sauves.":"Your name will live as long as the worlds you saved."));
-  const overlay = document.createElement('div'); overlay.className = 'cine-overlay eighth-star ' + (villain?'villain-8':'hero-8');
-  overlay.innerHTML = `<div class="cine-flash"></div><div class="cine-rays"></div><div class="star8-burst"></div>
-    <div class="cine-content">
-      <div class="star8-icon">&#9733;</div>
-      <div class="cine-scope">${isFr?'8EME ETOILE DEBLOQUEE':'8TH STAR UNLOCKED'}</div>
-      <div class="cine-title">${title}</div>
-      <p class="star8-sub">${sub}</p>
-      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px;">
-        <button class="btl-move" id="star8Download" style="min-width:220px; border-color:var(--gold); background:rgba(255,210,63,.1);"><b>${isFr?'TELECHARGER LA CARTE':'DOWNLOAD THE CARD'}</b></button>
-        <button class="btl-move" id="star8Continue" style="min-width:160px;"><b>${isFr?'CONTINUER':'CONTINUE'}</b></button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  document.body.classList.add('shake-cosmic');
-  setTimeout(()=>{ document.body.classList.remove('shake-cosmic'); }, 2200);
-  overlay.querySelector('#star8Download').onclick = downloadTrophyCard;
-  const advance8 = ()=>{ AudioEngine.stopSting(); overlay.classList.add('cine-out'); setTimeout(()=>{ overlay.remove(); cb(); }, 500); };
-  overlay.querySelector('#star8Continue').onclick = advance8;
-  if(S.careerAuto) setTimeout(advance8, 1200);
-}
+/* Une seule cinematique de 8eme etoile existe : celle du Gantelet aux 6 Gemmes (showVoidCompletionCinematic). */
+
 /* ---------- Les 6 Gemmes d'Infinite reunis : fin speciale dediee, bleu/rose en heros, rouge/violet explosif en villain ---------- */
 function showVoidCompletionCinematic(cb){
   const isFr = S.lang==='fr'; const villain = zoneOf(S.align)==='villain';
