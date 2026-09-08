@@ -9308,9 +9308,8 @@ function generateTrophyCardCanvas(cb){
   function finalize(){
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffffff'; ctx.font = '900 44px Arial, sans-serif';
-    const mainLine = S.eighthStarByGemmes
-      ? (villain ? (isFr?"LE MULTIVERS EST TOMBE":"THE MULTIVERSE HAS FALLEN") : (isFr?"LE MULTIVERS EST SAUVE":"THE MULTIVERSE IS SAVED"))
-      : (isFr?"FIN DE CARRIERE LEGENDAIRE":"LEGENDARY CAREER FINALE");
+    const mainLine = villain ? (isFr?"LE MULTIVERS EST TOMBE":"THE MULTIVERSE HAS FALLEN") : (isFr?"LE MULTIVERS EST SAUVE":"THE MULTIVERSE IS SAVED");
+
     const nLines = wrapCenteredText(ctx, mainLine, cx, pY+pH+68, W-150, 52);
     const nameY = pY+pH+68 + (nLines*26) + 60;
     ctx.font = '700 32px Arial, sans-serif'; ctx.fillStyle = heroCol;
