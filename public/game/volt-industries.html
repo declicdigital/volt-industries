@@ -4978,7 +4978,7 @@ function autoCareerStep(){
 }
 /* Ecrans ou l'on ne sauvegarde pas : accueil et ecrans de creation, pour ne pas ecraser
    une partie en cours avec un etat vide. Partout ailleurs, on sauvegarde. */
-const NO_SAVE_SCREENS = ['welcome','profileChoice','mode','name','path','powers','look','startside','careerDurationChoice','faceforge','codex','duelSim','trophies','end'];
+const NO_SAVE_SCREENS = ['welcome','profileChoice','mode','name','path','powers','look','startside','faceforge','codex','duelSim','trophies','end'];
 /* Serialisation blindee : on ignore les references circulaires, les noeuds DOM, les fonctions
    et tout ce qui ne peut pas etre relu. Sans ca, une seule reference circulaire ajoutee en
    cours de carriere (equipe de combat, element HTML memorise...) faisait echouer JSON.stringify
@@ -4999,46 +4999,47 @@ function safeSerializeState(state){
   });
 }
 function scheduleSaveGame(){
-  if(!window.storage) return;
   if(NO_SAVE_SCREENS.includes(S.screen)) return;
   if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(()=>{ saveGameState(); }, 400);
 }
-async function saveGameState(){
-  if(!window.storage) return;
+/* Une seule sauvegarde, toujours la plus recente, point final : ecriture directe et synchrone
+   dans localStorage, sans intermediaire asynchrone qui pourrait creer une course entre deux
+   ecritures concurrentes (celle programmee normalement et celle du filet de securite a la
+   fermeture). Le plus simple possible, pour eviter tout risque d'incoherence. */
+function saveGameState(){
   if(NO_SAVE_SCREENS.includes(S.screen)) return;
   if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
-  let payload = null;
-  try{ payload = safeSerializeState(S); }catch(e){ payload = null; }
-  if(!payload) return;
-  try{ await window.storage.set('currentGame', payload, false); }
-  catch(e){
-    /* Espace sature : on retente sans les elements les plus lourds (visuels encodes, journaux). */
-    try{
-      const light = JSON.parse(payload);
-      delete light.customPortrait; delete light.customImage; delete light.podImage;
-      if(Array.isArray(light.log) && light.log.length>60) light.log = light.log.slice(-60);
-      if(Array.isArray(light.history) && light.history.length>60) light.history = light.history.slice(-60);
-      await window.storage.set('currentGame', JSON.stringify(light), false);
-    }catch(e2){ /* storage unavailable */ }
-  }
+  try{
+    const payload = safeSerializeState(S);
+    if(payload) localStorage.setItem('volt:currentGame', payload);
+  }catch(e){ /* stockage indisponible ou plein : rien de plus a faire */ }
 }
 async function loadGameState(){
+  try{
+    const raw = localStorage.getItem('volt:currentGame');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
   if(!window.storage) return null;
   try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? JSON.parse(r.value) : null; }
   catch(e){ return null; }
 }
 async function clearGameState(){
+  try{ localStorage.removeItem('volt:currentGame'); }catch(e){}
   if(!window.storage) return;
   try{ await window.storage.delete('currentGame', false); }catch(e){ /* nothing to clear */ }
 }
 /* Filet de securite : on force une sauvegarde quand l'onglet passe en arriere-plan ou se ferme,
-   pour ne jamais perdre l'annee en cours a cause d'une actualisation. */
+   pour ne jamais perdre l'annee en cours a cause d'une actualisation. Volontairement plus permissif
+   que la sauvegarde normale : le but ici est de capturer le DERNIER etat connu quel que soit
+   l'ecran affiche au moment de la fermeture (menu de codex, choix de prolongation...), pas de
+   respecter la meme liste noire que pendant le jeu normal. */
 (function(){
+  const TRUE_MENU_SCREENS = ['welcome','profileChoice','mode','name','path','powers','look','startside','faceforge'];
   function flush(){
     try{
-      if(typeof S === 'undefined' || !S || NO_SAVE_SCREENS.includes(S.screen)) return;
+      if(typeof S === 'undefined' || !S || TRUE_MENU_SCREENS.includes(S.screen)) return;
       if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
       clearTimeout(_saveTimer);
       const payload = safeSerializeState(S);
