@@ -4469,7 +4469,7 @@ function foeStrength(foeKey, mission){
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
   /* Gardiens de Gemme : nettement plus durs que n'importe quel adversaire de mission classique. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 15 : 0;
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 26 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
@@ -5011,7 +5011,7 @@ function renderGemProgressPanel(){
     const shard = ECLATS.find(e=>e.id===id);
     const domain = S.lang==='fr' ? shard.domainFr : shard.domainEn;
     const val = res[id]||0;
-    const pct = Math.min(100, Math.round(val / eclatResThreshold(id) * 100));
+    const pct = Math.min(100, Math.floor(val / eclatResThreshold(id) * 100));
     return `<div style="margin-top:7px;">
       <div style="display:flex; justify-content:space-between; font-size:8px; letter-spacing:.8px; font-weight:900; color:${shard.col};">
         <span>${domain.toUpperCase()}</span><span style="color:var(--dim); font-weight:700;">${pct}%</span>
@@ -5026,7 +5026,7 @@ function renderGemProgressPanel(){
   const vestigeShard = ECLATS.find(e=>e.id==='vestige');
   const vestigeRow = (!owned.includes('vestige') && vestigeShard) ? (function(){
     const val = vormirSoulProgress();
-    const pct = Math.min(100, Math.round(val / VESTIGE_RES_THRESHOLD * 100));
+    const pct = Math.min(100, Math.floor(val / (VESTIGE_RES_THRESHOLD * ((S.gemThresholdMult||{}).vestige||1)) * 100));
     return `<div style="margin-top:7px;">
       <div style="display:flex; justify-content:space-between; font-size:8px; letter-spacing:.8px; font-weight:900; color:${vestigeShard.col};">
         <span>${(S.lang==='fr'?vestigeShard.domainFr:vestigeShard.domainEn).toUpperCase()}</span><span style="color:var(--dim); font-weight:700;">${pct}%</span>
@@ -12442,6 +12442,7 @@ function resolveOutcome(mission){
         grantEclatShard(shard);
         if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
+        if(STONE_HERALDS[shard.id]) S.pendingStoneHeraldFail = shard.id;
         const holderName = holderKey && CHARACTERS[holderKey] ? (S.lang==='fr'?CHARACTERS[holderKey].fr:CHARACTERS[holderKey].en) : '';
         jarvisSay(S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`,
                   S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`, S.lang==='fr'?'reprise manquee':'reclaim failed');
