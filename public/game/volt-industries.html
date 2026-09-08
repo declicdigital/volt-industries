@@ -1301,10 +1301,39 @@
 <div id="app"></div>
 
 <script>
-/* Le stockage persistant (window.storage) est deja fourni par la plateforme elle-meme - ne jamais
-   le redefinir ici. Un ancien polyfill base sur localStorage ecrasait ce vrai systeme, ce qui
-   empechait les sauvegardes de persister correctement (bouton de reprise disparu, historique vide),
-   puisque localStorage ne fonctionne pas de facon fiable dans cet environnement. */
+/* ============================ STORAGE (localStorage) ============================ */
+(function(){
+  var PREFIX = 'volt:';
+  function ok(v){ return Promise.resolve(v); }
+  window.storage = {
+    set: function(key, value){
+      try{ localStorage.setItem(PREFIX+key, String(value)); }catch(e){}
+      return ok({ key:key, ok:true });
+    },
+    get: function(key){
+      var v = null;
+      try{ v = localStorage.getItem(PREFIX+key); }catch(e){}
+      return ok(v===null ? null : { key:key, value:v });
+    },
+    delete: function(key){
+      try{ localStorage.removeItem(PREFIX+key); }catch(e){}
+      return ok({ key:key, ok:true });
+    },
+    list: function(prefix){
+      var keys = [];
+      try{
+        for(var i=0;i<localStorage.length;i++){
+          var k = localStorage.key(i);
+          if(k && k.indexOf(PREFIX)===0){
+            var bare = k.slice(PREFIX.length);
+            if(!prefix || bare.indexOf(prefix)===0) keys.push(bare);
+          }
+        }
+      }catch(e){}
+      return ok({ keys:keys });
+    }
+  };
+})();
 
 /* ============================ THEME ============================ */
 function lerp(a,b,tt){ return a+(b-a)*tt; }
