@@ -6602,6 +6602,11 @@ async function saveMetaProgress(){
 /* Appele une seule fois par carriere terminee, depuis screenEnd. */
 function recordCareerForMeta(){
   if(S.metaRecorded) return; S.metaRecorded = true;
+  /* La sauvegarde de la progression (et donc le deblocage du codex) ne doit jamais dependre du
+     bon deroulement de TOUS les calculs de statistiques ci-dessous : si l'un d'eux plante pour une
+     raison quelconque, on veut quand meme enregistrer ce qui a pu etre calcule avant, plutot que de
+     perdre silencieusement le deblocage de cette carriere entiere. */
+  try{
   META.careersCompleted = (META.careersCompleted||0) + 1;
   const years = S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear);
   META.longestCareerYears = Math.max(META.longestCareerYears||0, years||0);
@@ -6687,6 +6692,7 @@ function recordCareerForMeta(){
   if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
     META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
   }
+  }catch(e){ console.error('recordCareerForMeta : erreur en cours de calcul, sauvegarde quand meme de ce qui a ete enregistre jusque-la', e); }
   saveMetaProgress();
 }
 /* ============================ TROPHEES / HAUTS FAITS ============================
@@ -6843,14 +6849,14 @@ const UNLOCK_TIERS = [
   { ids:['obsidian'], condFr:'Obtenir la 5eme Gemme d\'Infinite', condEn:'Obtain the 5th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=5 },
   { ids:['magneto'], condFr:'Changer de camp 10 fois', condEn:'Switch sides 10 times', check:(m)=>(m.totalSideSwitches||0)>=10 },
   { ids:['apocalypse'], condFr:'Former 50 recrues', condEn:'Train 50 recruits', check:(m)=>(m.totalMenteesTrained||0)>=50 },
-  { ids:['gorr'], condFr:'Gagner 1500 combats', condEn:'Win 1500 fights', check:(m)=>(m.totalFightsWon||0)>=1500 },
+  { ids:['gorr'], condFr:'Gagner 1000 combats', condEn:'Win 1000 fights', check:(m)=>(m.totalFightsWon||0)>=1000 },
   { ids:['ferrum'], condFr:'Terminer une carriere d\'au moins 45 ans', condEn:'Complete a career of at least 45 years', check:(m)=>(m.longestCareerYears||0)>=45 },
   { ids:['mandate'], condFr:'Vaincre ton rival 15 fois', condEn:'Defeat your rival 15 times', check:(m)=>(m.totalRivalWins||0)>=15 },
   { ids:['vaelor'], condFr:'Gagner 150 duels dans le simulateur', condEn:'Win 150 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=150 },
   { ids:['solen'], condFr:'Obtenir tous les artefacts', condEn:'Obtain all artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=7 },
   { ids:['vipera'], condFr:'Obtenir la 6eme Gemme d\'Infinite', condEn:'Obtain the 6th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=6 },
   { ids:['nyx'], condFr:'Terminer une carriere d\'au moins 50 ans', condEn:'Complete a career of at least 50 years', check:(m)=>(m.longestCareerYears||0)>=50 },
-  { ids:['sepulcre'], condFr:'Gagner 2500 combats', condEn:'Win 2500 fights', check:(m)=>(m.totalFightsWon||0)>=2500 },
+  { ids:['sepulcre'], condFr:'Gagner 1500 combats', condEn:'Win 1500 fights', check:(m)=>(m.totalFightsWon||0)>=1500 },
   { ids:['jeangrey'], condFr:'Terminer une carriere d\'au moins 55 ans', condEn:'Complete a career of at least 55 years', check:(m)=>(m.longestCareerYears||0)>=55 },
   { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['sentry'], condFr:'Cumuler 150 etoiles au total (toutes carrieres confondues)', condEn:'Accumulate 150 stars total (across all careers)', check:(m)=>(m.totalStarsEarned||0)>=150 },
