@@ -7720,14 +7720,11 @@ function buildCareerPlan(){
      forcement le detenteur canonique Marvel ; les 4 autres se trouvent lors de combats, missions
      ou quetes, sans detenteur nomme. */
   S.eclats = [];
-  const gemGuards = shuffle(otherCharKeys().slice());
+  /* Aucune Gemme n'a de detenteur au tout debut d'une carriere : tant que tu n'as pas toi-meme
+     progresse vers l'une d'elles (et declenche une quete), personne ne la detient visiblement. Un
+     detenteur n'apparait que naturellement au fil du jeu - soit un rival croise au moment ou ta
+     propre quete se declenche, soit l'adversaire qui te bat et s'en empare. */
   S.eclatHolders = {};
-  const heldCount = Math.random() < 0.5 ? 1 : 2;
-  /* La Pierre de l'Ame ('vestige') est hors de ce tirage : elle ne s'obtient QUE sur Vormir. */
-  shuffle(ECLATS.map(e=>e.id).filter(id=>id!=='vestige')).slice(0, heldCount).forEach((gid,i)=>{
-    const g = gemGuards[i % Math.max(1,gemGuards.length)];
-    if(g) S.eclatHolders[gid] = g;
-  });
 
   if(!S.metCharacters) S.metCharacters = [];
   /* Nouvelle Partie+ : l'heritage d'une carriere remarquable precedente donne un petit coup de pouce
@@ -8590,9 +8587,13 @@ function showEclatCinematic(shard, cb){
   if(S.careerAuto) setTimeout(advance, 1400);
 }
 /* Obtention mutualisee : detecte le moment ou les 6 eclats sont enfin tous reunis. */
-function grantEclatShard(shard){
+function grantEclatShard(shard, viaVormir){
   S.eclats = S.eclats || [];
   if(S.eclats.includes(shard.id)) return;
+  /* Garde-fou absolu : la Pierre de l'Ame ne peut jamais etre accordee que par le sacrifice de
+     Vormir - jamais par une quete normale, une reprise, ou n'importe quel autre chemin, meme par
+     erreur. */
+  if(shard.id==='vestige' && !viaVormir) return;
   S.eclats.push(shard.id);
   if(S.eclatHolders) delete S.eclatHolders[shard.id];
   S.pendingEclatCinematic = shard.id;
@@ -12361,7 +12362,7 @@ function resolveOutcome(mission){
       const rName = rk && CHARACTERS[rk] ? (S.lang==='fr'?CHARACTERS[rk].fr:CHARACTERS[rk].en) : (S.lang==='fr'?'ta recrue':'your recruit');
       if(win){
         const soul = ECLATS.find(e=>e.id==='vestige');
-        if(soul) grantEclatShard(soul);
+        if(soul) grantEclatShard(soul, true);
         if(rk){
           markCharDead(rk, rName, 'ally');
           const mt = (S.mentees||[]).find(x=>x.charKey===rk); if(mt) mt.outcome = 'died';
