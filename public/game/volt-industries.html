@@ -6409,6 +6409,21 @@ const POD_FIT_TWEAKS = {
   custom:{ scale:1.16, y:-10 },      /* Personnage cree par le joueur (PNG detoure) */
 
 };
+/* Ajustements additionnels reserves aux capsules desktop. Le multiplicateur commun rapproche
+   legerement toutes les silhouettes ; les exceptions compensent uniquement les visuels dont le
+   sujet occupe naturellement moins de place, sans toucher au cadrage mobile existant. */
+const POD_DESKTOP_FIT_TWEAKS = {
+  marsh:{ scale:1.10 },               /* Black Widow */
+  nyx:{ scale:1.09 },                 /* Scarlet Witch */
+  aegis:{ scale:1.07 },               /* Captain America : bouclier large, hausse mesuree */
+  malachar:{ scale:1.08 },            /* Thanos */
+  nihil:{ scale:1.10 },               /* Annihilus */
+  capmarvel:{ scale:1.10 },           /* Captain Marvel */
+  drax:{ scale:1.13 },                /* Drax */
+  clea:{ scale:1.12 },                /* Clea */
+  usagent:{ scale:1.10 },             /* U.S. Agent */
+  sepulcre:{ scale:1.06, y:-10 },     /* Galactus : plus present et plus haut */
+};
 function fitPodFigure(img){
   if(!img || !img.naturalWidth || !img.naturalHeight) return;
   try{
@@ -6433,10 +6448,13 @@ function fitPodFigure(img){
     const center=((minX+maxX)/2)/w;
     const shift=Math.max(-14,Math.min(14,(.5-center)*box.width));
     const tw = POD_FIT_TWEAKS[img.dataset.podKey || ''] || {};
-    const finalScale = Math.min(tw.scale ? 1.55 : 1.34, scale * (tw.scale || 1));
+    const desktopPod = window.matchMedia && window.matchMedia('(min-width: 901px)').matches;
+    const dtw = desktopPod ? (POD_DESKTOP_FIT_TWEAKS[img.dataset.podKey || ''] || {}) : {};
+    const desktopScale = desktopPod ? 1.06 * (dtw.scale || 1) : 1;
+    const finalScale = Math.min(desktopPod ? 1.68 : (tw.scale ? 1.55 : 1.34), scale * (tw.scale || 1) * desktopScale);
     img.style.setProperty('--pod-scale',finalScale.toFixed(3));
     img.style.setProperty('--pod-shift-x',`${shift.toFixed(1)}px`);
-    img.style.setProperty('--pod-shift-y',`${(tw.y||0)}px`);
+    img.style.setProperty('--pod-shift-y',`${(tw.y||0)+(desktopPod?(dtw.y||0):0)}px`);
   }catch(e){ img.style.setProperty('--pod-scale','1.02'); }
 }
 function mountIncubatorPod(root){
