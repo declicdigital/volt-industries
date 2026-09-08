@@ -4976,15 +4976,53 @@ function autoCareerStep(){
     setTimeout(autoCareerStep, 500);
   }, 300);
 }
+/* Ecrans ou l'on ne sauvegarde pas : accueil et ecrans de creation, pour ne pas ecraser
+   une partie en cours avec un etat vide. Partout ailleurs, on sauvegarde. */
+const NO_SAVE_SCREENS = ['welcome','profileChoice','roster','create','look','codex','duelSim','trophies','history'];
+/* Serialisation blindee : on ignore les references circulaires, les noeuds DOM, les fonctions
+   et tout ce qui ne peut pas etre relu. Sans ca, une seule reference circulaire ajoutee en
+   cours de carriere (equipe de combat, element HTML memorise...) faisait echouer JSON.stringify
+   en silence et la sauvegarde restait bloquee sur un vieil etat. */
+function safeSerializeState(state){
+  const seen = new WeakSet();
+  return JSON.stringify(state, function(key, value){
+    if(typeof value === 'function' || typeof value === 'symbol') return undefined;
+    if(typeof value === 'number' && !isFinite(value)) return 0;
+    if(value && typeof value === 'object'){
+      if(typeof Node !== 'undefined' && value instanceof Node) return undefined;
+      if(typeof Window !== 'undefined' && value instanceof Window) return undefined;
+      if(value instanceof Element || value instanceof Event) return undefined;
+      if(seen.has(value)) return undefined;
+      seen.add(value);
+    }
+    return value;
+  });
+}
 function scheduleSaveGame(){
   if(!window.storage) return;
-  if(!['mission','mentor','yearbreak','invite','summary'].includes(S.screen)) return;
+  if(NO_SAVE_SCREENS.includes(S.screen)) return;
+  if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(()=>{ saveGameState(); }, 400);
 }
 async function saveGameState(){
   if(!window.storage) return;
-  try{ await window.storage.set('currentGame', JSON.stringify(S), false); }catch(e){ /* storage unavailable */ }
+  if(NO_SAVE_SCREENS.includes(S.screen)) return;
+  if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
+  let payload = null;
+  try{ payload = safeSerializeState(S); }catch(e){ payload = null; }
+  if(!payload) return;
+  try{ await window.storage.set('currentGame', payload, false); }
+  catch(e){
+    /* Espace sature : on retente sans les elements les plus lourds (visuels encodes, journaux). */
+    try{
+      const light = JSON.parse(payload);
+      delete light.customPortrait; delete light.customImage; delete light.podImage;
+      if(Array.isArray(light.log) && light.log.length>60) light.log = light.log.slice(-60);
+      if(Array.isArray(light.history) && light.history.length>60) light.history = light.history.slice(-60);
+      await window.storage.set('currentGame', JSON.stringify(light), false);
+    }catch(e2){ /* storage unavailable */ }
+  }
 }
 async function loadGameState(){
   if(!window.storage) return null;
@@ -4995,6 +5033,22 @@ async function clearGameState(){
   if(!window.storage) return;
   try{ await window.storage.delete('currentGame', false); }catch(e){ /* nothing to clear */ }
 }
+/* Filet de securite : on force une sauvegarde quand l'onglet passe en arriere-plan ou se ferme,
+   pour ne jamais perdre l'annee en cours a cause d'une actualisation. */
+(function(){
+  function flush(){
+    try{
+      if(!window.S || NO_SAVE_SCREENS.includes(S.screen)) return;
+      if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
+      clearTimeout(_saveTimer);
+      const payload = safeSerializeState(S);
+      if(payload) localStorage.setItem('volt:currentGame', payload);
+    }catch(e){}
+  }
+  window.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') flush(); });
+  window.addEventListener('pagehide', flush);
+  window.addEventListener('beforeunload', flush);
+})();
 /* Panneau complet des 6 domaines d'Infinite : une barre par domaine, coloree, sans jamais dire
    "Gemme" - juste le nom mysterieux du domaine. Deplacable comme les autres encarts, et reductible
    d'un simple clic pour ne pas encombrer l'ecran si le joueur n'en a pas besoin. */
