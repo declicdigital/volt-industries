@@ -4978,7 +4978,7 @@ function autoCareerStep(){
 }
 /* Ecrans ou l'on ne sauvegarde pas : accueil et ecrans de creation, pour ne pas ecraser
    une partie en cours avec un etat vide. Partout ailleurs, on sauvegarde. */
-const NO_SAVE_SCREENS = ['welcome','profileChoice','roster','create','look','codex','duelSim','trophies','history'];
+const NO_SAVE_SCREENS = ['welcome','profileChoice','mode','name','path','powers','look','startside','careerDurationChoice','faceforge','codex','duelSim','trophies','end'];
 /* Serialisation blindee : on ignore les references circulaires, les noeuds DOM, les fonctions
    et tout ce qui ne peut pas etre relu. Sans ca, une seule reference circulaire ajoutee en
    cours de carriere (equipe de combat, element HTML memorise...) faisait echouer JSON.stringify
