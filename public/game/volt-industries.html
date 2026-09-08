@@ -12525,7 +12525,6 @@ function applyChoice(choice){
       const heraldId = S.pendingStoneHerald; S.pendingStoneHerald = null;
       const runGem = ()=>showEclatCinematic(shard, ()=>{
         if(S.pendingVoidCompletion){ S.pendingVoidCompletion = false; showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); }); return; }
-        if(S.pendingEighthStarCinematic){ S.pendingEighthStarCinematic = false; showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); }); return; }
         handleZoneCheckAndContinue();
       });
       if(heraldId) showStoneHerald(heraldId, 'outro', null, runGem, true); else runGem();
@@ -12537,11 +12536,7 @@ function applyChoice(choice){
     showVoidCompletionCinematic(()=>{ pushYearHistoryIfDone(); S.screen='end'; render(); });
     return;
   }
-  if(S.pendingEighthStarCinematic){
-    S.pendingEighthStarCinematic = false;
-    showEighthStarCinematic(()=>{ handleZoneCheckAndContinue(); });
-    return;
-  }
+
   /* Un nouveau coup (artefact trouve, palier d'annees...) a fait deborder le total au-dela de 6 :
      le joueur doit choisir lui-meme lequel il abandonne, jamais un coup de Gemme. */
   if(moveOverflow()){
