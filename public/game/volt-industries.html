@@ -5038,7 +5038,7 @@ async function clearGameState(){
 (function(){
   function flush(){
     try{
-      if(!window.S || NO_SAVE_SCREENS.includes(S.screen)) return;
+      if(typeof S === 'undefined' || !S || NO_SAVE_SCREENS.includes(S.screen)) return;
       if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
       clearTimeout(_saveTimer);
       const payload = safeSerializeState(S);
