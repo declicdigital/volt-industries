@@ -4025,6 +4025,16 @@ const DISABLED_CHARS = new Set();
 /* Bassin des recrues generiques (non canon) : utilisees comme mentees potentielles, et desormais
    aussi pour reperer un adversaire qui est lui-meme une recrue (pas un heros/villain nomme). */
 const RECRUIT_ONLY_KEYS = new Set(['nightlark','titanwolf','solaris','kaito','bastion','glitch','tempest','sentinelle','archange','baronvex','venefica','warlock','pyra','rustjaw','requiem','courtier','umbra','precheur']);
+/* Chaque recrue generique repond a un maitre precis, un personnage canon de son propre camp qui l'a
+   formee et commande. Tant que ce maitre est vivant, la recrue ne se bat jamais seule contre toi -
+   uniquement en soutien. Si (et seulement si) tu tues reellement ce maitre, ses recrues deviennent
+   eligibles pour venir te chercher elles-memes, en vengeance. */
+const RECRUIT_MASTER_OF = {
+  nightlark:'hawkeye', titanwolf:'daredevil', solaris:'yelena', kaito:'falcon', bastion:'starlord',
+  glitch:'bucky', tempest:'wasp', sentinelle:'mantis', archange:'rocket',
+  baronvex:'mandate', venefica:'boomnpc', warlock:'sepulcre', pyra:'obsidian', rustjaw:'nihil',
+  requiem:'kaerus', courtier:'magneto', umbra:'apocalypse', precheur:'malachar'
+};
 const NPC_KEYS = Object.keys(CHARACTERS).filter(k=>ORIGINAL_IMGS.has(CHARACTERS[k].img) && !DISABLED_CHARS.has(k));
 const NPC_ONLY_KEYS = NPC_KEYS.slice();
 /* Les personnages jouables servent uniquement de recrues (rookies), a partir de la 5e annee. */
@@ -4565,6 +4575,16 @@ function softenAlign(delta){
 }
 function clampToReputation(v){ const cap = Math.min(reputationCap(), convictionCap()); return v>=0 ? Math.min(v,cap) : Math.max(v,-cap); }
 function charColor(align){ return align==='hero' ? '#00c2ff' : (align==='villain' ? 'var(--red)' : '#b98bff'); }
+/* Camp effectif d'un personnage pour la partie en cours : pas forcement son alignement canonique.
+   Une recrue qui a bascule de camp compte pour son nouveau camp ; le rival tire au sort est
+   toujours force du cote oppose au tien, meme si son alignement de base dit le contraire (visible
+   y compris dans sa couleur en combat). */
+function effectiveAlignOf(k){
+  if(k && S.rivalKey && k===S.rivalKey && S.rivalSide) return S.rivalSide;
+  const mentee = (S.mentees||[]).find(m=>m.charKey===k);
+  if(mentee && (mentee.outcome==='hero' || mentee.outcome==='villain')) return mentee.outcome;
+  return CHARACTERS[k] ? CHARACTERS[k].align : 'neutral';
+}
 function computeStars(){
   const score = careerScore().total;
   if(score<=15) return 1;
@@ -5626,7 +5646,70 @@ function markCharDead(k, name, side){
   else { S.deadAllies = S.deadAllies || []; S.deadAllies.push(rec); }
   if(S.rivalKey===k) S.rivalKey = null;
   if(S.traitorKey===k) S.traitorKey = null;
+  /* Notification de mort : n'importe quel personnage qui meurt dans la partie, peu importe son
+     camp, doit etre annonce - pas de mort silencieuse. */
+  try{
+    const dispName = rec.name;
+    const dead_align = CHARACTERS[k] ? effectiveAlignOf(k) : null;
+    const campLabel = dead_align==='hero' ? (S.lang==='fr'?'cote heros':'hero side')
+      : dead_align==='villain' ? (S.lang==='fr'?'cote villain':'villain side')
+      : (S.lang==='fr'?'independant':'independent');
+    jarvisSay(
+      S.lang==='fr' ? `${dispName} est mort${CHARACTERS[k]&&CHARACTERS[k].sex==='f'?'e':''} (${campLabel}).` : `${dispName} has died (${campLabel}).`,
+      S.lang==='fr' ? `${dispName} est mort${CHARACTERS[k]&&CHARACTERS[k].sex==='f'?'e':''} (${campLabel}).` : `${dispName} has died (${campLabel}).`,
+      S.lang==='fr' ? 'une mort de plus' : 'another death'
+    );
+  }catch(e){}
+  /* Si ce personnage etait le maitre d'une ou plusieurs recrues, celles-ci deviennent eligibles
+     pour venir te chercher elles-memes en vengeance - annonce dediee, separee de la notification
+     de mort generale. */
+  try{
+    const avengers = Object.keys(RECRUIT_MASTER_OF).filter(rk=>RECRUIT_MASTER_OF[rk]===k && CHARACTERS[rk] && !isCharDead(rk));
+    if(avengers.length){
+      S.avengingRecruits = Array.from(new Set((S.avengingRecruits||[]).concat(avengers)));
+      const names = avengers.map(rk=>(S.lang==='fr'?CHARACTERS[rk].fr:CHARACTERS[rk].en)).join(', ');
+      jarvisSay(
+        S.lang==='fr' ? `${names} n'oubliera${avengers.length>1?'ont':''} pas qui a tue son/leur maitre. Attends-toi a les voir venir.` : `${names} won't forget who killed their master. Expect them to come for you.`,
+        S.lang==='fr' ? `${names} n'oubliera${avengers.length>1?'ont':''} pas qui a tue son/leur maitre. Attends-toi a les voir venir.` : `${names} won't forget who killed their master. Expect them to come for you.`,
+        S.lang==='fr' ? 'vengeance en approche' : 'revenge looms'
+      );
+    }
+  }catch(e){}
   return true;
+}
+/* Annonce la raison d'un combat avant qu'il ne commence - jamais un combat qui tombe du ciel sans
+   explication. Verifie le contexte reel (rival, rivalite canonique, traitre, recrue passee a
+   l'ennemi, recrue vengeresse, quete de Pierre) avant de se rabattre sur une explication generique. */
+function announceCombatReason(mission){
+  if(!mission || mission.type!=='combat') return;
+  const k = mission.charKey; if(!k || !CHARACTERS[k]) return;
+  const n = S.lang==='fr' ? CHARACTERS[k].fr : CHARACTERS[k].en;
+  const fr = S.lang==='fr';
+  let msg = null;
+  if(mission.vormirSoul){
+    msg = fr ? `Vormir t'appelle : ${n} se dresse entre toi et la Pierre de l'Ame.` : `Vormir calls: ${n} stands between you and the Soul Stone.`;
+  } else if(mission.eclatQuest || mission.eclatReclaim){
+    const shard = ECLATS.find(e=>e.id===(mission.eclatQuest||mission.eclatReclaim));
+    msg = fr ? `${n} se dresse entre toi et ${shard?shard.frName:"la Gemme"}.` : `${n} stands between you and ${shard?shard.enName:"the Gem"}.`;
+  } else if(k===S.rivalKey){
+    msg = fr ? `${n} - ton rival - te retrouve encore une fois.` : `${n} - your rival - finds you once again.`;
+  } else if(k===S.traitorKey){
+    msg = fr ? `${n} t'a trahi. Il/elle revient regler ca.` : `${n} betrayed you. They're back to settle it.`;
+  } else if((S.avengingRecruits||[]).includes(k)){
+    const masterKey = RECRUIT_MASTER_OF[k];
+    const masterName = masterKey && CHARACTERS[masterKey] ? (fr?CHARACTERS[masterKey].fr:CHARACTERS[masterKey].en) : (fr?'son maitre':'their master');
+    msg = fr ? `${n} vient venger ${masterName}, tombe de tes mains.` : `${n} comes to avenge ${masterName}, who fell by your hand.`;
+  } else if((S.mentees||[]).find(m=>m.charKey===k)){
+    msg = fr ? `${n}, ta propre recrue, a bascule de camp. Elle/il te fait face aujourd'hui.` : `${n}, your own recruit, has switched sides. They face you today.`;
+  } else if(loreRivalOf(S.playerCharKey||'').includes(k)){
+    msg = fr ? `${n} et toi, une vieille histoire qui refait surface.` : `${n} and you - an old story resurfacing.`;
+  } else {
+    const foeSide = effectiveAlignOf(k);
+    msg = foeSide==='neutral'
+      ? (fr ? `${n} croise ta route, sans allegeance a personne.` : `${n} crosses your path, loyal to no one.`)
+      : (fr ? `${n} defend son camp face au tien.` : `${n} defends their side against yours.`);
+  }
+  if(msg) jarvisSay(msg, msg, fr?'raison du combat':'reason for the fight');
 }
 function otherCharKeys(){ return NPC_KEYS.filter(k=>k!==S.playerCharKey && !isCharDead(k)); }
 function avatarVisual(){
@@ -5884,6 +5967,9 @@ async function resetMetaProgress(){
   META.totalMenteesTrained = 0; META.totalDuelSimWins = 0; META.totalInvestigationsSolved = 0;
   META.totalPressEventsHandled = 0; META.totalSideSwitches = 0; META.totalRivalWins = 0;
   META.distinctFactionsJoined = []; META.bestGemsCount = 0;
+  /* Reinitialiser doit aussi effacer la partie en cours - pas seulement les stats de progression
+     globale, sinon une ancienne carriere resterait proposee au retour sur l'accueil. */
+  await clearGameState();
   await saveMetaProgress();
 }
 function showResetConfirm(){
@@ -6466,7 +6552,7 @@ function screenWelcome(){
       <div class="pname">${S.lang==='fr'?'Reprendre ta partie en cours':'Resume your ongoing career'}</div>
       <div class="pdesc">${saved.heroName} - ${S.lang==='fr'?'annee':'year'} ${saved.currentYear||1}/${saved.missionsPlan.length} - ${doneCount} ${S.lang==='fr'?'missions accomplies':'missions completed'}</div>
     </div>`;
-    box.querySelector('#resumeCard').onclick = ()=>{ S = saved; render(); };
+    box.querySelector('#resumeCard').onclick = ()=>{ S = saved; S.careerAuto = false; render(); };
   });
   /* console d'accueil : inamovible */
   return d;
@@ -6852,13 +6938,6 @@ const UNLOCK_TIERS = [
   { ids:['apocalypse'], condFr:'Former 50 recrues', condEn:'Train 50 recruits', check:(m)=>(m.totalMenteesTrained||0)>=50 },
   { ids:['gorr'], condFr:'Gagner 1000 combats', condEn:'Win 1000 fights', check:(m)=>(m.totalFightsWon||0)>=1000 },
   { ids:['ferrum'], condFr:'Terminer une carriere d\'au moins 45 ans', condEn:'Complete a career of at least 45 years', check:(m)=>(m.longestCareerYears||0)>=45 },
-  { ids:['mandate'], condFr:'Vaincre ton rival 15 fois', condEn:'Defeat your rival 15 times', check:(m)=>(m.totalRivalWins||0)>=15 },
-  { ids:['vaelor'], condFr:'Gagner 150 duels dans le simulateur', condEn:'Win 150 duels in the simulator', check:(m)=>(m.totalDuelSimWins||0)>=150 },
-  { ids:['solen'], condFr:'Obtenir tous les artefacts', condEn:'Obtain all artifacts', check:(m)=>(m.artifactsFoundEver||[]).length>=7 },
-  { ids:['vipera'], condFr:'Obtenir la 6eme Gemme d\'Infinite', condEn:'Obtain the 6th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=6 },
-  { ids:['nyx'], condFr:'Terminer une carriere d\'au moins 50 ans', condEn:'Complete a career of at least 50 years', check:(m)=>(m.longestCareerYears||0)>=50 },
-  { ids:['sepulcre'], condFr:'Gagner 1500 combats', condEn:'Win 1500 fights', check:(m)=>(m.totalFightsWon||0)>=1500 },
-  { ids:['jeangrey'], condFr:'Terminer une carriere d\'au moins 55 ans', condEn:'Complete a career of at least 55 years', check:(m)=>(m.longestCareerYears||0)>=55 },
   { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['sentry'], condFr:'Cumuler 150 etoiles au total (toutes carrieres confondues)', condEn:'Accumulate 150 stars total (across all careers)', check:(m)=>(m.totalStarsEarned||0)>=150 },
   { ids:['silversurfer'], condFr:'Jouer avec 40 personnages differents', condEn:'Play as 40 different characters', check:(m)=>(m.charactersPlayed||[]).length>=40 },
@@ -6873,6 +6952,8 @@ const UNLOCK_TIERS = [
   { ids:['ghost'], condFr:'Cumuler 40 etoiles au total', condEn:'Accumulate 40 stars total', check:(m)=>(m.totalStarsEarned||0)>=40 },
   { ids:['surtur'], condFr:'Terminer une carriere de 50 ans', condEn:'Finish a 50-year career', check:(m)=>(m.longestCareerYears||0)>=50 },
   { ids:['ronan'], condFr:'Vaincre ton rival 10 fois', condEn:'Defeat your rival 10 times', check:(m)=>(m.totalRivalWins||0)>=10 },
+  { ids:['mandate'], condFr:'Vaincre ton rival 20 fois', condEn:'Defeat your rival 20 times', check:(m)=>(m.totalRivalWins||0)>=20 },
+  { ids:['sepulcre'], condFr:'Gagner 2000 combats', condEn:'Win 2000 fights', check:(m)=>(m.totalFightsWon||0)>=2000 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
 ];
 function metaVal(k){ return Number(META[k]||0); }
@@ -8294,7 +8375,9 @@ function startEclatQuest(){
      Pierre concernee - le joueur doit reprendre la main pour un moment aussi important. */
   S.careerAuto = false;
   try{ renderCareerAutoWidget(); }catch(e){}
-  /* Annonce du heraut de la Pierre (comme Red Skull sur Vormir), puis le combat. */
+  /* Annonce la raison d'un combat avant qu'il ne commence - jamais un combat qui tombe du ciel sans
+   explication. Verifie le contexte reel (rival, rivalite canonique, traitre, recrue passee a
+   l'ennemi, recrue vengeresse, quete de Pierre) avant de se rabattre sur une explication generique. */
   showStoneHerald(shard.id, 'intro', guardName, ()=>{
     S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
   });
@@ -10303,7 +10386,15 @@ function loreAllyOf(charKey){
 function pickOpponentKey(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const crossed = crossedMentees();
+  /* Une recrue dont le maitre est mort de tes mains devient eligible pour venir te chercher elle-
+     meme, en 1v1 - c'est la seule exception a la regle "jamais seule". */
+  const avengers = (S.avengingRecruits||[]).filter(k=>CHARACTERS[k] && !isCharDead(k));
+  if(avengers.length && Math.random() < 0.22) return pick(avengers);
   const pool = otherCharKeys().filter(charUnlocked).filter(k=>{
+    /* Une recrue ne peut jamais etre l'adversaire principal d'un combat seul a seul - elle
+       n'accompagne qu'en soutien d'un vrai personnage, jamais en tete d'affiche. Exception : une
+       recrue vengeresse, deja geree ci-dessus. */
+    if(RECRUIT_ONLY_KEYS.has(k)) return false;
     /* Une recrue active et loyale ne doit jamais apparaitre comme adversaire aleatoire - seule une
        recrue ayant reellement bascule de camp (crossedMentees ci-dessus) peut te faire face. */
     const mentee = (S.mentees||[]).find(m=>m.charKey===k);
@@ -10821,11 +10912,11 @@ const CHAR_IQ_BY_NAME = {
    chaque tour : plus la note est elevee, plus le personnage agit tot. Cette note varie d'une partie
    a l'autre (jet de des a chaque combat) et peut evoluer au fil de la carriere (choix, age, blessures). */
 const CHAR_SPEED_BY_NAME = {
-  "Galactus": 8, "Silver Surfer": 10, "Thanos": 7, "Sentry": 9, "Hulk": 6, "Thor": 9,
+  "Galactus": 8, "Silver Surfer": 8, "Thanos": 7, "Sentry": 9, "Hulk": 6, "Thor": 9,
   "Surtur": 4, "Ronan": 6,
   "Apocalypse": 6, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
   "Hela": 7, "Doctor Strange": 6, "Magneto": 5, "Gorr": 7, "Telios": 9, "Siddharta": 6,
-  "Professor X": 3, "Ultron": 6, "Annihilus": 6, "Vision": 8, "The G": 7, "Kang": 6,
+  "Professor X": 3, "Ultron": 6, "Annihilus": 6, "Vision": 8, "The G": 7, "Kang": 9,
   "Invisible Woman": 5, "Storm": 6, "Iron Man": 8, "Clea": 7, "Loki": 6, "The Thing": 4,
   "Emma Frost": 4, "Human Torch": 8, "America Chavez": 7, "Mister Fantastic": 5, "Cyclops": 4,
   "Ebony Maw": 4, "Sylvie": 6, "Cull Obsidian": 4, "Venom": 6, "Wolverine": 6, "Wong": 5,
@@ -10840,11 +10931,11 @@ const CHAR_SPEED_BY_NAME = {
    infliges (environ -12% a +15% autour de la moyenne) : assez pour se sentir, pas assez pour
    desequilibrer les combats. Comme l'IQ et la vitesse, elle peut evoluer au fil de la carriere. */
 const CHAR_STRENGTH_BY_NAME = {
-  "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
+  "Galactus": 10, "Silver Surfer": 9, "Thanos": 8, "Sentry": 10, "Hulk": 10, "Thor": 9,
   "Surtur": 10, "Ronan": 8,
-  "Apocalypse": 9, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 4, "Doctor Doom": 8,
+  "Apocalypse": 9, "Captain Marvel": 9, "Jean Grey": 5, "Scarlet Witch": 4, "Doctor Doom": 9,
   "Hela": 8, "Doctor Strange": 4, "Magneto": 4, "Gorr": 8, "Telios": 6, "Siddharta": 9,
-  "Professor X": 2, "Ultron": 7, "Annihilus": 8, "Vision": 8, "The G": 8, "Kang": 6,
+  "Professor X": 2, "Ultron": 7, "Annihilus": 8, "Vision": 8, "The G": 8, "Kang": 9,
   "Invisible Woman": 5, "La Femme Invisible": 5, "Storm": 5, "Iron Man": 7, "Clea": 5, "Loki": 6,
   "The Thing": 8, "La Chose": 8, "Emma Frost": 4, "Human Torch": 5, "La Torche": 5,
   "America Chavez": 6, "Mister Fantastic": 5, "Cyclops": 4, "Cyclope": 4, "Ebony Maw": 3,
@@ -10862,9 +10953,9 @@ const CHAR_STRENGTH_BY_NAME = {
 const CHAR_RES_BY_NAME = {
   "Galactus": 10, "Silver Surfer": 9, "Thanos": 10, "Sentry": 10, "Hulk": 10, "Thor": 9,
   "Surtur": 9, "Ronan": 8,
-  "Apocalypse": 9, "Captain Marvel": 8, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 8,
+  "Apocalypse": 9, "Captain Marvel": 8, "Jean Grey": 5, "Scarlet Witch": 5, "Doctor Doom": 9,
   "Hela": 9, "Doctor Strange": 5, "Magneto": 4, "Gorr": 7, "Telios": 7, "Siddharta": 8,
-  "Professor X": 3, "Ultron": 8, "Annihilus": 8, "Vision": 9, "The G": 8, "Kang": 6,
+  "Professor X": 3, "Ultron": 8, "Annihilus": 8, "Vision": 9, "The G": 8, "Kang": 9,
   "Invisible Woman": 6, "La Femme Invisible": 6, "Storm": 5, "Iron Man": 8, "Clea": 5, "Loki": 5,
   "The Thing": 9, "La Chose": 9, "Emma Frost": 6, "Human Torch": 5, "La Torche": 5,
   "America Chavez": 6, "Mister Fantastic": 6, "Cyclops": 4, "Cyclope": 4, "Ebony Maw": 3,
@@ -10950,9 +11041,18 @@ function gemCountFor(k){
   if(!k || !S.eclatHolders) return 0;
   return Object.values(S.eclatHolders).filter(h=>h===k).length;
 }
+/* Une recrue reste moins forte qu'un personnage etabli tant qu'elle n'a pas gradue - qu'elle soit
+   une recrue generique (RECRUIT_ONLY_KEYS) ou l'une de tes propres recrues encore actives. Une fois
+   diplomee (graduated:true), elle combat a pleine puissance comme n'importe qui d'autre. */
+function recruitPenaltyMult(k){
+  if(RECRUIT_ONLY_KEYS.has(k)) return 0.72;
+  const mentee = (S.mentees||[]).find(m=>m.charKey===k);
+  if(mentee && !mentee.graduated) return 0.8;
+  return 1;
+}
 function combatMaxHp(k){
   const gemCount = gemCountFor(k);
-  const base = (62 + currentRes(k)*7) * worldProgressMult() * primeEliteBonus(k);
+  const base = (62 + currentRes(k)*7) * worldProgressMult() * primeEliteBonus(k) * recruitPenaltyMult(k);
   /* Bonus purement proportionnel (pas de montant fixe ajoute) : l'ecart entre un personnage
      modeste et un personnage au sommet de sa Prime reste globalement respecte meme une fois
      gemme a fond, plutot que tout le monde qui converge vers le meme chiffre. */
@@ -10966,7 +11066,7 @@ function combatMaxHp(k){
   const excess = rawTotal - softStart;
   return Math.round(softStart + excess*0.3);
 }
-function combatAttackPower(k){ return Math.round(55 + currentStrength(k)*3); }
+function combatAttackPower(k){ return Math.round((55 + currentStrength(k)*3) * recruitPenaltyMult(k)); }
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -11018,7 +11118,7 @@ function buildRosterExtras(keys, weakened){
     if(weakened === 'ally') hp = Math.round(maxHp * (0.55 + Math.random()*0.25)); // 55-80%
     else if(weakened === 'foe') hp = Math.round(maxHp * (0.7 + Math.random()*0.2)); // 70-90% : eux aussi ont encaisse
     else if(weakened) hp = Math.round(maxHp * (0.55 + Math.random()*0.25));
-    return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp, ko:false, dead:false };
+    return { key:k, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(effectiveAlignOf(k)||c.align), img:c.img, maxHp, hp, ko:false, dead:false };
   }).filter(Boolean);
 }
 function squadHTML(list, side){
@@ -11326,7 +11426,7 @@ function startBattle(mission, done){
   const myName = S.heroName || (S.lang==='fr'?'Toi':'You');
   const playerZone = zoneOf(S.align);
   const myCol = convBeamColor(playerZone==='villain'?'villain':(playerZone==='hero'?'hero':'neutral'));
-  const foeCol = convBeamColor(foe.align);
+  const foeCol = convBeamColor(effectiveAlignOf(foeKey) || foe.align);
   const form = battleForm();
   const inj = injuryActive();
   const ps = playerStrength(), fs = foeStrength(foeKey, mission);
@@ -11862,7 +11962,7 @@ function startBattle(mission, done){
           const c = CHARACTERS[chosenKey];
           const tier = tierOfKey(chosenKey);
           const maxHp = Math.round(58 + tier*0.9);
-          const newAlly = { key:chosenKey, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(c.align), img:c.img, maxHp, hp:maxHp, ko:false, dead:false, isPlayer:false };
+          const newAlly = { key:chosenKey, name:(S.lang==='fr'?c.fr:c.en), col:convBeamColor(effectiveAlignOf(chosenKey)||c.align), img:c.img, maxHp, hp:maxHp, ko:false, dead:false, isPlayer:false };
           newAlly.spd = spdFor(newAlly);
           allyRoster.push(newAlly);
           turnOrder.push({ side:'ally', idx:allyRoster.length-1, ref:newAlly });
@@ -12224,6 +12324,7 @@ function afterMissionRender(mission){
   if(mission && mission.breakthrough){ const dur = showBreakthroughCinematic(); setTimeout(()=>{ safeTriggerConversation(); if(S.careerAuto) autoCareerStep(); }, dur+150); return; }
   if(shouldBattle(mission)){
     S.pendingBattleWin = null;
+    try{ announceCombatReason(mission); }catch(e){}
     const launch = ()=> startBattle(mission, (win, foeKey, permaDeath)=>{ S.pendingBattleWin = win; S.lastBattleFoeKey = foeKey;
       if(permaDeath || S.dead){
         S.yearsHistory.push({ year:S.currentYear, entries:S.currentYearEntries.slice(), endAlign:S.align }); S.currentYearEntries = [];
@@ -13948,7 +14049,7 @@ function maybeTriggerRomance(){
   const gap = past ? 2 : 0;
   if(S.lastRomanceYear!==null && S.lastRomanceYear!==undefined && S.currentYear - S.lastRomanceYear < gap) return false;
   if(Math.random() > 0.88) return false;
-  const enemy = Math.random() < 0.20;
+  const enemy = Math.random() < 0.04;
   let pool = romanceCandidates(enemy);
   if(!pool.length) pool = romanceCandidates(!enemy);
   if(!pool.length) return false;
