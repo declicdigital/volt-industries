@@ -6713,13 +6713,13 @@ function renderCareerHistoryList(box, items){
   });
   box.querySelectorAll('.hc-view').forEach(btn=>{
     btn.onclick = async ()=>{
-      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.screen='end'; render(); } }
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = restoreSavedState(JSON.parse(r.value)); S.screen='end'; render(); } }
       catch(e){}
     };
   });
   box.querySelectorAll('.hc-replay').forEach(btn=>{
     btn.onclick = async ()=>{
-      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.savedToHistory = false; extendCareer(5); } }
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = restoreSavedState(JSON.parse(r.value)); S.savedToHistory = false; extendCareer(5); } }
       catch(e){}
     };
   });
