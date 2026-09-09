@@ -6677,6 +6677,10 @@ async function saveCareerToHistory(){
 }
 async function loadCareerHistory(box){
   if(!window.storage){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Historique indisponible dans ce contexte.':'History unavailable in this context.'}</p>`; return; }
+  if(window.voltStorageAvailable === false){
+    box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?"Ton navigateur bloque la memoire du jeu (navigation privee ou stockage desactive) : les parties ne peuvent pas etre gardees. Ouvre le jeu dans un onglet normal pour sauvegarder.":"Your browser is blocking the game's storage (private browsing or storage disabled): careers cannot be kept. Open the game in a normal tab to save."}</p>`;
+    return;
+  }
   try{
     const listResult = await window.storage.list('career:', false);
     const keys = (listResult && listResult.keys ? listResult.keys.slice() : []).sort().reverse().slice(0,12);
