@@ -6667,9 +6667,11 @@ async function saveCareerToHistory(){
       timestamp: ts, stateKey: 'career_state:'+ts,
     };
     const key = 'career:'+ts+'_'+Math.random().toString(36).slice(2,6);
+    /* La fiche de carriere d'abord : c'est elle qui alimente le journal. Elle est legere,
+       donc elle passe meme si l'espace est presque plein. */
     await window.storage.set(key, JSON.stringify(record), false);
-    /* Etat complet, pour pouvoir revoir le bilan detaille ou relancer cette carriere plus tard. */
-    await window.storage.set(record.stateKey, JSON.stringify(S), false);
+    /* Etat complet (pour revoir le bilan ou relancer), sans les images encodees. */
+    try{ await window.storage.set(record.stateKey, safeSerializeState(S), false); }catch(e){}
     S.savedToHistory = true;
   }catch(e){ /* storage unavailable - silently skip */ }
 }
