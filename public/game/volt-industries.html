@@ -5039,11 +5039,16 @@ const NO_SAVE_SCREENS = ['welcome','profileChoice','mode','name','path','powers'
    et tout ce qui ne peut pas etre relu. Sans ca, une seule reference circulaire ajoutee en
    cours de carriere (equipe de combat, element HTML memorise...) faisait echouer JSON.stringify
    en silence et la sauvegarde restait bloquee sur un vieil etat. */
+const HEAVY_IMG_TOKEN = '@@VOLT_CUSTOM_IMG@@';
 function safeSerializeState(state){
   const seen = new WeakSet();
   return JSON.stringify(state, function(key, value){
     if(typeof value === 'function' || typeof value === 'symbol') return undefined;
     if(typeof value === 'number' && !isFinite(value)) return 0;
+    /* Les portraits generes depuis une photo sont des images encodees en clair : plusieurs
+       centaines de milliers de caracteres, repetes dans l'etat (portrait, equipes, combats).
+       On ne les recopie pas dans la sauvegarde, on remet l'image au chargement. */
+    if(typeof value === 'string' && value.length > 4000 && value.slice(0,5) === 'data:') return HEAVY_IMG_TOKEN;
     if(value && typeof value === 'object'){
       if(typeof Node !== 'undefined' && value instanceof Node) return undefined;
       if(typeof Window !== 'undefined' && value instanceof Window) return undefined;
@@ -5053,6 +5058,22 @@ function safeSerializeState(state){
     }
     return value;
   });
+}
+/* Remet le portrait personnalise partout ou il avait ete retire avant sauvegarde. */
+function rehydrateHeavyImgs(obj, img, depth){
+  if(!obj || typeof obj !== 'object' || (depth||0) > 8) return obj;
+  Object.keys(obj).forEach(k=>{
+    const v = obj[k];
+    if(v === HEAVY_IMG_TOKEN) obj[k] = img || null;
+    else if(v && typeof v === 'object') rehydrateHeavyImgs(v, img, (depth||0)+1);
+  });
+  return obj;
+}
+function restoreSavedState(parsed){
+  if(!parsed) return parsed;
+  let img = null;
+  try{ const cc = ffLoadCustom(); img = cc && cc.img ? cc.img : null; }catch(e){}
+  return rehydrateHeavyImgs(parsed, img, 0);
 }
 function scheduleSaveGame(){
   if(NO_SAVE_SCREENS.includes(S.screen)) return;
@@ -5069,16 +5090,16 @@ function saveGameState(){
   if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
   try{
     const payload = safeSerializeState(S);
-    if(payload) localStorage.setItem('volt:currentGame', payload);
+    if(payload) window.voltWrite('volt:currentGame', payload);
   }catch(e){ /* stockage indisponible ou plein : rien de plus a faire */ }
 }
 async function loadGameState(){
   try{
     const raw = localStorage.getItem('volt:currentGame');
-    if(raw) return JSON.parse(raw);
+    if(raw) return restoreSavedState(JSON.parse(raw));
   }catch(e){}
   if(!window.storage) return null;
-  try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? JSON.parse(r.value) : null; }
+  try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? restoreSavedState(JSON.parse(r.value)) : null; }
   catch(e){ return null; }
 }
 async function clearGameState(){
