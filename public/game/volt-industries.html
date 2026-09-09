@@ -5120,7 +5120,7 @@ async function clearGameState(){
       if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
       clearTimeout(_saveTimer);
       const payload = safeSerializeState(S);
-      if(payload) localStorage.setItem('volt:currentGame', payload);
+      if(payload) window.voltWrite('volt:currentGame', payload);
     }catch(e){}
   }
   window.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') flush(); });
