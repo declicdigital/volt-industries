@@ -1333,7 +1333,42 @@
       return ok({ keys:keys });
     }
   };
+  /* Ecriture robuste : si le navigateur refuse (espace sature), on fait le ménage
+     (anciens etats de carriere, puis anciennes fiches) et on retente. Sinon plus rien
+     ne se sauvegardait du tout, en silence. */
+  window.voltWrite = function(fullKey, payload){
+    function attempt(){ localStorage.setItem(fullKey, payload); }
+    try{ attempt(); return true; }catch(e){}
+    var rounds = [
+      function(){ return purge('volt:career_state:'); },
+      function(){ return purge('volt:career:'); }
+    ];
+    for(var r=0;r<rounds.length;r++){
+      var removed = rounds[r]();
+      if(!removed) continue;
+      try{ attempt(); return true; }catch(e2){}
+    }
+    return false;
+  };
+  function purge(prefix){
+    var keys = [];
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf(prefix)===0 && k!==prefix) keys.push(k);
+      }
+    }catch(e){ return 0; }
+    keys.sort();
+    var cut = keys.slice(0, Math.max(1, Math.ceil(keys.length/2)));
+    cut.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    return cut.length;
+  }
+  window.voltStorageAvailable = (function(){
+    try{ localStorage.setItem('volt:__probe','1'); localStorage.removeItem('volt:__probe'); return true; }
+    catch(e){ return false; }
+  })();
 })();
+
 
 /* ============================ THEME ============================ */
 function lerp(a,b,tt){ return a+(b-a)*tt; }
