@@ -1307,8 +1307,9 @@
   function ok(v){ return Promise.resolve(v); }
   window.storage = {
     set: function(key, value){
-      try{ localStorage.setItem(PREFIX+key, String(value)); }catch(e){}
-      return ok({ key:key, ok:true });
+      var okWrite = false;
+      try{ okWrite = window.voltWrite(PREFIX+key, String(value)); }catch(e){}
+      return ok({ key:key, ok:okWrite });
     },
     get: function(key){
       var v = null;
@@ -1333,7 +1334,42 @@
       return ok({ keys:keys });
     }
   };
+  /* Ecriture robuste : si le navigateur refuse (espace sature), on fait le ménage
+     (anciens etats de carriere, puis anciennes fiches) et on retente. Sinon plus rien
+     ne se sauvegardait du tout, en silence. */
+  window.voltWrite = function(fullKey, payload){
+    function attempt(){ localStorage.setItem(fullKey, payload); }
+    try{ attempt(); return true; }catch(e){}
+    var rounds = [
+      function(){ return purge('volt:career_state:'); },
+      function(){ return purge('volt:career:'); }
+    ];
+    for(var r=0;r<rounds.length;r++){
+      var removed = rounds[r]();
+      if(!removed) continue;
+      try{ attempt(); return true; }catch(e2){}
+    }
+    return false;
+  };
+  function purge(prefix){
+    var keys = [];
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf(prefix)===0 && k!==prefix) keys.push(k);
+      }
+    }catch(e){ return 0; }
+    keys.sort();
+    var cut = keys.slice(0, Math.max(1, Math.ceil(keys.length/2)));
+    cut.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    return cut.length;
+  }
+  window.voltStorageAvailable = (function(){
+    try{ localStorage.setItem('volt:__probe','1'); localStorage.removeItem('volt:__probe'); return true; }
+    catch(e){ return false; }
+  })();
 })();
+
 
 /* ============================ THEME ============================ */
 function lerp(a,b,tt){ return a+(b-a)*tt; }
@@ -5003,11 +5039,16 @@ const NO_SAVE_SCREENS = ['welcome','profileChoice','mode','name','path','powers'
    et tout ce qui ne peut pas etre relu. Sans ca, une seule reference circulaire ajoutee en
    cours de carriere (equipe de combat, element HTML memorise...) faisait echouer JSON.stringify
    en silence et la sauvegarde restait bloquee sur un vieil etat. */
+const HEAVY_IMG_TOKEN = '@@VOLT_CUSTOM_IMG@@';
 function safeSerializeState(state){
   const seen = new WeakSet();
   return JSON.stringify(state, function(key, value){
     if(typeof value === 'function' || typeof value === 'symbol') return undefined;
     if(typeof value === 'number' && !isFinite(value)) return 0;
+    /* Les portraits generes depuis une photo sont des images encodees en clair : plusieurs
+       centaines de milliers de caracteres, repetes dans l'etat (portrait, equipes, combats).
+       On ne les recopie pas dans la sauvegarde, on remet l'image au chargement. */
+    if(typeof value === 'string' && value.length > 4000 && value.slice(0,5) === 'data:') return HEAVY_IMG_TOKEN;
     if(value && typeof value === 'object'){
       if(typeof Node !== 'undefined' && value instanceof Node) return undefined;
       if(typeof Window !== 'undefined' && value instanceof Window) return undefined;
@@ -5017,6 +5058,22 @@ function safeSerializeState(state){
     }
     return value;
   });
+}
+/* Remet le portrait personnalise partout ou il avait ete retire avant sauvegarde. */
+function rehydrateHeavyImgs(obj, img, depth){
+  if(!obj || typeof obj !== 'object' || (depth||0) > 8) return obj;
+  Object.keys(obj).forEach(k=>{
+    const v = obj[k];
+    if(v === HEAVY_IMG_TOKEN) obj[k] = img || null;
+    else if(v && typeof v === 'object') rehydrateHeavyImgs(v, img, (depth||0)+1);
+  });
+  return obj;
+}
+function restoreSavedState(parsed){
+  if(!parsed) return parsed;
+  let img = null;
+  try{ const cc = ffLoadCustom(); img = cc && cc.img ? cc.img : null; }catch(e){}
+  return rehydrateHeavyImgs(parsed, img, 0);
 }
 function scheduleSaveGame(){
   if(NO_SAVE_SCREENS.includes(S.screen)) return;
@@ -5033,16 +5090,16 @@ function saveGameState(){
   if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
   try{
     const payload = safeSerializeState(S);
-    if(payload) localStorage.setItem('volt:currentGame', payload);
+    if(payload) window.voltWrite('volt:currentGame', payload);
   }catch(e){ /* stockage indisponible ou plein : rien de plus a faire */ }
 }
 async function loadGameState(){
   try{
     const raw = localStorage.getItem('volt:currentGame');
-    if(raw) return JSON.parse(raw);
+    if(raw) return restoreSavedState(JSON.parse(raw));
   }catch(e){}
   if(!window.storage) return null;
-  try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? JSON.parse(r.value) : null; }
+  try{ const r = await window.storage.get('currentGame', false); return (r && r.value) ? restoreSavedState(JSON.parse(r.value)) : null; }
   catch(e){ return null; }
 }
 async function clearGameState(){
@@ -5063,7 +5120,7 @@ async function clearGameState(){
       if(!S.heroName || !S.missionsPlan || !S.missionsPlan.length) return;
       clearTimeout(_saveTimer);
       const payload = safeSerializeState(S);
-      if(payload) localStorage.setItem('volt:currentGame', payload);
+      if(payload) window.voltWrite('volt:currentGame', payload);
     }catch(e){}
   }
   window.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') flush(); });
@@ -6610,14 +6667,20 @@ async function saveCareerToHistory(){
       timestamp: ts, stateKey: 'career_state:'+ts,
     };
     const key = 'career:'+ts+'_'+Math.random().toString(36).slice(2,6);
+    /* La fiche de carriere d'abord : c'est elle qui alimente le journal. Elle est legere,
+       donc elle passe meme si l'espace est presque plein. */
     await window.storage.set(key, JSON.stringify(record), false);
-    /* Etat complet, pour pouvoir revoir le bilan detaille ou relancer cette carriere plus tard. */
-    await window.storage.set(record.stateKey, JSON.stringify(S), false);
+    /* Etat complet (pour revoir le bilan ou relancer), sans les images encodees. */
+    try{ await window.storage.set(record.stateKey, safeSerializeState(S), false); }catch(e){}
     S.savedToHistory = true;
   }catch(e){ /* storage unavailable - silently skip */ }
 }
 async function loadCareerHistory(box){
   if(!window.storage){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Historique indisponible dans ce contexte.':'History unavailable in this context.'}</p>`; return; }
+  if(window.voltStorageAvailable === false){
+    box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?"Ton navigateur bloque la memoire du jeu (navigation privee ou stockage desactive) : les parties ne peuvent pas etre gardees. Ouvre le jeu dans un onglet normal pour sauvegarder.":"Your browser is blocking the game's storage (private browsing or storage disabled): careers cannot be kept. Open the game in a normal tab to save."}</p>`;
+    return;
+  }
   try{
     const listResult = await window.storage.list('career:', false);
     const keys = (listResult && listResult.keys ? listResult.keys.slice() : []).sort().reverse().slice(0,12);
@@ -6654,13 +6717,13 @@ function renderCareerHistoryList(box, items){
   });
   box.querySelectorAll('.hc-view').forEach(btn=>{
     btn.onclick = async ()=>{
-      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.screen='end'; render(); } }
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = restoreSavedState(JSON.parse(r.value)); S.screen='end'; render(); } }
       catch(e){}
     };
   });
   box.querySelectorAll('.hc-replay').forEach(btn=>{
     btn.onclick = async ()=>{
-      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = JSON.parse(r.value); S.savedToHistory = false; extendCareer(5); } }
+      try{ const r = await window.storage.get(btn.dataset.statekey, false); if(r && r.value){ S = restoreSavedState(JSON.parse(r.value)); S.savedToHistory = false; extendCareer(5); } }
       catch(e){}
     };
   });
