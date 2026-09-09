@@ -1307,8 +1307,9 @@
   function ok(v){ return Promise.resolve(v); }
   window.storage = {
     set: function(key, value){
-      try{ localStorage.setItem(PREFIX+key, String(value)); }catch(e){}
-      return ok({ key:key, ok:true });
+      var okWrite = false;
+      try{ okWrite = window.voltWrite(PREFIX+key, String(value)); }catch(e){}
+      return ok({ key:key, ok:okWrite });
     },
     get: function(key){
       var v = null;
