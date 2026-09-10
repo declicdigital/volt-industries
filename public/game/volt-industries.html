@@ -4867,7 +4867,10 @@ function applyMobilePager(){
     if(i !== idx){ idx = i; syncUI(); }
   }, { passive:true });
   syncUI();
-  if(idx > 0) track.scrollLeft = idx * track.clientWidth;
+  if(idx > 0){
+    track.scrollLeft = idx * track.clientWidth;
+    requestAnimationFrame(()=>{ track.scrollLeft = idx * track.clientWidth; });
+  }
 }
 /* ====================================================================================
    MOTEUR AUDIO : musique generative (aucun fichier externe - tout est synthetise en direct
