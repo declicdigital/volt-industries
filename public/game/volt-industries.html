@@ -5803,15 +5803,15 @@ function topbar(){
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(36)}</div>
     <div class="topopts">
       <div class="palsel">${swatches}</div>
-      <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isMuted()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isMuted())}</button>
+      <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isSilent()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isSilent())}</button>
       ${langSel}
     </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
   bar.querySelector('#audioToggle').onclick = (e)=>{
-    AudioEngine.setMuted(!AudioEngine.isMuted());
+    AudioEngine.toggle();
     const btn = e.currentTarget;
-    btn.classList.toggle('muted', AudioEngine.isMuted());
-    btn.innerHTML = audioIconSVG(AudioEngine.isMuted());
+    btn.classList.toggle('muted', AudioEngine.isSilent());
+    btn.innerHTML = audioIconSVG(AudioEngine.isSilent());
   };
   bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
   bar.querySelectorAll('.palsel .swatch').forEach(b=>{ b.onclick=()=>{ S.palette=b.dataset.pal; try{ localStorage.setItem('vi_palette', S.palette); }catch(e){} applyTheme(); render(); }; });
