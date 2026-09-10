@@ -64,6 +64,8 @@
   @media(max-width:560px){ .palsel .swatch{ width:17px; height:17px; } .langsel button{ padding:5px 10px; } }
   .draggable-panel{ cursor:grab; touch-action:none; }
   .draggable-panel.dragging{ cursor:grabbing; opacity:.92; box-shadow:0 18px 40px -12px rgba(0,0,0,.7) !important; z-index:900 !important; }
+  .panel-drag-handle{ width:18px; height:24px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    color:var(--dim); cursor:grab; touch-action:none; font-size:15px; line-height:1; user-select:none; }
   .rank-badge{ position:fixed; top:78px; right:16px; z-index:80; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
     border:1.5px solid var(--line); border-radius:16px; padding:10px 16px; text-align:right; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); }
   .gem-progress-panel{ position:fixed; top:230px; right:16px; z-index:79; width:170px; background:rgba(8,12,22,.85); backdrop-filter:blur(12px);
@@ -1324,6 +1326,8 @@
   .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
 
   @media (max-width:760px){
+    body.mobile-game-pages{ height:100dvh; min-height:100dvh; overflow:hidden; }
+    body.mobile-game-pages #app{ height:100dvh; min-height:0; overflow:hidden; padding-bottom:8px; }
     #app{ padding:8px 10px 10px; }
     .card{ padding:12px 12px; border-radius:16px; }
     .topbar{ margin-bottom:10px; }
@@ -1336,9 +1340,8 @@
     .mpage .rank-badge, .mpage .gem-progress-panel{ position:static !important; transform:none !important;
       width:auto !important; max-width:none !important; text-align:left; margin-top:10px; inset:auto !important; }
     .mpage .rank-badge .rb-head, .mpage .rank-badge .rlove{ justify-content:flex-start; }
-    /* Bouton de simulation : coin haut droit, la place liberee par le choix de langue. */
-    .career-auto-widget{ top:auto !important; bottom:calc(84px + env(safe-area-inset-bottom)) !important;
-      left:auto !important; right:10px !important; transform:none !important; }
+    /* Radio et simulation flottent dans l'ecran mais restent librement repositionnables. */
+    .career-auto-widget{ top:auto; bottom:calc(18px + env(safe-area-inset-bottom)); left:auto; right:10px; transform:none; }
   }
 </style>
 </head>
@@ -4706,6 +4709,12 @@ const _dragPositions = {};
 function makeDraggable(el, key){
   if(!el) return;
   el.classList.add('draggable-panel');
+  if(!_dragPositions[key]){
+    try{
+      const saved = JSON.parse(localStorage.getItem('volt:drag:'+key) || 'null');
+      if(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) _dragPositions[key] = saved;
+    }catch(e){}
+  }
   const pos = _dragPositions[key] || { x:0, y:0 };
   el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
   if(el._dragBound) return;
@@ -4723,10 +4732,20 @@ function makeDraggable(el, key){
     if(!dragging) return;
     const dx = clientX-startX, dy = clientY-startY;
     if(Math.abs(dx)>3 || Math.abs(dy)>3) moved = true;
-    _dragPositions[key] = { x: origX+dx, y: origY+dy };
-    el.style.transform = `translate(${origX+dx}px, ${origY+dy}px)`;
+    let nx = origX+dx, ny = origY+dy;
+    el.style.transform = `translate(${nx}px, ${ny}px)`;
+    const r = el.getBoundingClientRect(), pad = 6;
+    if(r.left < pad) nx += pad-r.left;
+    if(r.right > window.innerWidth-pad) nx -= r.right-(window.innerWidth-pad);
+    if(r.top < pad) ny += pad-r.top;
+    if(r.bottom > window.innerHeight-pad) ny -= r.bottom-(window.innerHeight-pad);
+    _dragPositions[key] = { x:nx, y:ny };
+    el.style.transform = `translate(${nx}px, ${ny}px)`;
   }
-  function up(){ dragging = false; el.classList.remove('dragging'); setTimeout(()=>{ moved = false; }, 0); }
+  function up(){
+    if(dragging){ try{ localStorage.setItem('volt:drag:'+key, JSON.stringify(_dragPositions[key] || {x:0,y:0})); }catch(e){} }
+    dragging = false; el.classList.remove('dragging'); setTimeout(()=>{ moved = false; }, 0);
+  }
   el.addEventListener('mousedown', e=>{ down(e.clientX, e.clientY, e.target); });
   document.addEventListener('mousemove', e=>{ if(dragging) move(e.clientX, e.clientY); });
   document.addEventListener('mouseup', up);
@@ -4747,6 +4766,7 @@ function render(){
   if(S.screen !== 'welcome' && !document.querySelector('.btl-overlay')) AudioEngine.setMode('ambient');
   /* L'accueil reste immerge dans le laboratoire, sans enfermer la capsule dans un cadre. */
   document.body.classList.toggle('lab-scene', S.screen === 'welcome');
+  document.body.classList.toggle('mobile-game-pages', isMobileLayout() && shouldShowSidebar());
 
   const oldToast = document.getElementById('impactToast'); if(oldToast) oldToast.remove();
   const oldRankToast = document.getElementById('rankUpToast'); if(oldRankToast) oldRankToast.remove();
@@ -4817,7 +4837,8 @@ function applyMobilePager(){
      On ne se fie pas a la position a l'ecran (la page peut etre defilee au moment du rendu). */
   const topEl = app.querySelector('.topbar');
   const barH = topEl ? Math.round(topEl.getBoundingClientRect().height) + 22 : 60;
-  const avail = Math.max(320, Math.round(window.innerHeight - barH - 22));
+  const viewportH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const avail = Math.max(220, Math.round(viewportH - barH - 70));
 
   const heights = blocks.map(b=>Math.round(b.getBoundingClientRect().height) || 0);
   const groups = []; let cur = [], h = 0;
@@ -4860,6 +4881,13 @@ function applyMobilePager(){
   wrap.remove();
   pager.appendChild(bar); pager.appendChild(track);
   card.appendChild(pager);
+
+  /* La piste se termine strictement avant le bas visible, barre de navigation iOS comprise. */
+  const visibleH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const trackTop = track.getBoundingClientRect().top;
+  const fittedAvail = Math.max(220, Math.floor(visibleH - trackTop - 8));
+  track.style.height = fittedAvail + 'px';
+  pages.forEach(p=>{ p.style.maxHeight = fittedAvail + 'px'; });
 
   const key = mpagerKey();
   /* On ouvre toujours sur la scene en cours (question + choix). La fiche du personnage
@@ -5075,9 +5103,9 @@ function renderCareerAutoWidget(){
   el.className = 'career-auto-widget' + (S.careerAuto ? ' running' : '');
   makeDraggable(el, 'careerAutoWidget');
   const isFr = S.lang==='fr';
-  el.innerHTML = S.careerAuto
+  el.innerHTML = `<span class="panel-drag-handle" aria-hidden="true">⠿</span>` + (S.careerAuto
     ? `<span class="caw-dot"></span><span class="caw-label">${isFr?'SIMULATION':'SIMULATION'}</span><button class="caw-btn" id="cawStop">${isFr?'ARRETER':'STOP'}</button>`
-    : `<button class="caw-btn caw-start" id="cawStart">${isFr?'Simuler la carriere':'Simulate career'}</button>`;
+    : `<button class="caw-btn caw-start" id="cawStart">${isFr?'Simuler la carriere':'Simulate career'}</button>`);
   const startBtn = el.querySelector('#cawStart'); if(startBtn) startBtn.onclick = ()=>{ _autoStepPending = false; S.careerAuto = true; render(); };
   const stopBtn = el.querySelector('#cawStop'); if(stopBtn) stopBtn.onclick = ()=>{ _autoStepPending = false; S.careerAuto = false; render(); };
 }
