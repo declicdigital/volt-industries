@@ -1338,8 +1338,15 @@
     .mshell ~ footer.mini, .mshell + footer.mini{ display:none; }
     /* Infos + avancee des pierres : integrees dans l'ecran de gauche, plus en flottant. */
     .mpage .rank-badge, .mpage .gem-progress-panel{ position:static !important; transform:none !important;
-      width:auto !important; max-width:none !important; text-align:left; margin-top:10px; inset:auto !important; }
+      width:auto !important; max-width:none !important; text-align:left; margin-top:6px !important; inset:auto !important; }
     .mpage .rank-badge .rb-head, .mpage .rank-badge .rlove{ justify-content:flex-start; }
+    /* Mobile : la fiche va droit au but - pas de barres de stats, pas de doublon du nom de faction,
+       et les infos/pierres remontent juste sous l'incubateur. */
+    .mpage .sidebar-stats .sb-bars{ display:none; }
+    .mpage .sidebar-stats .sb-faction{ display:none; }
+    .mpage .sidebar-stats{ margin-top:2px !important; }
+    .mpage .side-avatar .pod-player{ margin-bottom:2px; }
+    .mpage .rank-badge{ max-width:none !important; }
     /* Radio et simulation flottent dans l'ecran mais restent librement repositionnables. */
     .career-auto-widget{ top:auto; bottom:calc(18px + env(safe-area-inset-bottom)); left:auto; right:10px; transform:none; }
   }
@@ -4756,7 +4763,9 @@ function makeDraggable(el, key){
      de tolerance du glisser-deposer. */
   el.addEventListener('click', e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); } }, true);
 }
-document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') AudioEngine.start(); }, { once:true });
+/* Regle d'or du son : rien ne demarre tout seul. Ni un clic au hasard, ni un changement
+   d'ecran ne lance la musique - seul le bouton son de la barre du haut la reveille.
+   Tant que le joueur n'a pas touche ce bouton, le jeu reste silencieux. */
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
@@ -5037,19 +5046,39 @@ const AudioEngine = (function(){
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
-    const target = muted ? 0 : LOOP_VOL;
     /* Sur mobile (surtout iOS Safari), le volume ne peut pas toujours etre change par script -
        seule la propriete .muted fonctionne de facon fiable partout. On applique les deux. */
     deckA.muted = m; deckB.muted = m;
-    if(activeDeck.paused===false || activeDeck.volume>0) fadeTo(activeDeck, target, 300);
-    if(stingAudio){ stingAudio.muted = m; fadeTo(stingAudio, muted?0:STING_VOL, 300); }
+    if(stingAudio) stingAudio.muted = m;
+    if(muted){
+      /* Sourdine = vraie pause : les platines s'arretent completement et rien ne pourra
+         se relancer seul tant que le joueur ne rappuie pas sur le bouton son. */
+      fadeTo(activeDeck, 0, 200, ()=>{ activeDeck.pause(); });
+      fadeTo(idleDeck, 0, 200, ()=>{ idleDeck.pause(); });
+      if(stingAudio){ const s = stingAudio; fadeTo(s, 0, 200, ()=>{ s.pause(); }); }
+    } else {
+      /* Le clic sur le bouton son EST le geste utilisateur qui autorise le son :
+         on debloque le moteur ici, et seulement ici. */
+      start();
+      if(currentLoopKey){ const k = currentLoopKey; currentLoopKey = null; crossTo(k); }
+    }
   }
   function isMuted(){ return muted; }
+  function isUnlocked(){ return unlocked; }
+  /* Le bouton son est le seul interrupteur : si le son n'a jamais ete active, le clic le
+     demarre ; s'il joue, le clic le met en pause ; s'il est en pause, le clic le relance. */
+  function toggle(){
+    if(muted){ setMuted(false); return; }
+    if(!unlocked){ start(); if(currentLoopKey){ const k = currentLoopKey; currentLoopKey = null; crossTo(k); } return; }
+    setMuted(true);
+  }
+  /* L'icone du bouton reflete le silence reel : muet OU jamais active = icone coupee. */
+  function isSilent(){ return muted || !unlocked; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
      avec les pistes musicales ci-dessus. */
   function speak(text, lang){
-    if(muted) return;
+    if(muted || !unlocked) return; // pas de voix tant que le joueur n'a pas active le son
     if(!('speechSynthesis' in window)) return;
     try{
       window.speechSynthesis.cancel();
@@ -5087,7 +5116,7 @@ const AudioEngine = (function(){
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) healthCheck(); });
   }
 
-  return { start, setMode, playSting, stopSting, setMuted, isMuted, speak };
+  return { start, setMode, playSting, stopSting, setMuted, isMuted, isUnlocked, isSilent, toggle, speak };
 })();
 let _saveTimer = null;
 /* Verrou purement technique, volontairement hors de S : il ne doit jamais etre sauvegarde avec
@@ -5774,15 +5803,15 @@ function topbar(){
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(36)}</div>
     <div class="topopts">
       <div class="palsel">${swatches}</div>
-      <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isMuted()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isMuted())}</button>
+      <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isSilent()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isSilent())}</button>
       ${langSel}
     </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
   bar.querySelector('#audioToggle').onclick = (e)=>{
-    AudioEngine.setMuted(!AudioEngine.isMuted());
+    AudioEngine.toggle();
     const btn = e.currentTarget;
-    btn.classList.toggle('muted', AudioEngine.isMuted());
-    btn.innerHTML = audioIconSVG(AudioEngine.isMuted());
+    btn.classList.toggle('muted', AudioEngine.isSilent());
+    btn.innerHTML = audioIconSVG(AudioEngine.isSilent());
   };
   bar.querySelectorAll('.langsel button').forEach(b=>{ b.onclick=()=>{ S.lang=b.dataset.lang; render(); }; });
   bar.querySelectorAll('.palsel .swatch').forEach(b=>{ b.onclick=()=>{ S.palette=b.dataset.pal; try{ localStorage.setItem('vi_palette', S.palette); }catch(e){} applyTheme(); render(); }; });
@@ -6031,11 +6060,11 @@ function sideAvatarPanel(){
   return `${playerPodPanel()}
 
     <div class="sidebar-stats">
-      <div class="statbar">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), Math.round(computePowerLevel()), 'var(--green)')}</div>
-      <div class="statbar">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
+      <div class="statbar sb-bars">${statBar(t('courage'), S.stats.courage, 'var(--gold)')}${statBar(t('power'), Math.round(computePowerLevel()), 'var(--green)')}</div>
+      <div class="statbar sb-bars">${statBar(t('intelligence'), S.stats.intelligence, '#00e5ff')}${statBar(t('popularity'), S.stats.popularity, '#b98bff')}</div>
       <div class="align-track"><div class="align-dot" style="left:${clamp((S.align+100)/2,0,100)}%;"></div></div>
       <div class="slabel" style="margin-top:6px; text-align:center;">${careerScore().total}<span style="color:var(--dim);">/100</span></div>
-      ${S.team ? `<div style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
+      ${S.team ? `<div class="sb-faction" style="margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px;">
         <div style="width:28px;height:28px;">${factionEmblemSVG(S.team.side, S.team.tier, 28)}</div>
         <span style="font-size:11px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
       </div>` : ''}
@@ -6833,14 +6862,10 @@ function screenWelcome(){
   </div>`;
   mountIncubatorPod(d);
   AudioEngine.setMode('welcome');
-  /* La musique ne peut demarrer qu'apres un geste de l'utilisateur (regle des navigateurs) :
-     le tout premier clic sur l'accueil, quel qu'il soit, la declenche. */
-  if(!d.dataset.audioBound){
-    d.dataset.audioBound = '1';
-    d.addEventListener('click', ()=>{ AudioEngine.start(); }, { once:true });
-  }
+  /* La musique ne demarre que via le bouton son de la barre du haut - jamais au premier
+     clic venu, jamais en relancant une partie. */
   d.querySelector('#go').onclick = ()=>{
-    AudioEngine.start(); AudioEngine.setMode('ambient');
+    AudioEngine.setMode('ambient');
     const fr = S.lang==='fr';
     const greetFr = ["Systemes en ligne. Pret quand vous l'etes.","Bienvenue au laboratoire. Choisissons votre specimen.","Tous les indicateurs sont au vert. On peut y aller."];
     const greetEn = ["Systems online. Ready when you are.","Welcome to the lab. Let's choose your specimen.","All indicators green. We're good to go."];
