@@ -5338,9 +5338,28 @@ function renderRankBadge(){
     const col = S.romance.enemy ? 'var(--red)' : '#ff5c8a';
     loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
   }
-  el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
+  /* Les infos peuvent se replier : sur telephone, seul le nom reste visible. */
+  const wasMin = el.classList.contains('rb-min');
+  el.innerHTML = `<div class="rb-head"><div class="rname">${S.heroName}</div>
+      <button class="panel-min-btn" id="rbMin" type="button" aria-label="reduire">${wasMin?'&plus;':'&minus;'}</button></div>
+    <div class="rb-body"><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}</div>`;
   el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
+  el.querySelector('#rbMin').onclick = (e)=>{
+    e.stopPropagation();
+    const on = !el.classList.contains('rb-min');
+    el.classList.toggle('rb-min', on);
+    el.querySelector('#rbMin').innerHTML = on ? '&plus;' : '&minus;';
+    try{ localStorage.setItem('volt:rbMin', on ? '1' : '0'); }catch(err){}
+  };
+  if(!el._rbInit){
+    el._rbInit = true;
+    let saved = null; try{ saved = localStorage.getItem('volt:rbMin'); }catch(err){}
+    if(saved === '1' || (saved === null && isMobileLayout())){
+      el.classList.add('rb-min');
+      el.querySelector('#rbMin').innerHTML = '&plus;';
+    }
+  }
   if(stars > S.lastStars){ showRankUpToast(stars, zone); showScopeCinematic(stars); }
   S.lastStars = stars;
 }
