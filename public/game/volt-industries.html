@@ -1324,12 +1324,21 @@
   .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
 
   @media (max-width:760px){
-    #app{ padding:14px 12px 24px; }
-    .card{ padding:16px 14px; border-radius:18px; }
+    #app{ padding:8px 10px 10px; }
+    .card{ padding:12px 12px; border-radius:16px; }
+    .topbar{ margin-bottom:10px; }
     .mshell{ display:block; }
     .mshell .side-avatar{ display:none; }
     .mpage .side-avatar{ display:block; width:100%; position:static; }
     .rank-badge{ max-width:52vw; }
+    .mshell ~ footer.mini, .mshell + footer.mini{ display:none; }
+    /* Infos + avancee des pierres : integrees dans l'ecran de gauche, plus en flottant. */
+    .mpage .rank-badge, .mpage .gem-progress-panel{ position:static !important; transform:none !important;
+      width:auto !important; max-width:none !important; text-align:left; margin-top:10px; inset:auto !important; }
+    .mpage .rank-badge .rb-head, .mpage .rank-badge .rlove{ justify-content:flex-start; }
+    /* Bouton de simulation : coin haut droit, la place liberee par le choix de langue. */
+    .career-auto-widget{ top:auto !important; bottom:calc(84px + env(safe-area-inset-bottom)) !important;
+      left:auto !important; right:10px !important; transform:none !important; }
   }
 </style>
 </head>
@@ -4820,7 +4829,16 @@ function applyMobilePager(){
   if(cur.length) groups.push(cur);
 
   const pages = [];
-  if(side){ const p = document.createElement('div'); p.className='mpage'; p.appendChild(side); pages.push(p); }
+  if(side){
+    const p = document.createElement('div'); p.className='mpage'; p.appendChild(side);
+    /* La fiche, le rang/les infos et l'avancee des pierres vivent sur l'ecran de gauche :
+       l'ecran de droite ne garde que la scene, la radio et le bouton de simulation. */
+    const badge = document.getElementById('rankBadgeFixed');
+    if(badge) p.appendChild(badge);
+    const gems = document.getElementById('gemProgressPanel') || document.querySelector('.gem-progress-panel');
+    if(gems) p.appendChild(gems);
+    pages.push(p);
+  }
   groups.forEach(g=>{ const p = document.createElement('div'); p.className='mpage'; g.forEach(b=>p.appendChild(b)); pages.push(p); });
   if(pages.length < 2 && !side) return;
 
@@ -5721,11 +5739,15 @@ function audioIconSVG(muted){
 function topbar(){
   const bar = document.createElement('div'); bar.className='topbar';
   const swatches = PALETTES.map(p=>`<button class="swatch ${S.palette===p.id?'active':''}" data-pal="${p.id}" title="${S.lang==='fr'?p.fr:p.en}" style="background:${p.swatch};"></button>`).join('');
+  /* Le choix de la langue ne sert qu'avant le lancement d'une partie : une fois la carriere
+     commencee, on recupere cette place a l'ecran. */
+  const langSel = shouldShowSidebar() ? '' :
+    `<div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>`;
   bar.innerHTML = `<div class="brand" id="brandHome" style="cursor:pointer;">${wordmarkLogoSVG(36)}</div>
     <div class="topopts">
       <div class="palsel">${swatches}</div>
       <button id="audioToggle" class="audio-toggle-btn ${AudioEngine.isMuted()?'muted':''}" title="${S.lang==='fr'?'Musique':'Music'}">${audioIconSVG(AudioEngine.isMuted())}</button>
-      <div class="langsel"><button data-lang="fr" class="${S.lang==='fr'?'active':''}">FR</button><button data-lang="en" class="${S.lang==='en'?'active':''}">EN</button></div>
+      ${langSel}
     </div>`;
   bar.querySelector('#brandHome').onclick = ()=>{ S.screen='welcome'; render(); };
   bar.querySelector('#audioToggle').onclick = (e)=>{
