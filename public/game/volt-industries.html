@@ -14936,12 +14936,18 @@ function jarvisHUD(){
         <div class="jv-core"><i></i><b></b></div>
         <div class="jv-id"><div class="jv-name">JARVIS</div><div class="jv-sub" id="jvSub">canal securise</div></div>
         <div class="jv-eq">${Array.from({length:9}).map((_,i)=>`<span style="animation-delay:${(i*0.11).toFixed(2)}s"></span>`).join('')}</div>
+        <button class="panel-min-btn" id="jvMin" type="button" aria-label="reduire">&minus;</button>
       </div>
       <div class="jv-wave"><i></i></div>
       <div class="jv-body" id="jvBody"></div>
       <div class="jv-meta"><span id="jvTag">// uplink 99.7 fm</span><button class="jv-mute" id="jvMute"></button></div>`;
     document.body.appendChild(el);
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
+    /* La radio peut se replier pour degager l'ecran (surtout sur telephone). */
+    const minBtn = el.querySelector('#jvMin');
+    minBtn.onclick = (e)=>{ e.stopPropagation(); jvSetMin(!el.classList.contains('jv-min')); };
+    let saved = null; try{ saved = localStorage.getItem('volt:jvMin'); }catch(err){}
+    jvSetMin(saved === null ? isMobileLayout() : saved === '1');
   }
   makeDraggable(el, 'jarvisPanel');
   jvSkin(el);
