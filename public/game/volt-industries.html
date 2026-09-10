@@ -4808,7 +4808,7 @@ function applyMobilePager(){
      On ne se fie pas a la position a l'ecran (la page peut etre defilee au moment du rendu). */
   const topEl = app.querySelector('.topbar');
   const barH = topEl ? Math.round(topEl.getBoundingClientRect().height) + 22 : 60;
-  const avail = Math.max(320, Math.round(window.innerHeight - barH - 108));
+  const avail = Math.max(320, Math.round(window.innerHeight - barH - 22));
 
   const heights = blocks.map(b=>Math.round(b.getBoundingClientRect().height) || 0);
   const groups = []; let cur = [], h = 0;
