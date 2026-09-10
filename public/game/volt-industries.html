@@ -14955,6 +14955,13 @@ function jarvisHUD(){
   return el;
 
 }
+function jvSetMin(on){
+  const el = document.getElementById('jarvis'); if(!el) return;
+  el.classList.toggle('jv-min', !!on);
+  const b = el.querySelector('#jvMin');
+  if(b) b.innerHTML = on ? '&plus;' : '&minus;';
+  try{ localStorage.setItem('volt:jvMin', on ? '1' : '0'); }catch(e){}
+}
 function jvSyncMute(){
   const b = document.getElementById('jvMute'); if(!b) return;
   b.textContent = JV.muted ? jvL('reprendre','resume') : jvL('silence','mute');
