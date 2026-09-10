@@ -5064,6 +5064,16 @@ const AudioEngine = (function(){
     }
   }
   function isMuted(){ return muted; }
+  function isUnlocked(){ return unlocked; }
+  /* Le bouton son est le seul interrupteur : si le son n'a jamais ete active, le clic le
+     demarre ; s'il joue, le clic le met en pause ; s'il est en pause, le clic le relance. */
+  function toggle(){
+    if(muted){ setMuted(false); return; }
+    if(!unlocked){ start(); if(currentLoopKey){ const k = currentLoopKey; currentLoopKey = null; crossTo(k); } return; }
+    setMuted(true);
+  }
+  /* L'icone du bouton reflete le silence reel : muet OU jamais active = icone coupee. */
+  function isSilent(){ return muted || !unlocked; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
      avec les pistes musicales ci-dessus. */
@@ -5106,7 +5116,7 @@ const AudioEngine = (function(){
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) healthCheck(); });
   }
 
-  return { start, setMode, playSting, stopSting, setMuted, isMuted, speak };
+  return { start, setMode, playSting, stopSting, setMuted, isMuted, isUnlocked, isSilent, toggle, speak };
 })();
 let _saveTimer = null;
 /* Verrou purement technique, volontairement hors de S : il ne doit jamais etre sauvegarde avec
