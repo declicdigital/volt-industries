@@ -4765,8 +4765,95 @@ function render(){
   jarvisHUD();
   jarvisAuto();
   renderCareerAutoWidget();
+  applyMobilePager();
   if(S.careerAuto) autoCareerStep();
   scheduleSaveGame();
+}
+/* ====================================================================================
+   LECTURE EN PAGES (mobile)
+   Sur telephone, un ecran de jeu peut etre tres long. Au lieu d'un long defilement
+   vertical, on decoupe le contenu en pages de la hauteur de l'ecran : la fiche du
+   personnage d'abord, puis le contenu de l'ecran par blocs. On passe d'une page a
+   l'autre en glissant horizontalement ou avec les fleches.
+   ==================================================================================== */
+const MPAGER_BREAK = 760;
+let _mpagerState = { key:'', idx:0 };
+function isMobileLayout(){ return window.innerWidth <= MPAGER_BREAK; }
+function mpagerKey(){
+  const m = S.currentMission;
+  return [S.screen, S.currentYear, S.currentMissionInYear, (m && m.id) || ''].join('|');
+}
+function applyMobilePager(){
+  if(!isMobileLayout()) return;
+  const shell = app.querySelector('.game-shell');
+  if(!shell) return;
+  const side = shell.querySelector('.side-avatar');
+  const card = shell.querySelector('.main-col > .card');
+  const wrap = card && card.firstElementChild;
+  if(!card || !wrap) return;
+
+  const blocks = Array.from(wrap.children);
+  if(!blocks.length) return;
+
+  /* Hauteur utile : ce qui reste sous la barre du haut, une fois la carte en place. */
+  const top = card.getBoundingClientRect().top;
+  const avail = Math.max(300, Math.round(window.innerHeight - top - 74));
+
+  const heights = blocks.map(b=>Math.round(b.getBoundingClientRect().height) || 0);
+  const groups = []; let cur = [], h = 0;
+  blocks.forEach((b,i)=>{
+    const bh = heights[i];
+    if(cur.length && (h + bh) > avail){ groups.push(cur); cur = []; h = 0; }
+    cur.push(b); h += bh + 10;
+  });
+  if(cur.length) groups.push(cur);
+
+  const pages = [];
+  if(side){ const p = document.createElement('div'); p.className='mpage'; p.appendChild(side); pages.push(p); }
+  groups.forEach(g=>{ const p = document.createElement('div'); p.className='mpage'; g.forEach(b=>p.appendChild(b)); pages.push(p); });
+  if(pages.length < 2 && !side) return;
+
+  shell.classList.add('mshell');
+  const pager = document.createElement('div'); pager.className='mpager';
+  const bar = document.createElement('div'); bar.className='mpager-bar';
+  const prev = document.createElement('button'); prev.className='mpager-arrow'; prev.type='button';
+  prev.innerHTML='&#10094;'; prev.setAttribute('aria-label', S.lang==='fr'?'Page precedente':'Previous page');
+  const next = document.createElement('button'); next.className='mpager-arrow'; next.type='button';
+  next.innerHTML='&#10095;'; next.setAttribute('aria-label', S.lang==='fr'?'Page suivante':'Next page');
+  const dots = document.createElement('div'); dots.className='mpager-dots';
+  pages.forEach(()=>dots.appendChild(document.createElement('i')));
+  bar.appendChild(prev); bar.appendChild(dots); bar.appendChild(next);
+
+  const track = document.createElement('div'); track.className='mpager-track';
+  track.style.height = avail + 'px';
+  pages.forEach(p=>{ p.style.maxHeight = avail + 'px'; track.appendChild(p); });
+
+  wrap.remove();
+  pager.appendChild(bar); pager.appendChild(track);
+  card.appendChild(pager);
+
+  const key = mpagerKey();
+  let idx = (_mpagerState.key === key) ? Math.min(_mpagerState.idx, pages.length-1) : 0;
+  const syncUI = ()=>{
+    dots.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on', i===idx));
+    prev.disabled = idx <= 0;
+    next.disabled = idx >= pages.length-1;
+    next.classList.toggle('pulse', idx < pages.length-1);
+    _mpagerState = { key:key, idx:idx };
+  };
+  const go = (i)=>{
+    idx = Math.max(0, Math.min(pages.length-1, i));
+    track.scrollTo({ left: idx * track.clientWidth, behavior:'smooth' });
+    syncUI();
+  };
+  prev.onclick = ()=>go(idx-1);
+  next.onclick = ()=>go(idx+1);
+  track.addEventListener('scroll', ()=>{
+    const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    if(i !== idx){ idx = i; syncUI(); }
+  }, { passive:true });
+  syncUI();
+  if(idx > 0) track.scrollLeft = idx * track.clientWidth;
 }
 /* ====================================================================================
    MOTEUR AUDIO : musique generative (aucun fichier externe - tout est synthetise en direct
