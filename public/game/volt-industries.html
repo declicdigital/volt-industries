@@ -1291,6 +1291,46 @@
   /* jamais de rectangle autour de la capsule, quel que soit l'ecran ou l'instant */
   .wl-pod, .wl-pod > .card, .card:has(> .pod), .card:has(> .pod-player), .pod, .pod-scene{
     background:transparent !important; border-color:transparent !important; box-shadow:none !important; backdrop-filter:none !important; }
+
+  /* ================= MOBILE : lecture en pages horizontales =================
+     Sur telephone, le jeu ne se deroule plus vers le bas : le contenu est decoupe en
+     pages de la taille de l'ecran, et on passe a la suite en glissant vers la gauche
+     (ou avec la fleche). Chaque page reste scrollable si son contenu depasse. */
+  .mpager{ position:relative; }
+  .mpager-track{ display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior-x:contain; }
+  .mpager-track::-webkit-scrollbar{ display:none; }
+  .mpage{ flex:0 0 100%; width:100%; scroll-snap-align:start; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:0 2px 4px; }
+  .mpager-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .mpager-dots{ display:flex; align-items:center; gap:5px; flex:1; justify-content:center; }
+  .mpager-dots i{ width:6px; height:6px; border-radius:99px; background:rgba(255,255,255,.22); transition:.2s; }
+  .mpager-dots i.on{ width:16px; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .mpager-arrow{ width:30px; height:30px; flex:0 0 auto; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.05); border:1.5px solid color-mix(in oklab, var(--accent) 45%, transparent);
+    color:var(--accent); font-size:14px; font-weight:900; cursor:pointer; }
+  .mpager-arrow[disabled]{ opacity:.28; border-color:var(--line); color:var(--dim); }
+  .mpager-arrow.pulse{ animation:mpArrow 1.8s ease-in-out infinite; }
+  @keyframes mpArrow{ 0%,100%{ box-shadow:0 0 0 0 var(--accent-soft); } 50%{ box-shadow:0 0 12px 2px var(--accent-soft); } }
+  .mpager-count{ font-size:9px; font-weight:900; letter-spacing:1.4px; color:var(--dim); }
+
+  /* encarts reductibles */
+  .panel-min-btn{ background:none; border:1px solid var(--line); color:var(--dim); border-radius:999px;
+    width:20px; height:20px; line-height:1; font-size:11px; font-weight:900; cursor:pointer; flex:0 0 auto; padding:0; }
+  .panel-min-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  #jarvis.jv-min .jv-wave, #jarvis.jv-min .jv-body, #jarvis.jv-min .jv-meta, #jarvis.jv-min .jv-eq{ display:none !important; }
+  #jarvis.jv-min{ width:auto; min-width:0; padding-bottom:8px; }
+  .rank-badge.rb-min .rb-body{ display:none !important; }
+  .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+
+  @media (max-width:760px){
+    #app{ padding:14px 12px 24px; }
+    .card{ padding:16px 14px; border-radius:18px; }
+    .mshell{ display:block; }
+    .mshell .side-avatar{ display:none; }
+    .mpage .side-avatar{ display:block; width:100%; position:static; }
+    .rank-badge{ max-width:52vw; }
+  }
 </style>
 </head>
 <body class="lab-scene">
@@ -4723,8 +4763,114 @@ function render(){
   jarvisHUD();
   jarvisAuto();
   renderCareerAutoWidget();
+  applyMobilePager();
   if(S.careerAuto) autoCareerStep();
   scheduleSaveGame();
+}
+/* ====================================================================================
+   LECTURE EN PAGES (mobile)
+   Sur telephone, un ecran de jeu peut etre tres long. Au lieu d'un long defilement
+   vertical, on decoupe le contenu en pages de la hauteur de l'ecran : la fiche du
+   personnage d'abord, puis le contenu de l'ecran par blocs. On passe d'une page a
+   l'autre en glissant horizontalement ou avec les fleches.
+   ==================================================================================== */
+const MPAGER_BREAK = 760;
+let _mpagerState = { key:'', idx:0 };
+function isMobileLayout(){ return window.innerWidth <= MPAGER_BREAK; }
+/* Rotation / changement de taille : on remet la mise en page a plat puis on redecoupe. */
+let _mpResizeT = null, _mpWasMobile = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_mpResizeT);
+  _mpResizeT = setTimeout(()=>{
+    const now = isMobileLayout();
+    if(_mpWasMobile === now && !now) return;
+    _mpWasMobile = now;
+    if(shouldShowSidebar()) render();
+  }, 220);
+});
+function mpagerKey(){
+  const m = S.currentMission;
+  return [S.screen, S.currentYear, S.currentMissionInYear, (m && m.id) || ''].join('|');
+}
+function applyMobilePager(){
+  if(!isMobileLayout()) return;
+  const shell = app.querySelector('.game-shell');
+  if(!shell) return;
+  const side = shell.querySelector('.side-avatar');
+  const card = shell.querySelector('.main-col > .card');
+  const wrap = card && card.firstElementChild;
+  if(!card || !wrap) return;
+
+  const blocks = Array.from(wrap.children);
+  if(!blocks.length) return;
+
+  /* Hauteur utile : la hauteur de l'ecran moins la barre du haut et les marges de la carte.
+     On ne se fie pas a la position a l'ecran (la page peut etre defilee au moment du rendu). */
+  const topEl = app.querySelector('.topbar');
+  const barH = topEl ? Math.round(topEl.getBoundingClientRect().height) + 22 : 60;
+  const avail = Math.max(320, Math.round(window.innerHeight - barH - 108));
+
+  const heights = blocks.map(b=>Math.round(b.getBoundingClientRect().height) || 0);
+  const groups = []; let cur = [], h = 0;
+  blocks.forEach((b,i)=>{
+    const bh = heights[i];
+    if(cur.length && (h + bh) > avail){ groups.push(cur); cur = []; h = 0; }
+    cur.push(b); h += bh + 10;
+  });
+  if(cur.length) groups.push(cur);
+
+  const pages = [];
+  if(side){ const p = document.createElement('div'); p.className='mpage'; p.appendChild(side); pages.push(p); }
+  groups.forEach(g=>{ const p = document.createElement('div'); p.className='mpage'; g.forEach(b=>p.appendChild(b)); pages.push(p); });
+  if(pages.length < 2 && !side) return;
+
+  shell.classList.add('mshell');
+  const pager = document.createElement('div'); pager.className='mpager';
+  const bar = document.createElement('div'); bar.className='mpager-bar';
+  const prev = document.createElement('button'); prev.className='mpager-arrow'; prev.type='button';
+  prev.innerHTML='&#10094;'; prev.setAttribute('aria-label', S.lang==='fr'?'Page precedente':'Previous page');
+  const next = document.createElement('button'); next.className='mpager-arrow'; next.type='button';
+  next.innerHTML='&#10095;'; next.setAttribute('aria-label', S.lang==='fr'?'Page suivante':'Next page');
+  const dots = document.createElement('div'); dots.className='mpager-dots';
+  pages.forEach(()=>dots.appendChild(document.createElement('i')));
+  bar.appendChild(prev); bar.appendChild(dots); bar.appendChild(next);
+
+  const track = document.createElement('div'); track.className='mpager-track';
+  track.style.height = avail + 'px';
+  pages.forEach(p=>{ p.style.maxHeight = avail + 'px'; track.appendChild(p); });
+
+  wrap.remove();
+  pager.appendChild(bar); pager.appendChild(track);
+  card.appendChild(pager);
+
+  const key = mpagerKey();
+  /* On ouvre toujours sur la scene en cours (question + choix). La fiche du personnage
+     et ses informations restent accessibles en revenant vers la gauche. */
+  const startIdx = side ? Math.min(1, pages.length-1) : 0;
+  let idx = (_mpagerState.key === key) ? Math.min(_mpagerState.idx, pages.length-1) : startIdx;
+  const syncUI = ()=>{
+    dots.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on', i===idx));
+    prev.disabled = idx <= 0;
+    next.disabled = idx >= pages.length-1;
+    next.classList.toggle('pulse', idx < pages.length-1);
+    _mpagerState = { key:key, idx:idx };
+  };
+  const go = (i)=>{
+    idx = Math.max(0, Math.min(pages.length-1, i));
+    track.scrollTo({ left: idx * track.clientWidth, behavior:'smooth' });
+    syncUI();
+  };
+  prev.onclick = ()=>go(idx-1);
+  next.onclick = ()=>go(idx+1);
+  track.addEventListener('scroll', ()=>{
+    const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    if(i !== idx){ idx = i; syncUI(); }
+  }, { passive:true });
+  syncUI();
+  if(idx > 0){
+    track.scrollLeft = idx * track.clientWidth;
+    requestAnimationFrame(()=>{ track.scrollLeft = idx * track.clientWidth; });
+  }
 }
 /* ====================================================================================
    MOTEUR AUDIO : musique generative (aucun fichier externe - tout est synthetise en direct
@@ -5209,9 +5355,28 @@ function renderRankBadge(){
     const col = S.romance.enemy ? 'var(--red)' : '#ff5c8a';
     loveHtml = `<div class="rlove" style="color:${col};"><span>${pn}${S.romance.secret?(S.lang==='fr'?' (secret)':' (secret)'):''}</span><span class="hb">&#10084;</span></div>`;
   }
-  el.innerHTML = `<div class="rname">${S.heroName}</div><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
-    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}`;
+  /* Les infos peuvent se replier : sur telephone, seul le nom reste visible. */
+  const wasMin = el.classList.contains('rb-min');
+  el.innerHTML = `<div class="rb-head"><div class="rname">${S.heroName}</div>
+      <button class="panel-min-btn" id="rbMin" type="button" aria-label="reduire">${wasMin?'&plus;':'&minus;'}</button></div>
+    <div class="rb-body"><div class="rlabel">${label} - ${scopeLabel(stars).toUpperCase()}</div>
+    <div class="stars">${starsHtml}</div><div class="score-line" style="color:${starColor};">${score}<span style="color:var(--dim);">/100</span> <span style="color:var(--dim); font-size:11px;">${cs.grade}</span></div>${eclatBadgeRowHTML()}${factionHtml}${customFactionHtml}${loveHtml}${rivalBadgeHtml}</div>`;
   el.querySelectorAll('.rival-badge-link').forEach(x=>{ x.onclick = ()=>{ S.pendingReturnScreen=S.screen; S.screen='rivalDossier'; render(); }; });
+  el.querySelector('#rbMin').onclick = (e)=>{
+    e.stopPropagation();
+    const on = !el.classList.contains('rb-min');
+    el.classList.toggle('rb-min', on);
+    el.querySelector('#rbMin').innerHTML = on ? '&plus;' : '&minus;';
+    try{ localStorage.setItem('volt:rbMin', on ? '1' : '0'); }catch(err){}
+  };
+  if(!el._rbInit){
+    el._rbInit = true;
+    let saved = null; try{ saved = localStorage.getItem('volt:rbMin'); }catch(err){}
+    if(saved === '1' || (saved === null && isMobileLayout())){
+      el.classList.add('rb-min');
+      el.querySelector('#rbMin').innerHTML = '&plus;';
+    }
+  }
   if(stars > S.lastStars){ showRankUpToast(stars, zone); showScopeCinematic(stars); }
   S.lastStars = stars;
 }
@@ -14807,18 +14972,31 @@ function jarvisHUD(){
         <div class="jv-core"><i></i><b></b></div>
         <div class="jv-id"><div class="jv-name">JARVIS</div><div class="jv-sub" id="jvSub">canal securise</div></div>
         <div class="jv-eq">${Array.from({length:9}).map((_,i)=>`<span style="animation-delay:${(i*0.11).toFixed(2)}s"></span>`).join('')}</div>
+        <button class="panel-min-btn" id="jvMin" type="button" aria-label="reduire">&minus;</button>
       </div>
       <div class="jv-wave"><i></i></div>
       <div class="jv-body" id="jvBody"></div>
       <div class="jv-meta"><span id="jvTag">// uplink 99.7 fm</span><button class="jv-mute" id="jvMute"></button></div>`;
     document.body.appendChild(el);
     el.querySelector('#jvMute').onclick = ()=>{ JV.muted = !JV.muted; jvSyncMute(); if(!JV.muted) jarvisAuto(true); };
+    /* La radio peut se replier pour degager l'ecran (surtout sur telephone). */
+    const minBtn = el.querySelector('#jvMin');
+    minBtn.onclick = (e)=>{ e.stopPropagation(); jvSetMin(!el.classList.contains('jv-min')); };
+    let saved = null; try{ saved = localStorage.getItem('volt:jvMin'); }catch(err){}
+    jvSetMin(saved === null ? isMobileLayout() : saved === '1');
   }
   makeDraggable(el, 'jarvisPanel');
   jvSkin(el);
   jvSyncMute();
   return el;
 
+}
+function jvSetMin(on){
+  const el = document.getElementById('jarvis'); if(!el) return;
+  el.classList.toggle('jv-min', !!on);
+  const b = el.querySelector('#jvMin');
+  if(b) b.innerHTML = on ? '&plus;' : '&minus;';
+  try{ localStorage.setItem('volt:jvMin', on ? '1' : '0'); }catch(e){}
 }
 function jvSyncMute(){
   const b = document.getElementById('jvMute'); if(!b) return;
