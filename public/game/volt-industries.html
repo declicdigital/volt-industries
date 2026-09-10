@@ -4844,7 +4844,10 @@ function applyMobilePager(){
   card.appendChild(pager);
 
   const key = mpagerKey();
-  let idx = (_mpagerState.key === key) ? Math.min(_mpagerState.idx, pages.length-1) : 0;
+  /* On ouvre toujours sur la scene en cours (question + choix). La fiche du personnage
+     et ses informations restent accessibles en revenant vers la gauche. */
+  const startIdx = side ? Math.min(1, pages.length-1) : 0;
+  let idx = (_mpagerState.key === key) ? Math.min(_mpagerState.idx, pages.length-1) : startIdx;
   const syncUI = ()=>{
     dots.querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on', i===idx));
     prev.disabled = idx <= 0;
