@@ -4763,7 +4763,9 @@ function makeDraggable(el, key){
      de tolerance du glisser-deposer. */
   el.addEventListener('click', e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); } }, true);
 }
-document.addEventListener('click', ()=>{ if(typeof AudioEngine!=='undefined') AudioEngine.start(); }, { once:true });
+/* Regle d'or du son : rien ne demarre tout seul. Ni un clic au hasard, ni un changement
+   d'ecran ne lance la musique - seul le bouton son de la barre du haut la reveille.
+   Tant que le joueur n'a pas touche ce bouton, le jeu reste silencieux. */
 function shouldShowSidebar(){ return !!S.heroName && !['welcome','profileChoice','name'].includes(S.screen); }
 function render(){
   applyTheme();
@@ -5044,19 +5046,29 @@ const AudioEngine = (function(){
   function setMuted(m){
     muted = m;
     try{ localStorage.setItem('volt_audio_muted', m?'1':'0'); }catch(e){}
-    const target = muted ? 0 : LOOP_VOL;
     /* Sur mobile (surtout iOS Safari), le volume ne peut pas toujours etre change par script -
        seule la propriete .muted fonctionne de facon fiable partout. On applique les deux. */
     deckA.muted = m; deckB.muted = m;
-    if(activeDeck.paused===false || activeDeck.volume>0) fadeTo(activeDeck, target, 300);
-    if(stingAudio){ stingAudio.muted = m; fadeTo(stingAudio, muted?0:STING_VOL, 300); }
+    if(stingAudio) stingAudio.muted = m;
+    if(muted){
+      /* Sourdine = vraie pause : les platines s'arretent completement et rien ne pourra
+         se relancer seul tant que le joueur ne rappuie pas sur le bouton son. */
+      fadeTo(activeDeck, 0, 200, ()=>{ activeDeck.pause(); });
+      fadeTo(idleDeck, 0, 200, ()=>{ idleDeck.pause(); });
+      if(stingAudio){ const s = stingAudio; fadeTo(s, 0, 200, ()=>{ s.pause(); }); }
+    } else {
+      /* Le clic sur le bouton son EST le geste utilisateur qui autorise le son :
+         on debloque le moteur ici, et seulement ici. */
+      start();
+      if(currentLoopKey){ const k = currentLoopKey; currentLoopKey = null; crossTo(k); }
+    }
   }
   function isMuted(){ return muted; }
 
   /* Voix JARVIS : synthese vocale du navigateur, sur un canal audio a part - aucun conflit
      avec les pistes musicales ci-dessus. */
   function speak(text, lang){
-    if(muted) return;
+    if(muted || !unlocked) return; // pas de voix tant que le joueur n'a pas active le son
     if(!('speechSynthesis' in window)) return;
     try{
       window.speechSynthesis.cancel();
@@ -6840,14 +6852,10 @@ function screenWelcome(){
   </div>`;
   mountIncubatorPod(d);
   AudioEngine.setMode('welcome');
-  /* La musique ne peut demarrer qu'apres un geste de l'utilisateur (regle des navigateurs) :
-     le tout premier clic sur l'accueil, quel qu'il soit, la declenche. */
-  if(!d.dataset.audioBound){
-    d.dataset.audioBound = '1';
-    d.addEventListener('click', ()=>{ AudioEngine.start(); }, { once:true });
-  }
+  /* La musique ne demarre que via le bouton son de la barre du haut - jamais au premier
+     clic venu, jamais en relancant une partie. */
   d.querySelector('#go').onclick = ()=>{
-    AudioEngine.start(); AudioEngine.setMode('ambient');
+    AudioEngine.setMode('ambient');
     const fr = S.lang==='fr';
     const greetFr = ["Systemes en ligne. Pret quand vous l'etes.","Bienvenue au laboratoire. Choisissons votre specimen.","Tous les indicateurs sont au vert. On peut y aller."];
     const greetEn = ["Systems online. Ready when you are.","Welcome to the lab. Let's choose your specimen.","All indicators green. We're good to go."];
