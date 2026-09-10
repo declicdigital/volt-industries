@@ -1324,12 +1324,21 @@
   .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
 
   @media (max-width:760px){
-    #app{ padding:14px 12px 24px; }
-    .card{ padding:16px 14px; border-radius:18px; }
+    #app{ padding:8px 10px 10px; }
+    .card{ padding:12px 12px; border-radius:16px; }
+    .topbar{ margin-bottom:10px; }
     .mshell{ display:block; }
     .mshell .side-avatar{ display:none; }
     .mpage .side-avatar{ display:block; width:100%; position:static; }
     .rank-badge{ max-width:52vw; }
+    .mshell ~ footer.mini, .mshell + footer.mini{ display:none; }
+    /* Infos + avancee des pierres : integrees dans l'ecran de gauche, plus en flottant. */
+    .mpage .rank-badge, .mpage .gem-progress-panel{ position:static !important; transform:none !important;
+      width:auto !important; max-width:none !important; text-align:left; margin-top:10px; inset:auto !important; }
+    .mpage .rank-badge .rb-head, .mpage .rank-badge .rlove{ justify-content:flex-start; }
+    /* Bouton de simulation : coin haut droit, la place liberee par le choix de langue. */
+    .career-auto-widget{ top:auto !important; bottom:calc(84px + env(safe-area-inset-bottom)) !important;
+      left:auto !important; right:10px !important; transform:none !important; }
   }
 </style>
 </head>
