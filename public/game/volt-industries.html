@@ -8866,8 +8866,19 @@ function grantEclatShard(shard, viaVormir){
 function vormirRecruitKeys(){
   const mentees = (S.mentees||[]).map(m=>m.charKey);
   const loved = (S.romance && S.romance.charKey) ? [S.romance.charKey] : [];
-  return mentees.concat(loved)
+  const primary = mentees.concat(loved)
     .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
+  if(primary.length) return primary;
+  /* Aucune recrue vivante : la falaise reclame alors le lien le plus fort de la carriere,
+     sinon la Pierre de l'Ame devenait impossible a 100% et rien ne se declenchait. */
+  const rel = S.rel||{};
+  const bonds = Object.keys(rel)
+    .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k))
+    .sort((a,b)=>Math.abs(rel[b]||0)-Math.abs(rel[a]||0));
+  if(bonds.length) return bonds.slice(0,3);
+  const squad = (S.squad||[]).map(x=>(x&&x.charKey)||x)
+    .filter(k=>k && CHARACTERS[k] && k!==S.playerCharKey && !isCharDead(k));
+  return squad;
 }
 /* Vormir ne se tire plus au sort : la falaise appelle celui dont les choix ont charge la
    resonance d'Ame - liens noues, recrues formees, sacrifices consentis, promesses tenues ou
