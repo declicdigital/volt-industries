@@ -4777,6 +4777,17 @@ function render(){
 const MPAGER_BREAK = 760;
 let _mpagerState = { key:'', idx:0 };
 function isMobileLayout(){ return window.innerWidth <= MPAGER_BREAK; }
+/* Rotation / changement de taille : on remet la mise en page a plat puis on redecoupe. */
+let _mpResizeT = null, _mpWasMobile = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_mpResizeT);
+  _mpResizeT = setTimeout(()=>{
+    const now = isMobileLayout();
+    if(_mpWasMobile === now && !now) return;
+    _mpWasMobile = now;
+    if(shouldShowSidebar()) render();
+  }, 220);
+});
 function mpagerKey(){
   const m = S.currentMission;
   return [S.screen, S.currentYear, S.currentMissionInYear, (m && m.id) || ''].join('|');
