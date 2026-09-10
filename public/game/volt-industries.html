@@ -4893,12 +4893,31 @@ function applyMobilePager(){
   pager.appendChild(bar); pager.appendChild(track);
   card.appendChild(pager);
 
-  /* La piste se termine strictement avant le bas visible, barre de navigation iOS comprise. */
-  const visibleH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const trackTop = track.getBoundingClientRect().top;
-  const fittedAvail = Math.max(220, Math.floor(visibleH - trackTop - 8));
-  track.style.height = fittedAvail + 'px';
-  pages.forEach(p=>{ p.style.maxHeight = fittedAvail + 'px'; });
+  /* La piste se termine strictement avant le bas visible, barre de navigation iOS comprise.
+     On garde une marge genereuse en bas et on recalcule quand la hauteur visible change
+     (barre Safari qui apparait/disparait, rotation, clavier). */
+  const refit = ()=>{
+    const visibleH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const trackTop = track.getBoundingClientRect().top;
+    const fittedAvail = Math.max(220, Math.floor(visibleH - trackTop - 26));
+    track.style.height = fittedAvail + 'px';
+    pages.forEach(p=>{ p.style.maxHeight = fittedAvail + 'px'; });
+  };
+  refit();
+  if(!window._mpagerResizeBound){
+    window._mpagerResizeBound = true;
+    const refitAll = ()=>{
+      document.querySelectorAll('.mpager').forEach(pg=>{
+        const tr = pg.querySelector('.mpager-track'); if(!tr) return;
+        const visibleH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const fittedAvail = Math.max(220, Math.floor(visibleH - tr.getBoundingClientRect().top - 26));
+        tr.style.height = fittedAvail + 'px';
+        tr.querySelectorAll('.mpage').forEach(p=>{ p.style.maxHeight = fittedAvail + 'px'; });
+      });
+    };
+    window.addEventListener('resize', refitAll);
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', refitAll);
+  }
 
   const key = mpagerKey();
   /* On ouvre toujours sur la scene en cours (question + choix). La fiche du personnage
