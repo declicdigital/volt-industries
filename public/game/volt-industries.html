@@ -4820,7 +4820,16 @@ function applyMobilePager(){
   if(cur.length) groups.push(cur);
 
   const pages = [];
-  if(side){ const p = document.createElement('div'); p.className='mpage'; p.appendChild(side); pages.push(p); }
+  if(side){
+    const p = document.createElement('div'); p.className='mpage'; p.appendChild(side);
+    /* La fiche, le rang/les infos et l'avancee des pierres vivent sur l'ecran de gauche :
+       l'ecran de droite ne garde que la scene, la radio et le bouton de simulation. */
+    const badge = document.getElementById('rankBadgeFixed');
+    if(badge) p.appendChild(badge);
+    const gems = document.getElementById('gemProgressPanel') || document.querySelector('.gem-progress-panel');
+    if(gems) p.appendChild(gems);
+    pages.push(p);
+  }
   groups.forEach(g=>{ const p = document.createElement('div'); p.className='mpage'; g.forEach(b=>p.appendChild(b)); pages.push(p); });
   if(pages.length < 2 && !side) return;
 
