@@ -1291,6 +1291,48 @@
   /* jamais de rectangle autour de la capsule, quel que soit l'ecran ou l'instant */
   .wl-pod, .wl-pod > .card, .card:has(> .pod), .card:has(> .pod-player), .pod, .pod-scene{
     background:transparent !important; border-color:transparent !important; box-shadow:none !important; backdrop-filter:none !important; }
+
+  /* ================= MOBILE : lecture en pages horizontales =================
+     Sur telephone, le jeu ne se deroule plus vers le bas : le contenu est decoupe en
+     pages de la taille de l'ecran, et on passe a la suite en glissant vers la gauche
+     (ou avec la fleche). Chaque page reste scrollable si son contenu depasse. */
+  .mpager{ position:relative; }
+  .mpager-track{ display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior-x:contain; }
+  .mpager-track::-webkit-scrollbar{ display:none; }
+  .mpage{ flex:0 0 100%; width:100%; scroll-snap-align:start; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:0 2px 4px; }
+  .mpager-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .mpager-dots{ display:flex; align-items:center; gap:5px; flex:1; justify-content:center; }
+  .mpager-dots i{ width:6px; height:6px; border-radius:99px; background:rgba(255,255,255,.22); transition:.2s; }
+  .mpager-dots i.on{ width:16px; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .mpager-arrow{ width:30px; height:30px; flex:0 0 auto; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.05); border:1.5px solid color-mix(in oklab, var(--accent) 45%, transparent);
+    color:var(--accent); font-size:14px; font-weight:900; cursor:pointer; }
+  .mpager-arrow[disabled]{ opacity:.28; border-color:var(--line); color:var(--dim); }
+  .mpager-arrow.pulse{ animation:mpArrow 1.8s ease-in-out infinite; }
+  @keyframes mpArrow{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(3px); } }
+  .mpager-count{ font-size:9px; font-weight:900; letter-spacing:1.4px; color:var(--dim); }
+
+  /* encarts reductibles */
+  .panel-min-btn{ background:none; border:1px solid var(--line); color:var(--dim); border-radius:999px;
+    width:20px; height:20px; line-height:1; font-size:11px; font-weight:900; cursor:pointer; flex:0 0 auto; padding:0; }
+  .panel-min-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  #jarvis.jv-min .jv-wave, #jarvis.jv-min .jv-body, #jarvis.jv-min .jv-meta, #jarvis.jv-min .jv-eq{ display:none !important; }
+  #jarvis.jv-min{ width:auto; min-width:0; padding-bottom:8px; }
+  .rank-badge.rb-min .stars, .rank-badge.rb-min .score-line, .rank-badge.rb-min .rlove,
+  .rank-badge.rb-min .rival-badge-link, .rank-badge.rb-min .eclat-badge-row,
+  .rank-badge.rb-min .rlabel{ display:none !important; }
+  .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+
+  @media (max-width:760px){
+    #app{ padding:14px 12px 24px; }
+    .card{ padding:16px 14px; border-radius:18px; }
+    .mshell{ display:block; }
+    .mshell .side-avatar{ display:none; }
+    .mpage .side-avatar{ display:block; width:100%; position:static; }
+    .rank-badge{ max-width:52vw; }
+  }
 </style>
 </head>
 <body class="lab-scene">
