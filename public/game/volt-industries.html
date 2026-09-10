@@ -1320,8 +1320,10 @@
   .panel-min-btn{ background:none; border:1px solid var(--line); color:var(--dim); border-radius:999px;
     width:20px; height:20px; line-height:1; font-size:11px; font-weight:900; cursor:pointer; flex:0 0 auto; padding:0; }
   .panel-min-btn:hover{ border-color:var(--accent); color:var(--accent); }
-  #jarvis.jv-min .jv-wave, #jarvis.jv-min .jv-body, #jarvis.jv-min .jv-meta, #jarvis.jv-min .jv-eq{ display:none !important; }
+  #jarvis.jv-min .jv-wave, #jarvis.jv-min .jv-body, #jarvis.jv-min .jv-meta, #jarvis.jv-min .jv-eq, #jarvis.jv-min .jv-sub{ display:none !important; }
   #jarvis.jv-min{ width:auto; min-width:0; padding-bottom:8px; }
+  #jarvis.jv-min .jv-head{ gap:8px; }
+  #jarvis.jv-min .jv-id{ margin-right:2px; }
   .rank-badge.rb-min .rb-body{ display:none !important; }
   .rank-badge .rb-head{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
 
@@ -5411,12 +5413,12 @@ function renderRankBadge(){
   const starColor = zone==='hero' ? '#ffd23f' : (zone==='villain' ? 'var(--red)' : '#b98bff');
   let starsHtml = ''; for(let i=1;i<=7;i++){ starsHtml += `<span style="color:${i<=stars?starColor:'rgba(255,255,255,.15)'}">&#9733;</span>`; }
   if(eighth) starsHtml += `<span style="color:var(--gold); text-shadow:0 0 10px var(--gold); margin-left:2px;">&#9733;</span>`;
-  const factionHtml = S.team ? `<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
+  const factionHtml = S.team ? `<div class="rb-faction" style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
       <span style="font-size:10px; font-weight:800; color:${charColor(S.team.side)};">${factionName(S.team.side, S.team.tier)}</span>
       <div style="width:24px;height:24px;">${factionEmblemSVG(S.team.side, S.team.tier, 24)}</div>
     </div>` : '';
   /* Une faction que TU as fondee affiche elle aussi son propre petit blason, meme sans palier officiel. */
-  const customFactionHtml = (S.customFactions||[]).map(f=>`<div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
+  const customFactionHtml = (S.customFactions||[]).map(f=>`<div class="rb-faction" style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:6px;">
       <span style="font-size:10px; font-weight:800; color:${charColor(f.side)};">${f.name}</span>
       <div style="width:24px;height:24px;">${customFactionEmblemSVG(f.side, 24)}</div>
     </div>`).join('');
