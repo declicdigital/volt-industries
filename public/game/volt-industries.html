@@ -4806,8 +4806,8 @@ function applyMobilePager(){
 
   /* Hauteur utile : la hauteur de l'ecran moins la barre du haut et les marges de la carte.
      On ne se fie pas a la position a l'ecran (la page peut etre defilee au moment du rendu). */
-  const bar = app.querySelector('.topbar');
-  const barH = bar ? Math.round(bar.getBoundingClientRect().height) + 22 : 60;
+  const topEl = app.querySelector('.topbar');
+  const barH = topEl ? Math.round(topEl.getBoundingClientRect().height) + 22 : 60;
   const avail = Math.max(320, Math.round(window.innerHeight - barH - 108));
 
   const heights = blocks.map(b=>Math.round(b.getBoundingClientRect().height) || 0);
