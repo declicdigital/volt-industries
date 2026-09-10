@@ -4726,6 +4726,24 @@ function makeDraggable(el, key){
   }
   const pos = _dragPositions[key] || { x:0, y:0 };
   el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+  /* La hauteur reellement visible (barre d'adresse iOS exclue) sert de limite,
+     sinon un panneau peut finir cache sous la barre du navigateur. */
+  const visH = ()=> (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+  const clampIntoView = ()=>{
+    const p = _dragPositions[key]; if(!p) return;
+    let nx = p.x, ny = p.y;
+    const r = el.getBoundingClientRect(), pad = 6;
+    if(r.left < pad) nx += pad-r.left;
+    if(r.right > window.innerWidth-pad) nx -= r.right-(window.innerWidth-pad);
+    if(r.top < pad) ny += pad-r.top;
+    if(r.bottom > visH()-pad) ny -= r.bottom-(visH()-pad);
+    if(nx !== p.x || ny !== p.y){
+      _dragPositions[key] = { x:nx, y:ny };
+      el.style.transform = `translate(${nx}px, ${ny}px)`;
+    }
+  };
+  /* Une position enregistree peut etre hors champ (barre Safari, rotation) : on recale. */
+  requestAnimationFrame(clampIntoView);
   if(el._dragBound) return;
   el._dragBound = true;
   let dragging = false, moved = false, startX=0, startY=0, origX=0, origY=0;
@@ -4747,7 +4765,7 @@ function makeDraggable(el, key){
     if(r.left < pad) nx += pad-r.left;
     if(r.right > window.innerWidth-pad) nx -= r.right-(window.innerWidth-pad);
     if(r.top < pad) ny += pad-r.top;
-    if(r.bottom > window.innerHeight-pad) ny -= r.bottom-(window.innerHeight-pad);
+    if(r.bottom > visH()-pad) ny -= r.bottom-(visH()-pad);
     _dragPositions[key] = { x:nx, y:ny };
     el.style.transform = `translate(${nx}px, ${ny}px)`;
   }
