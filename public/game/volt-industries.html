@@ -8189,10 +8189,12 @@ function buildCareerPlan(){
      carriere ratait ce tirage, plus AUCUNE carriere de la session ne pouvait jamais debloquer Doom,
      peu importe la performance du joueur. */
   S.eighthStar = false; S.eighthStarByGemmes = false; S.eighthStarEligible = Math.random() < 0.05; S.pendingEighthStarCinematic = false;
-  /* Mentorat : 70% des carrieres en comportent un ; quand c'est le cas, exactement 2 recrues
-     par tranche de 10 ans de carriere pour le joueur (pas plus). */
-  S.mentorEligible = Math.random() < 0.70;
-  S.mentorCap = S.mentorEligible ? Math.max(1, Math.round((S.years/10) * 2)) : 0;
+  /* Mentorat : plus de tirage au sort a l'ouverture de la carriere. L'eligibilite se merite par de
+     vrais choix de protection/formation faits en jeu (voir feedMentorProgress) - certaines
+     carrieres y arriveront vite si le joueur s'oriente dans ce sens, d'autres jamais si le joueur
+     ne fait jamais ce genre de choix, mais ca ne depend plus jamais du hasard pur. */
+  S.mentorEligible = false; S.mentorProgress = 0; S.mentorThreshold = 6 + Math.floor(Math.random()*5);
+  S.mentorCap = 0;
   S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
   /* ======================================================================================
@@ -8451,6 +8453,17 @@ function shouldTriggerMentor(){
   if(!recruitCandidates().length) return false;
   return Math.random() < 0.46;
 }
+/* Merite l'eligibilite au mentorat par de vrais choix de protection/formation en jeu, plutot que
+   par un tirage au sort a l'ouverture de la carriere. Une fois le seuil atteint, le plafond de
+   recrues se calcule alors, comme avant. */
+function feedMentorProgress(ctx){
+  if(S.mentorEligible || !ctx || !ctx.mentorLean) return;
+  S.mentorProgress = (S.mentorProgress||0) + 1;
+  if(S.mentorProgress >= (S.mentorThreshold||8)){
+    S.mentorEligible = true;
+    S.mentorCap = Math.max(1, Math.round((S.years/10) * 2));
+  }
+}
 /* Entrainements et suivis : plusieurs etapes par recrue, tres regulierement. */
 function shouldTriggerRecruitArc(){
   if(!alignedMentees().length) return false;
@@ -8647,6 +8660,7 @@ function eclatCtxFromChoice(choice, extra){
   if(/negoc|corromp|piege|mentir|manipul|trahi|bluff|deceive|corrupt|trap|lie|betray/.test(t)) ctx.deceit = true;
   if(/attendre|patien|observer|etudier|analyser|preparer|study|wait|observe|analyz|prepare/.test(t)) ctx.patient = true;
   if(/sacrifi|proteger|sauver|epargner|jurer|promettre|sacrific|protect|save|spare|vow/.test(t)) ctx.sacrifice = true;
+  if(/former|formation|guider|enseigner|transmettre|prendre sous ton aile|prendre sous son aile|mentor|train|teach|guide|mentor|nurture|take.*under.*wing/.test(t)) ctx.mentorLean = true;
   return ctx;
 }
 function eclatResLeader(excludeVestige){
@@ -12875,6 +12889,7 @@ function applyMentorChoice(choice, name){
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   S.currentYearEntries.push({ tag: t('mentorTag'), location:null, type:'mentor', outcome:finalRecruit });
   try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { recruit: finalRecruit==='hero'||finalRecruit==='villain', death: finalRecruit==='died' })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
+  try{ feedMentorProgress(eclatCtxFromChoice(choice, {})); }catch(e){}
   showImpact(impactFromEff(eff, eff.align||0), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   if(convertMsgFr) jarvisSay(convertMsgFr, convertMsgEn, S.lang==='fr'?'tentative de conversion':'conversion attempt');
   handleZoneCheckAndContinue();
@@ -13035,6 +13050,7 @@ function applyChoice(choice){
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   S.log.push({ year: S.currentYear, textFr: choice.fr, textEn: choice.en, villain: alignDelta < 0 });
   try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, { alignDelta, scope: m && m.scope })); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
+  try{ feedMentorProgress(eclatCtxFromChoice(choice, {})); }catch(e){}
   showImpact(impactFromEff(eff, alignDelta), S.lang==='fr'?'Consequences de ton choix':'Impact of your choice');
   const res = resolveOutcome(m);
   S.currentYearEntries.push({ tag:(S.lang==='fr'?m.tagFr:m.tagEn), location:m.location, type:res.type, outcome:res.outcome });
@@ -14622,6 +14638,7 @@ function applyConvChoice(conv, choice){
   if(eff.rel){ Object.keys(eff.rel).forEach(k=>{ S.rel[k] = clamp((S.rel[k]||0) + eff.rel[k], -20, 20); }); }
   if(eff.rom){ handleRomanceEffect(eff.rom, conv); }
   try{ feedEclatResonance(eff, eclatCtxFromChoice(choice, {})); }catch(e){ console.error('resonance d\'Infinite : echec', e); }
+  try{ feedMentorProgress(eclatCtxFromChoice(choice, {})); }catch(e){}
   const label = S.lang==='fr' ? choice.fr : choice.en;
   S.log.push({ year:S.currentYear, textFr:label, textEn:label, villain:(eff.align||0)<0 });
   const oldZone = S.lastZone;
