@@ -4579,7 +4579,7 @@ function foeStrength(foeKey, mission){
   /* Chaque Gemme deja en poche rend la suivante un peu plus dure a obtenir - jamais impossible,
      mais une vraie difficulte croissante au fil de la collection. */
   const ownedGemCount = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? (S.eclats||[]).length : 0;
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 18 + ownedGemCount*1.5 : 0;
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 18 + ownedGemCount*3.5 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
@@ -11913,7 +11913,7 @@ function startBattle(mission, done){
      mesure que tu accumules deja des Gemmes, sans jamais devenir impossible. */
   const stoneFight = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
   const stoneOwnedCount = stoneFight ? (S.eclats||[]).length : 0;
-  const stoneHpMult = stoneFight ? Math.min(1.7, 1.4 + stoneOwnedCount*0.02) : 1;
+  const stoneHpMult = stoneFight ? Math.min(2.1, 1.4 + stoneOwnedCount*0.09) : 1;
   const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * stoneHpMult);
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
@@ -12659,7 +12659,7 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const stoneDmgMult = stoneFight ? Math.min(1.55, 1.35 + stoneOwnedCount*0.015) : 1;
+    const stoneDmgMult = stoneFight ? Math.min(1.85, 1.35 + stoneOwnedCount*0.07) : 1;
     const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * stoneDmgMult);
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
