@@ -6040,7 +6040,9 @@ function announceCombatReason(mission){
     msg = fr ? `Vormir t'appelle : ${n} se dresse entre toi et la Pierre de l'Ame.` : `Vormir calls: ${n} stands between you and the Soul Stone.`;
   } else if(mission.eclatQuest || mission.eclatReclaim){
     const shard = ECLATS.find(e=>e.id===(mission.eclatQuest||mission.eclatReclaim));
-    msg = fr ? `${n} se dresse entre toi et ${shard?shard.frName:"la Gemme"}.` : `${n} stands between you and ${shard?shard.enName:"the Gem"}.`;
+    const ownedN = (S.eclats||[]).length;
+    const seal = ownedN ? (fr ? ` Le gardien scelle tes ${ownedN} Gemme${ownedN>1?'s':''} : tu affrontes ce combat sans leur pouvoir.` : ` The guardian seals your ${ownedN} Gem${ownedN>1?'s':''}: you fight this one without their power.`) : '';
+    msg = (fr ? `${n} se dresse entre toi et ${shard?shard.frName:"la Gemme"}.` : `${n} stands between you and ${shard?shard.enName:"the Gem"}.`) + seal;
   } else if(k===S.rivalKey){
     msg = fr ? `${n} - ton rival - te retrouve encore une fois.` : `${n} - your rival - finds you once again.`;
   } else if(k===S.traitorKey){
