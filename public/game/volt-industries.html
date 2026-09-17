@@ -4579,7 +4579,11 @@ function foeStrength(foeKey, mission){
   /* Chaque Gemme deja en poche rend la suivante un peu plus dure a obtenir - jamais impossible,
      mais une vraie difficulte croissante au fil de la collection. */
   const ownedGemCount = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? (S.eclats||[]).length : 0;
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 18 + ownedGemCount*3.5 : 0;
+  /* Difficulte reellement croissante : chaque Gemme deja obtenue rend le gardien suivant plus dur
+     (la 2e est plus dure que la 1re, la 3e encore plus, etc.). En parallele, tes propres Gemmes sont
+     neutralisees pendant ces epreuves (voir gemTrialActive/playerMoves) : elles ne peuvent plus
+     rendre la collection de plus en plus facile. */
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 18 + ownedGemCount*6 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
