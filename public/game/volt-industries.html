@@ -10536,7 +10536,9 @@ function playerMoves(){
      a part entiere, au meme titre que les autres - ils ne s'ajoutent plus par-dessus sans limite,
      ils prennent leur place dans le total plafonne ci-dessous, en priorite (ce sont les coups les
      plus rares et les plus puissants). */
-  const shardMoves = (S.eclats||[]).map(id=>{
+  /* Epreuve de Gemme : les Gemmes deja en poche sont neutralisees par le gardien - impossible de
+     conquerir une Gemme avec le pouvoir des precedentes. */
+  const shardMoves = gemTrialActive() ? [] : (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
     return Object.assign({ shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
