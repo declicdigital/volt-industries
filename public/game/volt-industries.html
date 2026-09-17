@@ -4581,15 +4581,13 @@ function foeStrength(foeKey, mission){
      nettement plus faible que Doctor Doom, quelle que soit la difficulte de la mission en cours.
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
-  /* Gardiens de Gemme : nettement plus durs que n'importe quel adversaire de mission classique. */
-  /* Chaque Gemme deja en poche rend la suivante un peu plus dure a obtenir - jamais impossible,
-     mais une vraie difficulte croissante au fil de la collection. */
+  /* Gardiens de Gemme : plus durs qu'un adversaire de mission classique, et de plus en plus
+     au fil de la collection (la 2e plus dure que la 1re, etc.) - mais dose pour rester gagnable :
+     reunir les 6 doit rester un vrai defi, jamais un mur. */
   const ownedGemCount = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? (S.eclats||[]).length : 0;
-  /* Difficulte reellement croissante : chaque Gemme deja obtenue rend le gardien suivant plus dur
-     (la 2e est plus dure que la 1re, la 3e encore plus, etc.). En parallele, tes propres Gemmes sont
-     neutralisees pendant ces epreuves (voir gemTrialActive/playerMoves) : elles ne peuvent plus
-     rendre la collection de plus en plus facile. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 18 + ownedGemCount*6 : 0;
+  /* En parallele, tes propres Gemmes sont neutralisees pendant ces epreuves (voir
+     gemTrialActive/playerMoves) : elles ne peuvent plus rendre la collection de plus en plus facile. */
+  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 10 + ownedGemCount*4 : 0;
   return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
 }
 function winOdds(foeKey, mission){
