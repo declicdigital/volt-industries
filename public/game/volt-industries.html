@@ -10563,11 +10563,13 @@ function playerMoves(){
   S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
   /* Tirage au sort du combat en cours : les 4 coups ont ete piochés aleatoirement par
      rollBattleLoadout() - on se contente de les resoudre ici. */
-  if(S.battleLoadout && S.battleLoadout.length){
+  if(S.battleLoadout && S.battleLoadout.length && !gemTrialActive()){
     const all = priorityAtk.concat(priorityDef);
     const sel = S.battleLoadout.map(n=>all.find(m=>m.fr===n)).filter(Boolean);
     if(sel.length) return sel;
   }
+  /* Epreuve de Gemme : on recompose un arsenal complet sans Gemme, pour que le tirage habituel
+     (qui garantissait les coups de Gemme) ne laisse pas le joueur avec deux coups seulement. */
   const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
   const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
