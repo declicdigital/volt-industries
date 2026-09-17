@@ -4564,6 +4564,12 @@ function playerStrength(){
   if(S.team) s += 2 + (S.team.tier||1);
   return Math.round(clamp(s, 10, 110));
 }
+/* Vrai ou faux : une epreuve de Gemme est en cours (quete ou reconquete). Pendant celle-ci, le
+   gardien neutralise les Gemmes deja obtenues - elles ne donnent aucun coup au joueur. */
+function gemTrialActive(){
+  const m = S.currentMission;
+  return !!(m && (m.eclatQuest || m.eclatReclaim));
+}
 function foeStrength(foeKey, mission){
   const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
