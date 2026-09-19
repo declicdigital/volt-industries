@@ -7126,7 +7126,7 @@ function recordCareerForMeta(){
   if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
   if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
   if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
-  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); }
+  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); META.careersWithGem = (META.careersWithGem||0) + 1; }
   if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
   if(S.eighthStar) metaBump('star8Count');
   /* Compteurs a vie supplementaires, utilises par les trophees. */
