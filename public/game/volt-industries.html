@@ -7063,7 +7063,8 @@ let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:f
   achievements:{}, ngPlusBonus:null, totalFightsWon:0, totalCivilsSaved:0, totalBetrayals:0, artifactsFoundEver:[],
   everHadRomance:false, everJoinedFaction:false, everFoundedFaction:false, everHadMentee:false, everGotGem:false, everSurvivedRivalClash:false,
   totalMenteesTrained:0, totalDuelSimWins:0, totalInvestigationsSolved:0, totalPressEventsHandled:0,
-  totalSideSwitches:0, totalRivalWins:0, distinctFactionsJoined:[], bestGemsCount:0, totalDuelSimPlayed:0 };
+  totalSideSwitches:0, totalRivalWins:0, distinctFactionsJoined:[], bestGemsCount:0, totalDuelSimPlayed:0,
+  gemCounts:{}, gemFirstYears:{}, totalGemsEver:0, gauntletsEver:0, careersWithGem:0 };
 async function loadMetaProgress(){
   if(!window.storage){ META.loaded = true; return META; }
   try{
