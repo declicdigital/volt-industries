@@ -6320,6 +6320,7 @@ async function resetMetaProgress(){
   META.totalMenteesTrained = 0; META.totalDuelSimWins = 0; META.totalInvestigationsSolved = 0;
   META.totalPressEventsHandled = 0; META.totalSideSwitches = 0; META.totalRivalWins = 0;
   META.distinctFactionsJoined = []; META.bestGemsCount = 0;
+  META.gemCounts = {}; META.gemFirstYears = {}; META.totalGemsEver = 0; META.gauntletsEver = 0; META.careersWithGem = 0;
   /* Reinitialiser doit aussi effacer la partie en cours - pas seulement les stats de progression
      globale, sinon une ancienne carriere resterait proposee au retour sur l'accueil. */
   await clearGameState();
@@ -6974,9 +6975,10 @@ async function loadCareerHistory(box){
     return;
   }
   try{
+    if(!META.loaded){ try{ await loadMetaProgress(); }catch(e){} }
     const listResult = await window.storage.list('career:', false);
     const keys = (listResult && listResult.keys ? listResult.keys.slice() : []).sort().reverse().slice(0,12);
-    if(!keys.length){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
+    if(!keys.length){ renderCareerHistoryList(box, []); return; }
     const items = [];
     for(const k of keys){
       try{ const r = await window.storage.get(k, false); if(r && r.value) items.push({ key:k, data: JSON.parse(r.value) }); }catch(e){}
@@ -6984,9 +6986,55 @@ async function loadCareerHistory(box){
     renderCareerHistoryList(box, items);
   }catch(e){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Historique indisponible.':'History unavailable.'}</p>`; }
 }
+/* ---------- Statistiques permanentes : les Gemmes obtenues sur toutes les carrieres ---------- */
+function renderGemStatsPanel(items){
+  const fr = S.lang==='fr';
+  const counts = META.gemCounts || {};
+  const first = META.gemFirstYears || {};
+  const total = ECLAT_RES_IDS.reduce((a,id)=>a+(counts[id]||0),0);
+  const best = ECLAT_RES_IDS.slice().sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0];
+  const missing = ECLAT_RES_IDS.filter(id=>!(counts[id]||0));
+  const careers = (items||[]).length ? (META.careersCompleted||items.length) : (META.careersCompleted||0);
+  const avg = careers ? (total/careers) : 0;
+  const rows = ECLAT_RES_IDS.map(id=>{
+    const e = ECLATS.find(x=>x.id===id) || { col:'#8ea0b5', frName:id, enName:id, domainFr:id, domainEn:id };
+    const n = counts[id]||0;
+    const pct = total ? Math.round(n/total*100) : 0;
+    const width = best && counts[best] ? Math.round(n/counts[best]*100) : 0;
+    return `<div style="margin-bottom:9px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:10px; letter-spacing:.7px; font-weight:900;">
+        <span style="color:${e.col};">${(fr?e.frName:e.enName).toUpperCase()}</span>
+        <span style="color:var(--dim); font-weight:800;">${n}&times; ${n?`&middot; ${pct}%`:''}${(n && first[id])?` &middot; ${fr?'des l\'an':'from yr'} ${first[id]}`:''}</span>
+      </div>
+      <div style="height:6px; margin-top:4px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden;">
+        <i style="display:block; height:100%; width:${width}%; background:${e.col}; box-shadow:0 0 8px ${e.col};"></i>
+      </div>
+    </div>`;
+  }).join('');
+  const chip = (label,val)=>`<div style="flex:1 1 90px; min-width:90px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:8px 10px;">
+      <div style="font-size:16px; font-weight:900; color:var(--accent);">${val}</div>
+      <div style="font-size:9px; letter-spacing:.8px; color:var(--dim); font-weight:800; text-transform:uppercase;">${label}</div>
+    </div>`;
+  return `<div class="history-card" style="margin-bottom:14px;">
+    <div class="hc-name" style="margin-bottom:10px;">${fr?'GEMMES DE L\'INFINI - TOTAL DE TOUTES TES CARRIERES':'INFINITY STONES - ALL-TIME TOTALS'}</div>
+    ${rows}
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+      ${chip(fr?'Gemmes obtenues':'Stones claimed', total)}
+      ${chip(fr?'Gantelets complets':'Full gauntlets', META.gauntletsEver||0)}
+      ${chip(fr?'Record en 1 carriere':'Best in one career', META.bestGemsCount||0)}
+      ${chip(fr?'Carrieres avec gemme':'Careers with a stone', META.careersWithGem||0)}
+      ${chip(fr?'Moyenne / carriere':'Average / career', avg.toFixed(1))}
+      ${chip(fr?'Ames sacrifiees (Vormir)':'Vormir sacrifices', counts.vestige||0)}
+    </div>
+    <div class="hc-meta" style="margin-top:10px;">
+      ${total ? `${fr?'Ta gemme signature':'Signature stone'} : <b style="color:${(ECLATS.find(x=>x.id===best)||{}).col||'var(--accent)'};">${fr?(ECLATS.find(x=>x.id===best)||{}).frName:(ECLATS.find(x=>x.id===best)||{}).enName}</b>.` : (fr?'Aucune Gemme obtenue pour l\'instant.':'No stone claimed yet.')}
+      ${missing.length ? ` ${fr?'Jamais obtenue':'Never claimed'} : ${missing.map(id=>fr?(ECLATS.find(x=>x.id===id)||{}).frName:(ECLATS.find(x=>x.id===id)||{}).enName).join(', ')}.` : ` ${fr?'Les 6 Gemmes ont deja ete tenues au moins une fois.':'All 6 stones have been held at least once.'}`}
+    </div>
+  </div>`;
+}
 function renderCareerHistoryList(box, items){
-  if(!items.length){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
-  box.innerHTML = `<div class="history-list">${items.map(it=>{
+  if(!items.length){ box.innerHTML = `${renderGemStatsPanel(items)}<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
+  box.innerHTML = `${renderGemStatsPanel(items)}<div class="history-list">${items.map(it=>{
     const c = it.data;
     const zoneLabel = c.zone==='hero'?t('alignHero'):(c.zone==='villain'?t('alignVillain'):t('alignNeutral'));
     const zoneColor = c.zone==='hero'?'#00e5ff':(c.zone==='villain'?'var(--red)':'#b98bff');
@@ -7063,7 +7111,8 @@ let META = { careersCompleted:0, longestCareerYears:0, bestStars:0, got8thStar:f
   achievements:{}, ngPlusBonus:null, totalFightsWon:0, totalCivilsSaved:0, totalBetrayals:0, artifactsFoundEver:[],
   everHadRomance:false, everJoinedFaction:false, everFoundedFaction:false, everHadMentee:false, everGotGem:false, everSurvivedRivalClash:false,
   totalMenteesTrained:0, totalDuelSimWins:0, totalInvestigationsSolved:0, totalPressEventsHandled:0,
-  totalSideSwitches:0, totalRivalWins:0, distinctFactionsJoined:[], bestGemsCount:0, totalDuelSimPlayed:0 };
+  totalSideSwitches:0, totalRivalWins:0, distinctFactionsJoined:[], bestGemsCount:0, totalDuelSimPlayed:0,
+  gemCounts:{}, gemFirstYears:{}, totalGemsEver:0, gauntletsEver:0, careersWithGem:0 };
 async function loadMetaProgress(){
   if(!window.storage){ META.loaded = true; return META; }
   try{
@@ -7124,7 +7173,7 @@ function recordCareerForMeta(){
   if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
   if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
   if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
-  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); }
+  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); META.careersWithGem = (META.careersWithGem||0) + 1; }
   if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
   if(S.eighthStar) metaBump('star8Count');
   /* Compteurs a vie supplementaires, utilises par les trophees. */
@@ -9156,11 +9205,22 @@ function grantEclatShard(shard, viaVormir){
   if(S.eclatHolders) delete S.eclatHolders[shard.id];
   S.pendingEclatCinematic = shard.id;
   syncBattleLoadout();
+  /* Statistiques permanentes : combien de fois chaque Gemme a ete obtenue, toutes carrieres confondues. */
+  try{
+    META.gemCounts = META.gemCounts || {};
+    META.gemCounts[shard.id] = (META.gemCounts[shard.id]||0) + 1;
+    META.totalGemsEver = (META.totalGemsEver||0) + 1;
+    META.gemFirstYears = META.gemFirstYears || {};
+    const yr = S.currentYear||0;
+    if(!META.gemFirstYears[shard.id] || yr < META.gemFirstYears[shard.id]) META.gemFirstYears[shard.id] = yr;
+    saveMetaProgress();
+  }catch(e){}
   if(S.eclats.length >= ECLATS.length && !S.voidCompletionDone){
     S.voidCompletionDone = true;
     S.eighthStar = true;
     S.eighthStarByGemmes = true;
     S.pendingVoidCompletion = true;
+    try{ META.gauntletsEver = (META.gauntletsEver||0) + 1; saveMetaProgress(); }catch(e){}
   }
 }
 /* ---------- VORMIR : le sacrifice pour la Pierre de l'Ame ----------
