@@ -6975,9 +6975,10 @@ async function loadCareerHistory(box){
     return;
   }
   try{
+    if(!META.loaded){ try{ await loadMetaProgress(); }catch(e){} }
     const listResult = await window.storage.list('career:', false);
     const keys = (listResult && listResult.keys ? listResult.keys.slice() : []).sort().reverse().slice(0,12);
-    if(!keys.length){ box.innerHTML = `<p class="lead" style="text-align:center; margin:0 auto;">${S.lang==='fr'?'Aucune carriere enregistree pour le moment.':'No career saved yet.'}</p>`; return; }
+    if(!keys.length){ renderCareerHistoryList(box, []); return; }
     const items = [];
     for(const k of keys){
       try{ const r = await window.storage.get(k, false); if(r && r.value) items.push({ key:k, data: JSON.parse(r.value) }); }catch(e){}
