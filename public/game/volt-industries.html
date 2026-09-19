@@ -9156,11 +9156,22 @@ function grantEclatShard(shard, viaVormir){
   if(S.eclatHolders) delete S.eclatHolders[shard.id];
   S.pendingEclatCinematic = shard.id;
   syncBattleLoadout();
+  /* Statistiques permanentes : combien de fois chaque Gemme a ete obtenue, toutes carrieres confondues. */
+  try{
+    META.gemCounts = META.gemCounts || {};
+    META.gemCounts[shard.id] = (META.gemCounts[shard.id]||0) + 1;
+    META.totalGemsEver = (META.totalGemsEver||0) + 1;
+    META.gemFirstYears = META.gemFirstYears || {};
+    const yr = S.currentYear||0;
+    if(!META.gemFirstYears[shard.id] || yr < META.gemFirstYears[shard.id]) META.gemFirstYears[shard.id] = yr;
+    saveMetaProgress();
+  }catch(e){}
   if(S.eclats.length >= ECLATS.length && !S.voidCompletionDone){
     S.voidCompletionDone = true;
     S.eighthStar = true;
     S.eighthStarByGemmes = true;
     S.pendingVoidCompletion = true;
+    try{ META.gauntletsEver = (META.gauntletsEver||0) + 1; saveMetaProgress(); }catch(e){}
   }
 }
 /* ---------- VORMIR : le sacrifice pour la Pierre de l'Ame ----------
