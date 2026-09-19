@@ -6320,6 +6320,7 @@ async function resetMetaProgress(){
   META.totalMenteesTrained = 0; META.totalDuelSimWins = 0; META.totalInvestigationsSolved = 0;
   META.totalPressEventsHandled = 0; META.totalSideSwitches = 0; META.totalRivalWins = 0;
   META.distinctFactionsJoined = []; META.bestGemsCount = 0;
+  META.gemCounts = {}; META.gemFirstYears = {}; META.totalGemsEver = 0; META.gauntletsEver = 0; META.careersWithGem = 0;
   /* Reinitialiser doit aussi effacer la partie en cours - pas seulement les stats de progression
      globale, sinon une ancienne carriere resterait proposee au retour sur l'accueil. */
   await clearGameState();
