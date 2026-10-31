@@ -8719,14 +8719,20 @@ function feedEclatResonance(eff, ctx){
   const aff = S.gemAffinity || {};
   if(ctx.deceit) gainEclatRes('fracture', 1 * (aff.fracture||1));
   if(ctx.patient) gainEclatRes('attente', 1 * (aff.attente||1));
-  if(ctx.investigation && ctx.battleWin!==false) gainEclatRes('murmure', 1 * (aff.murmure||1));
+  if(ctx.investigation) gainEclatRes('murmure', (ctx.battleWin!==false ? 1 : 0.5) * (aff.murmure||1)); // une enquete ratee apprend quand meme
+  /* L'Esprit se nourrit aussi de tout choix intellectuel : mots-cles mentaux, et gain d'intelligence. */
+  if(ctx.mind) gainEclatRes('murmure', 1 * (aff.murmure||1));
+  if((eff.intelligence||0) >= 5) gainEclatRes('murmure', 1 * (aff.murmure||1));
+  else if((eff.intelligence||0) >= 3) gainEclatRes('murmure', 0.5 * (aff.murmure||1));
   if((ctx.scope||1) >= 5) gainEclatRes('derive', 1 * (aff.derive||1));
 }
 /* Detecte l'intention d'un choix depuis son libelle, pour nourrir le bon domaine. */
 function eclatCtxFromChoice(choice, extra){
   const txt = ((choice&&choice.fr)||'') + ' ' + ((choice&&choice.en)||'');
   const t = txt.toLowerCase();
+  const tn = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const ctx = Object.assign({}, extra||{});
+  if(/enquet|deduire|deduction|dechiffr|decoder|decrypt|infiltr|espionn|interrog|enigme|indice|preuve|secret|mental|psychi|telepath|memoire|conscience|souvenir|reve|hacker|pirater|donnees|dossier|cerveau|esprit|stratag|comprendre|reflechir|savoir|connaissance|archive|bibliotheque|investigat|clue|evidence|decipher|infiltrate|spy|interrogate|riddle|puzzle|mind|memor|brain|mental|psychic|knowledge|understand|figure out|strateg/.test(tn)) ctx.mind = true;
   if(/negoc|corromp|piege|mentir|manipul|trahi|bluff|deceive|corrupt|trap|lie|betray/.test(t)) ctx.deceit = true;
   if(/attendre|patien|observer|etudier|analyser|preparer|study|wait|observe|analyz|prepare/.test(t)) ctx.patient = true;
   if(/sacrifi|proteger|sauver|epargner|jurer|promettre|sacrific|protect|save|spare|vow/.test(t)) ctx.sacrifice = true;
