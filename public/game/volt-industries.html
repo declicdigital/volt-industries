@@ -4264,7 +4264,7 @@ function agingLabel(){
 const CHAR_NORMAL = {
   sepulcre:96,
   silversurfer:85,
-  malachar:84,
+  malachar:91,
   sentry:86,
   surtur:88,
   ronan:74,
@@ -4291,7 +4291,7 @@ const CHAR_NORMAL = {
   storm:77,
   volt:76,
   clea:76,
-  vipera:75,
+  vipera:88,
   thething:73,
   emmafrost:72,
   humantorch:70,
@@ -4341,7 +4341,7 @@ const CHAR_NORMAL = {
 const CHAR_PRIME = {
   sepulcre:100,
   silversurfer:92,
-  malachar:96,
+  malachar:99,
   sentry:98,
   surtur:97,
   ronan:85,
@@ -4368,7 +4368,7 @@ const CHAR_PRIME = {
   storm:91,
   volt:90,
   clea:88,
-  vipera:91,
+  vipera:98,
   thething:85,
   emmafrost:86,
   humantorch:83,
@@ -4578,7 +4578,21 @@ function gemTrialActive(){
   const m = S.currentMission;
   return !!(m && (m.eclatQuest || m.eclatReclaim));
 }
+/* Combat de Gemme (quete, reprise ou Vormir) : les coups de Gemme restent disponibles mais ne
+   fonctionnent qu'UNE SEULE FOIS par combat, pour chaque camp. */
+/* Force de l'adversaire d'un duel de Gemme, tiree avant CHAQUE combat de pierre (Vormir compris) :
+   un coefficient continu (des millions de valeurs possibles) entre 1/1.2 (le plus faible, environ
+   -17%) et 1.2 (le plus fort, +20%) de TA propre puissance, distribue symetriquement. */
+function drawGemFoeRatio(){
+  const lim = Math.log(1.2);
+  return Math.exp((Math.random()*2 - 1) * lim);
+}
+function gemOnceFight(){
+  const m = S.currentMission;
+  return !!(m && (m.eclatQuest || m.eclatReclaim || m.vormirSoul));
+}
 function foeStrength(foeKey, mission){
+  if(mission && typeof mission.foeRatio==='number') return Math.round(playerStrength() * mission.foeRatio);
   const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
   const danger = (mission && mission.danger) || 1;
@@ -7380,7 +7394,6 @@ const UNLOCK_TIERS = [
   { ids:['thething'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
   { ids:['ronan'], condFr:'Vaincre ton rival 10 fois', condEn:'Defeat your rival 10 times', check:(m)=>(m.totalRivalWins||0)>=10 },
   { ids:['clea'], condFr:'Cumuler 60 etoiles au total', condEn:'Accumulate 60 stars total', check:(m)=>(m.totalStarsEarned||0)>=60 },
-  { ids:['vipera'], condFr:'Changer de camp 15 fois', condEn:'Switch sides 15 times', check:(m)=>(m.totalSideSwitches||0)>=15 },
   { ids:['volt'], condFr:'Obtenir la 4eme Gemme d\'Infinite', condEn:'Obtain the 4th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=4 },
   { ids:['invisiblewoman'], condFr:'Gagner 800 combats', condEn:'Win 800 fights', check:(m)=>(m.totalFightsWon||0)>=800 },
   { ids:['storm'], condFr:'Gerer 60 evenements presse', condEn:'Handle 60 press events', check:(m)=>(m.totalPressEventsHandled||0)>=60 },
@@ -7396,7 +7409,6 @@ const UNLOCK_TIERS = [
   { ids:['magneto'], condFr:'Changer de camp 10 fois', condEn:'Switch sides 10 times', check:(m)=>(m.totalSideSwitches||0)>=10 },
   { ids:['silversurfer'], condFr:'Jouer avec 40 personnages differents', condEn:'Play as 40 different characters', check:(m)=>(m.charactersPlayed||[]).length>=40 },
   { ids:['solen'], condFr:'Cumuler 100 etoiles au total', condEn:'Accumulate 100 stars total', check:(m)=>(m.totalStarsEarned||0)>=100 },
-  { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['apocalypse'], condFr:'Former 50 recrues', condEn:'Train 50 recruits', check:(m)=>(m.totalMenteesTrained||0)>=50 },
   { ids:['capmarvel'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
   { ids:['vaelor'], condFr:'Gagner 600 combats', condEn:'Win 600 fights', check:(m)=>(m.totalFightsWon||0)>=600 },
@@ -7405,8 +7417,10 @@ const UNLOCK_TIERS = [
   { ids:['jeangrey'], condFr:'Resoudre 25 enquetes', condEn:'Solve 25 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=25 },
   { ids:['sentry'], condFr:'Cumuler 150 etoiles au total (toutes carrieres confondues)', condEn:'Accumulate 150 stars total (across all careers)', check:(m)=>(m.totalStarsEarned||0)>=150 },
   { ids:['surtur'], condFr:'Terminer une carriere de 50 ans', condEn:'Finish a 50-year career', check:(m)=>(m.longestCareerYears||0)>=50 },
+  { ids:['vipera'], condFr:'Changer de camp 50 fois', condEn:'Switch sides 50 times', check:(m)=>(m.totalSideSwitches||0)>=50 },
+  { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
-  { ids:['mandate'], condFr:'Vaincre ton rival 20 fois', condEn:'Defeat your rival 20 times', check:(m)=>(m.totalRivalWins||0)>=20 },
+  { ids:['mandate'], condFr:'Vaincre ton rival 70 fois', condEn:'Defeat your rival 70 times', check:(m)=>(m.totalRivalWins||0)>=70 },
   { ids:['sepulcre'], condFr:'Gagner 2000 combats', condEn:'Win 2000 fights', check:(m)=>(m.totalFightsWon||0)>=2000 },
 
 ];
@@ -8303,7 +8317,7 @@ function buildCareerPlan(){
   S.orientationCount = 0; S.lastOrientationYear = null;
   /* ====================================================================================== */
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
-  S.deathBudgetPerMission = 1 - Math.pow(0.94, 1/Math.max(1,totalPlanned));
+  S.deathBudgetPerMission = 1 - Math.pow(0.97, 1/Math.max(1,totalPlanned));
   /* Rival : n'importe quel personnage que tu as deja debloque peut devenir ton rival, quelle que
      soit sa nature de base (heros/villain/independant) - il passe automatiquement du cote oppose
      au tien pour cette carriere, peu importe son camp canonique. */
@@ -8832,7 +8846,7 @@ function startEclatQuest(){
       ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
       : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
   const m = {
-    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
+    id:'eclat_quest', type:'combat', danger:3, scope, foeRatio:drawGemFoeRatio(), eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
     tagFr: guardianKey ? 'Quete d\'Infinite' : 'Site d\'Infinite',
     tagEn: guardianKey ? 'Infinity Quest' : 'Infinity Site',
     fr:introFr, en:introEn,
@@ -9114,7 +9128,7 @@ function startEclatReclaimQuest(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const m = {
-    id:'eclat_reclaim', type:'combat', danger:3, scope, eclatReclaim:shard.id, charKey:holderKey,
+    id:'eclat_reclaim', type:'combat', danger:3, scope, foeRatio:drawGemFoeRatio(), eclatReclaim:shard.id, charKey:holderKey,
     tagFr:'Reprise d\'Infinite', tagEn:'Infinity Reclaim',
     fr:`${holderName} detient toujours ${shardName}. Tu as une occasion de le lui reprendre.`,
     en:`${holderName} still holds ${shardName}. You have a chance to take it back.`,
@@ -9288,11 +9302,11 @@ function showVormirAnnouncement(recruitName, cb){
   const beats = fr ? [
     { who:'RED SKULL', txt:`Je t'attendais. Je n'ai plus de corps a moi, plus de camp, plus de guerre : seulement cette falaise, et le devoir de dire la verite a ceux qui montent. La Pierre de l'Ame est ici. Elle repose au fond de ce gouffre depuis avant ton monde.` },
     { who:'RED SKULL', txt:`Mais la Pierre ne se prend pas. Elle se <b>paie</b>. Une ame pour une ame. Pas un ennemi, pas un inconnu : quelqu'un que tu as choisi, forme, protege. Tu es monte avec <b>${recruitName}</b>. Ce n'est pas un hasard.` },
-    { who:'RED SKULL', txt:`Alors la falaise vous a rendus identiques : meme souffle, meme force, exactement les memes coups. Aucun avantage, aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
+    { who:'RED SKULL', txt:`Alors la falaise ne fera aucun cadeau : chacun se bat avec ce qu'il est, ses coups, sa force. Aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
   ] : [
     { who:'RED SKULL', txt:`I was waiting for you. I have no body of my own left, no side, no war: only this cliff, and the duty to tell the truth to those who climb. The Soul Stone is here. It has rested at the bottom of that chasm since before your world.` },
     { who:'RED SKULL', txt:`But the Stone is not taken. It is <b>paid for</b>. A soul for a soul. Not an enemy, not a stranger: someone you chose, trained, protected. You climbed up with <b>${recruitName}</b>. That is no accident.` },
-    { who:'RED SKULL', txt:`So the cliff made you identical: same breath, same strength, exactly the same moves. No advantage, no excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
+    { who:'RED SKULL', txt:`So the cliff gives no gifts: each of you fights with what you are, your own moves, your own strength. No excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
   ];
   const embers = Array.from({length:22}, ()=>{
     const l = Math.random()*100, d = 6 + Math.random()*7, dl = -Math.random()*9,
@@ -9348,7 +9362,7 @@ function startVormirSoul(){
   const foeName = fr?CHARACTERS[foeKey].fr:CHARACTERS[foeKey].en;
   S.vormirDone = true;
   const m = {
-    id:'vormir_soul', type:'combat', danger:3, scope:6, vormirSoul:true, forceDuel:true, charKey:foeKey,
+    id:'vormir_soul', type:'combat', danger:3, scope:6, foeRatio:drawGemFoeRatio(), vormirSoul:true, forceDuel:true, charKey:foeKey,
     tagFr:"VORMIR - PIERRE DE L'AME", tagEn:'VORMIR - SOUL STONE',
     fr:`Vormir. Le vent porte des voix qui connaissent ton nom. ${foeName}, que tu as forme(e) toi-meme, se tient a l'autre bout de la falaise : la Pierre de l'Ame n'acceptera qu'un seul de vous deux, et l'autre restera ici pour toujours.`,
     en:`Vormir. The wind carries voices that know your name. ${foeName}, whom you trained yourself, stands at the other end of the cliff: the Soul Stone will accept only one of you, and the other stays here forever.`,
@@ -10591,7 +10605,7 @@ function foeMovesFor(key){
       if(S.eclatHolders[gemId]===key){
         const shard = ECLATS.find(e=>e.id===gemId);
         if(shard && !base.some(m=>m.fr===shard.move.fr)){
-          base.push(Object.assign({ shard:true, shardCol:shard.col, shardCol2:shard.col2 }, shard.move));
+          base.push(Object.assign({ once:gemOnceFight(), shard:true, shardCol:shard.col, shardCol2:shard.col2 }, shard.move));
         }
       }
     });
@@ -10621,9 +10635,10 @@ function playerMoves(){
      plus rares et les plus puissants). */
   /* Epreuve de Gemme : les Gemmes deja en poche sont neutralisees par le gardien - impossible de
      conquerir une Gemme avec le pouvoir des precedentes. */
-  const shardMoves = gemTrialActive() ? [] : (S.eclats||[]).map(id=>{
+  const shardOnce = gemOnceFight();
+  const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
-    return Object.assign({ shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
+    return Object.assign({ once:shardOnce, shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
   const artifactMoves = (S.artifacts||[]).map(id=>{
     const a = ARTIFACTS.find(x=>x.id===id); if(!a) return null;
@@ -11965,7 +11980,7 @@ function startBattle(mission, done){
      plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
   const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  const vormirMirror = !!(mission && mission.vormirSoul);
+  const vormirMirror = false; // Vormir n'est plus un duel en miroir : l'adversaire a ses propres coups et sa propre puissance
   let myMoves = playerMoves(); const foeMoves = vormirMirror ? playerMoves().slice() : foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
@@ -12004,8 +12019,9 @@ function startBattle(mission, done){
      deja en poche - dose pour que la 6e reste dure mais gagnable, jamais un mur infranchissable. */
   const stoneFight = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
   const stoneOwnedCount = stoneFight ? (S.eclats||[]).length : 0;
-  const stoneHpMult = stoneFight ? Math.min(1.75, 1.22 + stoneOwnedCount*0.08) : 1;
-  const foeMaxHp = vormirMirror ? myMaxHP : Math.round(combatMaxHp(foeKey) * stoneHpMult);
+  const gemRatio = (mission && typeof mission.foeRatio==='number') ? mission.foeRatio : null;
+  const stoneHpMult = (stoneFight && gemRatio===null) ? Math.min(1.75, 1.22 + stoneOwnedCount*0.08) : 1;
+  const foeMaxHp = gemRatio!==null ? Math.max(30, Math.round(myMaxHP * gemRatio)) : Math.round(combatMaxHp(foeKey) * stoneHpMult);
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
@@ -12014,7 +12030,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastMoveFr:null, playerActs:0 };
+  const st = { spent:{}, busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastMoveFr:null, playerActs:0 };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -12117,7 +12133,7 @@ function startBattle(mission, done){
     if(st.auto && !st.busy) maybeAutoPlay();
   };
   function autoChooseMoveIdx(){
-    const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr);
+    const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr) && !(m.once && st.spent[m.fr]);
     /* Le mode auto joue au niveau d'intelligence de TON personnage : un cerveau optimise, un
        brutal frappe plus souvent au hasard et se soigne trop tard. */
     const sk = iqSkill(S.playerCharKey);
@@ -12381,13 +12397,14 @@ function startBattle(mission, done){
       const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
-      const isLocked = !!st.lastMoveFr && st.lastMoveFr === m.fr;
+      const isSpent = !!(m.once && st.spent[m.fr]);
+      const isLocked = isSpent || (!!st.lastMoveFr && st.lastMoveFr === m.fr);
       const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol}; position:relative; padding-right:32px;"` : (isLocked ? ` style="opacity:.4;"` : '');
       /* La vraie icone de pierre (meme rendu SVG que partout ailleurs dans le jeu), pour reperer
          immediatement qu'un coup vient d'une Gemme d'Infinite, pas juste une bordure coloree. */
       const gemIcon = m.shard ? `<div style="position:absolute; bottom:6px; right:8px; width:20px; height:20px; pointer-events:none;">${gemSVG({col:m.shardCol, col2:m.shardCol2}, 20, {spin:false})}</div>` : '';
       const moveKindClass = m.shard ? '' : (isDef ? 'btl-def' : 'btl-atk');
-      return `<button class="btl-move ${moveKindClass}"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}>${gemIcon}<span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      return `<button class="btl-move ${moveKindClass}"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}>${gemIcon}<span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isSpent?(S.lang==='fr'?'Epuise - utilisable une seule fois par combat':'Spent - one use per fight'):isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -12586,7 +12603,9 @@ function startBattle(mission, done){
     const playerWasKO = win && (allyRoster[0].ko || allyRoster[0].hp<=0);
     let permaDeath = false;
     if(!win && scope>=6 && !(mission && (mission.isTraining || mission.vormirSoul))){
-      const deathChance = 0.06 + (scope-6)*0.04;
+      /* Mort definitive apres une defaite d'ampleur : nettement reduite, et d'autant plus rare que la
+         carriere est longue (une longue carriere multiplie les affrontements, donc les occasions). */
+      const deathChance = (0.02 + (scope-6)*0.012) * clamp(30/Math.max(1,(S.missionsPlan||[]).length||30), 0.35, 1);
       if(Math.random() < deathChance){
         permaDeath = true;
         const causeFr = `terrasse(e) par ${foeName} lors d'un affrontement d'ampleur ${scopeLabel(scope).toLowerCase()}`;
@@ -12693,8 +12712,10 @@ function startBattle(mission, done){
     const fmFull = (vormirMirror || !fk) ? foeMoves : foeMovesFor(fk);
     /* Verrou d'un tour : un adversaire ne peut jamais enchainer deux fois de suite le meme coup,
        attaque comme defense - il doit varier, exactement comme le joueur. */
-    const fm = (actor && actor._lastMoveFr && fmFull.some(mm=>mm.fr!==actor._lastMoveFr))
-      ? fmFull.filter(mm=>mm.fr!==actor._lastMoveFr) : fmFull;
+    const fmUsable = fmFull.filter(mm=>!(mm.once && actor && actor._spent && actor._spent[mm.fr]));
+    const fmBase = fmUsable.length ? fmUsable : fmFull;
+    const fm = (actor && actor._lastMoveFr && fmBase.some(mm=>mm.fr!==actor._lastMoveFr))
+      ? fmBase.filter(mm=>mm.fr!==actor._lastMoveFr) : fmBase;
     let chosen = null;
     /* La qualite des decisions depend de l'intelligence de combat du personnage (note sur 10). */
     const sk = iqSkill(fk);
@@ -12716,6 +12737,7 @@ function startBattle(mission, done){
       chosen = Math.random() < sk ? weighted[0] : pick(fm);
     }
     if(actor) actor._lastMoveFr = chosen.fr;
+    if(actor && chosen.once){ actor._spent = actor._spent || {}; actor._spent[chosen.fr] = true; }
     return chosen;
   }
   function pickTeamTarget(roster, facingIdx, skill){
@@ -12751,8 +12773,11 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const stoneDmgMult = stoneFight ? Math.min(1.55, 1.15 + stoneOwnedCount*0.06) : 1;
-    const d = dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * stoneDmgMult);
+    const stoneDmgMult = (stoneFight && gemRatio===null) ? Math.min(1.55, 1.15 + stoneOwnedCount*0.06) : 1;
+    /* Duel de Gemme : l'adversaire frappe avec TA puissance de base multipliee par son coefficient tire. */
+    const d = (gemRatio!==null && actor.key===foeKey)
+      ? dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * strMult(S.playerCharKey) * gemPowerMult * gemRatio)
+      : dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * stoneDmgMult);
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
@@ -12768,7 +12793,9 @@ function startBattle(mission, done){
        son nom et non par son index, car la liste peut changer en cours de combat. */
     if(st.lastMoveFr && st.lastMoveFr === mv.fr) return;
     st.busy = true; setMovesEnabled(false);
+    if(mv.once && st.spent[mv.fr]) return;
     st.lastMoveFr = mv.fr; st.playerActs = (st.playerActs||0) + 1;
+    if(mv.once) st.spent[mv.fr] = true;
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
