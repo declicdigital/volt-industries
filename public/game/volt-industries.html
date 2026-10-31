@@ -1360,6 +1360,37 @@
     /* Radio et simulation flottent dans l'ecran mais restent librement repositionnables. */
     .career-auto-widget{ top:auto; bottom:calc(18px + env(safe-area-inset-bottom)); left:auto; right:10px; transform:none; }
   }
+
+.ssw-overlay{position:fixed;inset:0;z-index:9999;overflow:hidden;display:flex;align-items:center;justify-content:center;animation:sswIn .7s ease both}
+.ssw-overlay.out{animation:sswOut .6s ease forwards}
+.ssw-dark{background:#000;color:#f2e6e6}
+.ssw-light{background:#fff;color:#1a2433}
+.ssw-wash{position:absolute;inset:-20%;animation:sswPulse 4s ease-in-out infinite}
+.ssw-dark .ssw-wash{background:radial-gradient(circle at 50% 55%,rgba(150,0,10,.45),rgba(0,0,0,.95) 55%,#000 80%)}
+.ssw-light .ssw-wash{background:radial-gradient(circle at 50% 45%,#fff,rgba(220,235,255,.9) 45%,rgba(190,210,240,.8) 85%)}
+.ssw-burst{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);animation:sswBurst 1.6s cubic-bezier(.2,.8,.2,1) both}
+.ssw-dark .ssw-burst{box-shadow:0 0 0 0 #000,0 0 120px 60px rgba(200,0,20,.7)}
+.ssw-light .ssw-burst{box-shadow:0 0 160px 90px #fff,0 0 300px 160px rgba(160,200,255,.8)}
+.ssw-p{position:absolute;bottom:-5%;width:4px;height:4px;border-radius:50%;animation:sswRise linear infinite}
+.ssw-dark .ssw-p{background:#ff2a2a;box-shadow:0 0 8px #ff2a2a}
+.ssw-light .ssw-p{background:#fff;box-shadow:0 0 10px #9cc8ff}
+.ssw-wrap{position:relative;text-align:center;padding:20px;max-width:560px}
+.ssw-fig img{max-height:42vh;max-width:70vw;animation:sswFig 1.4s ease both}
+.ssw-dark .ssw-fig img{filter:brightness(.55) contrast(1.3) drop-shadow(0 0 24px rgba(255,20,30,.8))}
+.ssw-light .ssw-fig img{filter:brightness(1.1) drop-shadow(0 0 30px #fff) drop-shadow(0 0 14px #8cc0ff)}
+.ssw-kicker{font-size:11px;letter-spacing:6px;opacity:.7;margin-top:14px}
+.ssw-title{font-size:clamp(28px,7vw,54px);font-weight:900;letter-spacing:5px;animation:sswTitle 1.2s .3s ease both}
+.ssw-dark .ssw-title{color:#ff3b3b;text-shadow:0 0 22px rgba(255,0,0,.7)}
+.ssw-light .ssw-title{color:#2a6fd6;text-shadow:0 0 22px rgba(120,180,255,.8)}
+.ssw-sub{margin-top:8px;letter-spacing:2px;font-size:13px}
+.ssw-go{margin-top:22px;padding:10px 26px;letter-spacing:3px;font-weight:700;border-radius:4px;cursor:pointer;background:transparent;border:1px solid currentColor;color:inherit}
+@keyframes sswIn{from{opacity:0}to{opacity:1}}
+@keyframes sswOut{to{opacity:0}}
+@keyframes sswPulse{50%{transform:scale(1.08)}}
+@keyframes sswBurst{from{transform:translate(-50%,-50%) scale(.2);opacity:1}to{transform:translate(-50%,-50%) scale(6);opacity:.25}}
+@keyframes sswRise{to{transform:translate(var(--vx),-110vh);opacity:0}}
+@keyframes sswFig{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+@keyframes sswTitle{from{opacity:0;letter-spacing:22px}to{opacity:1}}
 </style>
 </head>
 <body class="lab-scene">
@@ -1413,10 +1444,16 @@
       function(){ return purge('volt:career_state:'); },
       function(){ return purge('volt:career:'); }
     ];
+    /* Les etats complets d'anciennes carrieres (les plus lourds) peuvent etre purges jusqu'au
+       bout ; le journal leger n'est ecourte qu'une fois. Sans ca, la progression (deblocages)
+       pouvait cesser d'etre enregistree quand l'appareil etait plein. */
     for(var r=0;r<rounds.length;r++){
-      var removed = rounds[r]();
-      if(!removed) continue;
-      try{ attempt(); return true; }catch(e2){}
+      var guard = r===0 ? 40 : 1;
+      while(guard-- > 0){
+        var removed = rounds[r]();
+        if(!removed) break;
+        try{ attempt(); return true; }catch(e2){}
+      }
     }
     return false;
   };
@@ -2826,6 +2863,8 @@ const CHOICE_PHRASES_VILLAIN = {
     {fr:"Terroriser assez fort pour qu'on cesse de te chercher", en:"Terrorize hard enough that they stop looking for you"},
   ], VILLAIN_TAILS),
   calculating: expandPhrases([
+    {fr:"Former tes agents a executer le plan sans erreur", en:"Train your operatives to execute the plan without mistakes"},
+    {fr:"Guider une jeune recrue pendant l'operation", en:"Guide a young recruit through the operation"},
     {fr:"Calculer chaque etape pour maximiser les degats sans te compromettre", en:"Calculate every step to maximize damage without compromising yourself"},
     {fr:"Utiliser {t} comme diversion pour un objectif plus vaste", en:"Use {t} as a diversion for a larger goal"},
     {fr:"Manipuler les evenements depuis l'ombre", en:"Manipulate events from the shadows"},
@@ -4264,7 +4303,7 @@ function agingLabel(){
 const CHAR_NORMAL = {
   sepulcre:96,
   silversurfer:85,
-  malachar:91,
+  malachar:84,
   sentry:86,
   surtur:88,
   ronan:74,
@@ -4291,7 +4330,7 @@ const CHAR_NORMAL = {
   storm:77,
   volt:76,
   clea:76,
-  vipera:88,
+  vipera:75,
   thething:73,
   emmafrost:72,
   humantorch:70,
@@ -4341,7 +4380,7 @@ const CHAR_NORMAL = {
 const CHAR_PRIME = {
   sepulcre:100,
   silversurfer:92,
-  malachar:99,
+  malachar:96,
   sentry:98,
   surtur:97,
   ronan:85,
@@ -4368,7 +4407,7 @@ const CHAR_PRIME = {
   storm:91,
   volt:90,
   clea:88,
-  vipera:98,
+  vipera:91,
   thething:85,
   emmafrost:86,
   humantorch:83,
@@ -4572,27 +4611,13 @@ function playerStrength(){
   if(S.team) s += 2 + (S.team.tier||1);
   return Math.round(clamp(s, 10, 110));
 }
-/* Vrai ou faux : une epreuve de Gemme est en cours (quete ou reconquete). Pendant celle-ci, le
-   gardien neutralise les Gemmes deja obtenues - elles ne donnent aucun coup au joueur. */
+/* Vrai ou faux : une epreuve de Gemme est en cours (quete ou reconquete). Pendant celle-ci, chaque
+   Gemme deja obtenue ne peut servir qu'une seule fois dans le combat (voir consumeShardMove). */
 function gemTrialActive(){
   const m = S.currentMission;
   return !!(m && (m.eclatQuest || m.eclatReclaim));
 }
-/* Combat de Gemme (quete, reprise ou Vormir) : les coups de Gemme restent disponibles mais ne
-   fonctionnent qu'UNE SEULE FOIS par combat, pour chaque camp. */
-/* Force de l'adversaire d'un duel de Gemme, tiree avant CHAQUE combat de pierre (Vormir compris) :
-   un coefficient continu (des millions de valeurs possibles) entre 1/1.2 (le plus faible, environ
-   -17%) et 1.2 (le plus fort, +20%) de TA propre puissance, distribue symetriquement. */
-function drawGemFoeRatio(){
-  const lim = Math.log(1.2);
-  return Math.exp((Math.random()*2 - 1) * lim);
-}
-function gemOnceFight(){
-  const m = S.currentMission;
-  return !!(m && (m.eclatQuest || m.eclatReclaim || m.vormirSoul));
-}
 function foeStrength(foeKey, mission){
-  if(mission && typeof mission.foeRatio==='number') return Math.round(playerStrength() * mission.foeRatio);
   const mv = (typeof foeMovesFor === 'function') ? foeMovesFor(foeKey) : [];
   const tier = mv.length ? mv.reduce((a,m)=>a + m.p*(m.acc||1), 0)/mv.length : 24;
   const danger = (mission && mission.danger) || 1;
@@ -4603,25 +4628,34 @@ function foeStrength(foeKey, mission){
      nettement plus faible que Doctor Doom, quelle que soit la difficulte de la mission en cours.
      Avant ce correctif, danger/scope pouvaient a eux seuls ajouter jusqu'a +46, ecrasant totalement
      la difference de puissance entre les personnages (qui ne pesait que +/-32). */
-  /* Gardiens de Gemme : plus durs qu'un adversaire de mission classique, et de plus en plus
-     au fil de la collection (la 2e plus dure que la 1re, etc.) - mais dose pour rester gagnable :
-     reunir les 6 doit rester un vrai defi, jamais un mur. */
-  const ownedGemCount = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? (S.eclats||[]).length : 0;
-  /* En parallele, tes propres Gemmes sont neutralisees pendant ces epreuves (voir
-     gemTrialActive/playerMoves) : elles ne peuvent plus rendre la collection de plus en plus facile. */
-  const stoneBonus = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 10 + ownedGemCount*4 : 0;
-  return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus + stoneBonus);
+  /* Gardiens de Gemme : aucune difficulte liee au nombre de Gemmes deja en poche. La
+     difficulte de l'epreuve vient uniquement du tirage propre a chaque combat (gemFightMultOf).
+     En parallele, tes propres Gemmes ne peuvent servir qu'une fois chacune pendant ces epreuves
+     (voir gemTrialActive/consumeShardMove). */
+  return Math.round(charTier(foeKey)*0.9 + danger*3 + scope*1 + (tier-24)*0.8 + rivalBonus);
+}
+function gemFightMultOf(mission){
+  const id = mission && (typeof mission.eclatQuest==='string' ? mission.eclatQuest : (typeof mission.eclatReclaim==='string' ? mission.eclatReclaim : null));
+  if(!id) return 1;
+  /* Tirage frais a CHAQUE combat de Gemme (plus de cache par carriere) : le gardien peut etre
+     aussi fort que toi, plus faible ou plus fort, sur une echelle CONTINUE de x0.833 a x1.2
+     (de 1.2x moins fort a 1.2x plus fort). Le nombre est reel (jamais arrondi) : x1.1578,
+     x0.9297... autant de valeurs que de decimales, donc des millions de possibilites, et deux
+     combats pour la meme Gemme ne se ressemblent pas. */
+  return Math.exp((Math.random()*2-1)*Math.log(1.2));
 }
 function winOdds(foeKey, mission){
+  /* Epreuve de Gemme : aucun palier lie aux Gemmes en poche. Cible 50/50 modulee uniquement
+     par le tirage du gardien (x0.833 a x1.2), re-tire a chaque combat de Gemme. */
+  if(mission && (mission.eclatQuest || mission.eclatReclaim)){
+    return clamp(0.50 / gemFightMultOf(mission), 0.18, 0.92);
+  }
   /* Courbe moderee : assez raide pour que l'ecart de force compte vraiment, sans punir trop
-     durement un ecart modeste. Plafond de victoire remonte legerement (91%) : une victoire tres
-     probable reste tres probable, sans etre pour autant totalement garantie. */
+      durement un ecart modeste. Plafond de victoire remonte legerement (91%) : une victoire tres
+      probable reste tres probable, sans etre pour autant totalement garantie. */
   const diff = playerStrength() - foeStrength(foeKey, mission);
   const p = 1/(1+Math.exp(-diff/8));
-  /* Epreuves de Gemme : le plancher de victoire est releve (18%) - meme le 6e gardien te laisse
-     toujours de vraies chances, le defi reste serieux sans jamais devenir impossible. */
-  const floor = (mission && (mission.eclatQuest || mission.eclatReclaim)) ? 0.18 : 0.05;
-  return clamp(p, floor, 0.91);
+  return clamp(p, 0.05, 0.91);
 }
 
 function zoneOf(align){ return align>=15?'hero':(align<=-15?'villain':'neutral'); }
@@ -5600,7 +5634,28 @@ function showSwitchAnnouncement(fromZone, toZone, cb){
   const html = `<div class="ru-title" style="color:${col}; font-size:12px; letter-spacing:2px;">${title}</div>
     ${betrayLine?`<p style="margin-top:12px; line-height:1.6;">${betrayLine}</p>`:''}
     ${welcomeLine?`<p style="margin-top:10px; line-height:1.6; color:${col};">${welcomeLine}</p>`:''}`;
-  showBattleAftermath(html, col, cb);
+  const after = ()=>showBattleAftermath(html, col, cb);
+  if(toZone==='villain' || toZone==='hero') showSideSwitchCinematic(toZone, after); else after();
+}
+/* Cinematique de bascule : noir d'encre et braises rouges vers VILLAIN, lumiere blanche vers HERO. */
+function showSideSwitchCinematic(toZone, cb){
+  const fr = S.lang==='fr', dark = toZone==='villain';
+  let img = ''; try{ img = heraldPortrait(S.playerCharKey) || ''; }catch(e){}
+  const name = (S.heroName || (CHARACTERS[S.playerCharKey] && (fr?CHARACTERS[S.playerCharKey].fr:CHARACTERS[S.playerCharKey].en)) || '').toUpperCase();
+  const parts = Array.from({length:34}, ()=>`<span class="ssw-p" style="left:${(Math.random()*100).toFixed(1)}%;animation-duration:${(3+Math.random()*4).toFixed(1)}s;animation-delay:${(-Math.random()*5).toFixed(1)}s;--vx:${(Math.random()*80-40).toFixed(0)}px;"></span>`).join('');
+  const ov = document.createElement('div');
+  ov.className = 'ssw-overlay ' + (dark ? 'ssw-dark' : 'ssw-light');
+  ov.innerHTML = `<div class="ssw-wash"></div><div class="ssw-burst"></div>${parts}
+    <div class="ssw-wrap">${img?`<div class="ssw-fig"><img src="${img}" alt=""></div>`:''}
+      <div class="ssw-kicker">${fr?'BASCULEMENT':'SIDE SWITCH'}</div>
+      <div class="ssw-title">${dark?(fr?'LE COTE OBSCUR':'THE DARK SIDE'):(fr?'LA LUMIERE':'THE LIGHT')}</div>
+      <div class="ssw-sub">${name} ${dark?(fr?'devient VILLAIN':'becomes a VILLAIN'):(fr?'devient HERO':'becomes a HERO')}</div>
+      <button class="ssw-go">${fr?'CONTINUER':'CONTINUE'}</button></div>`;
+  document.body.appendChild(ov);
+  try{ AudioEngine.playSting('gem'); }catch(e){}
+  let closed=false; const close=()=>{ if(closed) return; closed=true; ov.classList.add('out'); setTimeout(()=>{ ov.remove(); cb(); }, 600); };
+  ov.querySelector('.ssw-go').onclick = close;
+  if(S.careerAuto) setTimeout(close, 3600);
 }
 /* ---------- Ton ancien camp te rappelle parfois : force, faiblesse, ou tentative de recuperation ---------- */
 /* ---------- Altercations avec ton rival : hors combat, quelques lignes qui rappellent qu'il/elle existe ---------- */
@@ -6064,7 +6119,7 @@ function announceCombatReason(mission){
   } else if(mission.eclatQuest || mission.eclatReclaim){
     const shard = ECLATS.find(e=>e.id===(mission.eclatQuest||mission.eclatReclaim));
     const ownedN = (S.eclats||[]).length;
-    const seal = ownedN ? (fr ? ` Le gardien scelle tes ${ownedN} Gemme${ownedN>1?'s':''} : tu affrontes ce combat sans leur pouvoir.` : ` The guardian seals your ${ownedN} Gem${ownedN>1?'s':''}: you fight this one without their power.`) : '';
+    const seal = ownedN ? (fr ? ` Le gardien limite tes ${ownedN} Gemme${ownedN>1?'s':''} : chacune ne peut servir qu'une fois pendant ce combat.` : ` The guardian limits your ${ownedN} Gem${ownedN>1?'s':''}: each can be used only once during this fight.`) : '';
     msg = (fr ? `${n} se dresse entre toi et ${shard?shard.frName:"la Gemme"}.` : `${n} stands between you and ${shard?shard.enName:"the Gem"}.`) + seal;
   } else if(k===S.rivalKey){
     msg = fr ? `${n} - ton rival - te retrouve encore une fois.` : `${n} - your rival - finds you once again.`;
@@ -7151,25 +7206,29 @@ async function saveMetaProgress(){
 /* Appele une seule fois par carriere terminee, depuis screenEnd. */
 function recordCareerForMeta(){
   if(S.metaRecorded) return; S.metaRecorded = true;
+  /* Snapshot par carriere : une carriere prolongee (+5 ans) est re-enregistree a sa nouvelle fin,
+     mais seuls les gains depuis le dernier enregistrement s'ajoutent (pas de double comptage). */
+  const snap = S.metaSnap || (S.metaSnap = {});
+  const addD = (k, v)=>{ v = Number(v)||0; const d = v - (snap[k]||0); if(d>0) META[k] = (META[k]||0) + d; snap[k] = Math.max(snap[k]||0, v); };
+  const unlockedBefore = unlockedPresetIds();
   /* La sauvegarde de la progression (et donc le deblocage du codex) ne doit jamais dependre du
      bon deroulement de TOUS les calculs de statistiques ci-dessous : si l'un d'eux plante pour une
      raison quelconque, on veut quand meme enregistrer ce qui a pu etre calcule avant, plutot que de
      perdre silencieusement le deblocage de cette carriere entiere. */
   try{
-  META.careersCompleted = (META.careersCompleted||0) + 1;
+  addD('careersCompleted', 1);
   const years = S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear);
   META.longestCareerYears = Math.max(META.longestCareerYears||0, years||0);
   META.bestStars = Math.max(META.bestStars||0, computeStars());
   /* Deux nouvelles dimensions de suivi, jamais utilisees jusqu'ici : le total cumule (pas le
      meilleur d'une seule carriere) d'etoiles et d'annees, toutes carrieres confondues. */
-  META.totalStarsEarned = (META.totalStarsEarned||0) + computeStars();
-  META.totalYearsLived = (META.totalYearsLived||0) + (S.dead ? (S.deathInfo?S.deathInfo.year:S.currentYear) : (S.missionsPlan?S.missionsPlan.length:S.currentYear));
+  addD('totalStarsEarned', computeStars());
   if(S.eighthStar) META.got8thStar = true;
   if(S.voidCompletionDone) META.gotVoidCompletion = true;
-  META.totalFightsWon = (META.totalFightsWon||0) + (S.combat.won||0);
-  META.totalBetrayals = (META.totalBetrayals||0) + (S.turningPoints?S.turningPoints.length:0);
+  addD('totalFightsWon', S.combat.won||0);
+  addD('totalBetrayals', S.turningPoints?S.turningPoints.length:0);
   /* Compteurs des 62 objectifs individuels de deblocage. */
-  META.totalMenteesTrained = (META.totalMenteesTrained||0) + (S.mentees?S.mentees.length:0);
+  addD('totalMenteesTrained', S.mentees?S.mentees.length:0);
   /* Bug corrige : ce compteur n'etait jamais incremente nulle part, meme si le bilan de fin de
      carriere affichait bien un nombre de lieux sauves. On reutilise ici la meme logique de comptage
      (dedoublonnage par lieu, ne garder que ceux marques "saved") pour rester coherent avec l'affichage. */
@@ -7177,8 +7236,8 @@ function recordCareerForMeta(){
   const uniqueLocsForMeta = {};
   (S.locations||[]).forEach(l=>{ const key=l.type+':'+l.name; if(!uniqueLocsForMeta[key] || l.kind==='destroyed') uniqueLocsForMeta[key]=l; });
   const savedCount = Object.values(uniqueLocsForMeta).filter(l=>l.kind==='saved' || (!l.kind && finalZoneForLocs!=='villain')).length;
-  META.totalCivilsSaved = (META.totalCivilsSaved||0) + savedCount;
-  META.totalSideSwitches = (META.totalSideSwitches||0) + (S.turningPoints?S.turningPoints.length:0);
+  addD('totalCivilsSaved', savedCount);
+  addD('totalSideSwitches', S.turningPoints?S.turningPoints.length:0);
   META.bestGemsCount = Math.max(META.bestGemsCount||0, (S.eclats?S.eclats.length:0));
   META.distinctFactionsJoined = META.distinctFactionsJoined || [];
   if(S.team && S.team.side && S.team.tier){
@@ -7192,30 +7251,30 @@ function recordCareerForMeta(){
      (S.romanceHistory||[]).some(r=>(r.love||0) > 0 || (r.outcome && r.outcome!=='refus'))) && !S.romanceCounted){
     S.romanceCounted = true; META.everHadRomance = true; metaBump('romanceCount');
   }
-  if(S.team){ META.everJoinedFaction = true; metaBump('factionJoins'); }
-  if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; metaBump('factionsFounded'); }
-  if(S.mentees && S.mentees.length){ META.everHadMentee = true; metaBump('menteeCount'); }
-  if(S.eclats && S.eclats.length){ META.everGotGem = true; metaBump('gemCount'); META.careersWithGem = (META.careersWithGem||0) + 1; }
-  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; metaBump('rivalClashes'); }
-  if(S.eighthStar) metaBump('star8Count');
+  if(S.team){ META.everJoinedFaction = true; addD('factionJoins', 1); }
+  if(S.customFactions && S.customFactions.length){ META.everFoundedFaction = true; addD('factionsFounded', 1); }
+  if(S.mentees && S.mentees.length){ META.everHadMentee = true; addD('menteeCount', 1); }
+  if(S.eclats && S.eclats.length){ META.everGotGem = true; addD('gemCount', 1); addD('careersWithGem', 1); }
+  if((S.rivalAltercations||0) > 0 || (S.rivalClimaxReady===false && S.rivalKey)){ META.everSurvivedRivalClash = true; addD('rivalClashes', 1); }
+  if(S.eighthStar) addD('star8Count', 1);
   /* Compteurs a vie supplementaires, utilises par les trophees. */
   const fightsLost = S.combat.lost||0, fightsWon = S.combat.won||0;
   const missions = (S.missionsPlan?S.missionsPlan.length:0) || years || 0;
   const skills = (S.skills||[]).length, gems = (S.eclats||[]).length, mentees = (S.mentees||[]).length;
   const stars = computeStars();
   const st = S.stats||{};
-  META.totalFightsLost = (META.totalFightsLost||0) + fightsLost;
-  META.totalMissions = (META.totalMissions||0) + missions;
-  META.totalYearsLived = (META.totalYearsLived||0) + (years||0);
-  META.totalSkillsLearned = (META.totalSkillsLearned||0) + skills;
+  addD('totalFightsLost', fightsLost);
+  addD('totalMissions', missions);
+  addD('totalYearsLived', years||0);
+  addD('totalSkillsLearned', skills);
   META.maxSkillsInCareer = Math.max(META.maxSkillsInCareer||0, skills);
-  META.totalMentees = (META.totalMentees||0) + mentees;
+  addD('totalMentees', mentees);
   META.maxMenteesInCareer = Math.max(META.maxMenteesInCareer||0, mentees);
   META.maxGemsInCareer = Math.max(META.maxGemsInCareer||0, gems);
-  META.totalGemsFound = (META.totalGemsFound||0) + gems;
-  META.totalCosmicWins = (META.totalCosmicWins||0) + (S.cosmicWins||0);
-  META.totalMultiverseWins = (META.totalMultiverseWins||0) + (S.trueCosmicWins||0);
-  META.totalDeaths = (META.totalDeaths||0) + (S.dead?1:0);
+  addD('totalGemsFound', gems);
+  addD('totalCosmicWins', S.cosmicWins||0);
+  addD('totalMultiverseWins', S.trueCosmicWins||0);
+  addD('totalDeaths', S.dead?1:0);
   META.bestAlignGood = Math.max(META.bestAlignGood||0, S.align||0);
   META.bestAlignEvil = Math.min(META.bestAlignEvil||0, S.align||0);
   META.bestCourage = Math.max(META.bestCourage||0, st.courage||0);
@@ -7223,15 +7282,15 @@ function recordCareerForMeta(){
   META.bestPopularity = Math.max(META.bestPopularity||0, st.popularity||0);
   META.maxLove = Math.max(META.maxLove||0, (S.romance&&S.romance.love)||0,
     ...(S.romanceHistory||[]).map(r=>r.love||0));
-  META.heroCareers = (META.heroCareers||0) + ((S.align||0) > 20 ? 1 : 0);
-  META.villainCareers = (META.villainCareers||0) + ((S.align||0) < -20 ? 1 : 0);
-  META.neutralCareers = (META.neutralCareers||0) + (Math.abs(S.align||0) <= 20 ? 1 : 0);
-  META.survivedCareers = (META.survivedCareers||0) + (S.dead?0:1);
-  if(fightsWon>=5 && fightsLost===0) META.flawlessCareers = (META.flawlessCareers||0) + 1;
-  if(stars>=5) META.starFiveCareers = (META.starFiveCareers||0) + 1;
-  if(stars>=7) META.starSevenCareers = (META.starSevenCareers||0) + 1;
-  if(years>=40) META.marathonCareers = (META.marathonCareers||0) + 1;
-  if((S.turningPoints||[]).length===0) META.loyalCareers = (META.loyalCareers||0) + 1;
+  addD('heroCareers', (S.align||0) > 20 ? 1 : 0);
+  addD('villainCareers', (S.align||0) < -20 ? 1 : 0);
+  addD('neutralCareers', Math.abs(S.align||0) <= 20 ? 1 : 0);
+  addD('survivedCareers', S.dead?0:1);
+  if(fightsWon>=5 && fightsLost===0) addD('flawlessCareers', 1);
+  if(stars>=5) addD('starFiveCareers', 1);
+  if(stars>=7) addD('starSevenCareers', 1);
+  if(years>=40) addD('marathonCareers', 1);
+  if((S.turningPoints||[]).length===0) addD('loyalCareers', 1);
   META.locationsEver = META.locationsEver || [];
   (S.locations||[]).forEach(l=>{ const n=l&&l.name; if(n && !META.locationsEver.includes(n)) META.locationsEver.push(n); });
   META.charactersPlayed = META.charactersPlayed || [];
@@ -7241,6 +7300,7 @@ function recordCareerForMeta(){
   if(computeStars()>=6 || S.eighthStar || S.voidCompletionDone){
     META.ngPlusBonus = { fromHero:S.heroName, fromYears:years, fromStars:computeStars() };
   }
+  try{ S.newUnlocks = unlockedPresetIds().filter(id=>!unlockedBefore.includes(id)); }catch(e){ S.newUnlocks = []; }
   }catch(e){ console.error('recordCareerForMeta : erreur en cours de calcul, sauvegarde quand meme de ce qui a ete enregistre jusque-la', e); }
   saveMetaProgress();
 }
@@ -7394,6 +7454,7 @@ const UNLOCK_TIERS = [
   { ids:['thething'], condFr:'Terminer une carriere d\'au moins 30 ans', condEn:'Complete a career of at least 30 years', check:(m)=>(m.longestCareerYears||0)>=30 },
   { ids:['ronan'], condFr:'Vaincre ton rival 10 fois', condEn:'Defeat your rival 10 times', check:(m)=>(m.totalRivalWins||0)>=10 },
   { ids:['clea'], condFr:'Cumuler 60 etoiles au total', condEn:'Accumulate 60 stars total', check:(m)=>(m.totalStarsEarned||0)>=60 },
+  { ids:['vipera'], condFr:'Changer de camp 15 fois', condEn:'Switch sides 15 times', check:(m)=>(m.totalSideSwitches||0)>=15 },
   { ids:['volt'], condFr:'Obtenir la 4eme Gemme d\'Infinite', condEn:'Obtain the 4th Infinity Gem', check:(m)=>(m.bestGemsCount||0)>=4 },
   { ids:['invisiblewoman'], condFr:'Gagner 800 combats', condEn:'Win 800 fights', check:(m)=>(m.totalFightsWon||0)>=800 },
   { ids:['storm'], condFr:'Gerer 60 evenements presse', condEn:'Handle 60 press events', check:(m)=>(m.totalPressEventsHandled||0)>=60 },
@@ -7409,6 +7470,7 @@ const UNLOCK_TIERS = [
   { ids:['magneto'], condFr:'Changer de camp 10 fois', condEn:'Switch sides 10 times', check:(m)=>(m.totalSideSwitches||0)>=10 },
   { ids:['silversurfer'], condFr:'Jouer avec 40 personnages differents', condEn:'Play as 40 different characters', check:(m)=>(m.charactersPlayed||[]).length>=40 },
   { ids:['solen'], condFr:'Cumuler 100 etoiles au total', condEn:'Accumulate 100 stars total', check:(m)=>(m.totalStarsEarned||0)>=100 },
+  { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['apocalypse'], condFr:'Former 50 recrues', condEn:'Train 50 recruits', check:(m)=>(m.totalMenteesTrained||0)>=50 },
   { ids:['capmarvel'], condFr:'Terminer une carriere d\'au moins 40 ans', condEn:'Complete a career of at least 40 years', check:(m)=>(m.longestCareerYears||0)>=40 },
   { ids:['vaelor'], condFr:'Gagner 600 combats', condEn:'Win 600 fights', check:(m)=>(m.totalFightsWon||0)>=600 },
@@ -7417,10 +7479,8 @@ const UNLOCK_TIERS = [
   { ids:['jeangrey'], condFr:'Resoudre 25 enquetes', condEn:'Solve 25 investigations', check:(m)=>(m.totalInvestigationsSolved||0)>=25 },
   { ids:['sentry'], condFr:'Cumuler 150 etoiles au total (toutes carrieres confondues)', condEn:'Accumulate 150 stars total (across all careers)', check:(m)=>(m.totalStarsEarned||0)>=150 },
   { ids:['surtur'], condFr:'Terminer une carriere de 50 ans', condEn:'Finish a 50-year career', check:(m)=>(m.longestCareerYears||0)>=50 },
-  { ids:['vipera'], condFr:'Changer de camp 50 fois', condEn:'Switch sides 50 times', check:(m)=>(m.totalSideSwitches||0)>=50 },
-  { ids:['malachar'], condFr:'Terminer 50 carrieres au total', condEn:'Complete 50 careers total', check:(m)=>(m.careersCompleted||0)>=50 },
   { ids:['boomnpc'], condFr:'Obtenir la 8eme etoile', condEn:'Get the 8th star', check:(m)=>!!m.got8thStar },
-  { ids:['mandate'], condFr:'Vaincre ton rival 70 fois', condEn:'Defeat your rival 70 times', check:(m)=>(m.totalRivalWins||0)>=70 },
+  { ids:['mandate'], condFr:'Vaincre ton rival 20 fois', condEn:'Defeat your rival 20 times', check:(m)=>(m.totalRivalWins||0)>=20 },
   { ids:['sepulcre'], condFr:'Gagner 2000 combats', condEn:'Win 2000 fights', check:(m)=>(m.totalFightsWon||0)>=2000 },
 
 ];
@@ -8264,7 +8324,10 @@ function buildCareerPlan(){
      avoir un seuil de Realite tres bas et un seuil de Temps tres haut, sans aucune correlation entre
      les deux. */
   S.gemThresholdMult = {};
-  ['fureur','fracture','murmure','derive','attente','vestige'].forEach(id=>{ S.gemThresholdMult[id] = 0.5 + Math.random()*1.3; });
+  ['fureur','fracture','murmure','derive','attente','vestige'].forEach(id=>{ S.gemThresholdMult[id] = Math.exp((Math.random()*2-1)*Math.log(10)); });
+  /* Chaque Gemme a sa propre fortune, tiree independamment a chaque partie : de 10x plus facile
+     a 10x plus dure a faire apparaitre. La force du gardien, elle, n'est plus tiree ici : elle
+     l'est a chaque combat de Gemme (voir gemFightMultOf), sur une echelle continue. */
   S.hpBaseline = null; // les PV repartent de la condition de debut de carriere
   S.firstMissionStarted = false; // le bouton simulation reste cache tant que le dossier de bienvenue n'est pas passe
   S.romanceMax = 1 + (Math.random()<0.70?1:0) + (Math.random()<0.40?1:0);
@@ -8277,7 +8340,7 @@ function buildCareerPlan(){
      vrais choix de protection/formation faits en jeu (voir feedMentorProgress) - certaines
      carrieres y arriveront vite si le joueur s'oriente dans ce sens, d'autres jamais si le joueur
      ne fait jamais ce genre de choix, mais ca ne depend plus jamais du hasard pur. */
-  S.mentorEligible = false; S.mentorProgress = 0; S.mentorThreshold = 6 + Math.floor(Math.random()*5);
+  S.mentorEligible = false; S.mentorProgress = 0; S.mentorThreshold = 2 + Math.floor(Math.random()*3);
   S.mentorCap = 0;
   S.startAge = 22 + randInt(0,6); S.extensions = 0;
   S.lastMentorYear = null; S.lastArcYear = null; S.mentees = [];
@@ -8317,7 +8380,7 @@ function buildCareerPlan(){
   S.orientationCount = 0; S.lastOrientationYear = null;
   /* ====================================================================================== */
   const totalPlanned = S.missionsPlan.reduce((a,b)=>a+b,0);
-  S.deathBudgetPerMission = 1 - Math.pow(0.97, 1/Math.max(1,totalPlanned));
+  S.deathBudgetPerMission = 1 - Math.pow(0.94, 1/Math.max(1,totalPlanned));
   /* Rival : n'importe quel personnage que tu as deja debloque peut devenir ton rival, quelle que
      soit sa nature de base (heros/villain/independant) - il passe automatiquement du cote oppose
      au tien pour cette carriere, peu importe son camp canonique. */
@@ -8523,29 +8586,39 @@ function recruitCandidates(){
   const side = recruitSideKey();
   const leaders = ['theg','siddartha'];
   return ROOKIE_KEYS.filter(k=>{
-    if(k===S.playerCharKey || taken.includes(k) || leaders.includes(k)) return false;
+    if(k===S.playerCharKey || taken.includes(k) || leaders.includes(k) || isCharDead(k)) return false;
     if(S.romance && S.romance.active && S.romance.charKey===k) return false;
     if(playerIsIndependent()) return CHARACTERS[k] && (CHARACTERS[k].align==='hero' || CHARACTERS[k].align==='villain');
     return CHARACTERS[k] && CHARACTERS[k].align===side;
   });
 }
 function shouldTriggerMentor(){
+  normalizeMentorEligibility();
   if(!S.mentorEligible) return false;
   if(S.currentYear < 5) return false;
   if(S.mentorCount >= (S.mentorCap!=null ? S.mentorCap : 1)) return false;
   if(S.lastMentorYear!=null && (S.currentYear - S.lastMentorYear) < 2) return false;
   if(!recruitCandidates().length) return false;
-  return Math.random() < 0.46;
+  return Math.random() < 0.55;
 }
 /* Merite l'eligibilite au mentorat par de vrais choix de protection/formation en jeu, plutot que
    par un tirage au sort a l'ouverture de la carriere. Une fois le seuil atteint, le plafond de
    recrues se calcule alors, comme avant. */
+function normalizeMentorEligibility(){
+  /* Les sauvegardes anciennes gardent leurs choix merites, mais pas l'ancien seuil 6-10. */
+  S.mentorThreshold = clamp(S.mentorThreshold || 3, 2, 4);
+  if((S.mentorProgress||0) >= S.mentorThreshold) S.mentorEligible = true;
+  if(S.mentorEligible){
+    S.mentorCap = Math.max(S.mentorCap||0, 2, Math.round((S.years/10) * 2));
+  }
+}
 function feedMentorProgress(ctx){
+  normalizeMentorEligibility();
   if(S.mentorEligible || !ctx || !ctx.mentorLean) return;
   S.mentorProgress = (S.mentorProgress||0) + 1;
-  if(S.mentorProgress >= (S.mentorThreshold||8)){
+  if(S.mentorProgress >= S.mentorThreshold){
     S.mentorEligible = true;
-    S.mentorCap = Math.max(1, Math.round((S.years/10) * 2));
+    S.mentorCap = Math.max(2, Math.round((S.years/10) * 2));
   }
 }
 /* Entrainements et suivis : plusieurs etapes par recrue, tres regulierement. */
@@ -8733,24 +8806,19 @@ function feedEclatResonance(eff, ctx){
   const aff = S.gemAffinity || {};
   if(ctx.deceit) gainEclatRes('fracture', 1 * (aff.fracture||1));
   if(ctx.patient) gainEclatRes('attente', 1 * (aff.attente||1));
-  if(ctx.investigation) gainEclatRes('murmure', (ctx.battleWin!==false ? 1 : 0.5) * (aff.murmure||1)); // une enquete ratee apprend quand meme
-  /* L'Esprit se nourrit aussi de tout choix intellectuel : mots-cles mentaux, et gain d'intelligence. */
-  if(ctx.mind) gainEclatRes('murmure', 1 * (aff.murmure||1));
-  if((eff.intelligence||0) >= 5) gainEclatRes('murmure', 1 * (aff.murmure||1));
-  else if((eff.intelligence||0) >= 3) gainEclatRes('murmure', 0.5 * (aff.murmure||1));
+  if(ctx.investigation && ctx.battleWin!==false) gainEclatRes('murmure', 1 * (aff.murmure||1));
   if((ctx.scope||1) >= 5) gainEclatRes('derive', 1 * (aff.derive||1));
 }
 /* Detecte l'intention d'un choix depuis son libelle, pour nourrir le bon domaine. */
 function eclatCtxFromChoice(choice, extra){
   const txt = ((choice&&choice.fr)||'') + ' ' + ((choice&&choice.en)||'');
-  const t = txt.toLowerCase();
-  const tn = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const t = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const ctx = Object.assign({}, extra||{});
-  if(/enquet|deduire|deduction|dechiffr|decoder|decrypt|infiltr|espionn|interrog|enigme|indice|preuve|secret|mental|psychi|telepath|memoire|conscience|souvenir|reve|hacker|pirater|donnees|dossier|cerveau|esprit|stratag|comprendre|reflechir|savoir|connaissance|archive|bibliotheque|investigat|clue|evidence|decipher|infiltrate|spy|interrogate|riddle|puzzle|mind|memor|brain|mental|psychic|knowledge|understand|figure out|strateg/.test(tn)) ctx.mind = true;
   if(/negoc|corromp|piege|mentir|manipul|trahi|bluff|deceive|corrupt|trap|lie|betray/.test(t)) ctx.deceit = true;
   if(/attendre|patien|observer|etudier|analyser|preparer|study|wait|observe|analyz|prepare/.test(t)) ctx.patient = true;
   if(/sacrifi|proteger|sauver|epargner|jurer|promettre|sacrific|protect|save|spare|vow/.test(t)) ctx.sacrifice = true;
-  if(/former|formation|guider|enseigner|transmettre|prendre sous ton aile|prendre sous son aile|mentor|train|teach|guide|mentor|nurture|take.*under.*wing/.test(t)) ctx.mentorLean = true;
+  const mentorTxt = (((choice&&choice.fr)||'') + ' ' + ((choice&&choice.en)||'').replace(/\bformer\b/gi, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if(/\b(former|formation|guider|enseigner|transmettre|mentor|train|teach|guide|nurture)\b|prendre sous (ton|son) aile|take.*under.*wing|\b(proteger|sauver|protect|save)\b|coordonner.*equipes|coordinate.*teams|organiser l'evacuation|organize the evacuation/.test(mentorTxt)) ctx.mentorLean = true;
   return ctx;
 }
 function eclatResLeader(excludeVestige){
@@ -8846,7 +8914,7 @@ function startEclatQuest(){
       ? `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} holds it - you'll need to earn it, not steal it.`
       : `A resonance from the Infinity leads you to ${shardName}, tied to the domain of ${domain.toLowerCase()}. ${guardName} guards it fiercely.`);
   const m = {
-    id:'eclat_quest', type:'combat', danger:3, scope, foeRatio:drawGemFoeRatio(), eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
+    id:'eclat_quest', type:'combat', danger:3, scope, eclatQuest:shard.id, charKey:guardianKey, eclatHadHolder:!hadNoGuardian,
     tagFr: guardianKey ? 'Quete d\'Infinite' : 'Site d\'Infinite',
     tagEn: guardianKey ? 'Infinity Quest' : 'Infinity Site',
     fr:introFr, en:introEn,
@@ -9128,7 +9196,7 @@ function startEclatReclaimQuest(){
   const mySide = zoneOf(S.align)==='villain' ? 'villain' : 'hero';
   const scope = capScope(computeStars());
   const m = {
-    id:'eclat_reclaim', type:'combat', danger:3, scope, foeRatio:drawGemFoeRatio(), eclatReclaim:shard.id, charKey:holderKey,
+    id:'eclat_reclaim', type:'combat', danger:3, scope, eclatReclaim:shard.id, charKey:holderKey,
     tagFr:'Reprise d\'Infinite', tagEn:'Infinity Reclaim',
     fr:`${holderName} detient toujours ${shardName}. Tu as une occasion de le lui reprendre.`,
     en:`${holderName} still holds ${shardName}. You have a chance to take it back.`,
@@ -9139,8 +9207,13 @@ function startEclatReclaimQuest(){
       { fr:"Laisser filer - ce n'est plus une priorite pour l'instant.", en:"Let it go - not a priority right now.", eff:{align:-1} },
     ]
   };
-  S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m);
+  m.stoneHerald = shard.id;
   S.lastEclatReclaimYear = S.currentYear;
+  S.careerAuto = false;
+  try{ renderCareerAutoWidget(); }catch(e){}
+  if(STONE_HERALDS[shard.id]){
+    showStoneHerald(shard.id, 'intro', holderName, ()=>{ S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m); });
+  } else { S.currentMission = m; S.screen='mission'; render(); afterMissionRender(m); }
   return true;
 }
 /* Chaque eclat a sa propre identite visuelle de cinematique (icone + effet de fond), pour que les 6 se distinguent vraiment. */
@@ -9302,11 +9375,11 @@ function showVormirAnnouncement(recruitName, cb){
   const beats = fr ? [
     { who:'RED SKULL', txt:`Je t'attendais. Je n'ai plus de corps a moi, plus de camp, plus de guerre : seulement cette falaise, et le devoir de dire la verite a ceux qui montent. La Pierre de l'Ame est ici. Elle repose au fond de ce gouffre depuis avant ton monde.` },
     { who:'RED SKULL', txt:`Mais la Pierre ne se prend pas. Elle se <b>paie</b>. Une ame pour une ame. Pas un ennemi, pas un inconnu : quelqu'un que tu as choisi, forme, protege. Tu es monte avec <b>${recruitName}</b>. Ce n'est pas un hasard.` },
-    { who:'RED SKULL', txt:`Alors la falaise ne fera aucun cadeau : chacun se bat avec ce qu'il est, ses coups, sa force. Aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
+    { who:'RED SKULL', txt:`Alors la falaise vous a rendus identiques : meme souffle, meme force, exactement les memes coups. Aucun avantage, aucune excuse. Celui qui reste debout redescend avec la Pierre. L'autre reste ici, et <b>pour toujours</b>.` },
   ] : [
     { who:'RED SKULL', txt:`I was waiting for you. I have no body of my own left, no side, no war: only this cliff, and the duty to tell the truth to those who climb. The Soul Stone is here. It has rested at the bottom of that chasm since before your world.` },
     { who:'RED SKULL', txt:`But the Stone is not taken. It is <b>paid for</b>. A soul for a soul. Not an enemy, not a stranger: someone you chose, trained, protected. You climbed up with <b>${recruitName}</b>. That is no accident.` },
-    { who:'RED SKULL', txt:`So the cliff gives no gifts: each of you fights with what you are, your own moves, your own strength. No excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
+    { who:'RED SKULL', txt:`So the cliff made you identical: same breath, same strength, exactly the same moves. No advantage, no excuse. Whoever is left standing walks down with the Stone. The other stays here, <b>forever</b>.` },
   ];
   const embers = Array.from({length:22}, ()=>{
     const l = Math.random()*100, d = 6 + Math.random()*7, dl = -Math.random()*9,
@@ -9362,7 +9435,7 @@ function startVormirSoul(){
   const foeName = fr?CHARACTERS[foeKey].fr:CHARACTERS[foeKey].en;
   S.vormirDone = true;
   const m = {
-    id:'vormir_soul', type:'combat', danger:3, scope:6, foeRatio:drawGemFoeRatio(), vormirSoul:true, forceDuel:true, charKey:foeKey,
+    id:'vormir_soul', type:'combat', danger:3, scope:6, vormirSoul:true, forceDuel:true, charKey:foeKey,
     tagFr:"VORMIR - PIERRE DE L'AME", tagEn:'VORMIR - SOUL STONE',
     fr:`Vormir. Le vent porte des voix qui connaissent ton nom. ${foeName}, que tu as forme(e) toi-meme, se tient a l'autre bout de la falaise : la Pierre de l'Ame n'acceptera qu'un seul de vous deux, et l'autre restera ici pour toujours.`,
     en:`Vormir. The wind carries voices that know your name. ${foeName}, whom you trained yourself, stands at the other end of the cliff: the Soul Stone will accept only one of you, and the other stays here forever.`,
@@ -10605,7 +10678,7 @@ function foeMovesFor(key){
       if(S.eclatHolders[gemId]===key){
         const shard = ECLATS.find(e=>e.id===gemId);
         if(shard && !base.some(m=>m.fr===shard.move.fr)){
-          base.push(Object.assign({ once:gemOnceFight(), shard:true, shardCol:shard.col, shardCol2:shard.col2 }, shard.move));
+          base.push(Object.assign({ shard:true, shardCol:shard.col, shardCol2:shard.col2 }, shard.move));
         }
       }
     });
@@ -10633,12 +10706,11 @@ function playerMoves(){
      a part entiere, au meme titre que les autres - ils ne s'ajoutent plus par-dessus sans limite,
      ils prennent leur place dans le total plafonne ci-dessous, en priorite (ce sont les coups les
      plus rares et les plus puissants). */
-  /* Epreuve de Gemme : les Gemmes deja en poche sont neutralisees par le gardien - impossible de
-     conquerir une Gemme avec le pouvoir des precedentes. */
-  const shardOnce = gemOnceFight();
+  /* Les Gemmes obtenues donnent leur coup dans tous les combats, epreuves de Gemme comprises -
+     mais pendant une epreuve, chacune ne peut servir qu'une fois (voir consumeShardMove). */
   const shardMoves = (S.eclats||[]).map(id=>{
     const s = ECLATS.find(e=>e.id===id); if(!s) return null;
-    return Object.assign({ once:shardOnce, shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
+    return Object.assign({ shard:true, shardId:s.id, shardCol:s.col, shardCol2:s.col2, shardName: S.lang==='fr'?s.frName:s.enName }, s.move);
   }).filter(Boolean);
   const artifactMoves = (S.artifacts||[]).map(id=>{
     const a = ARTIFACTS.find(x=>x.id===id); if(!a) return null;
@@ -10661,13 +10733,13 @@ function playerMoves(){
   S._moveCandidates = { atk:priorityAtk, def:priorityDef, maxTotal, minDef };
   /* Tirage au sort du combat en cours : les 4 coups ont ete piochés aleatoirement par
      rollBattleLoadout() - on se contente de les resoudre ici. */
-  if(S.battleLoadout && S.battleLoadout.length && !gemTrialActive()){
+  if(S.battleLoadout && S.battleLoadout.length){
     const all = priorityAtk.concat(priorityDef);
     const sel = S.battleLoadout.map(n=>all.find(m=>m.fr===n)).filter(Boolean);
     if(sel.length) return sel;
   }
-  /* Epreuve de Gemme : on recompose un arsenal complet sans Gemme, pour que le tirage habituel
-     (qui garantissait les coups de Gemme) ne laisse pas le joueur avec deux coups seulement. */
+  /* Pas de tirage enregistre (ou epreuve de Gemme) : on recompose un arsenal complet, Gemmes
+     en tete, pour que le joueur ait toujours son arsenal au complet. */
   const defWanted = Math.max(minDef, maxTotal - priorityAtk.length);
   const defOut = []; priorityDef.forEach(m=>{ if(defOut.length<defWanted && defOut.length<maxTotal && !defOut.some(x=>x.fr===m.fr)) defOut.push(m); });
   while(defOut.length<minDef) defOut.push(charPool ? charPool.def[defOut.length%charPool.def.length] : DEFENSE_MOVES_BY_POWER.regen[defOut.length%2]);
@@ -11582,6 +11654,21 @@ function combatMaxHp(k){
   return Math.round(softStart + excess*0.3);
 }
 function combatAttackPower(k){ return Math.round((55 + currentStrength(k)*3) * recruitPenaltyMult(k)); }
+/* On compense les bonus passifs conserves par le joueur AVANT d'ajouter la difficulte.
+   Le hasard est tire a chaque combat (gemFightMultOf) : un meme detenteur peut etre plus
+   facile ou plus dur d'un combat a l'autre. */
+function gemTrialScaling(mission){
+  if(!mission || !(mission.eclatQuest || mission.eclatReclaim)) return {hp:1, damage:1};
+  const variation = gemFightMultOf(mission);
+  /* Aucun palier obligatoire : la difficulte ne depend pas du nombre de Gemmes en poche.
+     On compense seulement les bonus passifs du joueur (+15% de PV et +14% de degats par Gemme,
+     voir combatMaxHp/gemPowerMult) pour que l'epreuve reste neutre face a ta puissance, puis
+     le tirage du combat s'applique seul : le gardien peut etre plus fort ou moins fort que toi. */
+  return {
+    hp: variation,
+    damage: Math.sqrt(variation)
+  };
+}
 /* IQ de combat d'un personnage par sa cle. Recrues et inconnus : 5 (moyenne). */
 function iqOfKey(k){
   const c = k ? CHARACTERS[k] : null;
@@ -11932,6 +12019,7 @@ const FOEASSIST_EN = ["{n} hits you from behind", "{n} joins the melee and clips
     </div>`;
   }
 function startBattle(mission, done){
+  S._battleIsGemTrial = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
   syncLiveAligns(); /* les cadres et faisceaux du combat suivent le camp actuel de chacun */
   AudioEngine.setMode('combat');
   const foeKey = battleFoeKey(mission);
@@ -11980,7 +12068,7 @@ function startBattle(mission, done){
      plus de bonus cache de precision, PV ou degats en fonction de la puissance du joueur. */
   const dmgMult = (1 + form.momentum*0.02) * (inj ? (1 - inj.sev*0.06) : 1);
   if(inj) inj.battlesLeft = Math.max(0, inj.battlesLeft - 1);
-  const vormirMirror = false; // Vormir n'est plus un duel en miroir : l'adversaire a ses propres coups et sa propre puissance
+  const vormirMirror = !!(mission && mission.vormirSoul);
   let myMoves = playerMoves(); const foeMoves = vormirMirror ? playerMoves().slice() : foeMovesFor(foeKey);
   /* Escouades : la taille de l'equipe depend du niveau (etoiles) du joueur, pas de la mission. */
   const scope = squadCapForStars();
@@ -12015,13 +12103,17 @@ function startBattle(mission, done){
   }
   const allyRosterRaw = [{ isPlayer:true, key:null, name:myName, col:myCol, img:null, hp:myMaxHP, maxHp:myMaxHP, ko:false }]
     .concat(allyExtras.map(e=>Object.assign({ isPlayer:false }, e)));
-  /* Combat de Gemme : le gardien encaisse et frappe plus fort, et un peu plus a chaque Gemme
-     deja en poche - dose pour que la 6e reste dure mais gagnable, jamais un mur infranchissable. */
+  /* Combat de Gemme : epreuve neutre vis-a-vis de ta puissance (bonus passifs compenses),
+     modulee uniquement par le tirage du gardien a chaque combat (x0.833 a x1.2). */
   const stoneFight = !!(mission && (mission.eclatQuest || mission.eclatReclaim));
-  const stoneOwnedCount = stoneFight ? (S.eclats||[]).length : 0;
-  const gemRatio = (mission && typeof mission.foeRatio==='number') ? mission.foeRatio : null;
-  const stoneHpMult = (stoneFight && gemRatio===null) ? Math.min(1.75, 1.22 + stoneOwnedCount*0.08) : 1;
-  const foeMaxHp = gemRatio!==null ? Math.max(30, Math.round(myMaxHP * gemRatio)) : Math.round(combatMaxHp(foeKey) * stoneHpMult);
+  const stoneScaling = gemTrialScaling(mission);
+  const stoneHpMult = stoneScaling.hp;
+  /* Epreuve de Gemme : le gardien est calibre sur TON niveau, pas sur les stats propres du
+     personnage qui porte la pierre - sinon une gardienne naturellement fragile rend l'epreuve
+     triviale et un gardien naturellement tank la rend impossible. Le personnage reste le
+     visage du gardien ; la difficulte, elle, vient de la progression et du tirage propre a
+     chaque Gemme. */
+  const foeMaxHp = vormirMirror ? myMaxHP : (stoneFight ? Math.round(myMaxHP * stoneHpMult) : Math.round(combatMaxHp(foeKey) * stoneHpMult));
   const foeRosterRaw = [{ isPlayer:false, key:foeKey, name:foeName, col:foeCol, img:foe.img, hp:foeMaxHp, maxHp:foeMaxHp, ko:false }]
     .concat(foeExtras.map(e=>Object.assign({ isPlayer:false }, e)));
   allyRosterRaw.forEach(e=>{ e.spd = spdFor(e); }); foeRosterRaw.forEach(e=>{ e.spd = spdFor(e); });
@@ -12030,7 +12122,7 @@ function startBattle(mission, done){
   const turnOrder = allyRoster.map((ref,i)=>({ side:'ally', idx:i, ref }))
     .concat(foeRoster.map((ref,i)=>({ side:'foe', idx:i, ref })))
     .sort((a,b)=> b.ref.spd - a.ref.spd);
-  const st = { spent:{}, busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastMoveFr:null, playerActs:0 };
+  const st = { busy:true, finished:false, targetIdx:0, transformed:false, vanishUsed:false, specialUsed:false, dodgeNext:false, turnPtr:0, protectIdx:null, auto:!!S.careerAuto, lastProgressAt:Date.now(), turnCallCount:0, lastPlayerTurnAt:Date.now(), lastMoveFr:null, playerActs:0 };
   /* Filet de securite : dans de rares cas (course entre deux tours), le combat peut se figer -
      completement bloque, pris dans une boucle rapide, OU coince a cycler entre allies/adversaires
      sans jamais redonner la main au joueur (au debut ou meme en plein milieu du combat). On
@@ -12133,7 +12225,7 @@ function startBattle(mission, done){
     if(st.auto && !st.busy) maybeAutoPlay();
   };
   function autoChooseMoveIdx(){
-    const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr) && !(m.once && st.spent[m.fr]);
+    const avail = (m)=>!(st.lastMoveFr && st.lastMoveFr === m.fr);
     /* Le mode auto joue au niveau d'intelligence de TON personnage : un cerveau optimise, un
        brutal frappe plus souvent au hasard et se soigne trop tard. */
     const sk = iqSkill(S.playerCharKey);
@@ -12397,14 +12489,13 @@ function startBattle(mission, done){
       const badgeCol = m.shard ? m.shardCol : (isDef ? 'var(--green)' : 'var(--red)');
       /* Un coup vient d'etre utilise : il est verrouille jusqu'au prochain tour, impossible de
          l'enchainer deux fois de suite. */
-      const isSpent = !!(m.once && st.spent[m.fr]);
-      const isLocked = isSpent || (!!st.lastMoveFr && st.lastMoveFr === m.fr);
+      const isLocked = !!st.lastMoveFr && st.lastMoveFr === m.fr;
       const style = m.shard ? ` style="border-color:${m.shardCol}; box-shadow:0 0 14px -6px ${m.shardCol}; position:relative; padding-right:32px;"` : (isLocked ? ` style="opacity:.4;"` : '');
       /* La vraie icone de pierre (meme rendu SVG que partout ailleurs dans le jeu), pour reperer
          immediatement qu'un coup vient d'une Gemme d'Infinite, pas juste une bordure coloree. */
       const gemIcon = m.shard ? `<div style="position:absolute; bottom:6px; right:8px; width:20px; height:20px; pointer-events:none;">${gemSVG({col:m.shardCol, col2:m.shardCol2}, 20, {spin:false})}</div>` : '';
       const moveKindClass = m.shard ? '' : (isDef ? 'btl-def' : 'btl-atk');
-      return `<button class="btl-move ${moveKindClass}"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}>${gemIcon}<span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isSpent?(S.lang==='fr'?'Epuise - utilisable une seule fois par combat':'Spent - one use per fight'):isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
+      return `<button class="btl-move ${moveKindClass}"${style} data-i="${i}" ${isLocked?'disabled data-lock="1"':''}>${gemIcon}<span class="btl-move-badge" style="color:${badgeCol}; border-color:${badgeCol};">${badge}</span><b>${label}</b><span>${isLocked?(S.lang==='fr'?'Recharge - un tour de repit necessaire':'Cooldown - needs a turn to recharge'):sub}</span></button>`;
     }).join('');
     if(S.playerCharKey==='vipera' && !st.transformed){
       movesEl.innerHTML += `<button class="btl-move transform" id="btlTransform" style="grid-column:1 / -1; border-color:var(--accent); background:rgba(0,194,255,.08);">
@@ -12603,9 +12694,7 @@ function startBattle(mission, done){
     const playerWasKO = win && (allyRoster[0].ko || allyRoster[0].hp<=0);
     let permaDeath = false;
     if(!win && scope>=6 && !(mission && (mission.isTraining || mission.vormirSoul))){
-      /* Mort definitive apres une defaite d'ampleur : nettement reduite, et d'autant plus rare que la
-         carriere est longue (une longue carriere multiplie les affrontements, donc les occasions). */
-      const deathChance = (0.02 + (scope-6)*0.012) * clamp(30/Math.max(1,(S.missionsPlan||[]).length||30), 0.35, 1);
+      const deathChance = 0.06 + (scope-6)*0.04;
       if(Math.random() < deathChance){
         permaDeath = true;
         const causeFr = `terrasse(e) par ${foeName} lors d'un affrontement d'ampleur ${scopeLabel(scope).toLowerCase()}`;
@@ -12712,10 +12801,8 @@ function startBattle(mission, done){
     const fmFull = (vormirMirror || !fk) ? foeMoves : foeMovesFor(fk);
     /* Verrou d'un tour : un adversaire ne peut jamais enchainer deux fois de suite le meme coup,
        attaque comme defense - il doit varier, exactement comme le joueur. */
-    const fmUsable = fmFull.filter(mm=>!(mm.once && actor && actor._spent && actor._spent[mm.fr]));
-    const fmBase = fmUsable.length ? fmUsable : fmFull;
-    const fm = (actor && actor._lastMoveFr && fmBase.some(mm=>mm.fr!==actor._lastMoveFr))
-      ? fmBase.filter(mm=>mm.fr!==actor._lastMoveFr) : fmBase;
+    const fm = (actor && actor._lastMoveFr && fmFull.some(mm=>mm.fr!==actor._lastMoveFr))
+      ? fmFull.filter(mm=>mm.fr!==actor._lastMoveFr) : fmFull;
     let chosen = null;
     /* La qualite des decisions depend de l'intelligence de combat du personnage (note sur 10). */
     const sk = iqSkill(fk);
@@ -12737,7 +12824,6 @@ function startBattle(mission, done){
       chosen = Math.random() < sk ? weighted[0] : pick(fm);
     }
     if(actor) actor._lastMoveFr = chosen.fr;
-    if(actor && chosen.once){ actor._spent = actor._spent || {}; actor._spent[chosen.fr] = true; }
     return chosen;
   }
   function pickTeamTarget(roster, facingIdx, skill){
@@ -12773,11 +12859,12 @@ function startBattle(mission, done){
       setTimeout(runTurn, wait(900));
       return;
     }
-    const stoneDmgMult = (stoneFight && gemRatio===null) ? Math.min(1.55, 1.15 + stoneOwnedCount*0.06) : 1;
-    /* Duel de Gemme : l'adversaire frappe avec TA puissance de base multipliee par son coefficient tire. */
-    const d = (gemRatio!==null && actor.key===foeKey)
-      ? dmgOf(m, combatAttackPower(S.playerCharKey), dmgMult * strMult(S.playerCharKey) * gemPowerMult * gemRatio)
-      : dmgOf(m, combatAttackPower(actor.key), strMult(actor.key) * stoneDmgMult);
+    const stoneDmgMult = stoneScaling.damage;
+    /* Meme logique que les PV : en epreuve de Gemme, la puissance de frappe du gardien est
+       calibree sur ton propre niveau, pas sur la Force naturelle du personnage. */
+    const atkBase = stoneFight ? combatAttackPower(S.playerCharKey) : combatAttackPower(actor.key);
+    const strBase = stoneFight ? strMult(S.playerCharKey) : strMult(actor.key);
+    const d = dmgOf(m, atkBase, strBase * stoneDmgMult);
     const targetAllyIdx = pickAllyTarget(idx);
     const dApplied = dealToAlly(targetAllyIdx, d, actor.col) ?? d;
     if(m.heal){ actor.hp = Math.min(actor.maxHp, actor.hp + m.heal); refreshEntry('foe', idx); }
@@ -12786,6 +12873,33 @@ function startBattle(mission, done){
       + (m.heal ? (S.lang==='fr'?` Il recupere ${m.heal} PV.`:` He recovers ${m.heal} HP.`) : ''));
     setTimeout(runTurn, wait(950));
   }
+  /* Hors epreuve de Gemme, une Gemme se reutilise librement tout au long du combat et ne
+     disparait jamais. Pendant une epreuve de Gemme seulement, chaque Gemme ne peut servir
+     qu'une fois : son coup s'eteint alors et laisse place a un coup classique, pour ne jamais
+     descendre sous 4 coups jouables. */
+  function consumeShardMove(mv){
+    if(!S._battleIsGemTrial) return;
+    const idx = myMoves.findIndex(m=>m.fr===mv.fr); if(idx<0) return;
+    const cand = S._moveCandidates || { atk:[], def:[] };
+    const pool = (mv.heal ? (cand.def||[]).concat(cand.atk||[]) : (cand.atk||[]).concat(cand.def||[]))
+      .filter(m=>m && !m.shard && !myMoves.some(x=>x.fr===m.fr));
+    let repl = pool[0];
+    if(!repl){
+      const basic = mv.heal ? (DEFENSE_MOVES_BY_POWER.regen||[]) : (BASIC_MOVES||[]);
+      repl = basic.find(m=>m && !myMoves.some(x=>x.fr===m.fr));
+    }
+    /* Dernier recours : arsenal entierement epuise - on forge une variante du coup de base pour
+       garantir qu'il reste toujours au moins 4 coups jouables. */
+    if(!repl){
+      const src = (mv.heal ? (DEFENSE_MOVES_BY_POWER.regen||[])[0] : BASIC_MOVES[0]) || {fr:'Frappe',en:'Strike',p:20,acc:.9};
+      repl = Object.assign({}, src, { fr: src.fr+' II', en: (src.en||src.fr)+' II' });
+    }
+    myMoves.splice(idx, 1, repl);
+    if(S.battleLoadout) S.battleLoadout = myMoves.map(m=>m.fr);
+    setLog(S.lang==='fr'
+      ? `${mv.shardName||'La Gemme'} s'eteint : son pouvoir ne peut servir qu'une fois par combat.`
+      : `${mv.shardName||'The Gem'} goes dark: its power can only be used once per fight.`);
+  }
   function playerTurn(i){
     if(st.busy) return;
     const mv = myMoves[i]; if(!mv) return;
@@ -12793,9 +12907,8 @@ function startBattle(mission, done){
        son nom et non par son index, car la liste peut changer en cours de combat. */
     if(st.lastMoveFr && st.lastMoveFr === mv.fr) return;
     st.busy = true; setMovesEnabled(false);
-    if(mv.once && st.spent[mv.fr]) return;
     st.lastMoveFr = mv.fr; st.playerActs = (st.playerActs||0) + 1;
-    if(mv.once) st.spent[mv.fr] = true;
+    if(mv.shard) setTimeout(()=>{ consumeShardMove(mv); renderMoves(); }, 0);
     if(st.targetIdx<0 || !foeRoster[st.targetIdx] || foeRoster[st.targetIdx].ko){ pickNextTarget(); if(st.targetIdx<0){ finish(true); return; } }
     const m = myMoves[i]; const label = S.lang==='fr'?m.fr:m.en;
     const targetIdx = st.targetIdx, targetName = foeRoster[targetIdx].name;
@@ -12857,6 +12970,11 @@ function afterMissionRender(mission){
       if(permaDeath || S.dead){
         S.yearsHistory.push({ year:S.currentYear, entries:S.currentYearEntries.slice(), endAlign:S.align }); S.currentYearEntries = [];
         S.screen='end'; render(); return;
+      }
+      if(mission && (mission.eclatQuest || mission.eclatReclaim)){
+        /* Epreuve de Pierre : la cinematique d'apres-combat arrive tout de suite, sans question intermediaire. */
+        applyChoice({ fr:"Epreuve de la Pierre d'Infinite.", en:"Infinity Stone trial.", eff:{} });
+        return;
       }
       if(win) jarvisSay("Cible neutralisee. J'enregistre la victoire dans ton dossier.","Target neutralized. Logging the win in your file.", S.lang==='fr'?'victoire confirmee':'win confirmed');
       else jarvisSay("Tu as perdu l'echange. Je stabilise tes constantes, on rejoue ca a froid.","You lost the exchange. Stabilizing your vitals - we'll review it cold.", S.lang==='fr'?'defaite enregistree':'loss logged');
@@ -13107,7 +13225,7 @@ function resolveOutcome(mission){
     } else if(mission.eclatReclaim){
       const shard = ECLATS.find(e=>e.id===mission.eclatReclaim);
       const holderKey = mission.charKey;
-      if(shard && win && Math.random() < 0.35){
+      if(shard && win){
         grantEclatShard(shard);
         if(STONE_HERALDS[shard.id]) S.pendingStoneHerald = shard.id;
       } else if(shard){
@@ -13116,7 +13234,7 @@ function resolveOutcome(mission){
         jarvisSay(S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`,
                   S.lang==='fr'?`${holderName} garde toujours ${shard.frName}. Cette manche est perdue.`:`${holderName} still holds ${shard.enName}. This round is lost.`, S.lang==='fr'?'reprise manquee':'reclaim failed');
       }
-    } else if(!win && (S.eclats||[]).length && Math.random() < 0.12){
+    } else if(false){ /* Une Gemme ne se perd jamais lors d'un combat ordinaire. */
       // Un combat ordinaire perdu peut aussi couter un eclat : l'adversaire te le vole pendant que tu es a terre.
       const idx = Math.floor(Math.random()*S.eclats.length);
       const stolenId = S.eclats.splice(idx,1)[0];
@@ -14785,6 +14903,7 @@ function extendCareer(extra){
   if(S.dead) return;
   S.extensions = (S.extensions||0) + 1;
   S.savedToHistory = false;
+  S.metaRecorded = false;
   for(let i=0;i<extra;i++) S.missionsPlan.push(3);
   S.years = S.missionsPlan.length;
   S.mode = S.years <= 12 ? 'short' : 'long';
@@ -14796,9 +14915,9 @@ function extendCareer(extra){
   nextMission();
 }
 function screenEnd(){
-  saveCareerToHistory();
-  recordCareerForMeta();
   clearGameState();
+  recordCareerForMeta();
+  saveCareerToHistory();
   const d = document.createElement('div');
   const topRelKey = Object.keys(S.rel).reduce((a,b)=> (S.rel[b]>S.rel[a] ? b : a), Object.keys(S.rel)[0]);
   const topRel = CHARACTERS[topRelKey];
@@ -14924,6 +15043,7 @@ function screenEnd(){
       <div style="display:flex; justify-content:center; margin-bottom:10px;">${factionEmblemSVG(S.team.side, S.team.tier, 84) || factionEmblemSVG(S.team.side, 5, 84)}</div>
       <div class="tname" style="color:${charColor(S.team.side)}; text-shadow:0 0 20px ${charColor(S.team.side)};">${teamNameEnd}</div></div>` : ''}
     <p class="lead" style="margin-top:14px;">${S.lang==='fr'?'Alignement final':'Final alignment'}: <b>${alignLabel}</b></p>
+    ${(S.newUnlocks && S.newUnlocks.length) ? `<div class="team-hero-banner" style="border-color:var(--accent);"><div class="tname" style="color:var(--accent);">${isFr?'Nouveaux personnages debloques':'New characters unlocked'}</div><p class="lead" style="margin:8px auto 0;">${S.newUnlocks.map(id=>{ const p=SELECTABLE_PRESETS.find(x=>x.id===id); const c=p&&CHARACTERS[p.charKey]; return c?(isFr?c.fr:c.en):(p?(isFr?p.nameFr:p.nameEn):id); }).join(' &middot; ')}</p></div>` : ''}
     <h2 style="margin-top:20px;">${t('fullReportTitle')}</h2>
     ${kpiHtml}${kpiHtml2}${locBreak}${menteeDetail}${fallenAllies}${fallenFoes}${eclatsDetail}
     <h3>${isFr?'Note de carriere':'Career rating'}</h3>${scoreHtml}
